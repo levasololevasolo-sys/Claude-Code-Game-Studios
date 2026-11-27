@@ -308,5 +308,95 @@
     }
   },
   "drop_reach": 70,
-  "sub_buffer": 0.15
+  "sub_buffer": 0.15,
+  "_note_chunks": "Chunk rooms, GDD room-generation-and-doors §3.3-3.6, §3.10, §3.13, §4.1-4.3, §7. Library in chunks_<loc>.json.",
+  "cell": 40,
+  "module_w": 16,
+  "module_h": 9,
+  "L_first": 3,
+  "L_base": 4,
+  "L_tier": 0.5,
+  "L_max": 9,
+  "chunk_tries": 20,
+  "chest_max": 1,
+  "secret_chance": 0.3,
+  "knight_door": 0.35,
+  "wall_hits": 3,
+  "chest_embers": 18,
+  "chest_res": 3,
+  "cache_embers": 40,
+  "cache_res": 6,
+  "cache_heal_chance": 0.5,
+  "cache_heal": 20,
+  "chest_reach": 70,
+  "trap_idle": 1.4,
+  "trap_warn": 0.6,
+  "trap_active": 0.5,
+  "trap_dmg": 12,
+  "log_dmg": 16,
+  "knight_chest_embers": 40,
+  "knight_chest_res": 8,
+  "knight_chest_heal": 20,
+  "knight_reward_clear_r": 800,
+  "knight_stone_gap": 120,
+  "_note_elites": "Elites and nav marks, GDD enemies-and-elites §3.6, §5 edge 5, §7. elite_forbid = marks a kind never gets (its own trait already does it).",
+  "elite_chance": 0.18,
+  "elite_max": 2,
+  "elite_hp": 1.6,
+  "elite_dmg": 1.15,
+  "elite_size": 1.2,
+  "elite_from_tier": 2,
+  "fire_trail_time": 2.5,
+  "fire_trail_dmg": 6,
+  "fire_trail_tick": 0.5,
+  "fire_trail_every": 0.3,
+  "fire_trail_w": 44,
+  "blink_cd": 4,
+  "blink_fade": 0.6,
+  "blink_dist": 200,
+  "shield_frac": 0.4,
+  "shield_regrow": 4,
+  "shield_break_mult": 2,
+  "death_blast_delay": 0.8,
+  "death_blast_r": 140,
+  "death_blast_dmg": 20,
+  "call_count": 2,
+  "call_max": 4,
+  "call_howl": 0.8,
+  "elite_marks": {
+    "fire": {
+      "name": "Пламя",
+      "colour": "#ff8a2a"
+    },
+    "blink": {
+      "name": "Морок",
+      "colour": "#4f8dff"
+    },
+    "blast": {
+      "name": "Взрыв",
+      "colour": "#c0233a"
+    },
+    "ward": {
+      "name": "Заслон",
+      "colour": "#ffd24a"
+    },
+    "call": {
+      "name": "Зов",
+      "colour": "#efe6d2"
+    }
+  },
+  "elite_forbid": {
+    "crawler": [],
+    "bat": [],
+    "sentry": [
+      "ward"
+    ],
+    "bloat": [
+      "blast"
+    ]
+  },
+  "elite_fallback": [
+    "blast",
+    "call"
+  ]
 }

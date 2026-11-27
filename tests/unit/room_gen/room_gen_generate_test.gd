@@ -1,4 +1,5 @@
-## gdUnit4 suite for RoomGen.generate. Replaces the SceneTree runner test_room_gen.gd.
+## gdUnit4 suite for RoomGen.generate, legacy flat layout (safe_start = false,
+## the --demo / single-room checks) and the BUG-0004 safe zone of chunk rooms.
 extends GdUnitTestSuite
 
 const TUNING_PATH := "res://assets/data/tuning.json"
@@ -7,6 +8,11 @@ func _tuning() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string(TUNING_PATH))
 
 func _gen(seed_value: int, room_index: int, tier: int, tuning: Dictionary) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	return RoomGen.generate(rng, room_index, tier, tuning, false)
+
+func _chunk(seed_value: int, room_index: int, tier: int, tuning: Dictionary) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	return RoomGen.generate(rng, room_index, tier, tuning)
@@ -53,7 +59,7 @@ func test_no_enemy_inside_safe_start_zone_over_many_rooms() -> void:
 	for s in 40:
 		for k in range(1, 6):
 			for tier in range(1, 4):
-				for pack: Array in _gen(s, k, tier, t).packs:
+				for pack: Array in _chunk(s, k, tier, t).packs:
 					for x: float in pack:
 						min_x = minf(min_x, x)
 	assert_float(min_x).is_greater_equal(safe)
@@ -63,7 +69,7 @@ func test_first_room_keeps_two_packs_with_safe_zone() -> void:
 	for s in 30:
 		assert_int(_gen(s, 1, 1, t).packs.size()).is_equal(2)
 
-func test_safe_start_off_keeps_legacy_layout_rng_stream() -> void:
+func test_safe_start_off_keeps_the_legacy_flat_layout() -> void:
 	var t := _tuning()
 	var a := RandomNumberGenerator.new()
 	a.seed = 9
@@ -71,5 +77,6 @@ func test_safe_start_off_keeps_legacy_layout_rng_stream() -> void:
 	b.seed = 9
 	var on := RoomGen.generate(a, 2, 1, t)
 	var off := RoomGen.generate(b, 2, 1, t, false)
-	assert_int(a.state).is_equal(b.state)
-	assert_array(on.plats).is_equal(off.plats)
+	assert_bool(on.has("chunks")).is_true()
+	assert_bool(off.has("chunks")).is_false()
+	assert_float(off.w).is_equal(float(t.room_w_base + t.room_w_step))

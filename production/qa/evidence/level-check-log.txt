@@ -1,0 +1,17 @@
+seed 8: chunks ["swamp_entry_01", "swamp_arena_06", "swamp_pass_02", "swamp_arena_01", "swamp_shaft_01", "swamp_exit_01"]
+OK   found a chunk room with a shaft and a breakable wall
+OK   vertical pieces: 4 solids, top y -80
+screenshot level-chunks.png
+OK   2 forced elites: ["crawler/blast hp 78", "bat/fire hp 46"]
+OK   elite hp ×1.6: 78
+screenshot level-elite.png
+OK   the knight stands at x 862
+OK   knight woke on his own (state walk)
+screenshot level-knight.png
+OK   breakable wall stands
+OK   wall holds after 2 hits
+OK   wall falls on the 3rd hit (strike, shot, Flare)
+OK   secret pocket: rich chest, 2 traps
+OK   cache chest opens
+screenshot level-cache.png
+DONE: 0 failed checks

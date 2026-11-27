@@ -12,6 +12,9 @@ func build(l: Dictionary) -> void:
 	_solid(Rect2(-200, ground, w + 400, 400))
 	_solid(Rect2(-200, -2000, 200, 3000))
 	_solid(Rect2(w, -2000, 200, 3000))
+	# Chunk rooms (room-generation §3.3): solid earth of shafts, ledges and secret pockets.
+	for r: Rect2 in l.get("solids", []):
+		_solid(r)
 	for p: Vector3 in l.plats:
 		var body := StaticBody2D.new()
 		body.collision_layer = 2
@@ -51,6 +54,9 @@ func _draw() -> void:
 		x += rng.randf_range(120, 260)
 	draw_rect(Rect2(-200, ground, w + 400, 400), Color("#1f2b2a"))
 	draw_line(Vector2(-200, ground), Vector2(w + 200, ground), Color("#4f6d5c"), 4.0)
+	for r: Rect2 in layout.get("solids", []):
+		draw_rect(r, Color("#24302c"))
+		draw_line(r.position, Vector2(r.end.x, r.position.y), Color("#4f6d5c"), 3.0)
 	for p: Vector3 in layout.plats:
 		draw_rect(Rect2(p.x, p.y, p.z, 14), Color("#3a4a45"))
 		draw_line(Vector2(p.x, p.y), Vector2(p.x + p.z, p.y), Color("#7d9a7f"), 3.0)

@@ -34,6 +34,8 @@ var _confirm_t: float = 0.0
 var _toast: String = ""
 var _toast_t: float = 0.0
 var _unl: Dictionary = {}
+## Tier whose Навий витязь has already stood in a room (one per location, §3.6).
+var knight_tier: int = -1
 
 func _ready() -> void:
 	Events.enemy_killed.connect(_on_enemy_killed)
@@ -99,7 +101,7 @@ func enter_room() -> void:
 		"haven":
 			layout = { "w": Tune.f("haven_room_w"), "plats": [], "packs": [], "portal": false, "haven": true }
 		_:
-			layout = RoomGen.generate(rng, run.room_k, run.tier, Tune.data)
+			layout = RoomGen.generate(rng, run.room_k, run.tier, Tune.data, true, room_opts())
 			layout["portal"] = false
 	world.start_room(layout, rng)
 	world.player.hp = run.hp
@@ -147,11 +149,72 @@ func _physics_process(dt: float) -> void:
 			if _dead_t <= 0.0:
 				finish("dead")
 
-## Living enemies in the room, sleeping ones included (§3.7, AC 15).
+## Chunk-room options of this room (room-generation §3.6, §3.10; enemies-and-elites
+## §3.6). The knight: rooms 2-4 with chance knight_door, surely in the last room;
+## rolled here on the doors stream (door helmets are not drawn yet). Elites: from
+## elite_from_tier after the first boss win. Breakable wall: not in tier 1 room 1,
+## only once the cache door type is open.
+func room_opts() -> Dictionary:
+	var per_loc := int(Tune.f("rooms_per_loc"))
+	var knight := false
+	if knight_tier != run.tier and run.room_k >= 2:
+		knight = run.room_k >= per_loc or _doors_rng().randf() < Tune.f("knight_door")
+	if knight:
+		knight_tier = run.tier
+	var types: Array = _unl.get("types", [])
+	return { "knight": knight,
+		"elites_ok": run.tier >= int(Tune.f("elite_from_tier")) and game.meta.bosses_beaten() > 0,
+		"secret_ok": not (run.tier == 1 and run.room_k == 1) and "cache" in types }
+
+## A chest was opened (§3.13): ordinary 18 embers, 3 resource, drop_from("chest");
+## secret pocket 40 embers, 6 resource, drop_from("cache"), 50% heal 20.
+func open_chest(c: Chest) -> void:
+	var res_id := String(_loc().get("res", "gears"))
+	var at := c.position + Vector2(0, 0)
+	if c.rich:
+		var e := roundi(Tune.f("cache_embers") * Tune.f("embers_mult"))
+		run.embers += e
+		run.add_res(res_id, int(Tune.f("cache_res")))
+		var healed := 0.0
+		if game.rng.stream("loot").randf() < Tune.f("cache_heal_chance") and world.player:
+			healed = minf(run.max_hp - world.player.hp, Tune.f("cache_heal"))
+			world.player.hp += healed
+		var it := drop_from("cache", at)
+		_say("Тайник: +%d углей, +%d %s%s" % [e, int(Tune.f("cache_res")), _loc().get("res_name", ""), (", +%d здоровья" % int(healed)) if healed > 0.0 else ""])
+		_note("cache chest opened: +%d embers, heal %d, weapon %s" % [e, int(healed), it.id if it else "-"])
+	else:
+		var e := roundi(Tune.f("chest_embers") * Tune.f("embers_mult"))
+		run.embers += e
+		run.add_res(res_id, int(Tune.f("chest_res")))
+		var it := drop_from("chest", at)
+		_say("Сундук: +%d углей" % e)
+		_note("chest opened: +%d embers, weapon %s" % [e, it.id if it else "-"])
+
+## The knight's stone i was taken (enemies-and-elites §3.7): 0 Род rune offer,
+## 1 weapon (drop_from "knight", quality +1), 2 rich chest (knight_chest_*).
+func knight_reward(i: int, at: Vector2) -> void:
+	match i:
+		0:
+			_note("knight reward: rod rune")
+			_offer("rod", func() -> void: pass)
+		1:
+			var it := drop_from("knight", at)
+			_note("knight reward: weapon %s" % (it.id if it else "-"))
+		_:
+			var e := roundi(Tune.f("knight_chest_embers") * Tune.f("embers_mult"))
+			run.embers += e
+			run.add_res(String(_loc().get("res", "gears")), int(Tune.f("knight_chest_res")))
+			if world.player:
+				world.player.hp = minf(run.max_hp, world.player.hp + Tune.f("knight_chest_heal"))
+			_say("Богатый сундук: +%d углей" % e)
+			_note("knight reward: rich chest +%d embers" % e)
+
+## Living enemies in the room, sleeping ones included (§3.7, AC 15). Props
+## (breakable walls) do not count.
 func alive_enemies() -> int:
 	var n := 0
 	for e in get_tree().get_nodes_in_group("enemies"):
-		if not (e as Enemy).dead:
+		if not (e as Enemy).dead and not (e as Enemy).prop:
 			n += 1
 	return n
 
@@ -431,6 +494,15 @@ func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 			drop_from("boss", e.position)
 		_note("boss %s killed: +%d embers" % [id, int(Tune.f("lair_embers"))])
 	else:
+		if e is Knight:
+			var kr := KnightReward.new()
+			kr.world = world
+			kr.director = self
+			kr.position = Vector2(clampf(e.position.x, 200.0, float(world.room.layout.w) - 200.0), Tune.f("ground_y"))
+			world.add_child(kr)
+			_note("knight killed at x %d: reward stones laid" % int(e.position.x))
+		elif e.mark != "":
+			drop_from("elite", e.position)
 		# Picked up at once for now: ground pickups (economy §3.2) come with the loot step.
 		run.embers += maxi(1, roundi(float(e.stats.get("embers", 0)) * Tune.f("embers_mult")))
 		if game.rng.stream("loot").randf() < Tune.f("res_drop"):

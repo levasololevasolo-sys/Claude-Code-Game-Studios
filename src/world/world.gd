@@ -63,7 +63,7 @@ var weapon_hud: WeaponHud
 var first_run: bool = false
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots="]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -144,6 +144,10 @@ func _ready() -> void:
 			var hs: Node = (load("res://tests/integration/hero/hero_shots_driver.gd") as GDScript).new()
 			hs.set("out_dir", a.trim_prefix("--hero-shots="))
 			add_child(hs)
+		elif a.begins_with("--level-check="):
+			var lc: Node = (load("res://tests/integration/run/level_check_driver.gd") as GDScript).new()
+			lc.set("out_dir", a.trim_prefix("--level-check="))
+			add_child(lc)
 		elif a.begins_with("--run-check="):
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
@@ -155,7 +159,8 @@ func _ready() -> void:
 func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) -> void:
 	for c in get_children():
 		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
-				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot:
+				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot \
+				or c is Chest or c is Trap or c is FireTrail or c is KnightReward:
 			if c is Enemy:
 				c.remove_from_group("enemies")
 			c.queue_free()
@@ -179,10 +184,14 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 			Tune.get_value("swamp_roster"), Tune.get_value("swamp_late"), table, Tune.data)
 		for j in kinds.size():
 			var e := EnemyRoster.make(kinds[j])
+			# Elites (enemies-and-elites §3.6): the layout picks who, the mark fits the kind.
+			if [i, j] in (layout.get("elites", []) as Array):
+				e.mark = EliteMarks.pick(rng, kinds[j], Tune.data)
 			var y := Tune.f("ground_y")
 			if bool(table[kinds[j]].get("flies", false)):
 				y = rng.randf_range(float(fly_y[0]), float(fly_y[1]))
 			spawn_enemy(e, Vector2(pack[j], y), i, true, rng.randi())
+	_spawn_props(layout, rng)
 	var keep_charge := player.amulet.charge if player and is_instance_valid(player) and player.amulet else 0.0
 	player = Player.new()
 	player.world = self
@@ -204,7 +213,7 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	cam.limit_left = 0
 	cam.limit_right = int(layout.w)
 	cam.limit_bottom = int(Tune.f("ground_y") + 220)
-	cam.limit_top = -400
+	cam.limit_top = mini(-400, int(float(layout.get("top", 0.0)) - 40.0))
 	cam.position_smoothing_enabled = true
 	cam.position_smoothing_speed = 8.0
 	# ADR-0004: the screen is 1920x1080 but the world stays in prototype units;
@@ -229,6 +238,37 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	darkness = Darkness.new()
 	darkness.world = self
 	add_child(darkness)
+
+## Chunk-room props (room-generation §3.6, §3.10, §3.13): the knight on his
+## own pack, chests, the breakable wall and the traps of its pocket.
+func _spawn_props(layout: Dictionary, rng: RandomNumberGenerator) -> void:
+	if float(layout.get("knight_x", -1.0)) >= 0.0:
+		spawn_enemy(Knight.new(), Vector2(float(layout.knight_x), Tune.f("ground_y")), (layout.packs as Array).size() + 50, true, rng.randi())
+	for c: Dictionary in layout.get("chests", []):
+		var ch := Chest.new()
+		ch.world = self
+		ch.rich = bool(c.rich)
+		ch.position = Vector2(float(c.x), float(c.y))
+		add_child(ch)
+	var wl: Dictionary = layout.get("wall", {})
+	if not wl.is_empty():
+		var bw := BreakableWall.new()
+		bw.w = float(wl.w)
+		bw.h = float(wl.h)
+		bw.world = self
+		bw.position = Vector2(float(wl.x) + float(wl.w) / 2.0, float(wl.y))
+		bw.rng = RandomNumberGenerator.new()
+		add_child(bw)
+	var n := 0
+	for tr: Dictionary in layout.get("traps", []):
+		var trap := Trap.new()
+		trap.world = self
+		trap.kind = String(tr.kind)
+		trap.width = float(tr.w)
+		trap.offset = n * 0.7
+		trap.position = Vector2(float(tr.x), float(tr.y))
+		add_child(trap)
+		n += 1
 
 ## Opens the rune offer of `god` (§3.4). `wide` = «Широкий выбор» (4 cards).
 ## `opts` go to RuneOffer.build_offer (duos_open, legend_open).

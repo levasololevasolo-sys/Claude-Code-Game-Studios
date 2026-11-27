@@ -30,5 +30,11 @@
     "contact": 0, "color": "#6f8a7a", "eye": "#d36bd0",
     "speed": 75, "bob": 30, "bob_freq": 3, "target_dy": 40, "trigger": 120, "fuse": 0.85, "swell_damp": 0.9,
     "death_fuse": 0.35, "radius": 125, "dmg": 22, "enemy_mult": 2, "enemy_kb": 500, "blast_time": 0.35, "blast_shake": 12
+  },
+  "knight": {
+    "name": "Навий витязь", "role": "knight", "w": 46, "h": 88, "hp": 230, "flies": false, "weight": 2.6, "embers": 14,
+    "contact": 6, "color": "#2c2f3d", "eye": "#ffffff", "speed": 150, "stop": 110, "range_x": 320, "range_y": 170,
+    "wind": 0.55, "lunge": 800, "lunge_time": 0.34, "guard": 0.9, "cd": 1.2, "dmg": 20, "lunge_hit_x": 60,
+    "rage_at": 0.5, "rage_wind": 0.36, "rage_lunge": 1000, "rage_guard": 0.5, "rage_cd": 0.7, "rage_walk": 1.3
   }
 }

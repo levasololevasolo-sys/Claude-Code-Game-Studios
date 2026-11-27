@@ -87,6 +87,26 @@ var wall_cd: float = 0.0
 ## Ослоп (weapons-and-loot §3.3): {mult, r} while the hero's knockback carries
 ## this enemy; the next wall slam is ×mult and hits all within r. {} = none.
 var slam_boost: Dictionary = {}
+## Navi mark of an elite ("" = not an elite; enemies-and-elites §3.6). Set before
+## the enemy enters the tree; setup() applies the elite numbers.
+var mark: String = ""
+## Not a foe (breakable wall): skipped by the room-clear count.
+var prop: bool = false
+## Colour of the "!" sign (red for the knight).
+var alert_colour: Color = Color("#ffd36a")
+## Заслон ward left / its size / seconds without damage; Морок timer and fade;
+## Пламя drop timer; Зов howl left, enemies called, half-hp call done; Взрыв time since death.
+var ward: float = 0.0
+var ward_max: float = 0.0
+var ward_t: float = 0.0
+var blink_t: float = 0.0
+var blink_fade: float = 0.0
+var trail_t: float = 0.0
+var howl: float = 0.0
+var called: int = 0
+var called_half: bool = false
+var called_wake: bool = false
+var mark_blast_t: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -100,6 +120,13 @@ func setup() -> void:
 		rng.randomize()
 	_load_stats()
 	max_hp *= tier_mult(tier, Tune.f("tier_hp"))
+	if mark != "":
+		max_hp *= Tune.f("elite_hp")
+		w *= Tune.f("elite_size")
+		h *= Tune.f("elite_size")
+		if mark == "ward":
+			ward_max = max_hp * Tune.f("shield_frac")
+			ward = ward_max
 	hp = max_hp
 	t = _range("enemy_first_t")
 	cd = _range("enemy_first_cd")
@@ -174,7 +201,8 @@ func _stat_range(lo: String, hi: String) -> float:
 
 ## Damage multiplier to the hero from the tier (GDD F 4.2; ash and armour later).
 func dmg_mult() -> float:
-	return tier_mult(tier, Tune.f("tier_dmg"))
+	var m := tier_mult(tier, Tune.f("tier_dmg"))
+	return m * Tune.f("elite_dmg") if mark != "" else m
 
 ## Centre of the hit box.
 func center() -> Vector2:
@@ -254,6 +282,11 @@ func hurt(hit: Hit) -> float:
 	var view := hit_view()
 	var ctx := status_ctx()
 	var dmg := DamageRules.final(hit, view, Tune.data)
+	if mark == "ward":
+		var wa := EliteMarks.ward_absorb(ward, dmg, hit.kind == Hit.Kind.SLAM or hit.kind == Hit.Kind.WALL, Tune.f("shield_break_mult"))
+		ward -= wa.x
+		ward_t = 0.0
+		dmg = wa.y
 	hp -= dmg
 	flash = Tune.f("enemy_flash_time")
 	if hit.kind != Hit.Kind.TICK:
@@ -305,6 +338,13 @@ func _physics_process(dt: float) -> void:
 		n.t -= dt
 	numbers.assign(numbers.filter(func(n: Dictionary) -> bool: return n.t > 0.0))
 	if dead:
+		if mark == "blast" and mark_blast_t >= 0.0:
+			mark_blast_t += dt
+			if mark_blast_t < Tune.f("death_blast_delay"):
+				queue_redraw()
+				return
+			_death_blast()
+			mark_blast_t = -1.0
 		_dead_tick(dt)
 		queue_redraw()
 		return
@@ -323,6 +363,8 @@ func _physics_process(dt: float) -> void:
 		vel.x *= k
 		if flies:
 			vel.y *= k
+	elif mark != "" and _mark_tick(dt):
+		pass
 	else:
 		_behave(dt)
 	if status.rooted():
@@ -418,8 +460,10 @@ func _draw_overlay() -> void:
 	if hp < max_hp:
 		draw_rect(Rect2(-22, -h - 18, 44, 5), Color(0, 0, 0, 0.6))
 		draw_rect(Rect2(-22, -h - 18, 44 * maxf(hp, 0.0) / maxf(max_hp, 1.0), 5), Color("#e05a4a"))
+	if mark != "":
+		_draw_mark(font)
 	if alert > 0.0:
-		draw_string(font, Vector2(-6, -h - 26), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("#ffd36a"))
+		draw_string(font, Vector2(-6, -h - 26), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, alert_colour)
 	if show_state:
 		draw_string(font, Vector2(-30, -h - 52), "%s %.2f" % ["zz" if asleep else st, t], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.8, 1, 0.9))
 	_draw_status(font)
@@ -697,3 +741,100 @@ func _draw_status(font: Font) -> void:
 		draw_string_outline(font, Vector2(-110, y0), String(wd.text), HORIZONTAL_ALIGNMENT_CENTER, 220, 22, 5, Color(0, 0, 0, col.a))
 		draw_string(font, Vector2(-110, y0), String(wd.text), HORIZONTAL_ALIGNMENT_CENTER, 220, 22, col)
 		y0 -= 24.0
+
+# ---------------- elite marks (enemies-and-elites §3.6) ----------------
+
+## One tick of the mark. Returns true when the mark takes the whole tick (howl,
+## blink fade): the kind's behaviour is skipped.
+func _mark_tick(dt: float) -> bool:
+	match mark:
+		"ward":
+			ward_t += dt
+			if ward < ward_max and ward_t >= Tune.f("shield_regrow"):
+				ward = ward_max
+		"fire":
+			trail_t -= dt
+			if trail_t <= 0.0 and absf(vel.x) > 10.0 and world:
+				trail_t = Tune.f("fire_trail_every")
+				var f := FireTrail.new()
+				f.world = world
+				f.dmg_mult = dmg_mult() / Tune.f("elite_dmg")
+				f.position = Vector2(position.x, Tune.f("ground_y"))
+				world.add_child(f)
+		"blink":
+			if blink_fade > 0.0:
+				blink_fade -= dt
+				vel = Vector2.ZERO
+				if blink_fade <= 0.0:
+					var m := w / 2.0 + Tune.f("wall_margin")
+					position.x = EliteMarks.blink_x(position.x, hero_pos().x, Tune.f("blink_dist"), m, room_w - m if room_w > 0.0 else 1.0e9)
+					face = 1 if hero_pos().x > position.x else -1
+				return true
+			blink_t += dt
+			if blink_t >= Tune.f("blink_cd"):
+				blink_t = 0.0
+				blink_fade = Tune.f("blink_fade")
+				return true
+		"call":
+			if howl > 0.0:
+				howl -= dt
+				vel.x = 0.0
+				if howl <= 0.0:
+					_call_kin()
+				return true
+			var half := hp <= max_hp * 0.5
+			if called < int(Tune.f("call_max")) and (not called_wake or (half and not called_half)):
+				called_wake = true
+				if half:
+					called_half = true
+				howl = Tune.f("call_howl")
+				return true
+	return false
+
+## Зов: call_count ordinary enemies of the location's roster, at most call_max in all.
+func _call_kin() -> void:
+	if world == null:
+		return
+	var roster: Array = Tune.get_value("swamp_roster")
+	for i in mini(int(Tune.f("call_count")), int(Tune.f("call_max")) - called):
+		var kind := String(roster[rng.randi_range(0, roster.size() - 1)])
+		var e := EnemyRoster.make(kind)
+		var y := Tune.f("ground_y")
+		if bool(Tune.row("enemies", kind).get("flies", false)):
+			var fy: Array = Tune.get_value("flyer_spawn_y")
+			y = float(fy[0])
+		world.spawn_enemy(e, Vector2(clampf(position.x + (i * 2 - 1) * 90.0, 60.0, maxf(60.0, room_w - 60.0)), y), pack, false, rng.randi())
+		called += 1
+
+## Взрыв: death_blast_dmg to the hero within death_blast_r; enemies are not hurt.
+func _death_blast() -> void:
+	var p := hero()
+	if world:
+		world.add_ring(center(), Tune.f("death_blast_r"))
+		world.add_shake(Tune.f("shake_slam"))
+	if p and not p.dead:
+		var d := EliteMarks.blast_damage((p.position - Vector2(0, Player.H / 2.0)).distance_to(center()), Tune.data)
+		if d > 0.0:
+			hurt_hero(d / dmg_mult(), Hit.Kind.CONTACT)
+
+## The mark shown three ways (§3.6): aura colour, the word over the enemy, the hp bar pattern.
+func _draw_mark(font: Font) -> void:
+	var inf := EliteMarks.info(mark, Tune.data)
+	var c := Color(String(inf.colour))
+	var a := 0.25 + 0.1 * sin(anim * 4.0)
+	if blink_fade > 0.0:
+		a *= 2.0
+	draw_circle(Vector2(0, -h / 2.0), maxf(w, h) * 0.85, Color(c, a * 0.6))
+	draw_arc(Vector2(0, -h / 2.0), maxf(w, h) * 0.85, 0.0, TAU, 40, Color(c, 0.8), 3.0)
+	if mark == "ward" and ward > 0.0:
+		draw_arc(Vector2(0, -h / 2.0), maxf(w, h) * 0.7, 0.0, TAU * ward / maxf(ward_max, 1.0), 40, Color(c, 0.95), 5.0)
+	if mark == "blast" and dead:
+		draw_circle(Vector2(0, -h / 2.0), Tune.f("death_blast_r") * mark_blast_t / maxf(Tune.f("death_blast_delay"), 0.01), Color(c, 0.25 if int(mark_blast_t * 12.0) % 2 == 0 else 0.45))
+	var word := String(inf.name)
+	draw_string_outline(font, Vector2(-80, -h - 40), word, HORIZONTAL_ALIGNMENT_CENTER, 160, 24, 6, Color(0, 0, 0, 0.85))
+	draw_string(font, Vector2(-80, -h - 40), word, HORIZONTAL_ALIGNMENT_CENTER, 160, 24, c)
+	# Bar pattern: striped in the mark colour, always shown for elites.
+	draw_rect(Rect2(-26, -h - 20, 52, 7), Color(0, 0, 0, 0.7))
+	draw_rect(Rect2(-26, -h - 20, 52 * maxf(hp, 0.0) / maxf(max_hp, 1.0), 7), Color("#e05a4a"))
+	for i in 6:
+		draw_line(Vector2(-24 + i * 9, -h - 13), Vector2(-20 + i * 9, -h - 20), Color(c, 0.9), 2.0)
