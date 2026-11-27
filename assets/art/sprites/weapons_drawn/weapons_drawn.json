@@ -1,0 +1,57 @@
+{
+ "_note": "Drawn hero weapon bodies (tools/asset-pipeline/enemies2d/weapons.py): the sprite lies along +x from grip; tip_px / back_px = forward / rear length in sprite px (player.gd scales them to reach).",
+ "stick": {
+  "grip": [
+   25.0,
+   25.0
+  ],
+  "tip_px": 130.0,
+  "back_px": 15.0,
+  "file": "stick.png"
+ },
+ "blade": {
+  "grip": [
+   30.0,
+   27.5
+  ],
+  "tip_px": 152.5,
+  "back_px": 22.5,
+  "file": "blade.png"
+ },
+ "spear": {
+  "grip": [
+   65.0,
+   22.5
+  ],
+  "tip_px": 222.5,
+  "back_px": 55.0,
+  "file": "spear.png"
+ },
+ "hammer": {
+  "grip": [
+   25.0,
+   45.0
+  ],
+  "tip_px": 170.0,
+  "back_px": 17.5,
+  "file": "hammer.png"
+ },
+ "staff": {
+  "grip": [
+   100.0,
+   20.0
+  ],
+  "tip_px": 172.5,
+  "back_px": 92.5,
+  "file": "staff.png"
+ },
+ "sickles": {
+  "grip": [
+   20.0,
+   70.0
+  ],
+  "tip_px": 95.0,
+  "back_px": 12.5,
+  "file": "sickles.png"
+ }
+}

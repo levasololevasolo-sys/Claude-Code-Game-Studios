@@ -33,6 +33,18 @@ var drops: Array[Dictionary] = []
 var _t: float = 0.0
 var _trail_t: float = 0.0
 var _landed: bool = false
+## Drawn cut-out sprite (DrawnEnemyVisual.use via use_sprite); null = code shape.
+var tex: Texture2D
+var tex_pivot: Vector2 = Vector2.ZERO
+var tex_scale: Vector2 = Vector2.ONE
+
+## Replaces the placeholder shape by the real part sprite: pivot in sprite px
+## (it sits on this node's origin), s = world px per sprite px, flip = enemy face.
+func use_sprite(t: Texture2D, pivot: Vector2, s: float, flip: int) -> void:
+	tex = t
+	tex_pivot = pivot
+	tex_scale = Vector2(s * float(flip), s)
+	queue_redraw()
 
 func _ready() -> void:
 	z_index = 5
@@ -103,8 +115,11 @@ func _draw() -> void:
 			draw_circle(p, 5.0 + 6.0 * (1.0 - k), Color(0.55, 0.85, 0.78, 0.35 * k))
 		else:
 			draw_circle(p, 2.5, Color(0.55, 0.04, 0.08, k))
+	if tex != null:
+		draw_set_transform(Vector2.ZERO, ang, tex_scale)
+		draw_texture(tex, -tex_pivot, Color(1, 1, 1, fade))
 	draw_set_transform(Vector2.ZERO, ang)
-	if poly.size() >= 3:
+	if tex == null and poly.size() >= 3:
 		draw_colored_polygon(poly, Color(colour, fade))
 		var closed := poly.duplicate()
 		closed.append(poly[0])

@@ -29,11 +29,14 @@ var _factors: Array[float] = []
 var _zoom: float = 1.5
 var _plat: Texture2D
 var _frames: int = 0
+## Hand-drawn enemy skins (navi/art/enemy_art = "drawn", DrawnEnemyVisual).
+var _drawn: bool = true
 
 
 func _ready() -> void:
 	_zoom = Tune.f("camera_zoom") if Tune.data.has("camera_zoom") else 1.0
 	z_index = -50
+	_drawn = DrawnEnemyVisual.art_mode(OS.get_cmdline_user_args()) == "drawn"
 	if not full:
 		return
 	for l: Array in LAYERS:
@@ -85,7 +88,13 @@ func _process(_dt: float) -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if e.has_node("ArtSkin"):
 			continue
-		if e is Crawler:
+		if e is Enemy and _drawn and DrawnEnemyVisual.has_kind((e as Enemy).kind_id):
+			var dv := DrawnEnemyVisual.new()
+			dv.name = "ArtSkin"
+			dv.enemy = e
+			dv.kind = (e as Enemy).kind_id
+			e.add_child(dv)
+		elif e is Crawler:
 			var cs := CrawlerSprite.new()
 			cs.name = "ArtSkin"
 			cs.enemy = e
