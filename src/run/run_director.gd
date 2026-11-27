@@ -626,7 +626,9 @@ func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 		elif e.mark != "":
 			drop_from("elite", e.position)
 		# Picked up at once for now: ground pickups (economy §3.2) come with the loot step.
-		run.embers += maxi(1, roundi(float(e.stats.get("embers", 0)) * Difficulty.embers_mult()))
+		# Мара's ice copies give no embers (bestiary §3.4).
+		if not e.ice_copy:
+			run.embers += maxi(1, roundi(float(e.stats.get("embers", 0)) * Difficulty.embers_mult()))
 		if game.rng.stream("loot").randf() < Tune.f("res_drop"):
 			run.add_res(res_id, 1)
 

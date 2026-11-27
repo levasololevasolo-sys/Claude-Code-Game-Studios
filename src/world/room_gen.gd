@@ -16,7 +16,8 @@ static var _libs: Dictionary = {}
 ## and, for chunk rooms, solids (Array[Rect2]), chunks ([{id, kind, x, w, h}]),
 ## chests ([{x, y, rich}]), traps ([{kind, x, y, w}]), wall ({} or {x, y, w, h}),
 ## knight_x (-1 = none), elites ([[pack, member]]), top (highest y), fallback,
-## bogs (Array[Vector2] hummock tops of the G markers, Болотница spots).
+## bogs (Array[Vector2] hummock tops of the G markers, Болотница spots),
+## ceilings (Array[Vector2] hang points of the I markers, Сосульник spots).
 ## k is the room number in the location (1-based), tier the location number (1-based).
 ## `safe_start` false = the legacy flat layout without the BUG-0004 safe zone.
 ## `opts`: knight, elites_ok, elite_force (int), secret_ok, secret_force, lib
@@ -157,7 +158,7 @@ static func chunk_room(rng: RandomNumberGenerator, k: int, tier: int, t: Diction
 		by_id[c.id] = c
 	var chain := pick_chain(rng, k, tier, t, lib)
 	var out := { "w": 0.0, "plats": [], "packs": [], "solids": [], "chunks": [], "chests": [], "traps": [],
-		"wall": {}, "knight_x": -1.0, "elites": [], "top": ground, "fallback": chain.fallback, "bogs": [] }
+		"wall": {}, "knight_x": -1.0, "elites": [], "top": ground, "fallback": chain.fallback, "bogs": [], "ceilings": [] }
 	var x0 := 0.0
 	var arenas: Array = []
 	var c_slots: Array = []
@@ -177,6 +178,9 @@ static func chunk_room(rng: RandomNumberGenerator, k: int, tier: int, t: Diction
 		# Bog spawn markers (bestiary §3.2 Болотница): hummock top, world space.
 		for g: Array in c.get("G", []):
 			out.bogs.append(Vector2(x0 + float(g[0]) * cell, ground - float(g[1]) * cell))
+		# Ceiling spawn markers (bestiary §3.4 Сосульник): under the platform, world space.
+		for ic: Array in c.get("I", []):
+			out.ceilings.append(Vector2(x0 + float(ic[0]) * cell, ground - float(ic[1]) * cell + float(t.get("ice_hang_dy", 14.0))))
 		if c.kind == "arena":
 			arenas.append({ "c": c, "x": x0 })
 		x0 += int(c.w) * mod_w

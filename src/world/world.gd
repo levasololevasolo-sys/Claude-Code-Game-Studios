@@ -77,7 +77,7 @@ var first_run: bool = false
 var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--parry-check=", "--vis-shots=", "--base-view", "--aim-check=", "--bestiary-check="]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--parry-check=", "--vis-shots=", "--base-view", "--aim-check=", "--bestiary-check=", "--frost-check="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -198,6 +198,10 @@ func _ready() -> void:
 			var bsc: Node = (load("res://tests/integration/enemies/bestiary_check_driver.gd") as GDScript).new()
 			bsc.set("out_dir", a.trim_prefix("--bestiary-check="))
 			add_child(bsc)
+		elif a.begins_with("--frost-check="):
+			var fsc: Node = (load("res://tests/integration/enemies/frost_check_driver.gd") as GDScript).new()
+			fsc.set("out_dir", a.trim_prefix("--frost-check="))
+			add_child(fsc)
 		elif a.begins_with("--hero-shots="):
 			var hs: Node = (load("res://tests/integration/hero/hero_shots_driver.gd") as GDScript).new()
 			hs.set("out_dir", a.trim_prefix("--hero-shots="))
@@ -337,6 +341,12 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 			var b := EnemyRoster.make(bog_kind)
 			b.set("in_bog", true)
 			spawn_enemy(b, bogs[bi], (layout.packs as Array).size() + 60 + bi, true, rng.randi())
+	# Bestiary §3.4, §3.7 item 5, edge case 16: Сосульники hang on the ceiling markers only.
+	var ceil_kind := EnemyRoster.spot_kind(intro, table, "ceiling")
+	if ceil_kind != "" and int(intro[ceil_kind]) <= room_k:
+		var ceils: Array = layout.get("ceilings", [])
+		for ci in mini(ceils.size(), int(Tune.f("ceiling_max"))):
+			spawn_enemy(EnemyRoster.make(ceil_kind), ceils[ci], (layout.packs as Array).size() + 70 + ci, true, rng.randi())
 	_spawn_props(layout, rng)
 	var keep_charge := player.amulet.charge if player and is_instance_valid(player) and player.amulet else 0.0
 	player = Player.new()

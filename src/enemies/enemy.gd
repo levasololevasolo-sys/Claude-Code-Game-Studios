@@ -125,6 +125,9 @@ var death_severed: String = ""
 ## gone after tina_t s. 0 = none.
 var tina: float = 0.0
 var tina_t: float = 0.0
+## Ice copy raised by Мара (bestiary §3.4): weaker blows (ice_copy_dmg), broken
+## at once by a breaking blow, the Flare or a wall slam, plain death, no embers.
+var ice_copy: bool = false
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -223,6 +226,8 @@ func _stat_range(lo: String, hi: String) -> float:
 ## difficulty F1; ash and armour later).
 func dmg_mult() -> float:
 	var m := tier_mult(tier, Tune.f("tier_dmg")) * Difficulty.f("enemy_dmg")
+	if ice_copy:
+		m *= Tune.f("ice_copy_dmg")
 	return m * Tune.f("elite_dmg") if mark != "" else m
 
 ## Centre of the hit box.
@@ -307,6 +312,8 @@ func hurt(hit: Hit) -> float:
 	var view := hit_view()
 	var ctx := status_ctx()
 	var dmg := DamageRules.final(hit, view, Tune.data)
+	if ice_copy and FrostRules.copy_breaks(hit.kind, hit.finisher):
+		dmg = maxf(dmg, hp + tina + ward)
 	# Limb zones (limb-zones §3.2-3.3, F2): the cutting hit is re-checked here, so a
 	# part is never cut twice; a plain hit keeps its damage.
 	# Only the head is cut by a strike (§3.3); the arm only by a parry (parried()).
@@ -472,7 +479,7 @@ func parried(from_x: float) -> String:
 ## or the arm flying (harmless) when the killing blow met that zone or by
 ## death_sever_chance. Bosses and kinds without a row always die plainly.
 func _death_variant(hit: Hit) -> void:
-	if not limbs_on():
+	if not limbs_on() or ice_copy:
 		return
 	var roll := rng.randf() if rng else 1.0
 	var part := LimbRules.death_part(hit.zone, roll, limb_row(), arm_off, head_off, Tune.data)
@@ -699,6 +706,16 @@ func _draw_overlay() -> void:
 		var r := Rect2(-w / 2.0 - 5.0, -h - 5.0, w + 10.0, h + 8.0)
 		draw_rect(r, Color(tc, 0.18), true)
 		draw_rect(r, Color(tc, 0.75 + 0.25 * sin(anim * 6.0)), false, 3.0)
+	if ice_copy:
+		# Ice copy (bestiary §3.4 Мара): a pale ice contour with glints.
+		var ic := Color(String(Tune.get_value("ice_tint")))
+		var ir := Rect2(-w / 2.0 - 4.0, -h - 4.0, w + 8.0, h + 6.0)
+		draw_rect(ir, Color(ic, 0.5), true)
+		draw_rect(ir, Color(Color.WHITE, 0.7 + 0.3 * sin(anim * 5.0)), false, 3.0)
+		for gi in 3:
+			var gp := Vector2(-w * 0.3 + gi * w * 0.3, -h * (0.3 + 0.25 * gi))
+			draw_line(gp + Vector2(-5, 0), gp + Vector2(5, 0), Color.WHITE, 2.0)
+			draw_line(gp + Vector2(0, -5), gp + Vector2(0, 5), Color.WHITE, 2.0)
 	if alert > 0.0:
 		draw_string(font, Vector2(-6, -h - 26), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, alert_colour)
 	if show_state:

@@ -1158,6 +1158,126 @@
 			"pitch": 0.06,
 			"cd": 0.1,
 			"max": 3
+		},
+		"staff_raise": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"staff_raise"
+			],
+			"db": -5.0,
+			"cd": 0.3
+		},
+		"ice_wave": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"ice_wave"
+			],
+			"db": -4.0,
+			"cd": 0.2
+		},
+		"needle_cast": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"needle_cast"
+			],
+			"db": -6.0,
+			"cd": 0.2
+		},
+		"needle_fly": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"needle_fly"
+			],
+			"db": -10.0,
+			"cd": 0.06
+		},
+		"hero_freeze": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"hero_freeze"
+			],
+			"db": -3.0,
+			"cd": 0.3
+		},
+		"freeze_shatter": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"freeze_shatter"
+			],
+			"db": -4.0,
+			"cd": 0.3
+		},
+		"icicle_creak": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"icicle_creak"
+			],
+			"db": -5.0,
+			"cd": 0.3
+		},
+		"icicle_fall": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"icicle_fall"
+			],
+			"db": -4.0,
+			"cd": 0.2
+		},
+		"ice_shatter": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"ice_shatter"
+			],
+			"db": -3.0,
+			"cd": 0.15
+		},
+		"mara_raise": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"mara_raise"
+			],
+			"db": -5.0,
+			"cd": 0.3
+		},
+		"frozen_rise": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"frozen_rise"
+			],
+			"db": -4.0,
+			"cd": 0.3
+		},
+		"frozen_crack": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"frozen_crack"
+			],
+			"db": -3.0,
+			"cd": 0.1
 		}
 	},
 	"voice_limit": 3,
@@ -1257,12 +1377,30 @@
 		"vodyanitsa": {
 			"song": "song_ward",
 			"push": "water_push"
+		},
+		"karachun": {
+			"slam_wind": "staff_raise",
+			"slam": "heavy_thud",
+			"poke_wind": "claw_swipe"
+		},
+		"snezhnitsa": {
+			"cast": "needle_cast"
+		},
+		"sosulnik": {
+			"shake": "icicle_creak",
+			"fall": "icicle_fall",
+			"poke_wind": "claw_swipe"
+		},
+		"mara": {
+			"raise_w": "mara_raise",
+			"scratch": "claw_swipe"
 		}
 	},
 	"deaths": {
 		"bloat": "bloat_burst",
 		"boss": "boss_death",
-		"wall": ""
+		"wall": "",
+		"sosulnik": "ice_shatter"
 	},
 	"traps": {
 		"warn": "trap_warn",

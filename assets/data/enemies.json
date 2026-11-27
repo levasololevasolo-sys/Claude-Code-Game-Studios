@@ -54,13 +54,13 @@
     "cd_min": 1.8, "cd_max": 3.0
   },
   "wolf": {
-    "name": "Снежный волк", "role": "pack_runner", "w": 62, "h": 38, "hp": 32, "flies": false, "weight": 1.0, "embers": 3,
+    "name": "Снежный волк", "role": "pack_runner", "pack_role": "fodder", "pack_min": 2, "pack_pairs": true, "w": 62, "h": 38, "hp": 32, "flies": false, "weight": 1.0, "embers": 3,
     "contact": 8, "color": "#4a5a72", "mane": "#dde8f0", "eye": "#ff5a3a",
     "speed": 170, "stop": 70, "range_x": 300, "range_y": 120, "crouch": 0.45, "bite_speed": 600, "bite_up": 240, "bite_time": 0.3,
     "bite_mult": 1.6, "hop_speed": 320, "hop_up": 420, "hop_time": 0.45, "recover": 0.5, "cd_min": 1.4, "cd_max": 2.4
   },
   "jelly": {
-    "name": "Студёный дух", "role": "zone", "w": 46, "h": 54, "hp": 30, "flies": true, "weight": 0.7, "embers": 3,
+    "name": "Студёный дух", "role": "zone", "pack_role": "flyer", "w": 46, "h": 54, "hp": 30, "flies": true, "weight": 0.7, "embers": 3,
     "contact": 6, "color": "#2f4f7a", "core": "#a3206f", "eye": "#8fd3f5",
     "drift": 70, "hover_dy": 230, "hover_dx": 60, "drift_resp": 2.0, "range_x": 700, "range_y": 520,
     "chill_w": 0.9, "zone_w": 170, "zone_time": 3.0, "zone_tick": 0.5, "zone_dmg": 4, "zone_slow": 0.6, "zone_max": 2, "zone_dy": 10,
@@ -99,5 +99,36 @@
     "speed": 85, "keep_dx": 400, "song": 0.8, "song_r": 260, "ward_frac": 0.25, "ward_time": 6, "song_cd": 5,
     "song_break_cd": 2.0, "push_range": 160, "push_wind": 0.5, "push_time": 0.2, "push_dmg": 6, "push_hit_x": 110,
     "push_hit_y": 90, "push_knock": 380, "push_cd": 1.5
+  },
+  "karachun": {
+    "name": "Карачун", "role": "ground_wave", "pack_role": "bruiser", "w": 72, "h": 98, "hp": 60, "flies": false,
+    "weight": 2.2, "embers": 6, "contact": 0, "color": "#dde8f0", "shade": "#a8bccf", "beard": "#8fd3f5",
+    "staff": "#5f7f9f", "rime": "#a3206f", "eye": "#9e3a1c", "speed": 60, "slam_range": 560, "range_y": 140,
+    "slam_wind": 0.9, "slam_time": 0.15, "slam_recover": 0.8, "slam_cd": 3.2, "wave_speed": 420, "wave_h": 40,
+    "wave_dist": 600, "wave_half": 16, "wave_dmg": 14.4, "wave_dirs": 2, "wave_linger": 0.35, "poke_range": 110,
+    "poke_wind": 0.5, "poke_time": 0.2, "poke_reach": 95, "poke_dmg": 12, "poke_recover": 0.5, "cd_min": 1.2, "cd_max": 2.2
+  },
+  "snezhnitsa": {
+    "name": "Снежница", "role": "freeze_stack", "pack_role": "ranged", "w": 34, "h": 90, "hp": 27, "flies": false,
+    "weight": 0.8, "embers": 4, "contact": 0, "color": "#bcd6ea", "dress": "#8fb0cc", "crown": "#ffffff",
+    "eye": "#a3206f", "needle": "#8fd3f5", "speed": 80, "back_speed": 120, "keep_min": 350, "keep_max": 550,
+    "fire_range": 720, "range_y": 170, "cast": 0.6, "needles": 3, "needle_gap": 0.15, "needle_speed": 420,
+    "needle_dmg": 4.8, "needle_r": 7, "needle_life": 2.4, "needle_stop": 0.4, "muzzle_y": 60,
+    "cast_cd_min": 2.2, "cast_cd_max": 3.2
+  },
+  "sosulnik": {
+    "name": "Сосульник", "role": "ceiling_drop", "pack_role": "ambusher", "spot": "ceiling", "spot_only": true,
+    "w": 34, "h": 72, "hp": 24, "flies": false, "weight": 0.8, "embers": 3, "contact": 0, "color": "#cfe7f6",
+    "shade": "#8fd3f5", "core": "#a3206f", "eye": "#a3206f", "lane": 40, "shake": 0.5, "fall_speed": 1200,
+    "fall_dmg": 18, "fall_hit_x": 46, "land": 0.5, "speed": 70, "poke_range": 80, "range_y": 90, "poke_wind": 0.6,
+    "poke_time": 0.2, "reach": 70, "poke_dmg": 9.6, "recover": 0.6, "cd_min": 1.0, "cd_max": 1.8,
+    "shadow_r0": 8, "shadow_r1": 44, "shatter_time": 0.6
+  },
+  "mara": {
+    "name": "Мара", "role": "raise_frozen", "pack_role": "support", "w": 34, "h": 102, "hp": 30, "flies": false,
+    "weight": 0.9, "embers": 5, "contact": 0, "color": "#2c3b52", "veil": "#1a2436", "eye": "#a3206f",
+    "thread": "#d23a9a", "speed": 90, "keep_dx": 400, "raise_r": 400, "raise": 0.8, "raise_frac": 0.4,
+    "raise_dmg": 0.8, "raise_max": 2, "raise_cd": 1.0, "scratch_range": 120, "scratch_wind": 0.5,
+    "scratch_time": 0.2, "scratch_hit_x": 90, "scratch_hit_y": 90, "scratch_dmg": 7.2, "scratch_cd": 1.4
   }
 }
