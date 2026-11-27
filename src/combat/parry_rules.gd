@@ -25,3 +25,23 @@ static func tick_window(left: float, dt: float) -> Dictionary:
 		return { "left": 0.0, "whiff": false }
 	var n := left - dt
 	return { "left": maxf(n, 0.0), "whiff": n <= 0.0 }
+
+## P5 (GDD parry §3.5): true when an enemy shot that reaches the hero now is
+## reflected instead of hitting: the window is open and the shot is still the
+## enemy's (a reflected shot is the hero's and never reflects again).
+static func reflects(window_left: float, already_reflected: bool) -> bool:
+	return window_left > 0.0 and not already_reflected
+
+## P6: velocity of a reflected shot. Aimed at the shooter's centre when it is
+## still alive (`has_shooter`), else straight back along -vel; the speed is
+## |vel| x parry_reflect_speed. A zero velocity stays zero.
+static func reflect_velocity(pos: Vector2, vel: Vector2, has_shooter: bool, shooter_at: Vector2, tune: Dictionary) -> Vector2:
+	var speed := vel.length() * float(tune.get("parry_reflect_speed", 1.5))
+	var dir := -vel.normalized()
+	if has_shooter and shooter_at.distance_to(pos) > 0.001:
+		dir = (shooter_at - pos).normalized()
+	return dir * speed
+
+## P7: damage a reflected shot deals to an enemy: shot damage x parry_reflect_dmg.
+static func reflect_damage(shot_dmg: float, tune: Dictionary) -> float:
+	return maxf(0.0, shot_dmg * float(tune.get("parry_reflect_dmg", 2.0)))

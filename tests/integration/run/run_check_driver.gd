@@ -90,7 +90,7 @@ func _run() -> void:
 		p.inv = 5.0
 		for e: Enemy in get_tree().get_nodes_in_group("enemies"):
 			if not e.dead:
-				e.hurt(Hit.make(Hit.Kind.STRIKE, 1.0e6, e.position.x - 10.0, 0.0))
+				e.hurt(Hit.make(Hit.Kind.STRIKE, 1.0e6, e.position.x, 0.0))  # from its own x: no front shield
 		ok = await _wait(func() -> bool: return _d.phase == "reward")
 		_check(ok and _d.orb != null and _d.orb.position.x > float(_w.room.layout.w) - 900.0, "reward appears at the right edge (x %d of %d)" % [_d.orb.position.x if _d.orb else -1, int(_w.room.layout.w)])
 		var lair := _d.run.stage == "lair"

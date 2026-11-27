@@ -9,6 +9,7 @@
     "lib": "swamp",
     "roster": [
       "crawler",
+      "thrower",
       "sentry",
       "bat"
     ],
@@ -105,6 +106,7 @@
     "lib": "swamp",
     "roster": [
       "crawler",
+      "thrower",
       "sentry",
       "bat"
     ],
@@ -137,6 +139,7 @@
     "lib": "swamp",
     "roster": [
       "crawler",
+      "thrower",
       "sentry",
       "bat"
     ],

@@ -105,7 +105,11 @@ static func can_cut(limb: String, row: Dictionary, arm_off: bool, head_off: bool
 
 ## True when a parry may take this enemy's arm (§3.2): a cuttable arm (the row
 ## has one; a shield arm is simply not listed), still on, and the enemy attacks.
+## `arm_states`, when the row has it, narrows the parry to a melee blow (the
+## thrower's shove; its throw wind-up is an attack for the head only).
 static func parry_takes_arm(row: Dictionary, st: String, arm_off: bool) -> bool:
+	if row.has("arm_states"):
+		return can_cut(ARM, row, arm_off, false) and (row.arm_states as Array).has(st)
 	return can_cut(ARM, row, arm_off, false) and in_attack(st, row)
 
 ## Precise hits (parries for the arm, down-air hits for the head) one limb needs

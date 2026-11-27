@@ -886,19 +886,38 @@ func _update_parry(dt: float) -> void:
 		Audio.play_at(&"parry_whiff", position)
 		parry_whiffed.emit()
 
+## An enemy shot reached the hero (GDD parry §3.5, P5-P7): inside the window it
+## is reflected back at its shooter (or straight back) and counts as a parry
+## with result "reflect". Returns true when reflected (the shot does not hit).
+func reflect_shot(s: EnemyShot) -> bool:
+	if dead or not ParryRules.reflects(parry_t, s.reflected):
+		return false
+	var shooter := s.source as Enemy
+	var alive := shooter != null and is_instance_valid(shooter) and not shooter.dead
+	var v := ParryRules.reflect_velocity(s.position, s.vel, alive, shooter.center() if alive else Vector2.ZERO, Tune.data)
+	s.reflect(v, ParryRules.reflect_damage(s.dmg, Tune.data), self)
+	_parry_fx_common()
+	parry_succeeded.emit(shooter if alive else null, "reflect")
+	queue_redraw()
+	return true
+
 func _parry_success(e: Enemy) -> void:
+	var res := e.parried(position.x)
+	_parry_fx_common()
+	parry_succeeded.emit(e, res)
+	queue_redraw()
+
+## The shared part of a caught blow and a reflected shot (parry §3.3 item 3).
+func _parry_fx_common() -> void:
 	parry_t = 0.0
 	parry_cd = 0.0
 	parry_fx = Tune.f("parry_fx_time")
-	var res := e.parried(position.x)
 	parry_count += 1
 	inv = maxf(inv, Tune.f("parry_window"))
 	if world:
 		world.request_hitstop(Tune.f("parry_hitstop"))
 		world.add_shake(Tune.f("parry_shake"))
 	Audio.play_at(&"parry_clang", position)
-	parry_succeeded.emit(e, res)
-	queue_redraw()
 
 ## Parry placeholder: a bright arc in front while the window is open, sparks on a catch.
 func _draw_parry() -> void:

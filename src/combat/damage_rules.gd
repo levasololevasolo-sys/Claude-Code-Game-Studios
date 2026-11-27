@@ -55,7 +55,8 @@ static func final(hit: Hit, view: Dictionary, tune: Dictionary) -> float:
 		d *= float(tune.get("air_mult", 1.0))
 	d *= status_mult(hit, view, tune)
 	if shield_blocks(hit, view):
-		d *= float(tune.get("sentry_block", 1.0))
+		# The kind's own block (view "block", the shield-bearer's shield_block) or sentry_block.
+		d *= float(view.get("block", tune.get("sentry_block", 1.0)))
 	return maxf(0.0, d)
 
 ## F8: signed horizontal knockback speed for the target, px/s. Ticks push nothing;
