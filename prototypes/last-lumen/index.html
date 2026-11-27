@@ -1760,6 +1760,7 @@ function drawKnight(p, opt = {}) {
   const ghost = opt.ghost, wpn = opt.weapon || state.weapon, lan = opt.lantern || state.lantern;
   const col = c => ghost || c;
   if (!opt.noCape) drawCape(p, ghost);
+  const worldInv = ctx.getTransform().inverse(); // world space, for the smear trail
   ctx.save(); ctx.translate(p.x, p.y);
   const dead = opt.dead || 0;
   if (dead) { ctx.rotate(-p.face * dead * 1.45); ctx.translate(0, dead * 6); }
@@ -1856,10 +1857,12 @@ function drawKnight(p, opt = {}) {
   if (!ghost && p.atkT > 0 && !opt.static) {
     const L = weaponLen(wpn) * (has('arc') ? 1.15 : 1);
     const tip = [hx + Math.cos(wp.a) * L, hy + Math.sin(wp.a) * L];
-    const m = ctx.getTransform(); const inv = state._baseInv || new DOMMatrix();
-    const wpt = inv.multiply(m).transformPoint(new DOMPoint(tip[0], tip[1]));
-    const wph = inv.multiply(m).transformPoint(new DOMPoint(hx + Math.cos(wp.a) * L * 0.35, hy + Math.sin(wp.a) * L * 0.35));
-    p.trail.push({ x: wpt.x, y: wpt.y, bx: wph.x, by: wph.y, t: state.t });
+    // kept relative to the knight, so the smear moves with him instead of hanging behind
+    const tm = worldInv.multiply(ctx.getTransform());
+    const wpt = tm.transformPoint(new DOMPoint(tip[0], tip[1]));
+    const wph = tm.transformPoint(new DOMPoint(hx + Math.cos(wp.a) * L * 0.35, hy + Math.sin(wp.a) * L * 0.35));
+    const last = p.trail[p.trail.length - 1];
+    if (!last || last.t !== state.t) p.trail.push({ x: wpt.x - p.x, y: wpt.y - p.y, bx: wph.x - p.x, by: wph.y - p.y, t: state.t });
   }
   ctx.strokeStyle = col('#2e2838'); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(shx, shy); ctx.lineTo(hx, hy); ctx.stroke();
   if (!ghost) { ctx.save(); ctx.translate(hx, hy); drawWeapon(wpn, 1, wp.a); ctx.restore(); }
@@ -1890,7 +1893,7 @@ function drawTrail(p) {
   for (let i = 1; i < p.trail.length; i++) {
     const a = p.trail[i - 1], b = p.trail[i], k = 1 - (now - b.t) / 0.09;
     ctx.fillStyle = `rgba(${c},${0.55 * k})`;
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(b.bx, b.by); ctx.lineTo(a.bx, a.by); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(p.x + a.x, p.y + a.y); ctx.lineTo(p.x + b.x, p.y + b.y); ctx.lineTo(p.x + b.bx, p.y + b.by); ctx.lineTo(p.x + a.bx, p.y + a.by); ctx.closePath(); ctx.fill();
   }
   ctx.restore();
 }
@@ -2550,7 +2553,6 @@ function drawPlayScene() {
   const oy = state.shake ? (hashRng(Math.floor(state.t * 60) + 9)() - 0.5) * state.shake : 0;
   drawBackground();
   ctx.save();
-  state._baseInv = ctx.getTransform().inverse();
   ctx.translate(-state.cam + ox, oy);
   drawGround();
   for (const f of state.fires) {
