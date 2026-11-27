@@ -123,6 +123,7 @@ func _ready() -> void:
 		enemy.limb_severed.connect(_on_limb_severed)
 		_prev_st = enemy.st
 	_show("idle")
+	_ice_look()
 
 
 func _make_rim() -> void:
@@ -219,12 +220,21 @@ func _process(dt: float) -> void:
 		_rim.frame = _sprite.frame
 		_rim_mat.set_shader_parameter("fade", 0.0 if enemy.dead else 1.0)
 	modulate = Color(2.2, 2.2, 2.2) if enemy.flash > 0.0 else Color.WHITE
-	if enemy.ice_copy and _sprite.material == null and ResourceLoader.exists(ICE_COPY_SHADER):
+	_ice_look()
+	if kind == "vodyanitsa":
+		queue_redraw()
+
+
+## Ice copy of Мара: the pale ice shader on the sprite (once), hit flash through it.
+func _ice_look() -> void:
+	if enemy == null or not enemy.ice_copy:
+		return
+	if _sprite.material == null and ResourceLoader.exists(ICE_COPY_SHADER):
 		var m := ShaderMaterial.new()
 		m.shader = load(ICE_COPY_SHADER) as Shader
 		_sprite.material = m
-	if kind == "vodyanitsa":
-		queue_redraw()
+	if _sprite.material is ShaderMaterial:
+		(_sprite.material as ShaderMaterial).set_shader_parameter("flash", 0.7 if enemy.flash > 0.0 else 0.0)
 
 
 ## Advances the frame (by progress k >= 0, or by time); true when a one-shot ended.

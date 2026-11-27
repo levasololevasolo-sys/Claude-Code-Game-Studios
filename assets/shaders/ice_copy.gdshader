@@ -2,8 +2,9 @@
 // statue. The luminance of the painted frame is remapped onto an ice ramp
 // (deep #2C4A6A -> ice #8FD3F5 -> frost white), the ink outline stays dark
 // navy so the copy still reads on snow, a thin white frost rim lines the
-// silhouette's inner edge and a few glints sweep over it. The sprite's
-// modulate (hit flash) still multiplies on top. Unshaded; 5 taps per pixel;
+// silhouette's inner edge and a few glints sweep over it. COLOR in a 4.x
+// canvas fragment already holds texture x modulate, so the frame is re-sampled
+// and the hit flash comes in through the `flash` uniform (DrawnEnemyVisual). Unshaded; 5 taps per pixel;
 // works on Forward+, Mobile and gl_compatibility (no screen texture).
 shader_type canvas_item;
 render_mode unshaded;
@@ -17,6 +18,8 @@ uniform float rim_width = 2.5;
 uniform float rim_alpha = 0.75;
 uniform float glint_speed = 0.35;
 uniform float alpha_mult = 0.92;
+// 0..1 white hit flash (set per frame by DrawnEnemyVisual).
+uniform float flash = 0.0;
 
 void fragment() {
 	vec4 c = texture(TEXTURE, UV);
@@ -33,5 +36,6 @@ void fragment() {
 	// diagonal glint band sweeping over the body
 	float g = fract((UV.x * 3.0 - UV.y * 2.0) * 1.5 - TIME * glint_speed);
 	col += vec3(0.35) * smoothstep(0.0, 0.03, g) * (1.0 - smoothstep(0.03, 0.07, g)) * step(0.16, l);
-	COLOR = vec4(col, c.a * alpha_mult) * COLOR;
+	col = mix(col, vec3(1.0), flash);
+	COLOR = vec4(col, c.a * alpha_mult);
 }
