@@ -5,7 +5,7 @@ screenshot level-chunks.png
 OK   2 forced elites: ["crawler/blast hp 78", "bat/fire hp 46"]
 OK   elite hp ×1.6: 78
 screenshot level-elite.png
-OK   the knight stands at x 902
+OK   the knight stands at x 907
 OK   knight woke on his own (state walk)
 screenshot level-knight.png
 OK   breakable wall stands

@@ -108,7 +108,7 @@ func enter_room() -> void:
 	var layout: Dictionary
 	match run.stage:
 		"lair":
-			layout = { "w": Tune.f("lair_room_w"), "plats": [], "packs": [], "portal": false, "lair": true }
+			layout = { "w": Tune.f("lair_room_w"), "plats": LairBoss.arena_plats(), "packs": [], "portal": false, "lair": true }
 		"haven":
 			layout = { "w": Tune.f("haven_room_w"), "plats": [], "packs": [], "portal": false, "haven": true }
 		_:

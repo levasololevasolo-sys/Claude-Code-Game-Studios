@@ -1,0 +1,30 @@
+{
+  "_note": "Lair bosses, GDD enemies-and-elites §3.8-3.9; lines from design/narrative/living-world.md §4.1. Keyed by the location boss id (locations.json \"boss\"); the GDD id of kikimora is clockmaker. Attack order in weights: throw, pend, lunge, wave. Tiers without a row of their own fight kikimora's pattern with no lines (stand-in until §3.10-3.13 exist). wave is not in GDD §3.9 (phase 2 only, weight 0 in phase 1).",
+  "kikimora": {
+    "name": "Кикимора Болотная",
+    "w": 120, "h": 200, "hp": 680, "weight": 6, "embers": 40,
+    "color": "#3f5a45", "hair": "#1f2e26", "eye": "#c8f07a", "rage_eye": "#ff8a5a", "staff": "#8a6f48",
+    "dmg": 18, "rest": 1.0, "contact_mult": 0.8, "lunge_contact_mult": 1.3,
+    "walk_speed": 70, "walk_keep": 260,
+    "phase_marks": [0.5], "phase_fast": 1.3, "min_windup": 0.5,
+    "weights": [[38, 34, 28, 0], [32, 30, 22, 16]],
+    "throw_wind": 0.6, "throw_n": [3, 5], "throw_gap": 140, "throw_flight": 0.9, "throw_flight_step": 0.05,
+    "throw_up": 520, "throw_g": 1300, "throw_r": 16, "throw_dmg_mult": 0.8, "throw_bounces": 1, "throw_bounce_k": 0.45, "throw_life": 4.0, "throw_hand_y": 150,
+    "pend_wind": 0.55, "pend_offsets": [[0, -260, 260], [0, -260, 260, -520, 520]], "pend_w": 90, "pend_warn": 0.95, "pend_act": 0.5, "pend_dmg_mult": 0.9, "pend_rest_add": 0.6, "pend_top": -260, "pend_edge": 40,
+    "lunge_wind": 0.6, "lunge_speed": 720, "lunge_time": 0.7, "lunge_wall": 100, "lunge_shake": 8,
+    "wave_wind": 0.7, "wave_speed": 420, "wave_h": 46, "wave_w": 30, "wave_life": 2.4, "wave_dmg_mult": 0.7,
+    "summon_marks": [0.65, 0.3], "summons": [["crawler", "bat"], ["crawler", "sentry", "bat"]], "summon_wind": 0.8, "summon_dx": 220, "summon_fly_y": 420,
+    "water_h": 80, "water_rise": 2.0, "water_slow": 0.6, "water_dps": 4, "water_tick": 1.0, "water_drain": 3.0,
+    "roar_time": 1.2, "phase_hitstop": 0.25, "phase_shake": 14, "phase_flash": 0.45, "death_hitstop": 0.3, "death_shake": 18,
+    "line_time": 2.4, "death_linger": 3.5, "hazard_glow_r": 60, "hazard_glow_a": 0.7,
+    "lines": {
+      "intro_first": "Натоптал, натоптал! Кто тебя звал в мою воду?",
+      "intro_repeat": "Опять ты. Ноги вытри. Ах, нечем.",
+      "rage": "Кикимора в ярости",
+      "death_first": "Вода... светлеет. Иди. Забирай своих. Моих.",
+      "death_repeat": "Опять натоптал. Ладно. Вешки не трону.",
+      "hero_death": "Вот и лёг. Полежи в тине, остынь."
+    },
+    "arena_plats": [[280, 500, 220], [760, 440, 240], [1640, 440, 240], [1900, 510, 200]]
+  }
+}
