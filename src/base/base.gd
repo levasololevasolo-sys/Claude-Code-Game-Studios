@@ -38,6 +38,8 @@ func setup(p_world: World, p_meta: MetaState) -> void:
 	picked = rules.pick_visit(Tune.table("base").get("order", []), meta)
 	rules.apply_visit(picked, meta)
 	for row: Dictionary in Tune.table("base").get("stations", []):
+		if not station_open(row, meta):
+			continue
 		var s := Station.new()
 		s.row = row
 		s.position = Vector2(float(row.x), Tune.f("ground_y"))
@@ -54,6 +56,14 @@ func _streak_line() -> void:
 	if streak >= 3 and is_inside_tree():
 		await get_tree().create_timer(2.0, false).timeout
 		hero_say("death_streak")
+
+## True when the station of `row` stands in the yard now: rows with
+## "needs": "boss" (Офеня, characters.md 3.3) come after the first boss win.
+static func station_open(row: Dictionary, m: MetaState) -> bool:
+	match String(row.get("needs", "")):
+		"boss":
+			return m != null and not m.bosses.is_empty()
+	return true
 
 ## The hero's line after `key` (StoryRules.hero_line), floating over him.
 func hero_say(key: String, force: bool = false) -> String:
@@ -88,6 +98,11 @@ func _after_line(npc: String, line: Dictionary, kind: String) -> void:
 		box.speaker = String(_station(npc).row.get("name", npc))
 		box.text = DialogueRules.text_of(line, meta, Tune.table("armor").get("titles", []))
 		box.options = opts
+		box.portrait = NpcSprite.portrait(npc)
+		var st := _station(npc)
+		if st:
+			st.set_talking(true)
+			box.closed.connect(func() -> void: st.set_talking(false))
 		var pick := [0]
 		box.picked.connect(func(i: int) -> void: pick[0] = i)
 		_show(box)
@@ -146,7 +161,10 @@ func use(id: String) -> void:
 		var box := DialogueBox.new()
 		box.speaker = String(st.row.get("name", id))
 		box.text = DialogueRules.text_of(line, meta, Tune.table("armor").get("titles", []))
+		box.portrait = NpcSprite.portrait(id)
+		st.set_talking(true)
 		box.closed.connect(func() -> void:
+			st.set_talking(false)
 			screen = null
 			_after_line.call_deferred(id, line, kind))
 		_show(box)

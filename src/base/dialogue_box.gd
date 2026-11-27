@@ -4,7 +4,9 @@
 ## With `options` (prologue-and-endings §7 choices) it shows buttons instead:
 ## ← → / d-pad / mouse pick one, confirm emits `picked` and closes.
 ## Pauses the tree while open (`pause` false: the scene behind keeps moving).
-## 1920x1080 layout.
+## 1920x1080 layout. With a `portrait` (the speaker's drawn bust, NpcSprite)
+## it shows it left in a 240x280 frame rising 80 px above the box and moves the
+## name and text right (design/ux/dialogue-box.md §2).
 class_name DialogueBox
 extends Control
 
@@ -15,6 +17,8 @@ signal picked(i: int)
 
 const BOX: Rect2 = Rect2(Vector2(260, 730), Vector2(1400, 270))
 const OPT: Vector2 = Vector2(360, 56)
+## Portrait frame (dialogue-box.md §2: 240x280, 80 px above the box).
+const PORTRAIT: Rect2 = Rect2(Vector2(284, 650), Vector2(240, 280))
 
 ## Speaker name and the line.
 var speaker: String = ""
@@ -26,6 +30,8 @@ var selected: int = 0
 var pause: bool = true
 ## Speaker name colour.
 var speaker_colour: Color = Color("#FFC94A")
+## The speaker's portrait bust (square), null = none.
+var portrait: Texture2D
 var input: ChoiceInput
 var _label: Label
 
@@ -36,8 +42,8 @@ func _ready() -> void:
 	if pause:
 		get_tree().paused = true
 	_label = Label.new()
-	_label.position = BOX.position + Vector2(40, 90)
-	_label.size = Vector2(BOX.size.x - 80, 130 if options.is_empty() else 80)
+	_label.position = BOX.position + Vector2(40 + _text_dx(), 90)
+	_label.size = Vector2(BOX.size.x - 80 - _text_dx(), 130 if options.is_empty() else 80)
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.add_theme_font_size_override("font_size", 34)
 	_label.add_theme_color_override("font_color", Color("#F2EAD8"))
@@ -77,6 +83,10 @@ func _gui_input(ev: InputEvent) -> void:
 		selected = int(r.i)
 		queue_redraw()
 
+## Left shift of the name and text when a portrait is shown, px.
+func _text_dx() -> float:
+	return PORTRAIT.end.x - BOX.position.x - 10.0 if portrait else 0.0
+
 ## Button rects of the options, screen px.
 func option_rects() -> Array:
 	var out: Array = []
@@ -104,7 +114,16 @@ func _draw() -> void:
 	draw_rect(BOX, Color("#21170F", 0.93))
 	draw_rect(BOX, Color("#B3262E"), false, 4.0)
 	draw_rect(BOX.grow(-8), Color("#E9DFC9", 0.5), false, 1.5)
-	draw_string(font, BOX.position + Vector2(40, 62), speaker, HORIZONTAL_ALIGNMENT_LEFT, -1, 36, speaker_colour)
+	if portrait:
+		var pr := PORTRAIT
+		draw_rect(pr.grow(4), Color("#120D12"))
+		draw_rect(pr, Color("#2A1E18"))
+		var ts := portrait.get_size()
+		var sw := ts.y * pr.size.x / pr.size.y
+		draw_texture_rect_region(portrait, pr, Rect2((ts.x - sw) * 0.5, 0.0, sw, ts.y))
+		draw_rect(pr, Color("#B3262E"), false, 4.0)
+		draw_rect(pr.grow(-7), Color("#E9DFC9", 0.45), false, 1.5)
+	draw_string(font, BOX.position + Vector2(40 + _text_dx(), 62), speaker, HORIZONTAL_ALIGNMENT_LEFT, -1, 36, speaker_colour)
 	if options.is_empty():
 		draw_string(font, BOX.position + Vector2(0, BOX.size.y - 22), "Enter / E / A — дальше", HORIZONTAL_ALIGNMENT_RIGHT, BOX.size.x - 40, 22, Color("#A99C86"))
 		return
