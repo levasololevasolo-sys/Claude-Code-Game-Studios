@@ -11,6 +11,7 @@
 ## Runes (gods-and-runes): `--runes=svarog_s:2,perun_d,duo_storm` starts with
 ## those runes (id[:level]), `--rune-offer=<god>[:wide]` opens the rune offer
 ## screen at start, `--god-check=<dir>` runs the scripted per-god check.
+## `--hero-shots=<dir>` saves hero rig poses (with `--hero-tier=1..5`, HeroVisual).
 ## Run mode (default when none of the legacy check flags above is given): a
 ## RunDirector child plays the run of GDD room-generation-and-doors (rooms, doors,
 ## lair, haven, summary) on the Game autoload's RunState. `--run-check=<dir>`
@@ -51,7 +52,7 @@ var offer_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var director: RunDirector
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room="]
+const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--hero-shots="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -118,6 +119,10 @@ func _ready() -> void:
 			var fc: Node = (load("res://tests/integration/amulet/flare_check_driver.gd") as GDScript).new()
 			fc.set("out_dir", a.trim_prefix("--flare-check="))
 			add_child(fc)
+		elif a.begins_with("--hero-shots="):
+			var hs: Node = (load("res://tests/integration/hero/hero_shots_driver.gd") as GDScript).new()
+			hs.set("out_dir", a.trim_prefix("--hero-shots="))
+			add_child(hs)
 		elif a.begins_with("--run-check="):
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
