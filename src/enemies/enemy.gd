@@ -121,6 +121,10 @@ var _limb_mark: LimbMark
 var limb_hits: Dictionary = {}
 ## Part thrown by the death (§3.5): "head", "arm" or "" (plain death).
 var death_severed: String = ""
+## Tina shield from Водяница's song (bestiary §3.2, B4): absorbs damage first,
+## gone after tina_t s. 0 = none.
+var tina: float = 0.0
+var tina_t: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -317,6 +321,14 @@ func hurt(hit: Hit) -> float:
 		ward -= wa.x
 		ward_t = 0.0
 		dmg = wa.y
+	if tina > 0.0:
+		var ta := SwampRules.tina_absorb(tina, dmg)
+		tina -= ta.x
+		dmg = ta.y
+		if tina <= 0.0:
+			tina = 0.0
+			tina_t = 0.0
+			Audio.play_at(&"ward_break", position)
 	hp -= dmg
 	flash = Tune.f("enemy_flash_time")
 	if hit.kind != Hit.Kind.TICK:
@@ -353,6 +365,12 @@ func launch(speed: float) -> void:
 	if flies or boss or dead:
 		return
 	vel.y = -DamageRules.launch_speed(speed, weight)
+
+## Puts a tina shield of `amount` on for `time` s (the larger shield wins, the
+## timer restarts). Водяница's song calls it.
+func give_tina(amount: float, time: float) -> void:
+	tina = maxf(tina, amount)
+	tina_t = time
 
 func _wake_my_pack() -> void:
 	if world and pack >= 0:
@@ -550,6 +568,10 @@ func _physics_process(dt: float) -> void:
 		queue_redraw()
 		return
 	wall_cd -= dt
+	if tina_t > 0.0:
+		tina_t -= dt
+		if tina_t <= 0.0:
+			tina = 0.0
 	_tick_status(dt)
 	if dead:
 		queue_redraw()
@@ -671,6 +693,12 @@ func _draw_overlay() -> void:
 		draw_rect(Rect2(-22, -h - 18, 44 * maxf(hp, 0.0) / maxf(max_hp, 1.0), 5), Color("#e05a4a"))
 	if mark != "":
 		_draw_mark(font)
+	if tina > 0.0:
+		# Tina shield: a green contour round the body (bestiary §3.2 Водяница).
+		var tc := Color(String(Tune.get_value("tina_colour")))
+		var r := Rect2(-w / 2.0 - 5.0, -h - 5.0, w + 10.0, h + 8.0)
+		draw_rect(r, Color(tc, 0.18), true)
+		draw_rect(r, Color(tc, 0.75 + 0.25 * sin(anim * 6.0)), false, 3.0)
 	if alert > 0.0:
 		draw_string(font, Vector2(-6, -h - 26), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, alert_colour)
 	if show_state:

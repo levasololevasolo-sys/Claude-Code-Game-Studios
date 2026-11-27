@@ -1057,6 +1057,97 @@
 			"cd": 0.0,
 			"max": 1,
 			"loop": true
+		},
+		"swing_heavy": {
+			"files": [
+				"swing_heavy"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.08,
+			"max": 3
+		},
+		"shishiga_squeak": {
+			"files": [
+				"shishiga_squeak_1",
+				"shishiga_squeak_2"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.06,
+			"cd": 0.08,
+			"max": 3
+		},
+		"cling_latch": {
+			"files": [
+				"cling_latch"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.1,
+			"max": 3
+		},
+		"bog_bubble": {
+			"files": [
+				"bog_bubble"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.3,
+			"max": 2
+		},
+		"bog_plunge": {
+			"files": [
+				"bog_plunge"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.06,
+			"cd": 0.2,
+			"max": 2
+		},
+		"song_ward": {
+			"files": [
+				"song_ward"
+			],
+			"bus": "SFX",
+			"db": -5.0,
+			"pitch": 0.06,
+			"cd": 0.5,
+			"max": 2
+		},
+		"ward_gain": {
+			"files": [
+				"ward_gain"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.06,
+			"cd": 0.15,
+			"max": 3
+		},
+		"ward_break": {
+			"files": [
+				"ward_break"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.08,
+			"max": 3
+		},
+		"water_push": {
+			"files": [
+				"water_push"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.1,
+			"max": 3
 		}
 	},
 	"voice_limit": 3,
@@ -1137,6 +1228,25 @@
 			"dive": "dive_whoosh",
 			"stuck": "heavy_thud",
 			"summon_w": "boss_summon"
+		},
+		"balvan": {
+			"wind": "swing_heavy",
+			"swing": "hit_heavy"
+		},
+		"shishiga": {
+			"crouch": "shishiga_squeak",
+			"cling": "cling_latch",
+			"leap": "lunge_whoosh"
+		},
+		"bognitsa": {
+			"bubble": "bog_bubble",
+			"dive": "bog_plunge",
+			"rise": "bog_plunge",
+			"swipe": "claw_swipe"
+		},
+		"vodyanitsa": {
+			"song": "song_ward",
+			"push": "water_push"
 		}
 	},
 	"deaths": {
