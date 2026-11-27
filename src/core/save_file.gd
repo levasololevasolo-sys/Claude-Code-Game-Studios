@@ -5,7 +5,9 @@ class_name SaveFile
 extends RefCounted
 
 ## 2: armor, armor_pick, up, lanterns, lantern, story in meta (base hub).
-const VERSION: int = 2
+## 3: story wiring fields in meta.story (StoryRules: gods_seen, death_streak,
+## history...) and story_ev / needle in the run snapshot.
+const VERSION: int = 3
 
 ## Writes `data` (version is added) to `path`. False on any failure.
 static func write(path: String, data: Dictionary) -> bool:
@@ -52,7 +54,8 @@ static func read(path: String) -> Dictionary:
 	return migrate(d)
 
 ## Brings an older file up to VERSION, one step per version. 1 -> 2 fills the
-## base fields (armor at tier 0, no Капище rules, the free ring, empty story).
+## base fields (armor at tier 0, no Капище rules, the free ring, empty story);
+## 2 -> 3 the story wiring fields.
 static func migrate(d: Dictionary) -> Dictionary:
 	var out := d.duplicate(true)
 	var v := int(out.get("version", 1))
@@ -64,5 +67,27 @@ static func migrate(d: Dictionary) -> Dictionary:
 				meta[k] = base[k]
 		out["meta"] = meta
 		v = 2
+	if v < 3:
+		# 2 -> 3: the story wiring fields; a v2 file never had a prologue, so a
+		# save with finished runs counts it as seen (no prologue mid-game).
+		var meta3: Dictionary = out.get("meta", {}) if out.get("meta") is Dictionary else {}
+		var st: Dictionary = meta3.get("story", {}) if meta3.get("story") is Dictionary else {}
+		var sd := MetaState.story_defaults()
+		for k: String in sd:
+			if not st.has(k):
+				st[k] = sd[k]
+		if int(meta3.get("runs", 0)) > 0:
+			var fl: Dictionary = st.get("flags", {}) if st.get("flags") is Dictionary else {}
+			fl["prologue_seen"] = true
+			st["flags"] = fl
+		meta3["story"] = st
+		out["meta"] = meta3
+		if out.get("run") is Dictionary:
+			var r: Dictionary = out.run
+			if not r.has("story_ev"):
+				r["story_ev"] = []
+			if not r.has("needle"):
+				r["needle"] = false
+		v = 3
 	out["version"] = v
 	return out

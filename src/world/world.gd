@@ -14,6 +14,8 @@
 ## Weapons (weapons-and-loot): `--weapon=<id>` / `--sub=<id>` pick the hero's
 ## weapons in the legacy modes, `--weapon-check=<dir>` runs the weapon check,
 ## `--boss-check=<dir>` the scripted lair boss fight (Кикимора, enemies-and-elites §3.9).
+## `--story-check=<dir>` plays the prologue with scripted input and a god line
+## (tests/integration/story); a new save starts with the Prologue otherwise.
 ## `--hero-shots=<dir>` saves hero rig poses (with `--hero-tier=1..5`, HeroVisual).
 ## Run mode (default when none of the legacy check flags above is given): a
 ## RunDirector child plays the run of GDD room-generation-and-doors (rooms, doors,
@@ -129,7 +131,10 @@ func _ready() -> void:
 		director.world = self
 		director.game = get_node("/root/Game")
 		add_child(director)
-		director.begin.call_deferred()
+		if wants_prologue(OS.get_cmdline_user_args(), director.game.meta, director.game.run != null):
+			start_prologue()
+		else:
+			director.begin.call_deferred()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--demo="):
 			var d: Node = (load("res://tests/integration/core/demo_driver.gd") as GDScript).new()
@@ -174,10 +179,36 @@ func _ready() -> void:
 			var vs: Node = (load("res://tests/integration/visual/vis_shots_driver.gd") as GDScript).new()
 			vs.set("out_dir", a.trim_prefix("--vis-shots="))
 			add_child(vs)
+		elif a.begins_with("--story-check="):
+			var sc: Node = (load("res://tests/integration/story/story_check_driver.gd") as GDScript).new()
+			sc.set("out_dir", a.trim_prefix("--story-check="))
+			add_child(sc)
 		elif a.begins_with("--run-check="):
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
 			add_child(rc)
+
+## True when the run mode starts with the prologue (prologue-and-endings §1):
+## a new save (no prologue_seen, no finished run, no saved run) and no check
+## flag — checks never wait on it — except --story-check, which plays it.
+static func wants_prologue(args: PackedStringArray, meta: MetaState, has_run: bool) -> bool:
+	for a in args:
+		if a.begins_with("--story-check="):
+			return true
+		if a.contains("-check="):
+			return false
+	return not meta.story.flags.has("prologue_seen") and meta.runs == 0 and not has_run
+
+## Plays the Prologue, then writes the save and starts the run.
+func start_prologue() -> Prologue:
+	var pr := Prologue.new()
+	pr.world = self
+	pr.meta = director.game.meta
+	pr.finished.connect(func() -> void:
+		director.game.write_save()
+		director.begin.call_deferred())
+	add_child(pr)
+	return pr
 
 ## Clears the level and builds room number room_k of location tier. The run
 ## passes its own `layout` and the room stream `p_rng` (RunRng.for_room, already

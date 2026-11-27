@@ -398,5 +398,15 @@
   "elite_fallback": [
     "blast",
     "call"
-  ]
+  ],
+  "_story_note": "Story wiring (design/narrative/prologue-and-endings.md, dialogue/hero.md, gods.md): hero line cooldown / time on screen (s), god lines remembered against repeats, run history kept, prologue old-man nudges (s after the prompt), walk speeds (px/s), first-win line pause (s).",
+  "hero_line_cooldown": 20.0,
+  "hero_line_time": 3.5,
+  "god_line_recent": 3,
+  "story_history_max": 20,
+  "prologue_nudge_1": 10.0,
+  "prologue_nudge_2": 20.0,
+  "prologue_old_speed": 110.0,
+  "prologue_shake": 14.0,
+  "story_beat_pause": 0.8
 }

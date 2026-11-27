@@ -70,6 +70,7 @@ func end_run(outcome: String) -> Dictionary:
 	# living-world §1.2: the run's fresh events wait for the next base visit.
 	var before_bosses: Dictionary = before.get("bosses", {}) if before.get("bosses") is Dictionary else {}
 	DialogueRules.record_run(meta, outcome, summary.run, before_bosses, Tune.table("dialogue"))
+	StoryRules.record_run(meta, outcome, summary.run, int(Tune.f("story_history_max")))
 	run = null
 	rng = null
 	summary["bank_after"] = meta.to_dict()

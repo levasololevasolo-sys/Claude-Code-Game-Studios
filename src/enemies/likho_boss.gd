@@ -59,7 +59,7 @@ static func woe_xs(rng: RandomNumberGenerator, hx: float, n: int, gap: float, ro
 func _behave(dt: float) -> void:
 	if not introduced:
 		introduced = true
-		say(pick_line(stats.get("lines", {}), "intro", beaten_before))
+		say(story_line("intro"))
 	think(dt, hero_pos())
 	_redraw_fx()
 
