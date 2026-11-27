@@ -37,6 +37,7 @@ const CONTROLS = [
   'Shift / K — перекат на земле, рывок в воздухе (неуязвим)',
   'J / левая кнопка мыши — удар (серия)',
   'W + удар — удар вверх (подбрасывает) · S + удар в прыжке — удар вниз',
+  'U / средняя кнопка мыши — доп. оружие (лук, бомба, капкан, посох)',
   'L / правая кнопка мыши — Вспышка, когда оберег полон',
   'E / Enter — использовать (жители, двери, врата)',
   'Esc / P — пауза · M — звук',
@@ -123,7 +124,7 @@ const K = {
   left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
   jump: ['Space', 'KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'],
   dash: ['ShiftLeft', 'ShiftRight', 'KeyK'], strike: ['KeyJ', 'Mouse0'], flare: ['KeyL', 'Mouse2'],
-  ok: ['Enter', 'NumpadEnter'], use: ['KeyE', 'Enter', 'NumpadEnter'],
+  sub: ['KeyU', 'Mouse1'], ok: ['Enter', 'NumpadEnter'], use: ['KeyE', 'Enter', 'NumpadEnter'],
   up: ['KeyW', 'ArrowUp'], back: ['Escape', 'KeyQ'],
 };
 const held = a => a.some(c => down.has(c));
@@ -183,7 +184,7 @@ const RES_KEYS = ['gears', 'bronze', 'pearls', 'cores'];
 function defaultSave() {
   return { embers: 0, res: { gears: 0, bronze: 0, pearls: 0, cores: 0 },
     up: { vigor: 0, wick: 0, bright: 0, sense: 0, reroll: 0, second: 0 },
-    lanterns: { brass: true }, weapons: { blade: true }, lantern: 'brass', weapon: 'blade',
+    lanterns: { brass: true }, weapons: { blade: true }, subs: {}, lantern: 'brass', weapon: 'blade', sub: null,
     runs: 0, wins: 0, maxAsh: 0, ash: 0, bestRooms: 0, bosses: {}, run: null };
 }
 function loadSave() {
@@ -193,7 +194,7 @@ function loadSave() {
     if (s) {
       const d = defaultSave();
       return Object.assign(d, s, { up: Object.assign(d.up, s.up), res: Object.assign(d.res, s.res),
-        lanterns: Object.assign(d.lanterns, s.lanterns), weapons: Object.assign(d.weapons, s.weapons) });
+        lanterns: Object.assign(d.lanterns, s.lanterns), weapons: Object.assign(d.weapons, s.weapons), subs: Object.assign(d.subs, s.subs || {}) });
     }
   } catch (e) { /* no storage: play without saving */ }
   return defaultSave();
@@ -304,7 +305,9 @@ function blankState() {
     runEmbers: 0, runRes: { gears: 0, bronze: 0, pearls: 0, cores: 0 }, kills: 0, cleared: 0, bosses: 0,
     cam: 0, shake: 0, hitstop: 0, flash: 0, echoT: 0, fade: 1, deco: null, won: false, deadT: 0,
     hint: '', hintT: 0, run: null, ash: save.ash, menu: null, slowT: 0, banner: null, lanternPulse: 0,
-    lantern: save.lantern, weapon: save.weapon, motes: [], runSeed: 0 };
+    lantern: save.lantern, weapon: baseOf(save.weapon), motes: [], runSeed: 0,
+    arm: { id: save.weapon, q: 1, aff: null }, sub: save.sub ? { id: save.sub, q: 1, aff: null } : null, subCd: 0, subQ: 0,
+    pshots: [], traps: [], words: [], armStack: 0, growth: 0, crit: false, armQuake: false };
 }
 // reset(): back to the base, the start of every session and the end of every run.
 function reset() {
@@ -321,7 +324,8 @@ function startRun(resume) {
     const r = save.run;
     seed = r.seed;
     Object.assign(s, { world: 'run', boons: r.boons.slice(), runEmbers: r.runEmbers, runRes: { ...r.runRes },
-      rerolls: r.rerolls, revive: r.revive, ash: r.ash, lantern: r.lantern, weapon: r.weapon, runSeed: r.runSeed,
+      rerolls: r.rerolls, revive: r.revive, ash: r.ash, lantern: r.lantern, runSeed: r.runSeed,
+      arm: r.arm || { id: r.weapon, q: 1, aff: null }, sub: r.sub || null, weapon: baseOf((r.arm || { id: r.weapon }).id), growth: r.growth || 0,
       cleared: r.cleared, kills: r.kills, bosses: r.bosses });
     s.run = { route: r.route.slice(), locI: r.locI, order: r.order };
     s.p = makePlayer(); s.p.hp = r.hp; s.p.maxHp = r.maxHp; s.p.charge = r.charge;
@@ -329,7 +333,8 @@ function startRun(resume) {
     return;
   }
   s.runSeed = base + save.runs * 101; seed = s.runSeed;
-  s.world = 'run'; s.ash = save.ash; s.lantern = save.lantern; s.weapon = save.weapon;
+  s.world = 'run'; s.ash = save.ash; s.lantern = save.lantern; s.weapon = baseOf(save.weapon); s.growth = 0;
+  s.arm = { id: save.weapon, q: 1, aff: null }; s.sub = save.sub ? { id: save.sub, q: 1, aff: null } : null; s.subCd = 0;
   s.boons = []; s.runEmbers = 0; s.runRes = { gears: 0, bronze: 0, pearls: 0, cores: 0 };
   s.rerolls = save.up.reroll; s.revive = save.up.second > 0; s.cleared = 0; s.kills = 0; s.bosses = 0;
   const order = {};
@@ -348,7 +353,7 @@ function snapshotRun() {
   const s = state, p = s.p;
   save.run = { route: s.run.route.slice(), locI: s.run.locI, order: s.run.order, hp: p.hp, maxHp: p.maxHp,
     charge: p.charge, boons: s.boons.slice(), runEmbers: s.runEmbers, runRes: { ...s.runRes }, rerolls: s.rerolls,
-    revive: s.revive, ash: s.ash, lantern: s.lantern, weapon: s.weapon, runSeed: s.runSeed, cleared: s.cleared,
+    revive: s.revive, ash: s.ash, lantern: s.lantern, weapon: s.weapon, arm: s.arm, sub: s.sub, growth: s.growth, runSeed: s.runSeed, cleared: s.cleared,
     kills: s.kills, bosses: s.bosses, seed };
   writeSave();
 }
@@ -363,6 +368,7 @@ function enterRoom(kind, loc, k) {
   s.room = { kind, loc: loc || 'hub', k: k || 0, w: tmpl.w, plats: tmpl.plats, inter: [] };
   s.enemies = []; s.spawns = []; s.shots = []; s.fires = []; s.flares = []; s.haz = []; s.bolts = [];
   s.wisps = []; s.corpses = []; s.loot = []; s.waves = []; s.menu = null; s.slowT = 0; s.echoT = 0;
+  s.pshots = []; s.traps = []; s.words = []; s.armStack = 0; s.subQ = 0;
   p.x = 140; p.y = GROUND; p.vx = 0; p.vy = 0; p.dashT = 0; p.atkT = 0; p.trail = [];
   for (const c of p.cape) { c.x = c.ox = p.x - 4; c.y = c.oy = p.y - 44; }
   s.cam = 0; s.fade = 1;
@@ -513,6 +519,8 @@ function killEnemy(e) {
     for (const o of state.enemies) if (o !== e && !o.dead) { o.dead = true; state.corpses.push({ e: { ...o, stun: 0, flash: 0 }, t: 0.6 }); burst(o.x, o.y - o.h / 2, 10, '#e0566b', 260, 0.5, 3); }
     state.spawns = []; state.shots = []; state.haz = []; state.waves = [];
   }
+  armOnKill(e);
+  if (state.world === 'run' && (d.boss || e.elite && rng() < tune.elite_arm)) spawnArmsDrop(e.x, rollArms(null, d.boss ? 1 : 0));
   if (d.boss) { state.hitstop = 0.45; state.shake = 20; state.flash = 1; state.bosses++; save.bosses[e.kind] = (save.bosses[e.kind] || 0) + 1; }
 }
 function dropLoot(x, y, type, n) {
@@ -538,9 +546,9 @@ function explode(x, y, src, friendly = false) {
 function hurtPlayer(d, srcX, mult = 1) {
   const p = state.p;
   if (state.world === 'hub' || p.inv > 0 || p.dashT > 0 || state.mode === 'dead' || state.won) return;
-  d *= ashM('dmg') * (1 + (tier() - 1) * tune.tier_dmg) * mult;
+  d *= ashM('dmg') * (1 + (tier() - 1) * tune.tier_dmg) * mult * armTaken();
   if (p.shield > 0) { const a = Math.min(p.shield, d); p.shield -= a; d -= a; addNum(p.x, p.y - p.h - 30, a, '#9ff0b0'); if (d <= 0) { p.inv = tune.hurt_iframes * 0.5; sfx.clang(); return; } }
-  p.hp -= d; p.inv = tune.hurt_iframes; p.hurtFlash = 0.3;
+  p.hp -= d; p.inv = tune.hurt_iframes; p.hurtFlash = 0.3; armOnHurt();
   p.vx = Math.sign(p.x - srcX || 1) * 380; p.vy = -330;
   state.shake = Math.max(state.shake, 9); state.hitstop = 0.07;
   addNum(p.x, p.y - p.h - 14, d, '#ffa0a0');
@@ -628,7 +636,7 @@ function gainCharge(f) {
 }
 
 // ---- Player ------------------------------------------------------------------------------------------
-const reachOf = () => (state.weapon === 'spear' ? tune.spear_reach : state.weapon === 'sickles' ? 64 : state.weapon === 'hammer' ? 100 : tune.strike_reach) * (has('arc') ? 1.4 : 1);
+const reachOf = () => (state.weapon === 'spear' ? tune.spear_reach : state.weapon === 'sickles' ? 64 : state.weapon === 'hammer' ? 100 : tune.strike_reach) * (has('arc') ? 1.4 : 1) * armReach();
 function updatePlayer(dt) {
   const p = state.p, room = state.room, Wp = WEAPONS[state.weapon];
   p.anim += dt; p.hurtFlash -= dt; p.land = Math.max(0, p.land - dt * 5);
@@ -641,7 +649,7 @@ function updatePlayer(dt) {
   if (tapped(K.dash) && p.dashCd <= 0 && p.dashT <= 0) {
     p.roll = p.onGround; p.dashDur = p.roll ? tune.roll_time : tune.dash_time; p.dashT = p.dashDur; p.dashCd = tune.dash_cooldown * (has('swift') ? 0.55 : 1) * (slotGod('dash') === 'stribog' ? 0.7 : 1) * (has('duo_spring') ? 0.6 : 1);
     p.dashDir = mx || p.face; p.face = p.dashDir; p.inv = Math.max(p.inv, p.dashDur + 0.05);
-    p.dashHit = new Set(); p.atkT = 0; sfx.dash(); events.push({ t: state.t, type: 'dash' });
+    p.dashHit = new Set(); p.atkT = 0; p.lastDash = state.t; sfx.dash(); events.push({ t: state.t, type: 'dash' });
     if (state.lantern === 'storm' && state.world === 'run') gainCharge(tune.storm_dash_charge / tune.charge_per_hit);
     burst(p.x, p.y - 20, 8, '#ffd99a', 160, 0.3, 2);
     const dg = slotGod('dash');
@@ -685,8 +693,13 @@ function updatePlayer(dt) {
     const n = Wp.times.length;
     p.atkDir = held(K.up) ? 'up' : held(K.down) && !p.onGround ? 'down' : 'side';
     if (p.atkDir === 'side') p.combo = p.comboT > 0 ? (p.combo % n) + 1 : 1; else p.combo = 1;
-    p.slammed = false;
-    p.atkT = Wp.times[p.combo - 1] * (p.atkDir === 'side' ? 1 : 1.1) / tune.swing_speed / (has('stribog_p') ? 1.15 : 1); p.atkDur = p.atkT; p.comboT = p.atkT + 0.3;
+    p.slammed = false; state.armQuake = false;
+    if (slotGod('strike') === 'stribog' && state.world === 'run') { // Stribog's cutting wind flies ahead of every swing
+      const d = p.atkDir, v = 860;
+      shootP({ kind: 'wave', x: p.x + (d === 'side' ? p.face * 30 : 0), y: p.y - 34 + (d === 'up' ? -30 : d === 'down' ? 30 : 0), vx: d === 'side' ? p.face * v : 0, vy: d === 'up' ? -v : d === 'down' ? v : 0,
+        dmg: tune.strike_dmg * 0.45, pierce: 99, life: 0.42, fx: 'stribog', kb: 320, wind: true });
+    }
+    p.atkT = Wp.times[p.combo - 1] * (p.atkDir === 'side' ? 1 : 1.1) / tune.swing_speed / armSpd() / (has('stribog_p') ? 1.15 : 1); p.atkDur = p.atkT; p.comboT = p.atkT + 0.3;
     p.hitSet = new Set(); p.quaked = false; p.atkBuf = 0; if (p.atkDir === 'side') p.vx += p.face * Wp.lunge; p.trail = [];
     if (state.weapon === 'hammer') tone(160, 0.2, 'triangle', 0.1, 0.6); else sfx.swing();
   }
@@ -755,6 +768,7 @@ function overlap(a, b) {
 }
 function strikeHits(k) {
   const p = state.p, Wp = WEAPONS[state.weapon], wpn = state.weapon;
+  p.combo = clamp(p.combo, 1, Wp.times.length);
   const reach = reachOf();
   let x0 = p.face > 0 ? p.x : p.x - reach - 12, x1 = p.face > 0 ? p.x + reach + 12 : p.x;
   let y0 = p.y - p.h - 14, y1 = p.y + 6;
@@ -772,10 +786,15 @@ function strikeHits(k) {
     if (e.x + e.w / 2 > x0 && e.x - e.w / 2 < x1 && e.y > y0 && e.y - e.h < y1) {
       p.hitSet.add(e);
       const ground = !EDEF[e.kind].fly && !EDEF[e.kind].boss && e.kind !== 'dummy';
-      const f = hurtEnemy(e, dmg * (ground && e.y < GROUND - 8 ? tune.air_mult : 1), dir === 'side' ? p.x : e.x - p.face, { kb: tune.knockback * (fin ? 1.8 : 1) * (wpn === 'hammer' ? 1.5 : 1), breaker: wpn === 'hammer', stun: wpn === 'hammer' ? 0.35 : 0 });
+      state.crit = false;
+      const f = hurtEnemy(e, dmg * armDmgMul(e, fin, dir) * (ground && e.y < GROUND - 8 ? tune.air_mult : 1), dir === 'side' ? p.x : e.x - p.face, { kb: tune.knockback * (fin ? 1.8 : 1) * (wpn === 'hammer' ? 1.5 : 1), breaker: wpn === 'hammer', stun: wpn === 'hammer' ? 0.35 : 0 });
       gainCharge(f * Wp.charge);
       const sg = slotGod('strike'); if (sg && f > 0) applyGod(sg, e);
       if (sg === 'stribog') e.kb *= 1.4;
+      if (sg === 'perun' && f > 0) state.bolts.push({ pts: boltPts(p.x + p.face * 24, p.y - 44, e.x, e.y - e.h / 2), t: 0.14, c: '#bfe6ff' });
+      if (sg === 'veles' && f > 0 && p.hitSet.size === 1) velesSpirit(p.x, p.y - 56, tune.strike_dmg * 0.6);
+      if (state.crit) { addNum(e.x, e.y - e.h - 34, dmg * 2, '#ffd36a'); burst(e.x, e.y - e.h / 2, 14, '#ffd36a', 360, 0.35, 3); }
+      armOnHit(e, f, fin, dmg);
       if (dir !== 'side') e.kb *= 0.25;
       if (dir === 'up' && ground) { e.vy = -tune.launch_speed / weightOf(e); e.y -= 2; }
       if (dir === 'down') { p.vy = -tune.pogo_speed; p.airJumps = 0; p.dashCd = Math.min(p.dashCd, 0.05); p.atkT = Math.min(p.atkT, p.atkDur * 0.3); p.slammed = true; p.flip = 0.45; }
@@ -870,6 +889,8 @@ function heal(v) { const p = state.p; p.hp = Math.min(p.maxHp, p.hp + v); addNum
 // Put a god's status on an enemy. Wrath of the Gods may chain a second god's status on top.
 function applyGod(g, e, pw = 1, depth = 0) {
   if (!e || e.dead || e.dying || !GODS[g]) return;
+  const fresh = g === 'svarog' ? !(e.burn > 0) : g === 'stribog' ? !(e.bleed > 0) : g === 'veles' ? !(e.curse > 0) : g === 'perun';
+  if (fresh && g !== 'zhiva') godMark(e, g);
   if (g === 'svarog') e.burn = Math.max(e.burn, tune.burn_time * pw);
   else if (g === 'perun') { e.shock = (e.shock || 0) + pw; if (e.shock >= (has('duo_storm') ? 2 : tune.shock_stacks)) discharge(e); }
   else if (g === 'stribog') { e.bleed = Math.max(e.bleed || 0, tune.bleed_time * pw); if (has('duo_naviwind')) e.curse = Math.max(e.curse || 0, tune.curse_time * 0.5); }
@@ -909,7 +930,8 @@ function tickStatus(e, dt) {
     e.bleed -= dt; e.bleedTick = (e.bleedTick || 0) + dt;
     if (e.bleedTick >= 0.25) { e.bleedTick = 0; hurtEnemy(e, tune.bleed_dps * 0.25, e.x, { burnTick: true }); }
   }
-  if (e.curse > 0) e.curse -= dt;
+  if (e.curse > 0) { e.curse -= dt; if (Math.floor(e.curse * 4) !== Math.floor((e.curse + dt) * 4)) state.parts.push({ x: e.x + (rng() - 0.5) * e.w, y: e.y - rng() * e.h, vx: 0, vy: -50, t: 0.7, life: 0.7, c: '#b070ff', size: 4, g: -30 }); }
+  if (e.bleed > 0 && Math.floor(e.bleed * 6) !== Math.floor((e.bleed + dt) * 6)) state.parts.push({ x: e.x + (rng() - 0.5) * e.w * 0.6, y: e.y - e.h * (0.3 + rng() * 0.5), vx: 0, vy: 40, t: 0.5, life: 0.5, c: '#e0303a', size: 3, g: 500 });
   if (e.burn > 0) {
     e.godT = (e.godT || 0) + dt;
     if (e.godT >= 1) {
@@ -922,7 +944,7 @@ function tickStatus(e, dt) {
 // What dies carrying a status may do something more.
 function statusDeath(e) {
   if (e.curse > 0) {
-    if (has('veles_p')) for (let i = 0; i < (has('duo_naviwind') ? 2 : 1); i++) state.wisps.push({ x: e.x, y: e.y - e.h / 2, vx: (rng() - 0.5) * 300, vy: -300, t: 4, dmg: tune.flare_dmg * tune.witch_dmg * 0.6, ph: i });
+    if (has('veles_p')) for (let i = 0; i < (has('duo_naviwind') ? 4 : 2); i++) state.wisps.push({ x: e.x, y: e.y - e.h / 2, vx: (rng() - 0.5) * 300, vy: -300, t: 6, dmg: tune.flare_dmg * tune.witch_dmg * 0.6, ph: i, curse: true });
     if (has('duo_cycle')) heal(4);
     if (has('duo_pyre') && e.burn > 0) explode(e.x, e.y - e.h / 2, e, true);
   }
@@ -935,6 +957,7 @@ function rewardLabel(r) {
   if (r.type === 'rod') return 'руна Рода';
   if (r.type === 'res') return RES[REWARD_RES()].name.toLowerCase();
   if (r.type === 'heal') return 'живой родник';
+  if (r.type === 'arms') return 'оружие';
   return 'горсть углей';
 }
 function grantReward() {
@@ -942,6 +965,7 @@ function grantReward() {
   if (r.type === 'god' || r.type === 'rod') { openBoon(r.type === 'god' ? r.god : 'rod'); return; }
   if (r.type === 'res') { dropLoot(p.x + 40, p.y - 60, REWARD_RES(), 6); dropLoot(p.x + 40, p.y - 60, 'ember', 8); }
   else if (r.type === 'heal') heal(Math.round(p.maxHp * 0.35));
+  else if (r.type === 'arms') spawnArmsDrop(state.room.w / 2, rollArms(null, 1));
   else dropLoot(p.x + 40, p.y - 60, 'ember', 30);
   sfx.pick(); state.mode = 'open'; state.hint = `Награда: ${rewardLabel(r)}`; state.hintT = 2;
 }
@@ -962,7 +986,8 @@ function makeDoors() {
     if (roll < 0.62 && gods.length) opts.push({ type: 'god', god: gods.splice(Math.floor(rng() * gods.length), 1)[0] });
     else if (roll < 0.72 && !opts.some(o => o.type === 'rod')) opts.push({ type: 'rod' });
     else if (roll < 0.84 && !opts.some(o => o.type === 'res')) opts.push({ type: 'res' });
-    else if (roll < 0.93 && !opts.some(o => o.type === 'heal')) opts.push({ type: 'heal' });
+    else if (roll < 0.86 + tune.door_arms && !opts.some(o => o.type === 'arms')) opts.push({ type: 'arms' });
+    else if (roll < 0.93 + tune.door_arms && !opts.some(o => o.type === 'heal')) opts.push({ type: 'heal' });
     else if (!opts.some(o => o.type === 'embers')) opts.push({ type: 'embers' });
     else opts.push({ type: 'god', god: gods.length ? gods.splice(Math.floor(rng() * gods.length), 1)[0] : 'svarog' });
   }
@@ -976,6 +1001,7 @@ function rewardColor(r) {
   if (r.type === 'rod') return GODS.rod.color;
   if (r.type === 'res') return RES[REWARD_RES()].color;
   if (r.type === 'heal') return '#ff8aa0';
+  if (r.type === 'arms') return '#c77dff';
   return '#ffe18a';
 }
 // The sign floating over a door: what waits behind it.
@@ -987,6 +1013,7 @@ function drawReward(r, x, y, s) {
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 40 * s, 0, Math.PI * 2); ctx.fill();
   if (r.type === 'god' || r.type === 'rod') drawLanternIcon(0, 0, 0.9 * s, 1, 0, r.type === 'god' ? GODS[r.god].sign : 'rod');
   else if (r.type === 'res') drawResIcon(REWARD_RES(), 0, 0, 2.4 * s);
+  else if (r.type === 'arms') { ctx.rotate(-0.8); ctx.scale(s, s); ctx.translate(-23, 0); drawWeapon('blade', 1, 0, false); }
   else if (r.type === 'embers') { drawResIcon('ember', -8, 2, 2 * s); drawResIcon('ember', 8, -2, 2 * s); }
   else if (r.type === 'heal') { ctx.scale(2.4 * s, 2.4 * s); ctx.fillStyle = '#ff6a8a'; ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 7); ctx.bezierCurveTo(-9, 0, -6, -8, 0, -3); ctx.bezierCurveTo(6, -8, 9, 0, 0, 7); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   else { // the lair: a skull of horns
@@ -1018,6 +1045,511 @@ function drawStatus(e) {
     ctx.fill();
     if (g === 'perun' && n > 0) for (let k = 0; k < Math.min(4, Math.floor(n)); k++) { ctx.fillStyle = '#e8f8ff'; ctx.fillRect(x - 6 + k * 4, y + 9, 3, 3); }
   });
+}
+
+// ---- Making each god felt: a word when a status lands, effects on the enemy, the hero's aura ----
+const GOD_WORD = { svarog: 'ГОРИТ', perun: 'ЗАРЯД', stribog: 'ПОРЕЗ', veles: 'ПРОКЛЯТ' };
+function godMark(e, g) {
+  if ((e.markT || 0) > state.t && e.markG === g) return;
+  e.markT = state.t + 0.8; e.markG = g;
+  const word = g === 'perun' ? `${GOD_WORD.perun} ${Math.min((e.shock || 0) + 1, tune.shock_stacks)}/${has('duo_storm') ? 2 : tune.shock_stacks}` : GOD_WORD[g];
+  state.words.push({ x: e.x, y: e.y - e.h - 26, s: word, c: GODS[g].color, t: 0.9 });
+  burst(e.x, e.y - e.h / 2, 10, GODS[g].color, 240, 0.4, 3);
+  if (g === 'veles') state.flares.push({ x: e.x, y: e.y - e.h / 2, t: 0, dur: 0.35, r: e.w, c: '#b070ff' });
+}
+// A Veles spirit: flies from the hero into the nearest enemy and curses it.
+function velesSpirit(x, y, dmg) {
+  state.wisps.push({ x, y, vx: state.p.face * 420, vy: -160, t: 3, dmg, ph: rng() * 6, curse: true });
+}
+// Effects drawn on an enemy for each status it carries (world space).
+function drawStatusFx(e) {
+  const t = state.t, cx = e.x, cy = e.y - e.h / 2;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  if (e.curse > 0) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, e.w * 0.9 + 14);
+    g.addColorStop(0, 'rgba(150,60,230,0.45)'); g.addColorStop(1, 'rgba(90,20,160,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, e.w * 0.9 + 14, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(200,140,255,0.8)'; ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) { const a = t * 2.2 + i * 2.09; ctx.beginPath(); ctx.arc(cx, cy, e.w * 0.6 + 8, a, a + 0.8); ctx.stroke(); }
+  }
+  if (e.shock > 0) {
+    ctx.strokeStyle = 'rgba(190,235,255,0.9)'; ctx.lineWidth = 1.5 + e.shock * 0.5;
+    for (let i = 0; i < 2 + e.shock; i++) {
+      const a = t * 9 + i * 2.4, r = e.w * 0.5 + 6;
+      const x0 = cx + Math.cos(a) * r, y0 = cy + Math.sin(a) * r * 1.1;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + Math.sin(t * 31 + i) * 9, y0 + Math.cos(t * 27 + i) * 9); ctx.lineTo(x0 + Math.sin(t * 17 + i) * 14, y0 + 10); ctx.stroke();
+    }
+  }
+  if (e.bleed > 0) {
+    ctx.strokeStyle = 'rgba(255,90,90,0.75)'; ctx.lineWidth = 2;
+    for (let i = 0; i < 2; i++) { const k = (t * 1.6 + i * 0.5) % 1; ctx.beginPath(); ctx.moveTo(cx - 16 + i * 10, cy - 14 + i * 8 + k * 4); ctx.lineTo(cx + 12 + i * 6, cy - 4 + i * 8 + k * 4); ctx.stroke(); }
+  }
+  if (e.burn > 0) {
+    for (let i = 0; i < 4; i++) {
+      const fx = cx + Math.sin(t * 3 + i * 1.7) * e.w * 0.35, fy = e.y - e.h * (0.1 + ((t * 1.4 + i * 0.25) % 1) * 0.9);
+      const g = ctx.createRadialGradient(fx, fy, 0, fx, fy, 12); g.addColorStop(0, 'rgba(255,210,120,0.9)'); g.addColorStop(1, 'rgba(255,90,20,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(fx, fy, 12, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+// Zhiva's shield around the hero, and the colour of the dash ghost by the dash rune's god.
+function drawHeroAura(p) {
+  if (p.shield > 0) {
+    const k = clamp(p.shield / tune.shield_max, 0.25, 1), r = 44 + Math.sin(state.t * 4) * 2;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(p.x, p.y - 30, r * 0.6, p.x, p.y - 30, r);
+    g.addColorStop(0, 'rgba(120,255,160,0)'); g.addColorStop(1, `rgba(140,255,170,${0.35 * k})`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y - 30, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(170,255,190,${0.6 * k})`; ctx.lineWidth = 1.5;
+    for (let i = 0; i < 6; i++) { const a = state.t + i * 1.047; ctx.beginPath(); ctx.arc(p.x, p.y - 30, r - 2, a, a + 0.5); ctx.stroke(); }
+    ctx.restore();
+  }
+}
+function ghostColor() { const g = slotGod('dash'); if (!g || g === 'rod') return 'rgba(255,210,140,0.35)'; const [r, gg, b] = hexRgb(GODS[g].color); return `rgba(${r},${gg},${b},0.45)`; }
+function drawWords() {
+  for (const w of state.words) { ctx.globalAlpha = clamp(w.t * 2.5, 0, 1); textShadow(w.s, w.x, w.y - (0.9 - w.t) * 30, 15, w.c); }
+  ctx.globalAlpha = 1;
+}
+
+// ---- Arms: 35 main weapons and 20 secondary weapons -----------------------------------------------
+// A main weapon rides on one of four movesets (WEAPONS: blade, spear, sickles, hammer) and adds its
+// own stats and one unique mechanic. Each copy found in a run has a quality of 1-5 stars; quality
+// 4-5 may roll an extra effect (affix). Weapons with a shop price are unlocked at Potap's forge and
+// then drop in runs; weapons without a price are found only in runs.
+const RAR = {
+  c: { name: 'Обычное', color: '#d8cfb8', w: 55 },
+  r: { name: 'Редкое', color: '#6fb6ff', w: 30 },
+  e: { name: 'Эпическое', color: '#c77dff', w: 12 },
+  l: { name: 'Легендарное', color: '#ffb347', w: 4 },
+};
+// [id, name, moveset, rarity, shop price or null, damage x, speed x, reach x, mechanic, description]
+const ARM_ROWS = [
+  ['blade', 'Меч-кладенец', 'blade', 'c', {}, 1, 1, 1, 'none', 'Серия из трёх взмахов, третий самый сильный'],
+  ['spear', 'Рогатина', 'spear', 'c', { gears: 10 }, 1, 1, 1, 'none', 'Длинный выпад, пробивает всех на линии'],
+  ['sickles', 'Парные серпы', 'sickles', 'c', { pearls: 10 }, 1, 1, 1, 'none', 'Быстрая серия из пяти ударов, последний — вихрь'],
+  ['hammer', 'Булава', 'hammer', 'c', { bronze: 10, cores: 1 }, 1, 1, 1, 'none', 'Медленная и тяжёлая: разбивает щиты, трясёт землю'],
+  ['firesword', 'Огненный меч', 'blade', 'r', { gears: 14, bronze: 6 }, 0.95, 1, 1, 'burn', 'Каждый удар поджигает врага'],
+  ['axe', 'Секира', 'hammer', 'c', { gears: 12 }, 1, 1.1, 0.95, 'crit', '25% шанс критического удара ×2'],
+  ['saber', 'Сабля', 'blade', 'c', { gears: 12 }, 0.95, 1.1, 1, 'combo', 'Последний удар серии вдвое сильнее'],
+  ['berdysh', 'Бердыш', 'spear', 'r', { gears: 10, pearls: 6 }, 1, 1, 1, 'execute', 'Добивает: ×2.5 урона по врагам с малым здоровьем'],
+  ['flail', 'Кистень', 'hammer', 'r', { bronze: 12 }, 0.9, 1.1, 1, 'stun', 'Каждый удар оглушает'],
+  ['knives', 'Засапожные ножи', 'sickles', 'c', { pearls: 12 }, 1, 1, 1, 'bleed', 'Удары пускают кровь (урон со временем)'],
+  ['glaive', 'Совня', 'spear', 'r', { pearls: 12, bronze: 6 }, 1, 1, 1, 'wave', 'Последний удар серии пускает режущую волну'],
+  ['chekan', 'Чекан', 'hammer', 'r', { bronze: 14, gears: 6 }, 1, 1, 1, 'quake', 'Последний удар серии бьёт землю волной'],
+  ['tesak', 'Тесак', 'blade', 'r', { gears: 10, pearls: 8 }, 1, 1, 1, 'leech', 'Каждый удар лечит 1 здоровья'],
+  ['hooks', 'Крюки', 'sickles', 'r', { bronze: 10, pearls: 6 }, 1, 1, 1, 'airborne', '×1.6 урона по врагам в воздухе'],
+  ['boarspear', 'Рогатина на вепря', 'spear', 'e', { gears: 16, cores: 1 }, 1.1, 1, 1.1, 'duel', '×1.6 урона по хозяевам и элите'],
+  ['perunsword', 'Меч Перуна', 'blade', 'e', null, 1, 1, 1, 'chain', 'Заряжает врагов; последний удар бьёт молнией ещё двоих'],
+  ['svarogaxe', 'Топор Сварога', 'hammer', 'e', null, 1, 1, 1, 'boom', 'Убитые враги взрываются'],
+  ['velesspear', 'Копьё Велеса', 'spear', 'e', null, 1, 1, 1, 'doom', 'Проклинает; проклятые враги взрываются при смерти'],
+  ['zhivasickle', 'Серп Живы', 'sickles', 'e', null, 0.95, 1, 1, 'shieldhit', 'Каждый удар даёт 1 щита'],
+  ['stribogblade', 'Клинок Стрибога', 'blade', 'r', null, 1, 1.15, 1, 'wind', 'Удары сбивают ветром и пускают кровь'],
+  ['berserkaxe', 'Секира берсерка', 'hammer', 'e', null, 1, 1, 1, 'berserk', 'Чем меньше у тебя здоровья, тем сильнее удар (до ×2)'],
+  ['glasssword', 'Стеклянный меч', 'blade', 'e', null, 1, 1.1, 1, 'glass', '×1.6 урона, но ты получаешь на 30% больше'],
+  ['ragesword', 'Ярый меч', 'blade', 'r', null, 1, 1, 1, 'rage', 'Каждый удар +4% урона (до +60%), сброс при ранении'],
+  ['twins', 'Близнецы', 'sickles', 'e', null, 1, 1, 1, 'twin', '30% шанс ударить ещё раз'],
+  ['thunderpike', 'Рогатина Громовника', 'spear', 'l', null, 1.1, 1, 1.1, 'gods', 'Каждый удар — состояние бога, чьи руны у тебя есть'],
+  ['marascythe', 'Коса Мары', 'sickles', 'l', null, 1.1, 1, 1.15, 'reaper', 'Убийство лечит 4 и сразу возвращает рывок'],
+  ['misersword', 'Меч скупца', 'blade', 'r', null, 0.9, 1, 1, 'greed', 'Убитые враги роняют больше углей'],
+  ['arrowspear', 'Сулица-стрела', 'spear', 'r', null, 1, 1, 1, 'dashstrike', 'Удар сразу после рывка ×1.8'],
+  ['jumphammer', 'Молот-прыгун', 'hammer', 'r', null, 1, 1, 1, 'pogo', 'Удар вниз ×2'],
+  ['liftberdysh', 'Подъёмный бердыш', 'spear', 'r', null, 1, 1, 1, 'launcher', 'Удар вверх ×1.8'],
+  ['whirlsickles', 'Вихрь-серпы', 'sickles', 'l', null, 1, 1.1, 1, 'vortex', 'Последний удар серии стягивает врагов к тебе'],
+  ['thornmace', 'Шипастая булава', 'hammer', 'r', null, 1, 1, 1, 'thorns', 'Когда тебя ранят, шипы бьют всех рядом'],
+  ['ringsword', 'Звонкий меч', 'blade', 'c', null, 0.95, 1, 1, 'charge', 'Оберег заряжается вдвое быстрее'],
+  ['svyatogor', 'Меч Святогора', 'blade', 'l', null, 1.15, 0.95, 1.1, 'growth', 'Каждое убийство +2 к здоровью до конца забега'],
+  ['frostscythe', 'Ледяная коса', 'sickles', 'r', null, 1, 1, 1, 'frost', 'Удары холодят; по оглушённым ×1.5'],
+];
+const ARMS = {};
+for (const [id, name, base, rar, shop, dmg, spd, reach, mech, desc] of ARM_ROWS) ARMS[id] = { id, name, base, rar, shop, dmg, spd, reach, mech, desc };
+const ARM_ORDER = ARM_ROWS.map(r => r[0]);
+
+// [id, name, kind, rarity, shop price or null, cooldown s, damage, description]
+const SUB_ROWS = [
+  ['bow', 'Охотничий лук', 'arrow', 'c', { gears: 8 }, 0.7, 14, 'Быстрая стрела'],
+  ['longbow', 'Тугой лук', 'longbow', 'r', { gears: 10, bronze: 6 }, 1.1, 24, 'Стрела пробивает трёх врагов'],
+  ['crossbow', 'Самострел', 'crossbow', 'r', { gears: 12, pearls: 6 }, 1.4, 30, 'Тяжёлый болт: отбрасывает в стену'],
+  ['bomb', 'Горшок с порохом', 'bomb', 'c', { bronze: 10 }, 3, 34, 'Брошенная бомба взрывается'],
+  ['beartrap', 'Медвежий капкан', 'beartrap', 'c', { gears: 8 }, 2.5, 26, 'Капкан под ноги: держит и ранит врага'],
+  ['axes', 'Метательные топорики', 'axes', 'r', { gears: 10, pearls: 6 }, 1.5, 14, 'Два топорика летят и возвращаются'],
+  ['javelin', 'Сулица', 'javelin', 'c', { pearls: 10 }, 1.2, 28, 'Тяжёлое копьё насквозь'],
+  ['sling', 'Праща', 'sling', 'c', { bronze: 8 }, 0.6, 10, 'Камень оглушает'],
+  ['triplebow', 'Тройной лук', 'triple', 'e', null, 1, 11, 'Три стрелы веером'],
+  ['firebow', 'Лук Жар-птицы', 'firebow', 'e', null, 0.8, 12, 'Огненные стрелы поджигают'],
+  ['frostbomb', 'Ледяной горшок', 'frostbomb', 'r', null, 3, 18, 'Взрыв замораживает врагов'],
+  ['cluster', 'Огненный рой', 'cluster', 'e', null, 3.5, 20, 'Бомба разлетается на четыре'],
+  ['cursebomb', 'Чёрная склянка', 'cursebomb', 'r', null, 3, 14, 'Облако проклятия'],
+  ['spikes', 'Колья', 'spikes', 'r', null, 4, 6, 'Полоса кольев ранит всех, кто на ней'],
+  ['totem', 'Идол-стрелок', 'totem', 'e', null, 8, 9, 'Идол сам стреляет в ближнего врага'],
+  ['firewand', 'Посох Сварога', 'firewand', 'r', null, 1.2, 22, 'Огненный шар со взрывом'],
+  ['boltwand', 'Жезл Перуна', 'boltwand', 'e', null, 1.6, 20, 'Молния прыгает по трём врагам'],
+  ['icewand', 'Посох Мороза', 'icewand', 'r', null, 1, 14, 'Ледяной осколок насквозь, оглушает'],
+  ['windflute', 'Свирель Стрибога', 'windflute', 'l', null, 2.5, 8, 'Ураган отбрасывает всех в стены'],
+  ['velesbell', 'Колокол Велеса', 'bell', 'l', null, 4, 10, 'Звон проклинает и оглушает всех вокруг'],
+];
+const SUBS = {};
+for (const [id, name, kind, rar, shop, cd, dmg, desc] of SUB_ROWS) SUBS[id] = { id, name, kind, rar, shop, cd, dmg, desc };
+const SUB_ORDER = SUB_ROWS.map(r => r[0]);
+
+const AFFIX = {
+  a_burn: { name: 'Пылающее', desc: '20% шанс поджечь' },
+  a_shock: { name: 'Грозовое', desc: '20% шанс зарядить' },
+  a_bleed: { name: 'Кровавое', desc: '25% шанс пустить кровь' },
+  a_crit: { name: 'Острое', desc: '15% шанс крита ×2' },
+  a_leech: { name: 'Жадное', desc: '10% шанс вылечить 2' },
+  a_speed: { name: 'Быстрое', desc: '+15% скорость ударов' },
+  a_reach: { name: 'Длинное', desc: '+20% дальность' },
+  a_charge: { name: 'Звонкое', desc: '+30% заряд оберега' },
+  a_boss: { name: 'Богатырское', desc: '+30% урона по хозяевам и элите' },
+  a_kill: { name: 'Ненасытное', desc: 'Убийство даёт 3 щита' },
+};
+const SUB_AFFIX = {
+  s_cd: { name: 'Скорое', desc: 'Перезарядка −30%' },
+  s_dmg: { name: 'Тяжёлое', desc: '+40% урона' },
+  s_twice: { name: 'Двойное', desc: 'Срабатывает дважды' },
+};
+const baseOf = id => (ARMS[id] || ARMS.blade).base;
+const armDef = () => ARMS[(state.arm || {}).id] || ARMS.blade;
+const armMech = () => armDef().mech;
+const armAff = () => (state.arm || {}).aff;
+const qMult = q => 1 + tune.arm_q_step * ((q || 1) - 1);
+const stars = q => '★'.repeat(q) + '☆'.repeat(5 - q);
+function canDrop(def) { return !def.shop || (def.base ? save.weapons[def.id] : save.subs[def.id]); }
+
+// A freshly found copy: quality from the location tier, sometimes an extra effect.
+function rollQuality(bonus = 0) {
+  const r = rng() * 100 - (tier() - 1) * 12 - bonus * 18;
+  const q = r < 5 ? 5 : r < 18 ? 4 : r < 42 ? 3 : r < 72 ? 2 : 1;
+  return clamp(q, 1, 5);
+}
+function rollAffix(q, table) {
+  const ch = q >= 5 ? tune.affix_q5 : q >= 4 ? tune.affix_q4 : 0;
+  if (rng() >= ch) return null;
+  const keys = Object.keys(table); return keys[Math.floor(rng() * keys.length)];
+}
+function pickWeighted(list) {
+  let tot = 0; for (const d of list) tot += RAR[d.rar].w;
+  let r = rng() * tot;
+  for (const d of list) { r -= RAR[d.rar].w; if (r <= 0) return d; }
+  return list[list.length - 1];
+}
+// What a drop holds: a main weapon or a secondary weapon from the current pool.
+function rollArms(kind, bonus = 0) {
+  const isMain = kind ? kind === 'arm' : rng() < 0.55;
+  const pool = (isMain ? ARM_ORDER.map(i => ARMS[i]) : SUB_ORDER.map(i => SUBS[i]))
+    .filter(d => canDrop(d) && d.id !== (isMain ? (state.arm || {}).id : (state.sub || {}).id));
+  if (!pool.length) return null;
+  const d = pickWeighted(pool), q = rollQuality(bonus);
+  return { kind: isMain ? 'arm' : 'sub', inst: { id: d.id, q, aff: rollAffix(q, isMain ? AFFIX : SUB_AFFIX) } };
+}
+function instName(dr) {
+  const d = dr.kind === 'arm' ? ARMS[dr.inst.id] : SUBS[dr.inst.id];
+  const a = dr.inst.aff ? (dr.kind === 'arm' ? AFFIX : SUB_AFFIX)[dr.inst.aff] : null;
+  return (a ? a.name + ' · ' : '') + d.name;
+}
+// Put a weapon on the floor of this room: E to take it, the held one drops in its place.
+function spawnArmsDrop(x, dr) {
+  if (!dr) return;
+  const room = state.room;
+  x = clamp(x, 120, room.w - 120);
+  const it = { x, drop: dr, born: state.t, label: '', act: null };
+  it.label = `взять: ${instName(dr)}`;
+  it.act = () => {
+    const cur = it.drop;
+    let old = null;
+    if (cur.kind === 'arm') { old = state.arm ? { kind: 'arm', inst: state.arm } : null; state.arm = cur.inst; state.weapon = baseOf(cur.inst.id); const p = state.p; p.trail = []; p.combo = 0; p.comboT = 0; p.atkT = 0; }
+    else { old = state.sub ? { kind: 'sub', inst: state.sub } : null; state.sub = cur.inst; state.subCd = 0; }
+    sfx.buy(); burst(it.x, GROUND - 40, 16, RAR[(cur.kind === 'arm' ? ARMS : SUBS)[cur.inst.id].rar].color, 260, 0.5, 3);
+    state.hint = `В руках: ${instName(cur)}`; state.hintT = 2;
+    if (old) { it.drop = old; it.label = `взять: ${instName(old)}`; it.born = state.t; }
+    else room.inter.splice(room.inter.indexOf(it), 1);
+  };
+  room.inter.push(it);
+  burst(x, GROUND - 60, 20, RAR[(dr.kind === 'arm' ? ARMS : SUBS)[dr.inst.id].rar].color, 300, 0.6, 3);
+}
+
+// ---- Main weapon hooks: called from the strike, kill and hurt code ----
+function armDmgMul(e, fin, dir) {
+  const p = state.p, m = armMech(), a = armAff(), boss = EDEF[e.kind].boss;
+  let k = armDef().dmg * qMult(state.arm && state.arm.q);
+  if (m === 'crit' && rng() < 0.25 || a === 'a_crit' && rng() < 0.15) { k *= 2; state.crit = true; }
+  if (m === 'combo' && fin) k *= 2;
+  if (m === 'execute' && e.hp < e.maxHp * 0.25) k *= boss ? 1.5 : 2.5;
+  if (m === 'duel' && (boss || e.elite)) k *= 1.6;
+  if (a === 'a_boss' && (boss || e.elite)) k *= 1.3;
+  if (m === 'airborne' && (EDEF[e.kind].fly || e.y < GROUND - 8)) k *= EDEF[e.kind].fly ? 1.3 : 1.6;
+  if (m === 'berserk') k *= 2 - clamp(p.hp / p.maxHp, 0, 1);
+  if (m === 'glass') k *= 1.6;
+  if (m === 'rage') k *= 1 + Math.min(15, state.armStack) * 0.04;
+  if (m === 'dashstrike' && state.t - (p.lastDash || -9) < 0.6) k *= 1.8;
+  if (m === 'pogo' && dir === 'down') k *= 2;
+  if (m === 'launcher' && dir === 'up') k *= 1.8;
+  if (m === 'frost' && e.stun > 0) k *= 1.5;
+  return k;
+}
+const armSpd = () => armDef().spd * (armAff() === 'a_speed' ? 1.15 : 1);
+const armReach = () => armDef().reach * (armAff() === 'a_reach' ? 1.2 : 1);
+function armOnHit(e, f, fin, dmg) {
+  const p = state.p, m = armMech(), a = armAff();
+  if (f <= 0) return;
+  if (m === 'burn' || a === 'a_burn' && rng() < 0.2) applyGod('svarog', e);
+  if (m === 'chain' || a === 'a_shock' && rng() < 0.2) applyGod('perun', e);
+  if (m === 'doom') applyGod('veles', e);
+  if (m === 'wind') { applyGod('stribog', e); e.kb *= 1.5; }
+  if (m === 'bleed' || a === 'a_bleed' && rng() < 0.25) e.bleed = Math.max(e.bleed || 0, tune.bleed_time);
+  if (m === 'leech' || a === 'a_leech' && rng() < 0.1) heal(m === 'leech' ? 1 : 2);
+  if (m === 'stun') e.stun = Math.max(e.stun, EDEF[e.kind].boss ? 0.1 : 0.35);
+  if (m === 'frost') { e.stun = Math.max(e.stun, EDEF[e.kind].boss ? 0.05 : 0.15); burst(e.x, e.y - e.h / 2, 5, '#bfeaff', 160, 0.3, 2); }
+  if (m === 'shieldhit') addShield(1);
+  if (m === 'rage') state.armStack++;
+  if (m === 'charge' || a === 'a_charge') gainCharge(f * (m === 'charge' ? 1 : 0.3));
+  if (m === 'twin' && rng() < 0.3) { hurtEnemy(e, dmg * 0.6, p.x, { kb: 0 }); burst(e.x, e.y - e.h / 2, 6, '#ffe2a0', 220, 0.25, 2); }
+  if (m === 'gods') {
+    const own = [...godsTaken()].filter(g => g !== 'rod');
+    applyGod(own.length ? own[Math.floor(rng() * own.length)] : GOD_ORDER[Math.floor(rng() * 5)], e);
+  }
+  if (!fin) return;
+  if (m === 'chain') {
+    const near = state.enemies.filter(o => o !== e && !o.dead && !o.dying && Math.hypot(o.x - e.x, o.y - e.y) < 260).slice(0, 2);
+    for (const o of near) { hurtEnemy(o, dmg * 0.6, e.x, { kb: 80 }); applyGod('perun', o); state.bolts.push({ pts: boltPts(e.x, e.y - e.h / 2, o.x, o.y - o.h / 2), t: 0.25, c: '#bfe6ff' }); }
+  }
+  if (m === 'wave') shootP({ kind: 'wave', x: p.x + p.face * 30, y: p.y - 30, vx: p.face * 900, vy: 0, dmg: dmg * 0.7, pierce: 99, life: 0.5 });
+  if (m === 'quake' && !state.armQuake) {
+    state.armQuake = true; sfx.quake(); state.shake = Math.max(state.shake, 10);
+    state.flares.push({ x: p.x + p.face * 60, y: p.y - 4, t: 0, dur: 0.4, r: 170, quake: true });
+    for (const o of state.enemies) if (!o.dead && !o.dying && Math.abs(o.x - p.x - p.face * 60) < 170 && Math.abs(o.y - p.y) < 80 && o !== e) hurtEnemy(o, dmg * 0.5, p.x, { kb: 300, stun: 0.4 });
+  }
+  if (m === 'vortex') for (const o of state.enemies) if (!o.dead && !o.dying && !EDEF[o.kind].boss && Math.abs(o.x - p.x) < 300) {
+    o.kb = Math.sign(p.x - o.x) * 520 / weightOf(o); burst(o.x, o.y - o.h / 2, 4, '#c9e8ff', 140, 0.3, 2);
+  }
+}
+function armOnKill(e) {
+  const p = state.p, m = armMech();
+  if (m === 'boom') explode(e.x, e.y - e.h / 2, e, true);
+  if (m === 'doom' && e.curse > 0) explode(e.x, e.y - e.h / 2, e, true);
+  if (m === 'reaper') { heal(4); p.dashCd = 0; }
+  if (m === 'greed') dropLoot(e.x, e.y - e.h / 2, 'ember', 4);
+  if (m === 'growth' && state.growth < 60) { state.growth += 2; p.maxHp += 2; p.hp += 2; addNum(p.x, p.y - p.h - 20, 2, '#9ff0b0'); }
+  if (armAff() === 'a_kill') addShield(3);
+}
+const armTaken = () => armMech() === 'glass' ? 1.3 : 1;
+function armOnHurt() {
+  const p = state.p, m = armMech();
+  if (m === 'rage') state.armStack = 0;
+  if (m === 'thorns') {
+    state.flares.push({ x: p.x, y: p.y - 30, t: 0, dur: 0.3, r: 130, c: '#e8c48a' });
+    for (const e of state.enemies) if (!e.dead && !e.dying && Math.hypot(e.x - p.x, e.y - p.y) < 140) hurtEnemy(e, 20, p.x, { kb: 420, stun: 0.3 });
+  }
+}
+
+// ---- Secondary weapons: projectiles and traps ----
+function shootP(o) { state.pshots.push(Object.assign({ t: 0, g: 0, pierce: 1, hit: new Set(), fx: null, kb: 160, stun: 0, rot: 0 }, o)); }
+function subDmg() { const s = state.sub; return SUBS[s.id].dmg * qMult(s.q) * (s.aff === 's_dmg' ? 1.4 : 1); }
+function useSub() {
+  const s = state.sub, d = SUBS[s.id], p = state.p, f = p.face, x = p.x + f * 20, y = p.y - 34, dmg = subDmg();
+  const k = d.kind;
+  if (k === 'arrow' || k === 'firebow') shootP({ kind: 'arrow', x, y, vx: f * 1150, vy: 0, dmg, life: 0.9, fx: k === 'firebow' ? 'svarog' : null });
+  else if (k === 'longbow') shootP({ kind: 'arrow', x, y, vx: f * 1300, vy: 0, dmg, life: 0.9, pierce: 3 });
+  else if (k === 'triple') for (const a of [-0.14, 0, 0.14]) shootP({ kind: 'arrow', x, y, vx: f * 1100 * Math.cos(a), vy: 1100 * Math.sin(a), dmg, life: 0.8 });
+  else if (k === 'crossbow') shootP({ kind: 'bolt', x, y, vx: f * 1250, vy: 0, dmg, life: 0.9, kb: 700 });
+  else if (k === 'javelin') shootP({ kind: 'javelin', x, y: y - 6, vx: f * 980, vy: -160, g: 500, dmg, life: 1.2, pierce: 99, kb: 300 });
+  else if (k === 'sling') shootP({ kind: 'stone', x, y, vx: f * 1000, vy: -60, g: 300, dmg, life: 0.9, stun: 0.6 });
+  else if (k === 'axes') for (const a of [0, 1]) shootP({ kind: 'axe', x, y: y - a * 18, vx: f * 820, vy: -a * 80, dmg, life: 1.4, pierce: 99, boom: true, dir: f });
+  else if (k === 'bomb' || k === 'frostbomb' || k === 'cluster' || k === 'cursebomb')
+    shootP({ kind: 'bomb', x, y, vx: f * 400 + p.vx * 0.4, vy: -480, g: 1500, dmg, life: 3, bomb: k, r: k === 'cursebomb' ? 170 : 125 });
+  else if (k === 'firewand') shootP({ kind: 'fireball', x, y, vx: f * 820, vy: 0, dmg, life: 1, bomb: 'fire', r: 90 });
+  else if (k === 'icewand') shootP({ kind: 'shard', x, y, vx: f * 1100, vy: 0, dmg, life: 0.8, pierce: 99, stun: 0.8 });
+  else if (k === 'windflute') shootP({ kind: 'gust', x, y: y + 6, vx: f * 760, vy: 0, dmg, life: 0.7, pierce: 99, kb: 1100 });
+  else if (k === 'boltwand') {
+    let from = { x: p.x, y: p.y - 34 }, left = 3; const hit = new Set();
+    while (left-- > 0) {
+      let best = null, bd = 520;
+      for (const e of state.enemies) if (!e.dead && !e.dying && !hit.has(e)) { const dd = Math.hypot(e.x - from.x, e.y - e.h / 2 - from.y); if (dd < bd && (hit.size || Math.sign(e.x - p.x) === f)) { bd = dd; best = e; } }
+      if (!best) break;
+      hit.add(best); state.bolts.push({ pts: boltPts(from.x, from.y, best.x, best.y - best.h / 2), t: 0.3, c: '#bfe6ff' });
+      hurtEnemy(best, dmg, from.x, { kb: 120 }); applyGod('perun', best); from = { x: best.x, y: best.y - best.h / 2 };
+    }
+    sfx.hit();
+  } else if (k === 'bell') {
+    sfx.bell(); state.flares.push({ x: p.x, y: p.y - 30, t: 0, dur: 0.45, r: 180, c: '#b48cff' });
+    for (const e of state.enemies) if (!e.dead && !e.dying && Math.hypot(e.x - p.x, e.y - e.h / 2 - p.y + 30) < 190) { hurtEnemy(e, dmg, p.x, { kb: 200, stun: 0.8 }); applyGod('veles', e); }
+  } else { // traps: placed at the hero's feet
+    const gy = p.onGround ? p.y : GROUND;
+    if (state.traps.length >= 3) state.traps.shift();
+    if (k === 'beartrap') state.traps.push({ kind: 'beartrap', x: p.x + f * 30, y: gy, life: 14, dmg, t: 0 });
+    if (k === 'spikes') state.traps.push({ kind: 'spikes', x: p.x + f * 60, y: gy, life: 6, dmg, t: 0, tick: 0 });
+    if (k === 'totem') state.traps.push({ kind: 'totem', x: p.x - f * 20, y: gy, life: 9, dmg, t: 0, tick: 0.2 });
+  }
+  if (k !== 'boltwand' && k !== 'bell') tone(k.includes('bomb') || k === 'cluster' ? 220 : 620, 0.08, 'triangle', 0.06, 0.4);
+}
+function subBoom(s) {
+  const R = s.r;
+  state.flares.push({ x: s.x, y: s.y, t: 0, dur: 0.35, r: R, boom: s.bomb !== 'frostbomb', c: s.bomb === 'frostbomb' ? '#bfeaff' : s.bomb === 'cursebomb' ? '#b48cff' : undefined });
+  const col = s.bomb === 'frostbomb' ? '#bfeaff' : s.bomb === 'cursebomb' ? '#b48cff' : '#ffb04a';
+  burst(s.x, s.y, 24, col, 380, 0.5, 4); sfx.boom(); state.shake = Math.max(state.shake, 8);
+  for (const e of state.enemies) if (!e.dead && !e.dying && Math.hypot(e.x - s.x, e.y - e.h / 2 - s.y) < R) {
+    hurtEnemy(e, s.dmg, s.x, { kb: s.bomb === 'frostbomb' ? 60 : 420, stun: s.bomb === 'frostbomb' ? 1.6 : 0 });
+    if (s.bomb === 'fire') applyGod('svarog', e);
+    if (s.bomb === 'cursebomb') applyGod('veles', e, 1.5);
+  }
+  if (s.bomb === 'cluster' && !s.mini) for (let i = 0; i < 4; i++)
+    shootP({ kind: 'bomb', x: s.x, y: s.y - 10, vx: (i - 1.5) * 260, vy: -420 - (i % 2) * 120, g: 1500, dmg: s.dmg * 0.6, life: 2, bomb: 'cluster', r: 80, mini: true });
+}
+function updateSub(dt) {
+  const s = state, p = s.p;
+  s.subCd -= dt;
+  if (s.sub && s.world === 'run' && tapped(K.sub) && s.subCd <= 0 && p.dashT <= 0) {
+    useSub(); s.subCd = SUBS[s.sub.id].cd * (s.sub.aff === 's_cd' ? 0.7 : 1);
+    if (s.sub.aff === 's_twice') s.subQ = 0.14;
+    p.throwT = 0.22;
+  }
+  if (s.subQ > 0) { s.subQ -= dt; if (s.subQ <= 0 && s.sub) useSub(); }
+  p.throwT = (p.throwT || 0) - dt;
+  for (const b of s.pshots) {
+    b.t += dt; b.vy += b.g * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.rot += dt * 18;
+    if (b.boom && b.t > 0.32) { // the throwing axes come back
+      const dx = p.x - b.x, dy = p.y - 34 - b.y, d = Math.hypot(dx, dy) || 1;
+      b.vx += (dx / d * 1400 - b.vx) * Math.min(1, dt * 5); b.vy += (dy / d * 1400 - b.vy) * Math.min(1, dt * 5);
+      if (!b.back) { b.back = true; b.hit = new Set(); }
+      if (d < 30) b.t = 99;
+    }
+    if (b.bomb && b.kind === 'bomb' && b.y >= GROUND - 6) { subBoom(b); b.t = 99; continue; }
+    if (b.x < 0 || b.x > s.room.w || b.y > GROUND + 10) { if (b.bomb) subBoom(b); b.t = 99; continue; }
+    for (const e of s.enemies) {
+      if (e.dead || e.dying || b.hit.has(e) || b.t > 90) continue;
+      if (Math.abs(e.x - b.x) < e.w / 2 + 10 && b.y > e.y - e.h - 8 && b.y < e.y + 8) {
+        if (b.bomb) { subBoom(b); b.t = 99; break; }
+        b.hit.add(e);
+        hurtEnemy(e, b.dmg, b.x - Math.sign(b.vx || 1) * 20, { kb: b.kb, stun: b.stun });
+        if (b.fx) applyGod(b.fx, e);
+        gainCharge(0.4); burst(b.x, b.y, 6, '#ffe2a0', 200, 0.25, 2);
+        if (--b.pierce <= 0) { b.t = 99; break; }
+      }
+    }
+  }
+  s.pshots = s.pshots.filter(b => b.t < b.life);
+  for (const tr of s.traps) {
+    tr.t += dt; tr.life -= dt;
+    if (tr.kind === 'beartrap' && !tr.used) for (const e of s.enemies) if (!e.dead && !e.dying && !EDEF[e.kind].fly && Math.abs(e.x - tr.x) < e.w / 2 + 14 && e.y > tr.y - 20) {
+      tr.used = true; tr.life = Math.min(tr.life, 0.6); hurtEnemy(e, tr.dmg, tr.x, { kb: 0, stun: 2 }); e.bleed = Math.max(e.bleed || 0, tune.bleed_time); sfx.clang(); break;
+    }
+    if (tr.kind === 'spikes') { tr.tick -= dt; if (tr.tick <= 0) { tr.tick = 0.3; for (const e of s.enemies) if (!e.dead && !e.dying && Math.abs(e.x - tr.x) < 80 && e.y > tr.y - 30) hurtEnemy(e, tr.dmg, tr.x, { kb: 0 }); } }
+    if (tr.kind === 'totem') { tr.tick -= dt; if (tr.tick <= 0) {
+      let best = null, bd = 700; for (const e of s.enemies) if (!e.dead && !e.dying) { const dd = Math.abs(e.x - tr.x); if (dd < bd) { bd = dd; best = e; } }
+      if (best) { tr.tick = 0.6; const dx = best.x - tr.x, dy = best.y - best.h / 2 - (tr.y - 60), d = Math.hypot(dx, dy) || 1;
+        shootP({ kind: 'arrow', x: tr.x, y: tr.y - 60, vx: dx / d * 1000, vy: dy / d * 1000, dmg: tr.dmg, life: 0.9 }); }
+    } }
+  }
+  s.traps = s.traps.filter(tr => tr.life > 0);
+}
+
+// ---- Drawing: secondary weapons, projectiles, traps and drops on the floor ----
+function drawSubIcon(id, x, y, s = 1) {
+  const k = SUBS[id].kind; ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = INK; ctx.lineWidth = 2;
+  if (['arrow', 'longbow', 'triple', 'firebow'].includes(k)) {
+    ctx.strokeStyle = k === 'firebow' ? '#ff9a3a' : '#8a5a2e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-4, 0, 13, -1.2, 1.2); ctx.stroke();
+    ctx.strokeStyle = '#e8e0c8'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(Math.cos(-1.2) * 13 - 4, Math.sin(-1.2) * 13); ctx.lineTo(Math.cos(1.2) * 13 - 4, Math.sin(1.2) * 13); ctx.stroke();
+    if (k === 'triple') { ctx.strokeStyle = '#d8cfb8'; ctx.lineWidth = 1.5; for (const a of [-5, 0, 5]) { ctx.beginPath(); ctx.moveTo(-6, a); ctx.lineTo(12, a * 1.4); ctx.stroke(); } }
+  } else if (k === 'crossbow') {
+    ctx.fillStyle = '#6a4424'; ctx.fillRect(-12, -2, 22, 5); ctx.strokeStyle = '#3a3a40'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(8, 0, 11, -1.4, 1.4); ctx.stroke();
+  } else if (['bomb', 'frostbomb', 'cluster', 'cursebomb'].includes(k)) {
+    ctx.fillStyle = k === 'frostbomb' ? '#8fd0ee' : k === 'cursebomb' ? '#5a2a7a' : k === 'cluster' ? '#c0502a' : '#3a3230';
+    ctx.beginPath(); ctx.arc(0, 3, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#c9a070'; ctx.beginPath(); ctx.moveTo(0, -7); ctx.quadraticCurveTo(4, -12, 8, -11); ctx.stroke();
+    ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.arc(8, -11, 2.5, 0, Math.PI * 2); ctx.fill();
+  } else if (k === 'beartrap') {
+    ctx.strokeStyle = '#9aa2aa'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 4, 12, Math.PI, 0); ctx.stroke();
+    for (let i = -10; i <= 10; i += 5) { ctx.beginPath(); ctx.moveTo(i, 4); ctx.lineTo(i + 2, -3); ctx.stroke(); }
+  } else if (k === 'spikes') { ctx.fillStyle = '#8a6a44'; for (let i = -12; i <= 12; i += 6) { ctx.beginPath(); ctx.moveTo(i - 3, 10); ctx.lineTo(i, -10); ctx.lineTo(i + 3, 10); ctx.closePath(); ctx.fill(); ctx.stroke(); } }
+  else if (k === 'totem') { ctx.fillStyle = '#7a5a34'; ctx.fillRect(-6, -13, 12, 26); ctx.strokeRect(-6, -13, 12, 26); ctx.fillStyle = '#ff6a4a'; ctx.beginPath(); ctx.arc(0, -6, 2.5, 0, Math.PI * 2); ctx.fill(); }
+  else if (k === 'axes') { for (const sx of [-5, 5]) { ctx.save(); ctx.translate(sx, 0); ctx.rotate(sx * 0.05); ctx.strokeStyle = '#6a4424'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(0, -10); ctx.stroke(); ctx.fillStyle = '#c8ced4'; ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, -10); ctx.quadraticCurveTo(9, -8, 7, 0); ctx.lineTo(0, -3); ctx.fill(); ctx.stroke(); ctx.restore(); } }
+  else if (k === 'javelin') { ctx.rotate(-0.6); ctx.strokeStyle = '#7a5434'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-15, 0); ctx.lineTo(10, 0); ctx.stroke(); ctx.fillStyle = '#d8dde2'; ctx.beginPath(); ctx.moveTo(10, -3); ctx.lineTo(18, 0); ctx.lineTo(10, 3); ctx.fill(); }
+  else if (k === 'sling') { ctx.strokeStyle = '#8a6a44'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-12, -10); ctx.quadraticCurveTo(0, 14, 12, -10); ctx.stroke(); ctx.fillStyle = '#9a9488'; ctx.beginPath(); ctx.arc(0, 3, 4.5, 0, Math.PI * 2); ctx.fill(); }
+  else if (k === 'bell') { ctx.fillStyle = '#b48cff'; ctx.beginPath(); ctx.moveTo(-10, 8); ctx.quadraticCurveTo(-9, -12, 0, -12); ctx.quadraticCurveTo(9, -12, 10, 8); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 10, 2.5, 0, Math.PI * 2); ctx.fill(); }
+  else { // wands and the flute
+    const c = k === 'firewand' ? '#ff8a3a' : k === 'boltwand' ? '#bfe6ff' : k === 'icewand' ? '#9fe3ff' : '#9ff0d0';
+    ctx.rotate(-0.7); ctx.strokeStyle = '#6a4424'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(10, 0); ctx.stroke();
+    const g = ctx.createRadialGradient(13, 0, 0, 13, 0, 9); g.addColorStop(0, c); g.addColorStop(1, c + '00'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(13, 0, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = c; ctx.beginPath(); ctx.arc(13, 0, 3.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawPShot(b) {
+  ctx.save(); ctx.translate(b.x, b.y); ctx.lineCap = 'round';
+  const ang = Math.atan2(b.vy, b.vx);
+  if (b.kind === 'arrow' || b.kind === 'bolt' || b.kind === 'javelin') {
+    ctx.rotate(ang); const L = b.kind === 'javelin' ? 54 : b.kind === 'bolt' ? 26 : 32;
+    ctx.strokeStyle = b.fx === 'svarog' ? '#ffb04a' : b.kind === 'javelin' ? '#7a5434' : '#c9a070'; ctx.lineWidth = b.kind === 'arrow' ? 2.5 : 4;
+    ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(0, 0); ctx.stroke();
+    ctx.fillStyle = '#e8eef2'; ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(9, 0); ctx.lineTo(0, 4); ctx.fill();
+    if (b.fx === 'svarog') { const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 16); g.addColorStop(0, 'rgba(255,170,60,0.8)'); g.addColorStop(1, 'rgba(255,120,30,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff0d0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-L - 30, 0); ctx.lineTo(-L, 0); ctx.stroke();
+  } else if (b.kind === 'stone') { ctx.fillStyle = '#9a9488'; ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  else if (b.kind === 'axe') { ctx.rotate(b.rot * (b.dir || 1)); ctx.strokeStyle = '#6a4424'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(0, -10); ctx.stroke(); ctx.fillStyle = '#d0d6dc'; ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -10); ctx.quadraticCurveTo(12, -8, 9, 2); ctx.lineTo(0, -2); ctx.fill(); ctx.stroke(); }
+  else if (b.kind === 'bomb') {
+    const c = b.bomb === 'frostbomb' ? '#8fd0ee' : b.bomb === 'cursebomb' ? '#5a2a7a' : b.bomb === 'cluster' ? '#c0502a' : '#3a3230';
+    const r = b.mini ? 6 : 9;
+    ctx.fillStyle = c; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = Math.floor(b.t * 20) % 2 ? '#fff4b0' : '#ff9a3a'; ctx.beginPath(); ctx.arc(Math.cos(b.rot) * r, -r - 3, 3, 0, Math.PI * 2); ctx.fill();
+  } else if (b.kind === 'fireball') {
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 22); g.addColorStop(0, '#fff4c0'); g.addColorStop(0.35, '#ff9a3a'); g.addColorStop(1, 'rgba(255,80,20,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
+  } else if (b.kind === 'shard') { ctx.rotate(ang); ctx.fillStyle = '#cff2ff'; ctx.strokeStyle = '#5aa8d0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(0, -5); ctx.lineTo(-14, 0); ctx.lineTo(0, 5); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  else if (b.kind === 'wave' || b.kind === 'gust') {
+    ctx.scale(Math.sign(b.vx) || 1, 1); const k = 1 - b.t / b.life;
+    ctx.strokeStyle = b.kind === 'gust' ? `rgba(180,255,230,${0.7 * k})` : `rgba(255,240,200,${0.8 * k})`; ctx.lineWidth = b.kind === 'gust' ? 5 : 4;
+    for (let i = 0; i < (b.kind === 'gust' ? 3 : 1); i++) { ctx.beginPath(); ctx.arc(-10 - i * 14, 0, 34 + i * 6, -1.1, 1.1); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+function drawTrap(tr) {
+  ctx.save(); ctx.translate(tr.x, tr.y); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  const fade = clamp(tr.life * 2, 0, 1); ctx.globalAlpha = fade;
+  if (tr.kind === 'beartrap') {
+    const shut = tr.used ? 1 : 0;
+    ctx.strokeStyle = '#a8b0b8'; ctx.lineWidth = 3;
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(0, -2, 18, 10 * (1 - shut * 0.7), 0, s < 0 ? Math.PI : 0, s < 0 ? Math.PI * 2 : Math.PI); ctx.stroke(); }
+    ctx.lineWidth = 2; for (let i = -14; i <= 14; i += 7) { ctx.beginPath(); ctx.moveTo(i, -2); ctx.lineTo(i + 2, -8 + shut * 4); ctx.stroke(); }
+  } else if (tr.kind === 'spikes') {
+    const up = clamp(tr.t * 6, 0, 1);
+    ctx.fillStyle = '#8a6a44';
+    for (let i = -72; i <= 72; i += 12) { ctx.beginPath(); ctx.moveTo(i - 4, 0); ctx.lineTo(i, -22 * up - (i % 24 ? 0 : 6) * up); ctx.lineTo(i + 4, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  } else {
+    ctx.fillStyle = '#6a4a2e'; ctx.fillRect(-9, -70, 18, 70); ctx.strokeRect(-9, -70, 18, 70);
+    ctx.fillStyle = '#4a3020'; ctx.beginPath(); ctx.moveTo(-14, -70); ctx.lineTo(0, -84); ctx.lineTo(14, -70); ctx.closePath(); ctx.fill(); ctx.stroke();
+    eyeGlow(0, -58, 3, '#ff6a4a');
+  }
+  ctx.restore();
+}
+function drawArmsDrop(it) {
+  const dr = it.drop, def = dr.kind === 'arm' ? ARMS[dr.inst.id] : SUBS[dr.inst.id], col = RAR[def.rar].color;
+  const [r, g, b] = hexRgb(col), t = state.t, y = GROUND - 56 + Math.sin(t * 2.4 + it.x) * 5;
+  const beam = ctx.createLinearGradient(0, GROUND - 260, 0, GROUND);
+  beam.addColorStop(0, `rgba(${r},${g},${b},0)`); beam.addColorStop(1, `rgba(${r},${g},${b},${def.rar === 'c' ? 0.12 : 0.28})`);
+  ctx.fillStyle = beam; ctx.fillRect(it.x - 16, GROUND - 260, 32, 260);
+  const gl = ctx.createRadialGradient(it.x, y, 0, it.x, y, 40); gl.addColorStop(0, `rgba(${r},${g},${b},0.5)`); gl.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(it.x, y, 40, 0, Math.PI * 2); ctx.fill();
+  if (dr.kind === 'arm') { ctx.save(); ctx.translate(it.x, y); ctx.rotate(-0.8 + Math.sin(t * 1.7) * 0.1); ctx.translate(-weaponLen(def.base) / 2, 0); drawWeapon(def.base, 1, 0, false); ctx.restore(); }
+  else drawSubIcon(def.id, it.x, y, 1.3);
+  for (let i = 0; i < dr.inst.q; i++) { ctx.fillStyle = col; ctx.beginPath(); const sx = it.x + (i - (dr.inst.q - 1) / 2) * 9, sy = y - 34; ctx.moveTo(sx, sy - 4); ctx.lineTo(sx + 3, sy); ctx.lineTo(sx, sy + 4); ctx.lineTo(sx - 3, sy); ctx.fill(); }
+}
+// The card over a weapon on the floor: what it is and what you hold now.
+function drawArmsCard(it) {
+  const dr = it.drop, isArm = dr.kind === 'arm', def = isArm ? ARMS[dr.inst.id] : SUBS[dr.inst.id];
+  const aff = dr.inst.aff ? (isArm ? AFFIX : SUB_AFFIX)[dr.inst.aff] : null, col = RAR[def.rar].color;
+  const x = clamp(it.x - state.cam, 240, W - 240), y = 168, w = 440, h = aff ? 168 : 140;
+  ctx.fillStyle = 'rgba(12,10,14,0.92)'; rrect(x - w / 2, y, w, h, 12); ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+  text(`${isArm ? 'Оружие' : 'Доп. оружие'} · ${RAR[def.rar].name}`, x, y + 18, 13, col);
+  textShadow(def.name, x, y + 42, 21, '#ffe7b8');
+  text(stars(dr.inst.q) + `  +${Math.round((qMult(dr.inst.q) - 1) * 100)}% урона`, x, y + 66, 15, '#ffd36a');
+  text(def.desc, x, y + 90, 14, '#d8d0bc');
+  if (aff) text(`${aff.name}: ${aff.desc}`, x, y + 114, 14, '#9ff0b0');
+  const cur = isArm ? state.arm : state.sub;
+  const curName = cur ? `${(isArm ? ARMS : SUBS)[cur.id].name} ${stars(cur.q)}` : 'пусто';
+  text(`В руках: ${curName}`, x, y + h - 18, 13, '#a89a80');
 }
 
 // ---- Enemies ----------------------------------------------------------------------------------------
@@ -1404,6 +1936,9 @@ function updatePlay(dt) {
     return;
   }
   updatePlayer(dt);
+  updateSub(dt);
+  for (const w of state.words) w.t -= dt;
+  state.words = state.words.filter(w => w.t > 0);
   if (state.echoT > 0) { state.echoT -= dt; if (state.echoT <= 0) flare(0.5); }
   // interact with what is near: stations, doors, people
   state.near = null;
@@ -1475,8 +2010,13 @@ function updatePlay(dt) {
     for (const e of state.enemies) { if (e.dead || e.dying) continue; const d = Math.hypot(e.x - w.x, e.y - e.h / 2 - w.y); if (d < bd) { bd = d; best = e; } }
     if (best) {
       const a = Math.atan2(best.y - best.h / 2 - w.y, best.x - w.x);
-      w.vx = lerp(w.vx, Math.cos(a) * 520, Math.min(1, dt * 4)); w.vy = lerp(w.vy, Math.sin(a) * 520, Math.min(1, dt * 4));
-      if (bd < 26) { hurtEnemy(best, w.dmg, w.x, { flare: true, kb: 160, burn: 1.5 }); burst(w.x, w.y, 12, '#d9a6ff', 260, 0.4, 2); w.t = 0; sfx.hit(); }
+      const sp = w.curse ? 640 : 520, st = w.curse ? 7 : 4;
+      w.vx = lerp(w.vx, Math.cos(a) * sp, Math.min(1, dt * st)); w.vy = lerp(w.vy, Math.sin(a) * sp, Math.min(1, dt * st));
+      if (bd < best.w / 2 + 12) {
+        if (w.curse) { hurtEnemy(best, w.dmg, w.x, { kb: 140 }); applyGod('veles', best, 1); }
+        else hurtEnemy(best, w.dmg, w.x, { flare: true, kb: 160, burn: 1.5 });
+        burst(w.x, w.y, 12, '#d9a6ff', 260, 0.4, 2); w.t = 0; sfx.hit();
+      }
     } else { w.vy -= 200 * dt; }
     w.x += w.vx * dt; w.y += w.vy * dt;
   }
@@ -1611,7 +2151,7 @@ function keeperLines() {
   ];
 }
 const IVA_LINES = ['Оберег — не безделица, богатырь. В нём сила бога, а у каждого бога свой нрав.', 'Принеси болотного железа, живицы или иней-камня и сердце чудища, и я сплету тебе новый оберег.'];
-const SMITH_LINES = ['Кладенец хорош, но Навь велика. Рогатина, серпы, булава…', 'Добычу из Нави — мне. Оружие — тебе. Честный уговор, по-медвежьи.'];
+const SMITH_LINES = ['Кладенец хорош, но Навь велика. Рогатина, серпы, булава, луки, бомбы…', 'Что купишь у меня, то и в Нави тебе попадётся. А самое чудное оружие там само лежит: его ни один кузнец не скуёт.', 'Добычу из Нави — мне. Оружие — тебе. Честный уговор, по-медвежьи.'];
 
 function openMenu(kind) { state.menu = { kind, sel: 0, msg: '', msgT: 0 }; if (kind === 'gate') state.menu.sel = 0; }
 function talk(name, lines) { state.dialog = { name, lines, i: 0 }; }
@@ -1626,7 +2166,24 @@ function menuRows(kind) {
     return { name: u.name, desc: u.desc(), right: maxed ? 'макс.' : `${upCost(u)} углей`, ok: !maxed && save.embers >= upCost(u), pips: [lv, u.max],
       act: () => { if (maxed) return 'Уже на максимуме'; if (save.embers < upCost(u)) return 'Не хватает углей'; save.embers -= upCost(u); save.up[u.id]++; writeSave(); sfx.buy(); return `${u.name}: уровень ${save.up[u.id]}`; } };
   });
-  if (kind === 'lantern' || kind === 'weapon') {
+  if (kind === 'weapon') { // Potap's shop: a bought weapon can be taken into a run and starts dropping in runs
+    const rows = [];
+    for (const [isArm, order, defs, owned] of [[true, ARM_ORDER, ARMS, save.weapons], [false, SUB_ORDER, SUBS, save.subs]]) for (const id of order) {
+      const d = defs[id]; if (!d.shop) continue;
+      const own = owned[id] || (isArm && id === 'blade'), eq = isArm ? save.weapon === id : save.sub === id;
+      rows.push({ name: d.name, col: RAR[d.rar].color, desc: `${isArm ? 'Оружие' : 'Доп. оружие'} · ${RAR[d.rar].name} · ${d.desc}`, icon: { kind: isArm ? 'weapon' : 'sub', id: isArm ? d.base : id },
+        right: eq ? 'с собой' : own ? 'взять' : costText(d.shop), ok: eq || own || canPay(d.shop),
+        act: () => {
+          if (eq) return 'Уже с собой';
+          if (!own) { if (!canPay(d.shop)) return 'Не хватает ресурсов'; pay(d.shop); owned[id] = true; sfx.buy(); }
+          if (isArm) { save.weapon = id; state.weapon = d.base; state.arm = { id, q: 1, aff: null }; } else { save.sub = id; state.sub = { id, q: 1, aff: null }; }
+          writeSave(); sfx.pick(); return `${d.name}: теперь с тобой, и может выпасть в Нави`;
+        } });
+    }
+    rows.push({ name: 'Поговорить', desc: 'Кузнец Потап', right: '', ok: true, act: () => { state.menu = null; talk('Потап', SMITH_LINES); return null; } });
+    return rows;
+  }
+  if (kind === 'lantern') {
     const L = kind === 'lantern', order = L ? LANTERN_ORDER : WEAPON_ORDER, defs = L ? LANTERNS : WEAPONS, owned = L ? save.lanterns : save.weapons;
     const rows = order.map(id => {
       const d = defs[id], own = owned[id], eq = (L ? save.lantern : save.weapon) === id;
@@ -2278,7 +2835,7 @@ function drawKnight(p, opt = {}) {
     if (!last || last.t !== state.t) p.trail.push({ x: wpt.x - p.x, y: wpt.y - p.y, bx: wph.x - p.x, by: wph.y - p.y, t: state.t });
   }
   ctx.strokeStyle = col('#9a2a22'); ctx.lineWidth = 5.5; ctx.beginPath(); ctx.moveTo(shx, shy); ctx.lineTo(hx, hy); ctx.stroke();
-  if (!ghost) { ctx.save(); ctx.translate(hx, hy); drawWeapon(wpn, 1, wp.a); ctx.restore(); }
+  if (!ghost) { ctx.save(); ctx.translate(hx, hy); const rr = !opt.static && state.arm ? armDef().rar : 'c'; if (rr !== 'c') { ctx.shadowColor = RAR[rr].color; ctx.shadowBlur = 12; } drawWeapon(wpn, 1, wp.a); ctx.restore(); }
   ctx.restore();
   ctx.restore();
 }
@@ -2868,9 +3425,25 @@ function drawHUD() {
   panel(76, 72, 196, 40, 0.6);
   textShadow(full ? 'ВСПЫШКА ГОТОВА — L' : `${LANTERNS[state.lantern].name.split(' ')[0]} · ${Math.floor(p.charge)}%`, 174, 92, 16, full ? '#ffe29a' : '#e8d9b8');
   // weapon
-  panel(20, 122, 252, 34, 0.6);
+  const ad = armDef(), aq = (state.arm || {}).q || 1;
+  panel(20, 122, 290, 34, 0.6);
+  ctx.strokeStyle = RAR[ad.rar].color; ctx.lineWidth = 1.5; rrect(20, 122, 290, 34, 8); ctx.stroke();
   drawWeaponIcon(state.weapon, 44, 139, 0.9);
-  text(WEAPONS[state.weapon].name, 70, 139, 16, '#e8d9b8', 'left');
+  text(ad.name, 70, 133, 15, RAR[ad.rar].color, 'left', 'bold');
+  text(stars(aq) + (state.arm && state.arm.aff ? ' · ' + AFFIX[state.arm.aff].name : ''), 70, 149, 11, '#ffd36a', 'left');
+  if (armMech() === 'rage' && state.armStack > 0) text(`ярость +${Math.min(15, state.armStack) * 4}%`, 300, 139, 12, '#ff8a6a', 'right');
+  // the secondary weapon slot
+  panel(20, 162, 290, 34, 0.6);
+  if (state.sub) {
+    const sd = SUBS[state.sub.id];
+    ctx.strokeStyle = RAR[sd.rar].color; ctx.lineWidth = 1.5; rrect(20, 162, 290, 34, 8); ctx.stroke();
+    drawSubIcon(sd.id, 44, 179, 0.9);
+    text(sd.name, 70, 173, 15, RAR[sd.rar].color, 'left', 'bold');
+    text(stars(state.sub.q) + (state.sub.aff ? ' · ' + SUB_AFFIX[state.sub.aff].name : ''), 70, 189, 11, '#ffd36a', 'left');
+    const cd = state.subCd > 0 ? state.subCd / (sd.cd * (state.sub.aff === 's_cd' ? 0.7 : 1)) : 0;
+    ctx.fillStyle = cd > 0 ? 'rgba(120,110,90,0.8)' : 'rgba(255,217,154,0.9)'; rrect(250, 170, 50, 18, 5); ctx.fill();
+    text(cd > 0 ? `${state.subCd.toFixed(1)}` : 'U', 275, 180, 13, '#1a140e');
+  } else text('Доп. оружие: пусто', 34, 179, 14, '#8a8070', 'left');
   // embers and resources
   const res = hub ? save.res : state.runRes;
   panel(W - 250, 18, 230, 36);
@@ -2906,6 +3479,7 @@ function drawHUD() {
     drawBoonIcon(b.kind || SLOT_KIND[b.slot] || 'body', x, y, 0.85);
   });
   // what to press here
+  if (state.near && state.near.drop && !state.menu && !state.dialog && state.mode === 'open') drawArmsCard(state.near);
   if (state.near && !state.menu && !state.dialog && state.mode === 'open') {
     const sx = state.near.x - state.cam;
     const s = `E — ${state.near.label}`;
@@ -2969,25 +3543,28 @@ function drawBoonCards() {
   });
   if (state.rerolls > 0) text(`R — перебросить (${state.rerolls})`, W / 2, 590, 18, '#c8bfa8');
 }
-const MENU_TITLE = { shrine: 'Капище Рода', lantern: 'Ведунья Сова', weapon: 'Кузнец Потап', gate: 'Ворота в Навь' };
+const MENU_TITLE = { shrine: 'Капище Рода', lantern: 'Ведунья Сова', weapon: 'Лавка кузнеца Потапа', gate: 'Ворота в Навь' };
 function drawMenu() {
   const m = state.menu, rows = menuRows(m.kind);
   ctx.fillStyle = 'rgba(3,4,10,0.7)'; ctx.fillRect(0, 0, W, H);
-  const x0 = 300, w = 680, rh = m.kind === 'gate' ? 76 : 66, y0 = 140;
-  ctx.fillStyle = 'rgba(16,12,12,0.92)'; rrect(x0 - 30, 60, w + 60, y0 + rows.length * rh - 20, 16); ctx.fill();
+  const x0 = 300, w = 680, rh = m.kind === 'gate' ? 76 : 66, y0 = 140, VIS = 7;
+  const first = rows.length > VIS ? clamp(m.sel - 3, 0, rows.length - VIS) : 0, shown = rows.slice(first, first + VIS);
+  ctx.fillStyle = 'rgba(16,12,12,0.92)'; rrect(x0 - 30, 60, w + 60, y0 + shown.length * rh - 20, 16); ctx.fill();
+  if (rows.length > VIS) { text(first > 0 ? '▲' : '', x0 + w + 14, y0 + 10, 16, '#ffd07a'); text(first + VIS < rows.length ? '▼' : '', x0 + w + 14, y0 + VIS * rh - 24, 16, '#ffd07a'); }
   ctx.strokeStyle = '#6a5a40'; ctx.lineWidth = 2; ctx.stroke();
   textShadow(MENU_TITLE[m.kind], W / 2, 96, 32, '#ffe7b8');
-  rows.forEach((r, i) => {
-    const y = y0 + i * rh, sel = i === m.sel;
+  shown.forEach((r, j) => {
+    const i = j + first, y = y0 + j * rh, sel = i === m.sel;
     ctx.fillStyle = sel ? 'rgba(70,52,30,0.9)' : 'rgba(10,14,20,0.7)'; rrect(x0, y, w, rh - 10, 10); ctx.fill();
     if (sel) { ctx.strokeStyle = '#ffd07a'; ctx.lineWidth = 2; ctx.stroke(); }
     let tx = x0 + 20;
     if (r.icon) {
       if (r.icon.kind === 'lantern') drawLanternIcon(x0 + 34, y + (rh - 10) / 2, 0.75, 1, sel ? 0.4 : 0.15, r.icon.id, !save.lanterns[r.icon.id]);
+      else if (r.icon.kind === 'sub') drawSubIcon(r.icon.id, x0 + 34, y + (rh - 10) / 2, 1);
       else drawWeaponIcon(r.icon.id, x0 + 34, y + (rh - 10) / 2, 0.9);
       tx = x0 + 70;
     }
-    text(r.name, tx, y + 18, 20, '#ffe7b8', 'left', 'bold');
+    text(r.name, tx, y + 18, 20, r.col || '#ffe7b8', 'left', 'bold');
     ctx.save(); ctx.beginPath(); ctx.rect(tx, y, w - (tx - x0) - 12, rh); ctx.clip();
     text(r.desc, tx, y + 42, r.desc.length > 72 ? 13 : 14, '#d0c6b0', 'left'); ctx.restore();
     if (r.pips) for (let k = 0; k < r.pips[1]; k++) {
@@ -2997,7 +3574,7 @@ function drawMenu() {
     }
     if (r.right) text(r.right, x0 + w - 16, y + 18, 16, r.ok ? '#a8e08a' : '#e08a7a', 'right');
   });
-  const fy = y0 + rows.length * rh + 30;
+  const fy = y0 + shown.length * rh + 30;
   // what the player holds now
   let tx = W / 2 - 190;
   drawLoot({ x: tx, y: fy, spin: 0, type: 'ember' }); text(`${save.embers}`, tx + 14, fy + 1, 16, '#ffe18a', 'left'); tx += 70;
@@ -3024,24 +3601,28 @@ function drawPlayScene() {
     const g = ctx.createLinearGradient(0, GROUND - 30, 0, GROUND); g.addColorStop(0, 'rgba(255,120,30,0)'); g.addColorStop(1, 'rgba(255,150,40,0.7)');
     ctx.fillStyle = g; ctx.fillRect(f.x - f.w / 2, GROUND - 30, f.w, 30);
   }
+  for (const it of state.room.inter) if (it.drop) drawArmsDrop(it);
+  for (const tr of state.traps) drawTrap(tr);
   for (const c of state.corpses) drawEnemy(c.e, false, c.t / 0.6);
   for (const e of state.enemies) drawEnemy(e);
   const p = state.p;
-  for (const g of p.ghosts) { ctx.globalAlpha = clamp(g.t * 2, 0, 1); drawKnight({ ...p, x: g.x, y: g.y, face: g.face, atkT: 0 }, { ghost: 'rgba(255,210,140,0.35)', noCape: true }); }
+  for (const g of p.ghosts) { ctx.globalAlpha = clamp(g.t * 2, 0, 1); drawKnight({ ...p, x: g.x, y: g.y, face: g.face, atkT: 0 }, { ghost: ghostColor(), noCape: true }); }
   ctx.globalAlpha = 1;
   const blink = p.inv > 0 && p.dashT <= 0 && Math.floor(state.t * 20) % 2;
   if (!blink || state.mode === 'dead') drawKnight(p, { dead: state.mode === 'dead' ? 1 - state.deadT / 1.8 : 0 });
   drawTrail(p);
+  drawHeroAura(p);
   if (p.hurtFlash > 0) { ctx.save(); ctx.globalAlpha = 0.3 * clamp(p.hurtFlash * 4, 0, 1); ctx.fillStyle = '#ff5050'; ctx.fillRect(p.x - 20, p.y - 66, 40, 66); ctx.restore(); }
   ctx.restore();
   drawDarkness(ox, oy);
   // what glows reads through the dark: eyes, warnings, shots, loot, sparks, the Flare
   ctx.save(); ctx.translate(-state.cam + ox, oy);
-  for (const e of state.enemies) { drawEnemy(e, true); if (!e.dead && !e.dying) drawStatus(e); }
+  for (const e of state.enemies) { if (!e.dead && !e.dying) drawStatusFx(e); drawEnemy(e, true); if (!e.dead && !e.dying) drawStatus(e); }
   for (const h of state.haz) drawHazard(h);
   for (const s of state.spawns) drawSpawn(s);
   for (const s of state.shots) drawShot(s);
   for (const w of state.wisps) drawWisp(w);
+  for (const b of state.pshots) drawPShot(b);
   for (const b of state.bolts) drawBolt(b);
   for (const m of state.loot) drawLoot(m);
   for (const pt of state.parts) { ctx.globalAlpha = clamp(pt.t / pt.life, 0, 1); ctx.fillStyle = pt.c; ctx.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size); }
@@ -3056,6 +3637,7 @@ function drawPlayScene() {
     ctx.stroke();
   }
   for (const n of state.nums) { ctx.globalAlpha = clamp(n.t * 2, 0, 1); textShadow(`${n.v}`, n.x, n.y, 18, n.c); }
+  drawWords();
   ctx.globalAlpha = 1;
   ctx.restore();
   drawAmbient();

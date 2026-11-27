@@ -112,6 +112,13 @@ window.CONFIG = {
   wall_slam_dmg: { value: 12, min: 0, max: 80, step: 1 },         // damage from hitting a wall or another enemy
   roll_time: { value: 0.3, min: 0.1, max: 0.8, step: 0.02 },      // s a ground roll lasts (air dash uses dash_time)
 
+  // ---- Arms: weapon quality, extra effects and drops ----
+  arm_q_step: { value: 0.08, min: 0, max: 0.3, step: 0.01 },      // damage x per quality star above 1
+  affix_q4: { value: 0.35, min: 0, max: 1, step: 0.05 },          // chance a 4-star weapon has an extra effect
+  affix_q5: { value: 0.75, min: 0, max: 1, step: 0.05 },          // chance a 5-star weapon has an extra effect
+  elite_arm: { value: 0.3, min: 0, max: 1, step: 0.05 },          // chance an elite drops a weapon (bosses always do)
+  door_arms: { value: 0.1, min: 0, max: 0.4, step: 0.01 },        // extra share of fork doors that offer a weapon
+
   // ---- Gods' statuses and runes ----
   shock_stacks: { value: 3, min: 1, max: 8, step: 1 },            // Perun charges before a discharge
   shock_dmg: { value: 22, min: 1, max: 100, step: 1 },            // discharge damage to the charged enemy

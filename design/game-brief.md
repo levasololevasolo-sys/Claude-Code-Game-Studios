@@ -37,6 +37,8 @@ After play: нужно самое главное придумать систем
 After play: крч суть в том, что бы каждый забег был уникален и не похож не на что другое, в конце каждой комнаты, добавить развилку по 2-3м дверям, где ты получал или какой то ресурс по завершению локации или какой то баф для героя
 After play: по итогу от анимаций и физики и тексторам, жду от тебя игру между хейдес и дед селс, добавить надо анимации бега, переката, разные анимации оружия, графику очень сильно подтянуть, визуальную часть тоже самое надо ну очень сильно апнуть
 Chosen: «Механики, потом Godot» (mechanics finished in the browser first, then the game moves to Godot 4 with real art)
+After play: взять и бесплатные варианты по графике и ии генерации
+After play: боги есть, но механики их не доработаны, все что увидел, это то что работает бог огня и он поджигает, остальные не заметил разницы, проклятия и светлячки даже во врагов не летят
 
 **Pitch:** A fallen bogatyr, held to life by the thread of the goddess Mokosh, cuts his way through Nav, the Slavic underworld that has flooded into the living world, taking back the gods' elemental powers from the monsters of the tales; every blow charges his god's amulet until it bursts in that god's wrath. *(you chose the world; details inferred)*
 
@@ -93,9 +95,9 @@ The first room is gentle; by its third room a mix of fliers and a shielded spitt
 - [x] Runes instead of boons: each adds to the dash, strike or special; pairs of runes unlock synergy runes
 - [x] The top goal: a synergy system where a run can, in theory, build an overpowered hero; every run unique
 - [x] A fork of 2-3 doors after each room, each showing its reward (a resource, a rune, a weapon, a buff)
-- [ ] Merchant: buys unlock weapons into the drop pool; more than half the weapons (bows, bombs, traps, wands) only drop in runs
-- [ ] Weapon loot: 35 main and 20 secondary weapons, rarity and quality, high quality may roll an extra effect; a secondary weapon slot
-- [ ] Buffs and debuffs (enemy statuses done: burn, shock, wind, curse; hero shield done) (burn, frost, bleed, curse, haste, shield) shown on the HUD
+- [x] Merchant: buys unlock weapons into the drop pool; more than half the weapons (bows, bombs, traps, wands) only drop in runs
+- [x] Weapon loot: 35 main and 20 secondary weapons, rarity and quality, high quality may roll an extra effect; a secondary weapon slot
+- [ ] Buffs and debuffs (enemy statuses done and visible: burn, shock, bleed, curse; hero shield done; hero buffs like haste still to do) (burn, frost, bleed, curse, haste, shield) shown on the HUD
 - [x] Re-theme to Nav: bogatyr hero, Spinner / Owl Witch / bear smith, Kikimora's Bog, Likho's Pinewood, Morena's Frost; enemies and bosses redrawn as Slavic creatures
 
 ## Your systems
@@ -140,3 +142,5 @@ The first room is gentle; by its third room a mix of fliers and a shielded spitt
 **Who it's for / what they feel:** players of fast action roguelites who want to feel clever and strong as their build comes together.
 
 **Games you love / don't:** Love Dead Cells (format, look) and Hades 1 and 2 (format).
+
+- [ ] Godot 4 port with free assets and AI-generated art; check every asset license allows selling on Steam
