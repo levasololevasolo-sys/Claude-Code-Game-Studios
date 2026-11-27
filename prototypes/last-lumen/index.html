@@ -399,7 +399,13 @@ function enterRoom(kind, loc, k) {
     left.forEach((id, i) => s.room.inter.push({ x: xs[i], door: id, label: `Путь: ${LOCS[id].name}`, act: () => {
       s.run.route.push(id); s.run.locI++; save.run = null; writeSave(); enterRoom('combat', id, 1);
     } }));
-    s.room.inter.push({ x: 120, door: 'home', label: 'Вернуться на базу с добычей', act: () => endRun(false, true) });
+    // going home asks twice, so a stray E after a boss never ends the run
+    const home = { x: 120, door: 'home', askT: -9,
+      get label() { return state.t - this.askT < 3 ? 'Точно на базу? Забег закончится. E — да' : 'Вернуться на базу с добычей'; },
+      act: () => { if (state.t - home.askT < 3) { endRun(false, true); return; } home.askT = state.t; sfx.menu(); } };
+    s.room.inter.push(home);
+    p.x = 330; // arrive by the fire, away from the way home
+    s.hint = `Привал: +${heal} здоровья. Иди вправо и выбери путь →`;
     s.room.inter.push({ x: 470, label: 'Охранный огонь: забег сохранён', act: () => { snapshotRun(); sfx.pick(); s.hint = 'Сохранено'; s.hintT = 1.5; } });
     snapshotRun();
   } else if (kind === 'boss') {
