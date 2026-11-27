@@ -12,7 +12,8 @@
 ## those runes (id[:level]), `--rune-offer=<god>[:wide]` opens the rune offer
 ## screen at start, `--god-check=<dir>` runs the scripted per-god check.
 ## Weapons (weapons-and-loot): `--weapon=<id>` / `--sub=<id>` pick the hero's
-## weapons in the legacy modes, `--weapon-check=<dir>` runs the weapon check.
+## weapons in the legacy modes, `--weapon-check=<dir>` runs the weapon check,
+## `--boss-check=<dir>` the scripted lair boss fight (Кикимора, enemies-and-elites §3.9).
 ## `--hero-shots=<dir>` saves hero rig poses (with `--hero-tier=1..5`, HeroVisual).
 ## Run mode (default when none of the legacy check flags above is given): a
 ## RunDirector child plays the run of GDD room-generation-and-doors (rooms, doors,
@@ -63,7 +64,7 @@ var weapon_hud: WeaponHud
 var first_run: bool = false
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots="]
+const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -140,6 +141,10 @@ func _ready() -> void:
 			var wc: Node = (load("res://tests/integration/loot/weapon_check_driver.gd") as GDScript).new()
 			wc.set("out_dir", a.trim_prefix("--weapon-check="))
 			add_child(wc)
+		elif a.begins_with("--boss-check="):
+			var bc: Node = (load("res://tests/integration/enemies/boss_check_driver.gd") as GDScript).new()
+			bc.set("out_dir", a.trim_prefix("--boss-check="))
+			add_child(bc)
 		elif a.begins_with("--hero-shots="):
 			var hs: Node = (load("res://tests/integration/hero/hero_shots_driver.gd") as GDScript).new()
 			hs.set("out_dir", a.trim_prefix("--hero-shots="))
