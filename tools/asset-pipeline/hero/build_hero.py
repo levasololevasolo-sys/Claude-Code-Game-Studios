@@ -46,6 +46,17 @@ WOOD = ("#C49A64", "#A07A4E", "#6E5034")
 THREAD = "#B3262E"
 SILVER = "#EDE6F2"
 LINE_DARK = "#3A2414"
+# tiers 2-4 (bible §5.6 «Силуэт и палитра по ярусам»)
+LINEN = ("#F6EFE0", "#E9DFC9", "#B4A88E")          # t2 shirt, the lightest patch after the amulet
+WRAP_LEATHER = ("#94603A", "#7A4A2A", "#4E2E1A")   # t2 forearm wraps
+BAST = ("#D8BE84", "#BFA36A", "#86703F")           # t2 lapti
+ONUCHI = ("#CFC4AC", "#B8AC92", "#857A64")         # t2 foot cloths
+QUILT = ("#B68E5E", "#9A7448", "#664A2A")          # t3 tegilyai
+LEATHER3 = TROUSER5                                # t3 leather #6B4428
+BRONZE = ("#D49C5A", "#B07A3A", "#74501F")         # t3 bronze, darker than loot gold
+WOOL = ("#8C826E", "#706654", "#4A4336")           # t3-t4 homespun trousers (under the boots)
+IRON = MAIL                                        # t4 iron splints and fittings
+TROUSERS = {1: CANVAS, 2: CANVAS, 3: WOOL, 4: WOOL, 5: TROUSER5}
 
 
 def shade_hex(c: str, k: float) -> str:
@@ -311,7 +322,7 @@ BOOT_FOOT_D = "M-16 -11 C-20 4 -18 14 -16 18 L36 18 C42 16 42 8 36 4 C26 0 16 -4
 
 
 def draw_pelvis_cloth(s: Svg, tier: int) -> None:
-    pal = CANVAS if tier < 5 else TROUSER5
+    pal = TROUSERS[tier]
     s.shape(PELVIS_D, pal)
     c = s.clip(PELVIS_D)
     s.soft("M-34 -16 L-14 -16 C-18 6 -14 22 -8 34 L-34 34 Z", pal[2], 0.4, c)
@@ -319,19 +330,19 @@ def draw_pelvis_cloth(s: Svg, tier: int) -> None:
 
 
 def draw_thigh(s: Svg, tier: int, k: float = 1.0) -> None:
-    pal = dark(CANVAS if tier < 5 else TROUSER5, k)
+    pal = dark(TROUSERS[tier], k)
     s.shape(THIGH_D, pal)
     c = s.clip(THIGH_D)
     s.soft("M-24 -14 L-10 -14 C-12 20 -10 50 -6 78 L-24 78 Z", pal[2], 0.4, c)
     s.line("M-4 18 C0 32 4 44 2 58 M10 4 C12 14 12 22 10 30", pal[2], 3, 0.8)
-    if tier < 5:  # patch with stitches on the canvas, and a tear
+    if tier == 1:  # patch with stitches on the canvas, and a tear
         s.shape("M4 36 L16 34 L17 48 L5 50 Z", dark(("#C4AE86", "#B49E78", "#8C7656"), k), 3)
         s.line("M6 38 l2 2 M8 46 l2 2 M14 37 l2 2 M14 45 l2 2", "#5A4A36", 1.8)
         s.shape("M-14 56 L-8 62 L-13 66 Z", "#3A2C22", 0)
 
 
 def draw_shin_cloth(s: Svg, tier: int, k: float = 1.0) -> None:
-    if tier < 5:
+    if tier == 1:
         s.shape(CALF_D, dark(SKIN, k), 6)
         pal = dark(CANVAS, k)
         s.shape(SHIN_RAG_D, pal)
@@ -339,13 +350,46 @@ def draw_shin_cloth(s: Svg, tier: int, k: float = 1.0) -> None:
         s.soft("M-22 -14 L-10 -14 C-12 10 -10 26 -8 42 L-22 42 Z", pal[2], 0.4, c)
         s.line("M2 0 C4 10 4 18 2 26", pal[2], 3, 0.8)
     else:
-        pal = dark(TROUSER5, k)
+        pal = dark(TROUSERS[tier], k)
         s.shape(SHIN_TUCK_D, pal)
         c = s.clip(SHIN_TUCK_D)
         s.soft("M-22 -14 L-10 -14 C-12 10 -10 26 -8 46 L-22 46 Z", pal[2], 0.4, c)
 
 
+ONUCHI_D = "M-19 -10 C-21 14 -19 42 -16 67 L15 67 C18 42 20 14 18 -12 C6 -16 -8 -16 -19 -10 Z"
+HIGH_BOOT_D = "M-21 -8 C-22 18 -20 46 -17 68 L16 68 C19 46 21 18 20 -10 C6 -14 -8 -14 -21 -8 Z"
+SPLINT_D = "M2 -4 C12 -6 18 0 18 8 L16 54 C10 57 5 57 2 54 Z"
+
+
+def draw_boot_shin_mid(s: Svg, tier: int, k: float) -> None:
+    """Tiers 2-4: onuchi with lapti cords (2), knee boots (3), boots with iron splints (4)."""
+    if tier == 2:
+        pal = dark(ONUCHI, k)
+        s.shape(ONUCHI_D, pal)
+        c = s.clip(ONUCHI_D)
+        s.soft("M-24 -14 L-10 -14 L-8 70 L-24 70 Z", pal[2], 0.4, c)
+        s.line("M-20 2 L18 -4 M-20 16 L19 10 M-19 30 L18 24 M-18 44 L17 38 M-17 58 L16 52", pal[2], 2, 0.7, c)
+        cord = "M-18 66 L16 46 L-18 26 L17 6 M16 66 L-18 46 L17 26 L-19 6"  # lapti cords (оборы), criss-cross
+        s.line(cord, OUT, 6, 1.0, c)
+        s.line(cord, dark(BAST, k)[1], 3, 1.0, c)
+        return
+    pal = dark(LEATHER3, k)
+    s.shape(HIGH_BOOT_D, pal)
+    c = s.clip(HIGH_BOOT_D)
+    s.soft("M-24 -12 L-10 -12 L-8 70 L-24 70 Z", pal[2], 0.45, c)
+    s.shape("M-22 -10 C-8 -15 8 -15 21 -12 L21 0 C8 -3 -8 -3 -22 2 Z", dark(LEATHER3, k * 1.12), 5)  # cuff
+    s.line("M-14 20 C-12 36 -12 50 -10 64", pal[2], 2.5, 0.8, c)
+    if tier == 4:  # iron splints on the shin, strapped, no gold (that is tier 5)
+        g = dark(IRON, k)
+        s.shape(SPLINT_D, g, 6)
+        s.line("M9 2 C12 16 12 36 10 50", g[0], 2.5, 0.9)
+        s.line("M-20 14 L3 12 M-18 44 L3 42", dark(LEATHER, k)[2], 4)
+
+
 def draw_boot_shin(s: Svg, tier: int, k: float = 1.0) -> None:
+    if 2 <= tier <= 4:
+        draw_boot_shin_mid(s, tier, k)
+        return
     if tier < 5:
         pal = dark(WRAPS, k)
         s.shape(WRAP_SHIN_D, pal)
@@ -364,7 +408,26 @@ def draw_boot_shin(s: Svg, tier: int, k: float = 1.0) -> None:
         s.line("M-1 -8 C12 -10 20 -2 20 10", dark(GOLD, k)[1], 3)
 
 
+LAPTI_D = ("M-16 -9 C-20 4 -18 14 -14 19 L30 19 C40 19 43 11 37 6 C28 1 18 -3 13 -11 "
+           "C4 -15 -10 -15 -16 -9 Z")
+
+
 def draw_boot_foot(s: Svg, tier: int, k: float = 1.0) -> None:
+    if tier == 2:  # lapti: woven bast, lattice, cords up the shin
+        pal = dark(BAST, k)
+        s.shape(LAPTI_D, pal)
+        c = s.clip(LAPTI_D)
+        s.line(" ".join(f"M{x} -16 l24 36" for x in range(-30, 44, 9)), pal[2], 2.2, 0.85, c)
+        s.line(" ".join(f"M{x} -16 l-24 36" for x in range(-8, 66, 9)), pal[2], 2.2, 0.85, c)
+        s.soft("M-20 13 L46 13 L46 24 L-20 24 Z", pal[2], 0.55, c)
+        return
+    if tier in (3, 4):
+        pal = dark(LEATHER3, k)
+        s.shape(BOOT_FOOT_D, pal)
+        c = s.clip(BOOT_FOOT_D)
+        s.soft("M-20 10 L44 10 L44 22 L-20 22 Z", "#1E120A", 0.6, c)
+        s.line("M14 -8 C20 0 28 2 36 4", pal[0], 2.5, 0.7, c)
+        return
     if tier < 5:
         pal = dark(WRAPS, k)
         s.shape(WRAP_FOOT_D, pal)
@@ -423,7 +486,39 @@ FORE_D = "M-12 -8 C-14 14 -11 34 -9 54 L9 54 C11 34 14 12 12 -8 C4 -14 -6 -14 -1
 FIST_D = "M-14 2 C-14 -4 -8 -6 0 -6 C8 -6 15 -3 15 4 L15 22 C15 28 10 30 2 30 C-8 30 -14 28 -14 22 Z"
 
 
+SLEEVE_D = "M-18 -12 C-22 12 -19 36 -16 58 C-6 62 6 62 16 58 C19 36 21 14 17 -12 C6 -20 -8 -20 -18 -12 Z"
+QSLEEVE_D = "M-21 -12 C-25 12 -21 36 -18 56 C-6 61 7 61 18 56 C22 36 24 12 19 -12 C7 -22 -9 -22 -21 -12 Z"
+MSLEEVE_D = "M-17 -10 C-21 12 -18 34 -15 54 L-9 58 L-3 53 L3 58 L9 53 L15 57 C18 36 20 14 16 -10 Z"
+
+
+def draw_upper_mid(s: Svg, tier: int, k: float) -> None:
+    """Tiers 2-4 sleeve: linen shirt (2), quilted tegilyai (3), mail over tegilyai (4)."""
+    s.shape(UPPER_D, dark(SKIN, k))
+    if tier == 2:
+        pal = dark(LINEN, k)
+        s.shape(SLEEVE_D, pal)
+        c = s.clip(SLEEVE_D)
+        s.soft("M-24 -16 L-10 -16 C-12 10 -10 36 -8 64 L-24 64 Z", pal[2], 0.4, c)
+        s.line("M-8 4 C-6 20 -6 34 -4 48 M6 2 C8 18 8 34 7 50", pal[2], 2.5, 0.6, c)
+        s.line("M-16 52 C-6 56 6 56 16 52", dark(RED, k)[1], 4, 1.0, c)          # embroidered cuff
+        return
+    pal = dark(QUILT, k)
+    s.shape(QSLEEVE_D, pal)
+    c = s.clip(QSLEEVE_D)
+    s.soft("M-26 -16 L-12 -16 C-14 10 -12 36 -10 64 L-26 64 Z", pal[2], 0.45, c)
+    s.line("M-22 6 C-8 10 8 10 22 4 M-22 22 C-8 26 8 26 22 20 M-20 38 C-8 42 8 42 20 36", pal[2], 2.5, 0.9, c)
+    if tier == 4:
+        m = dark(MAIL, k)
+        s.shape(MSLEEVE_D, m, 7)
+        c2 = s.clip(MSLEEVE_D)
+        s.line(mail_rows(-22, 22, -4, 60), m[2], 2, 0.9, c2)
+        s.soft("M-22 -12 L-10 -12 L-8 60 L-22 60 Z", m[2], 0.4, c2)
+
+
 def draw_upper(s: Svg, tier: int, k: float) -> None:
+    if 2 <= tier <= 4:
+        draw_upper_mid(s, tier, k)
+        return
     if tier < 5:
         pal = dark(SKIN, k)
         s.shape(UPPER_D, pal)
@@ -450,7 +545,27 @@ def draw_fore(s: Svg, tier: int, k: float) -> None:
     s.shape(FORE_D, pal)
     c = s.clip(FORE_D)
     s.soft("M-16 -12 L-6 -12 C-8 14 -6 34 -4 56 L-16 56 Z", pal[2], 0.4, c)
-    if tier >= 5:
+    if tier == 2:  # leather wraps, diagonal turns
+        w = "M-14 4 C-15 18 -14 34 -12 50 L12 50 C14 34 15 18 14 4 C6 1 -6 1 -14 4 Z"
+        lw = dark(WRAP_LEATHER, k)
+        s.shape(w, lw, 6)
+        c2 = s.clip(w)
+        s.line("M-16 14 L16 6 M-16 24 L16 16 M-16 34 L16 26 M-16 44 L16 36", lw[2], 2.5, 0.95, c2)
+        s.line("M-16 12 L16 4 M-16 32 L16 24", lw[0], 1.5, 0.7, c2)
+    elif tier == 3:  # leather bracer with bronze studs
+        b = "M-15 6 C-16 20 -15 36 -13 50 L13 50 C15 36 16 20 15 6 C6 3 -6 3 -15 6 Z"
+        lb = dark(LEATHER3, k)
+        s.shape(b, lb, 7)
+        s.line("M-13 11 C-4 9 6 9 13 11 M-12 45 C-4 46 6 46 12 45", lb[0], 2, 0.6)
+        for y in (18, 28, 38):
+            s.circle(4, y, 3.4, dark(BRONZE, k), 2.5)
+    elif tier == 4:  # plain steel bracer
+        b = "M-15 6 C-16 20 -15 36 -13 50 L13 50 C15 36 16 20 15 6 C6 3 -6 3 -15 6 Z"
+        st = dark(STEEL, k)
+        s.shape(b, st, 7)
+        s.line("M6 12 C8 24 8 34 6 42", st[0], 2.5, 0.9)
+        s.line("M-13 11 C-4 9 6 9 13 11 M-12 45 C-4 46 6 46 12 45", st[2], 2.5, 0.9)
+    elif tier >= 5:
         b = "M-15 6 C-16 20 -15 36 -13 50 L13 50 C15 36 16 20 15 6 C6 3 -6 3 -15 6 Z"
         st = dark(STEEL, k)
         s.shape(b, st, 7)
@@ -579,6 +694,207 @@ def _cf(s: Svg, tier: int) -> None:
     s.line("M-3 -94 L13 -82", GOLD[2], 2.5)
 
 
+# ---- tiers 2-4 (bible §5.6 «Пять ярусов»): Странник, Ополченец, Витязь.
+# Rects equal the rect the scene already uses for that sprite (EMPTY_RECT / tier-5 part).
+TORSO_RECT = (-62, -112, 128, 134)
+SKIRT_RECT = (-44, -16, 90, 72)
+HELMET_RECT = (-44, -136, 90, 90)
+CAPE_FRONT_RECT = (-50, -114, 76, 52)
+AMULET_RECT = (-22, -42, 46, 66)
+QUILT_WIDE = 1.22  # tegilyai: the shoulders get wider (bible t3 silhouette)
+
+
+@part("torso_cloth_t2", TORSO_RECT)
+def _shirt(s: Svg, tier: int) -> None:
+    s.sx = WIDE_TORSO
+    s.shape(ARMOR_D, LINEN)
+    c = s.clip(ARMOR_D)
+    s.soft("M-46 -70 C-38 -40 -32 -10 -28 18 L-50 18 L-50 -70 Z", LINEN[2], 0.45, c)
+    s.soft("M10 -56 C22 -46 36 -44 50 -54 L50 -16 C38 -26 22 -36 10 -42 Z", LINEN[2], 0.35, c)
+    s.line("M-30 -60 C-28 -40 -24 -20 -22 10 M30 -40 C32 -20 30 0 28 14", LINEN[2], 2.5, 0.7, c)
+    # kosovorotka collar and placket, red embroidery (bible t2)
+    s.shape("M-6 -100 C2 -92 12 -91 20 -98 L23 -89 C13 -82 0 -84 -9 -92 Z", RED, 5)
+    s.line("M20 -92 L26 -66", RED[1], 5, 1.0, c)
+    s.line("M-2 -94 l4 3 l4 -3 l4 3 l4 -3", "#F2D6A0", 1.6, 0.9)
+
+
+@part("skirt_t2", SKIRT_RECT)
+def _shirt_hem(s: Svg, tier: int) -> None:
+    d = "M-34 -12 L37 -12 C40 2 41 12 41 22 C14 27 -14 27 -38 22 C-38 12 -37 2 -34 -12 Z"
+    s.shape(d, LINEN)
+    c = s.clip(d)
+    s.soft("M-42 -12 L-22 -12 L-24 30 L-42 30 Z", LINEN[2], 0.45, c)
+    band = "M-40 12 C-14 17 14 17 42 12 L42 24 C14 29 -14 29 -40 24 Z"
+    s.shape(band, RED, 0, clip=c)
+    zz = " ".join(f"M{x} 19 l3 -3 l3 3 l-3 3 Z" for x in range(-36, 38, 8))
+    s.soft(zz, "#F2D6A0", 0.9, c)
+
+
+@part("torso_cloth_t3", TORSO_RECT)
+def _tegilyai(s: Svg, tier: int) -> None:
+    s.sx = QUILT_WIDE
+    s.shape(ARMOR_D, QUILT)
+    c = s.clip(ARMOR_D)
+    s.soft("M-46 -70 C-38 -40 -32 -10 -28 18 L-50 18 L-50 -70 Z", QUILT[2], 0.45, c)
+    s.soft("M10 -56 C22 -46 36 -44 50 -54 L50 -16 C38 -26 22 -36 10 -42 Z", QUILT[2], 0.3, c)
+    # quilting: vertical channels, puffed between (bible t3: «простёганная куртка»)
+    s.line(" ".join(f"M{x} -96 C{x - 2} -50 {x - 3} -10 {x - 4} 20" for x in range(-36, 52, 11)), QUILT[2], 2.8, 0.95, c)
+    s.line(" ".join(f"M{x + 4} -94 C{x + 2} -50 {x + 1} -10 {x} 20" for x in range(-36, 52, 11)), QUILT[0], 1.6, 0.6, c)
+    s.shape("M-6 -101 C2 -93 12 -91 20 -98 L22 -86 C12 -80 0 -82 -9 -90 Z", QUILT, 5)    # standing collar
+    s.line("M21 -88 L27 -60 L30 -30", QUILT[2], 3.5, 1.0, c)                           # front closure
+
+
+@part("skirt_t3", SKIRT_RECT)
+def _tegilyai_hem(s: Svg, tier: int) -> None:
+    d = "M-36 -12 L39 -12 C42 4 43 18 43 32 C14 37 -14 37 -40 32 C-40 18 -39 4 -36 -12 Z"
+    s.shape(d, QUILT)
+    c = s.clip(d)
+    s.soft("M-44 -12 L-22 -12 L-24 40 L-44 40 Z", QUILT[2], 0.45, c)
+    s.line(" ".join(f"M{x} -10 L{x - 1} 36" for x in range(-30, 42, 11)), QUILT[2], 2.8, 0.95, c)
+    s.line("M14 -8 L16 34", OUT, 3, 0.8)
+
+
+@part("belt_t3", (-40, -24, 82, 44))
+def _belt3(s: Svg, tier: int) -> None:
+    s.shape("M-37 -17 C-10 -14 12 -14 39 -17 L39 -4 C12 -1 -10 -1 -37 -4 Z", LEATHER3, 6, vertical=True)
+    s.shape("M18 -21 L33 -21 L33 1 L18 1 Z", BRONZE, 5)                     # bronze buckle
+    s.shape("M22 -15 L29 -15 L29 -5 L22 -5 Z", LEATHER3[2], 0)
+    s.line("M26 -2 L24 14", OUT, 8)
+    s.line("M26 -2 L24 14", LEATHER3[1], 4)                                 # strap end
+    s.line("M-30 -10 L14 -10", LEATHER3[0], 2, 0.6)
+
+
+@part("belt_t4", (-40, -24, 82, 44))
+def _belt4(s: Svg, tier: int) -> None:
+    s.shape("M-37 -17 C-10 -14 12 -14 39 -17 L39 -4 C12 -1 -10 -1 -37 -4 Z", LEATHER, 6, vertical=True)
+    s.shape("M18 -21 L33 -21 L33 1 L18 1 Z", IRON, 5)                       # iron buckle
+    s.shape("M22 -15 L29 -15 L29 -5 L22 -5 Z", LEATHER[2], 0)
+    for x in (-26, -12, 2):
+        s.circle(x, -10, 2.6, IRON, 2)
+    s.line("M26 -2 L24 14", OUT, 8)
+    s.line("M26 -2 L24 14", LEATHER[1], 4)
+
+
+@part("torso_armor_t4", TORSO_RECT)
+def _mail(s: Svg, tier: int) -> None:
+    s.sx = WIDE_TORSO
+    s.shape(ARMOR_D, MAIL)
+    c = s.clip(ARMOR_D)
+    s.line(mail_rows(-46, 54, -94, 18), MAIL[2], 2, 0.9, c)
+    s.soft("M-46 -70 C-38 -40 -32 -10 -28 18 L-50 18 L-50 -70 Z", MAIL[2], 0.45, c)
+    s.soft("M10 -56 C22 -46 36 -44 50 -54 L50 -16 C38 -26 22 -36 10 -42 Z", MAIL[2], 0.3, c)
+    s.line("M30 -90 C42 -84 46 -70 44 -56", MAIL[0], 3, 0.8, c)               # sheen on the chest
+    # tegilyai collar shows at the neck (mail worn over it)
+    s.shape("M-6 -101 C2 -93 12 -91 20 -98 L22 -88 C12 -82 0 -84 -9 -92 Z", QUILT, 5)
+
+
+@part("skirt_t4", SKIRT_RECT)
+def _mail_hem(s: Svg, tier: int) -> None:
+    d = ("M-34 -12 L37 -12 C41 6 42 22 42 40 L36 44 L30 40 L24 44 L18 40 L12 44 L6 40 L0 44 L-6 40 "
+         "L-12 44 L-18 40 L-24 44 L-30 40 L-38 42 C-39 22 -38 6 -34 -12 Z")
+    s.shape(d, MAIL)
+    c = s.clip(d)
+    s.line(mail_rows(-42, 44, -8, 46), MAIL[2], 2, 0.9, c)
+    s.soft("M-42 -12 L-22 -12 L-24 48 L-42 48 Z", MAIL[2], 0.45, c)
+    s.line("M12 -6 L14 40", OUT, 3, 0.8)                                  # front slit
+
+
+@part("helmet_t2", HELMET_RECT)
+def _ochelye(s: Svg, tier: int) -> None:
+    # tie ends hang at the back of the head
+    for d in ("M-36 -60 L-42 -48", "M-35 -60 L-37 -47"):
+        s.line(d, OUT, 8)
+        s.line(d, LINEN[1], 4)
+    band = "M-38 -68 C-12 -74 14 -74 34 -68 L34 -57 C14 -63 -12 -63 -38 -57 Z"
+    s.shape(band, LINEN, 5, vertical=True)
+    c = s.clip(band)
+    zz = " ".join(f"M{x} -65 l3 -3 l3 3 l-3 3 Z" for x in range(-32, 32, 8))
+    s.soft(zz, RED[1], 1.0, c)
+
+
+@part("helmet_t3", HELMET_RECT)
+def _cap(s: Svg, tier: int) -> None:
+    dome = "M-37 -54 C-39 -78 -20 -94 0 -94 C20 -94 37 -82 36 -56 Z"
+    s.shape(dome, LEATHER3)
+    c = s.clip(dome)
+    s.soft("M-40 -56 C-36 -80 -20 -92 -4 -94 L-14 -56 Z", LEATHER3[2], 0.45, c)
+    s.line("M0 -93 C-2 -80 -3 -66 -4 -56 M18 -90 C20 -78 20 -66 19 -56", LEATHER3[2], 2.5, 0.9, c)  # seams
+    s.line("M6 -90 C16 -86 24 -78 28 -66", LEATHER3[0], 3, 0.8, c)
+    # rolled brim, a step lighter: the cap stays round (no point until tier 4)
+    s.shape("M-39 -62 C-16 -66 16 -66 38 -62 L38 -51 C16 -55 -16 -55 -39 -51 Z", dark(LEATHER3, 1.2), 6, vertical=True)
+
+
+@part("helmet_t4", HELMET_RECT)
+def _cone(s: Svg, tier: int) -> None:
+    dome = "M-33 -57 C-34 -76 -16 -92 0 -106 C16 -92 34 -76 35 -57 Z"
+    s.shape(dome, STEEL)
+    c = s.clip(dome)
+    s.soft("M-34 -60 C-30 -78 -16 -92 -2 -104 L-8 -60 Z", STEEL[2], 0.45, c)
+    s.line("M3 -100 C9 -90 14 -76 16 -62", STEEL[0], 4, 0.9)
+    s.line("M0 -104 C-2 -88 -2 -72 0 -60", STEEL[2], 2.5, 0.8, c)          # ridge, plain
+    s.shape("M-35 -61 C-18 -65 18 -65 37 -60 L37 -51 C18 -56 -18 -56 -35 -52 Z", IRON, 6, vertical=True)
+
+
+def _cape_short(s: Svg, tier: int) -> None:
+    # short накидка: ends at the waist and flares back past the wide tegilyai, so the
+    # red reads in profile (bible t3: the first «хвост»; a cape to the shoulder blades
+    # hides completely behind the quilted torso at 160 px)
+    d = ("M-33 -8 L31 -8 L33 22 L26 28 L18 22 L10 29 L2 22 L-6 29 L-14 22 L-22 29 L-30 22 "
+         "L-38 30 L-46 24 C-44 12 -38 2 -33 -8 Z")
+    s.shape(d, RED)
+    c = s.clip(d)
+    s.line("M-8 -4 C-10 6 -12 14 -14 22 M14 -4 C15 6 16 14 17 20", RED[2], 3.5, 0.8, c)
+
+
+part("cape_back_1_t3", (-40, -22, 80, 92))(PARTS["cape_back_1_t5"][1])  # t4 falls back to it
+part("cape_back_2_t3", (-48, -16, 94, 88))(_cape_short)
+part("cape_back_2_t4", (-48, -16, 94, 88))(PARTS["cape_back_2_t5"][1])
+
+
+@part("cape_back_3_t4", (-54, -16, 106, 84))
+def _c3_knee(s: Svg, tier: int) -> None:
+    d = "M-39 -8 L37 -8 L40 22 C20 30 -20 30 -44 22 Z"   # to the knee, no border (bible t4)
+    s.shape(d, RED)
+    c = s.clip(d)
+    s.line("M-12 -4 C-13 6 -14 14 -15 24 M16 -4 C17 6 18 14 19 24", RED[2], 3.5, 0.8, c)
+
+
+def _cape_front_plain(s: Svg, tier: int) -> None:
+    s.sx = WIDE_TORSO
+    d = "M-35 -82 C-27 -101 -7 -106 5 -101 C13 -96 15 -89 11 -83 C1 -78 -17 -74 -31 -68 Z"
+    s.shape(d, RED)
+    s.line("M-24 -92 C-14 -96 -4 -98 4 -96", RED[0], 2.5, 0.8)
+    if tier == 3:   # tied with a leather cord
+        s.line("M3 -92 L12 -82 M5 -92 L0 -80", OUT, 7)
+        s.line("M3 -92 L12 -82 M5 -92 L0 -80", LEATHER3[0], 3)
+        s.circle(4, -92, 4.5, LEATHER3, 3.5)
+    else:           # plain iron ring, the fibula is tier 5
+        s.circle(5, -88, 6, IRON, 4)
+        s.circle(5, -88, 2.2, RED[2], 0)
+
+
+part("cape_front_t3", CAPE_FRONT_RECT)(_cape_front_plain)
+part("cape_front_t4", CAPE_FRONT_RECT)(_cape_front_plain)
+
+
+def _amulet_mid(s: Svg, tier: int) -> None:
+    cord = "M-12 -38 Q-10 -12 -2 -6 M4 -38 Q7 -16 3 -6"
+    s.line(cord, LEATHER[2], 4)
+    s.line(cord, LEATHER[0], 2)
+    r = {2: 12, 3: 13, 4: 14}[tier]
+    rim = BRONZE if tier < 4 else GOLD
+    s.circle(0, 4, r, rim, 5.5)
+    centre = {2: ("#C08A4A", "#9A6A30", "#6E4A20"), 3: ("#F0C078", "#D49C5A", "#A06A2E"),
+              4: ("#F6D48A", "#E0A858", "#B07A3A")}[tier]
+    s.circle(0, 4, r - 5, centre, 2.5)
+    s.raw(f'<circle cx="0" cy="4" r="{r - 8}" fill="none" stroke="{BRONZE[2]}" stroke-width="1.8"/>')
+    s.ellipse(-3, -1, 3, 2, "#FFF0C8", 0.75)
+
+
+for _t in (2, 3, 4):
+    part(f"amulet_t{_t}", AMULET_RECT)(_amulet_mid)
+
+
 # ---- weapon in hand: the starting stick (grip at 0,0, points along +x)
 @part("weapon_stick", (-52, -26, 236, 46))
 def _stick(s: Svg, tier: int) -> None:
@@ -600,11 +916,19 @@ TIERED: dict[str, list[int]] = {
 }
 # part name -> list of (file stem, tier)
 FILES: list[tuple[str, str, int]] = []
+# multi-tier parts: which tiers get their own file (others fall back to the lower one)
+PART_TIERS: dict[str, tuple] = {
+    "legs_cloth_pelvis": (1, 3, 5), "legs_cloth_thigh": (1, 2, 3, 5), "legs_cloth_shin": (1, 2, 3, 5),
+    "boots_shin": (1, 2, 3, 4, 5), "boots_foot": (1, 2, 3, 5),
+    "leg_far_thigh": (1, 2, 3, 5), "leg_far_shin": (1, 2, 3, 4, 5), "leg_far_foot": (1, 2, 3, 5),
+    "arm_near_upper": (1, 2, 3, 4, 5), "arm_near_fore": (1, 2, 3, 4, 5),
+    "arm_far_upper": (1, 2, 3, 4, 5), "arm_far_fore": (1, 2, 3, 4, 5),
+}
 for name in PARTS:
-    if name.endswith(("_t1", "_t5")):
+    if name[-3:-1] == "_t" and name[-1].isdigit():
         FILES.append((name, name, int(name[-1])))
     elif name.startswith(("legs_cloth_", "boots_", "leg_far_", "arm_near_", "arm_far_")):
-        for t in (1, 5):
+        for t in PART_TIERS.get(name, (1, 5)):
             FILES.append((name, f"{name}_t{t}", t))
     else:
         FILES.append((name, name, 0))

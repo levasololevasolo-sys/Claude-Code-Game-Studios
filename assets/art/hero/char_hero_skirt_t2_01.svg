@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="72" viewBox="-44 -16 90 72">
+<defs><linearGradient id="g1" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#F6EFE0"/><stop offset="0.5" stop-color="#E9DFC9"/><stop offset="1" stop-color="#B4A88E"/></linearGradient><clipPath id="c2"><path d="M-34 -12 L37 -12 C40 2 41 12 41 22 C14 27 -14 27 -38 22 C-38 12 -37 2 -34 -12 Z"/></clipPath><linearGradient id="g3" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#CC3A40"/><stop offset="0.5" stop-color="#B3262E"/><stop offset="1" stop-color="#7A1820"/></linearGradient></defs>
+<g><path d="M-34 -12 L37 -12 C40 2 41 12 41 22 C14 27 -14 27 -38 22 C-38 12 -37 2 -34 -12 Z" fill="url(#g1)" stroke="#120D12" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M-42 -12 L-22 -12 L-24 30 L-42 30 Z" fill="#B4A88E" opacity="0.45" clip-path="url(#c2)"/>
+<path d="M-40 12 C-14 17 14 17 42 12 L42 24 C14 29 -14 29 -40 24 Z" fill="url(#g3)" clip-path="url(#c2)"/>
+<path d="M-36 19 l3 -3 l3 3 l-3 3 Z M-28 19 l3 -3 l3 3 l-3 3 Z M-20 19 l3 -3 l3 3 l-3 3 Z M-12 19 l3 -3 l3 3 l-3 3 Z M-4 19 l3 -3 l3 3 l-3 3 Z M4 19 l3 -3 l3 3 l-3 3 Z M12 19 l3 -3 l3 3 l-3 3 Z M20 19 l3 -3 l3 3 l-3 3 Z M28 19 l3 -3 l3 3 l-3 3 Z M36 19 l3 -3 l3 3 l-3 3 Z" fill="#F2D6A0" opacity="0.9" clip-path="url(#c2)"/>
+</g></svg>
