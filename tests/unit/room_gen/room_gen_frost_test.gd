@@ -32,8 +32,9 @@ func test_room_gen_picks_the_frost_library_for_location_3() -> void:
 
 func test_frost_roster_per_gdd_3_3_and_one_flyer_kind() -> void:
 	var ros := EnemyRoster.for_tier(3, _locs(), _t())
-	assert_array(ros.roster).contains_exactly(["wolf", "crawler", "jelly"])
-	assert_array(ros.late).contains_exactly(["sentry"])
+	# Bestiary §3.4: six frost kinds, Студёный дух the only flyer; Трясинник and Упырь-щитник left.
+	assert_array(ros.roster).contains_exactly(["wolf", "karachun", "jelly", "snezhnitsa", "sosulnik", "mara"])
+	assert_array(ros.late).is_empty()
 
 func test_location_3_is_live_and_light_and_4_is_still_a_stub() -> void:
 	var l := _locs()

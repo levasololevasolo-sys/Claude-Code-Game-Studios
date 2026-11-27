@@ -414,6 +414,22 @@
     "vodyanitsa": [
       "ward",
       "call"
+    ],
+    "wolf": [],
+    "karachun": [
+      "ward"
+    ],
+    "snezhnitsa": [],
+    "sosulnik": [
+      "blink",
+      "fire"
+    ],
+    "mara": [
+      "call"
+    ],
+    "jelly": [
+      "curse",
+      "fire"
     ]
   },
   "elite_fallback": [
@@ -484,5 +500,14 @@
   "cling_slow": 0.15,
   "cling_max": 2,
   "bog_max": 1,
-  "tina_colour": "#b6e36b"
+  "tina_colour": "#b6e36b",
+  "_frost_note": "Царство Морены mechanics (GDD bestiary §3.4, §4 B5, §7). frost_marks = needle marks that freeze the hero, frost_decay = s per mark falling off, freeze_time = hero frozen s, freeze_guard = s after a freeze with no new marks; ceiling_max = Сосульники per room on ceiling spots; ice_copy_dmg = damage mult of Мара's copies; ice_tint = copy tint; ice_hang_dy = px under the platform top the icicle hangs from.",
+  "frost_marks": 3,
+  "frost_decay": 1.5,
+  "freeze_time": 0.7,
+  "freeze_guard": 3.0,
+  "ceiling_max": 2,
+  "ice_copy_dmg": 0.8,
+  "ice_tint": "#9fdcff",
+  "ice_hang_dy": 16.0
 }

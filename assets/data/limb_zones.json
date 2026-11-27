@@ -237,5 +237,84 @@
       0.2,
       0.7
     ]
+  },
+  "karachun": {
+    "arm": [
+      0.2,
+      1.4,
+      0.4,
+      1.05
+    ],
+    "head": [
+      -0.25,
+      0.3,
+      0.8,
+      1.0
+    ],
+    "attack_states": [
+      "slam_wind",
+      "slam",
+      "poke_wind",
+      "poke"
+    ],
+    "arm_states": [
+      "poke_wind",
+      "poke"
+    ],
+    "one_arm": {
+      "wave_dirs": 0.5,
+      "slam_wind": 1.3
+    },
+    "arm_colour": "staff",
+    "arm_len": 60,
+    "arm_root": [
+      0.25,
+      0.72
+    ],
+    "tough": true
+  },
+  "snezhnitsa": {
+    "head": [
+      -0.3,
+      0.3,
+      0.8,
+      1.0
+    ],
+    "attack_states": [
+      "cast"
+    ]
+  },
+  "mara": {
+    "arm": [
+      0.1,
+      1.5,
+      0.45,
+      0.9
+    ],
+    "head": [
+      -0.3,
+      0.3,
+      0.82,
+      1.0
+    ],
+    "attack_states": [
+      "raise_w",
+      "scratch_wind",
+      "scratch"
+    ],
+    "arm_states": [
+      "scratch_wind",
+      "scratch"
+    ],
+    "one_arm": {
+      "raise": 1.5,
+      "scratch_dmg": 0.6
+    },
+    "arm_colour": "color",
+    "arm_len": 40,
+    "arm_root": [
+      0.2,
+      0.75
+    ]
   }
 }

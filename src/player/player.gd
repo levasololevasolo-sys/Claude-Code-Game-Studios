@@ -64,6 +64,12 @@ var dash_dir: int = 1
 var rolling: bool = false
 ## Шишиги hanging on the hero now (bestiary §3.2, B7); each slows the run.
 var cling_n: int = 0
+## Снежница frost (bestiary §3.4, B5): marks on the hero, decay clock, freeze
+## left (no walking, striking, dashing or parrying, edge case 7), freeze guard left.
+var frost: int = 0
+var frost_clock: float = 0.0
+var frozen_t: float = 0.0
+var freeze_guard_t: float = 0.0
 var inv: float = 0.0
 var atk_t: float = 0.0
 var atk_dur: float = 0.0
@@ -244,6 +250,16 @@ func _step(dt: float) -> void:
 	if _tap_sub:
 		sub_buf = Tune.f("sub_buffer")
 	_tap_sub = false
+	_tick_frost(dt)
+	if frozen_t > 0.0:
+		# Frozen (bestiary §3.4, edge case 7): no input at all, running dash i-frames stay.
+		mx = 0
+		want_dash = false
+		_tap_parry = false
+		atk_buf = 0.0
+		sub_buf = 0.0
+		jump_buf = 0.0
+		velocity.x = 0.0
 	_update_parry(dt)
 	if parry_lock > 0.0:
 		# A whiffed parry leaves the hero open: no strike, dash or parry (GDD parry §3.2).
@@ -945,6 +961,37 @@ func reflect_shot(s: EnemyShot) -> bool:
 	parry_succeeded.emit(shooter if alive else null, "reflect")
 	queue_redraw()
 	return true
+
+## A frost needle of Снежница hit the hero (bestiary §3.4, B5): +1 mark; at
+## frost_marks the hero freezes for freeze_time s, then freeze_guard s without
+## marks. Returns true when this mark froze him.
+func add_frost() -> bool:
+	if dead:
+		return false
+	var n := FrostRules.add_mark(frost, int(Tune.f("frost_marks")), freeze_guard_t, frozen_t)
+	if n == frost:
+		return false
+	frost = n
+	frost_clock = 0.0
+	if FrostRules.freezes(frost, int(Tune.f("frost_marks"))):
+		frost = 0
+		frozen_t = Tune.f("freeze_time")
+		freeze_guard_t = Tune.f("freeze_guard") + frozen_t
+		parry_t = 0.0
+		Audio.play_at(&"hero_freeze", position)
+		return true
+	return false
+
+func _tick_frost(dt: float) -> void:
+	freeze_guard_t = maxf(0.0, freeze_guard_t - dt)
+	if frozen_t > 0.0:
+		frozen_t -= dt
+		if frozen_t <= 0.0:
+			frozen_t = 0.0
+			Audio.play_at(&"freeze_shatter", position)
+	var d := FrostRules.decay_tick(frost, frost_clock, Tune.f("frost_decay"), dt)
+	frost = int(d.x)
+	frost_clock = d.y
 
 func _parry_success(e: Enemy) -> void:
 	var res := e.parried(position.x)

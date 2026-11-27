@@ -84,12 +84,13 @@
     "lib": "frost",
     "roster": [
       "wolf",
-      "crawler",
-      "jelly"
+      "karachun",
+      "jelly",
+      "snezhnitsa",
+      "sosulnik",
+      "mara"
     ],
-    "late": [
-      "sentry"
-    ],
+    "late": [],
     "darkness": 0.32,
     "look": {
       "sky": "#c9d8e6",
@@ -105,7 +106,15 @@
       "par_mid": 0.5,
       "props": "frost"
     },
-    "beaten": "повержена"
+    "beaten": "повержена",
+    "intro": {
+      "wolf": 1,
+      "karachun": 1,
+      "jelly": 2,
+      "snezhnitsa": 2,
+      "sosulnik": 3,
+      "mara": 3
+    }
   },
   "4": {
     "name": "Калинов мост",
