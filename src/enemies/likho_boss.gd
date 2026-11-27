@@ -268,6 +268,8 @@ func light_spots() -> Array[Vector4]:
 	return out
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	if dead:
 		var k := clampf(_linger / maxf(stat("death_linger"), 0.01), 0.0, 1.0)
 		draw_set_transform(Vector2(0, h * 0.5 * k), 0.0, Vector2(face, 1.0 - 0.5 * k))

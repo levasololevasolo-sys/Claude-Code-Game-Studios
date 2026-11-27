@@ -35,6 +35,8 @@ var _last_flash: float = 0.0
 var _prev_st: String = ""
 ## One-shot animation playing after a state (the thrower's throw), "" = none.
 var _oneshot: String = ""
+## Boss intro one-shot (registry "intro") already started.
+var _intro_done: bool = false
 
 
 ## The registry (loaded once): every enemies_drawn*.json in ROOT, "kinds" merged.
@@ -160,7 +162,7 @@ func _show(key: String) -> void:
 		if not ResourceLoader.exists(path):
 			return
 		_tex[key] = load(path) as Texture2D
-	var anim := key.trim_suffix("_noarm").trim_suffix("_nohead")
+	var anim := key.trim_suffix("_noarm").trim_suffix("_nohead").trim_suffix("_rage")
 	var a: Dictionary = (_meta.get("anims", {}) as Dictionary).get(anim, {})
 	_cur = key
 	_frame_f = 0.0
@@ -197,9 +199,16 @@ func _process(dt: float) -> void:
 		var after := String((states.get(_prev_st, {}) as Dictionary).get("after", ""))
 		_oneshot = after if after != "" and not enemy.dead else ""
 		_prev_st = enemy.st
+	# Boss intro (registry "intro"): played once when the boss says its intro line.
+	if _meta.has("intro") and not _intro_done and enemy is LairBoss and (enemy as LairBoss).introduced:
+		_intro_done = true
+		if enemy.st == "idle":
+			_oneshot = String(_meta.intro)
 	var pick := choose(states, anims, enemy.st, enemy.dead, _hurt_t, absf(enemy.vel.x) > MOVING_SPEED,
 		enemy.is_winding(), enemy.death_severed, enemy.arm_off, enemy.head_off, _oneshot)
 	var anim := String(pick.anim)
+	if String(pick.variant) == "" and rage_variant(anims, anim, (enemy as LairBoss).phase if enemy is LairBoss else 1):
+		pick.variant = "rage"
 	if bloat and (enemy.st == "swell" or bloat.death_t >= 0.0) and anims.has("inflate"):
 		anim = "inflate"
 	var key := anim + ("_" + String(pick.variant) if String(pick.variant) != "" else "")
@@ -220,6 +229,39 @@ func _process(dt: float) -> void:
 	modulate = Color(2.2, 2.2, 2.2) if enemy.flash > 0.0 else Color.WHITE
 	if kind == "vodyanitsa":
 		queue_redraw()
+
+
+## True when the boss look of phase 2 applies: the anim has a "rage" variant
+## (build_bosses.py) and `phase` (LairBoss.phase, 1 for other enemies) >= 2. Pure (tested).
+static func rage_variant(anims: Dictionary, anim: String, phase: int) -> bool:
+	if phase < 2 or not anims.has(anim):
+		return false
+	return ((anims[anim] as Dictionary).get("variants", []) as Array).has("rage")
+
+
+## Paints one frame of `anim` (progress k in [0, 1]) onto `cv` with the feet at
+## `at` (cv's space), mirrored by `flip`, tinted `mod`: Морена's ice double.
+## False when the kind has no such sheet (the caller draws its code shape).
+func draw_frame(cv: CanvasItem, anim: String, k: float, at: Vector2, flip: int, mod: Color) -> bool:
+	var a: Dictionary = (_meta.get("anims", {}) as Dictionary).get(anim, {})
+	if a.is_empty():
+		return false
+	if not _tex.has(anim):
+		var path := ROOT + "%s/%s_%s.png" % [kind, kind, anim]
+		if not ResourceLoader.exists(path):
+			return false
+		_tex[anim] = load(path) as Texture2D
+	var cell: Array = _meta.get("cell", [0, 0])
+	var n := maxi(1, int(a.get("frames", 1)))
+	var cols := maxi(1, int(a.get("cols", 1)))
+	var f := HeroSprite.frame_for_progress(clampf(k, 0.0, 1.0), n)
+	var src := Rect2(float(f % cols) * float(cell[0]), float(f / cols) * float(cell[1]), float(cell[0]), float(cell[1]))
+	var s := 1.0 / maxf(float(registry().get("px_per_world", 1.5)), 0.01)
+	var origin: Array = _meta.get("origin", [0, 0])
+	cv.draw_set_transform(at, 0.0, Vector2(float(flip) * s, s))
+	cv.draw_texture_rect_region(_tex[anim], Rect2(-Vector2(float(origin[0]), float(origin[1])), src.size), src, mod)
+	cv.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	return true
 
 
 ## Advances the frame (by progress k >= 0, or by time); true when a one-shot ended.

@@ -296,6 +296,8 @@ func light_spots() -> Array[Vector4]:
 	return out
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	if dead:
 		var k := clampf(_linger / maxf(stat("death_linger"), 0.01), 0.0, 1.0)
 		draw_set_transform(Vector2(0, h * 0.6 * k), 0.0, Vector2(face, 1.0 - 0.6 * k))
@@ -418,9 +420,12 @@ func _draw_fx() -> void:
 					_fx.draw_polyline(PackedVector2Array([Vector2(hx - sw * 0.4, tip - 90.0), Vector2(hx, tip), Vector2(hx + sw * 0.4, tip - 90.0)]), ice, 2.0)
 			"clone":
 				var k5 := clampf(float(hz.t) / maxf(float(hz.warn), 0.01), 0.0, 1.0)
-				_fx.draw_set_transform(Vector2(hx, float(hz.y)), 0.0, Vector2(-face, 1))
-				_draw_figure(_fx, Color("#9fc4e8"), 0.25 + 0.45 * k5, "scythe" if hz.hit else "scythe_w", anim, phase)
-				_fx.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+				var skin := get_node_or_null("ArtSkin") as DrawnEnemyVisual
+				if skin == null or not skin.draw_frame(_fx, "scythe" if hz.hit else "scythe_w", 1.0 if hz.hit else k5,
+						Vector2(hx, float(hz.y)), -face, Color(0.62, 0.77, 0.91, 0.25 + 0.45 * k5)):
+					_fx.draw_set_transform(Vector2(hx, float(hz.y)), 0.0, Vector2(-face, 1))
+					_draw_figure(_fx, Color("#9fc4e8"), 0.25 + 0.45 * k5, "scythe" if hz.hit else "scythe_w", anim, phase)
+					_fx.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 				var cc2 := Vector2(hx, float(hz.y) - h * 0.5)
 				var r2 := stat("scythe_r") * stat("mirror_r_k")
 				_fx.draw_arc(cc2, r2, 0.0, TAU, 32, Color(threat, 0.3 + 0.5 * k5) if not hz.hit else Color("#f3f8ff"), 3.0 if not hz.hit else 12.0)

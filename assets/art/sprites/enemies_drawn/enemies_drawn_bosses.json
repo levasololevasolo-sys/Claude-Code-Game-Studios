@@ -1,0 +1,681 @@
+{
+ "_note": "Hand-drawn location bosses (tools/asset-pipeline/enemies2d/build_bosses.py); format as enemies_drawn.json. intro: one-shot when the boss speaks its intro line; variant \"rage\": the phase-2 look (LairBoss.phase >= 2).",
+ "px_per_world": 1.5,
+ "kinds": {
+  "kikimora": {
+   "cell": [
+    403,
+    457
+   ],
+   "origin": [
+    194.4,
+    432.0
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 6,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "move": {
+     "frames": 6,
+     "fps": 8,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "throw_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "throw": {
+     "frames": 4,
+     "fps": 14,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "pend_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "pend": {
+     "frames": 4,
+     "fps": 12,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "lunge_w": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "lunge": {
+     "frames": 4,
+     "fps": 10,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "wave_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "wave": {
+     "frames": 4,
+     "fps": 12,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "summon_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "summon": {
+     "frames": 4,
+     "fps": 10,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "roar": {
+     "frames": 8,
+     "fps": 8,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "intro": {
+     "frames": 10,
+     "fps": 6,
+     "loop": false,
+     "cols": 8,
+     "rows": 2,
+     "variants": []
+    },
+    "death": {
+     "frames": 12,
+     "fps": 4,
+     "loop": false,
+     "cols": 8,
+     "rows": 2,
+     "variants": []
+    }
+   },
+   "parts": {},
+   "states": {
+    "idle": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "throw_w": {
+     "anim": "throw_w",
+     "k": "throw_wind",
+     "after": "throw"
+    },
+    "pend_w": {
+     "anim": "pend_w",
+     "k": "pend_wind",
+     "after": "pend"
+    },
+    "lunge_w": {
+     "anim": "lunge_w",
+     "k": "lunge_wind"
+    },
+    "lunge": {
+     "anim": "lunge",
+     "k": "lunge_time"
+    },
+    "wave_w": {
+     "anim": "wave_w",
+     "k": "wave_wind",
+     "after": "wave"
+    },
+    "summon_w": {
+     "anim": "summon_w",
+     "k": "summon_wind",
+     "after": "summon"
+    },
+    "roar": {
+     "anim": "roar",
+     "k": "roar_time"
+    }
+   },
+   "intro": "intro"
+  },
+  "likho": {
+   "cell": [
+    381,
+    457
+   ],
+   "origin": [
+    180.0,
+    439.2
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 6,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 9,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "leap_w": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "leap": {
+     "frames": 5,
+     "fps": 7,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "land": {
+     "frames": 4,
+     "fps": 12,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "gaze_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "gaze": {
+     "frames": 4,
+     "fps": 10,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "lunge_w": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "lunge": {
+     "frames": 4,
+     "fps": 10,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "woe_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "woe": {
+     "frames": 4,
+     "fps": 12,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "summon_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "summon": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "roar": {
+     "frames": 8,
+     "fps": 8,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "intro": {
+     "frames": 10,
+     "fps": 6,
+     "loop": false,
+     "cols": 8,
+     "rows": 2,
+     "variants": []
+    },
+    "death": {
+     "frames": 12,
+     "fps": 4,
+     "loop": false,
+     "cols": 8,
+     "rows": 2,
+     "variants": []
+    }
+   },
+   "parts": {},
+   "states": {
+    "idle": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "leap_w": {
+     "anim": "leap_w",
+     "k": "leap_wind"
+    },
+    "leap": {
+     "anim": "leap",
+     "after": "land"
+    },
+    "gaze_w": {
+     "anim": "gaze_w",
+     "k": "gaze_wind"
+    },
+    "gaze": {
+     "anim": "gaze"
+    },
+    "lunge_w": {
+     "anim": "lunge_w",
+     "k": "lunge_wind"
+    },
+    "lunge": {
+     "anim": "lunge",
+     "k": "lunge_time"
+    },
+    "woe_w": {
+     "anim": "woe_w",
+     "k": "woe_wind",
+     "after": "woe"
+    },
+    "summon_w": {
+     "anim": "summon_w",
+     "k": "summon_wind",
+     "after": "summon"
+    },
+    "roar": {
+     "anim": "roar",
+     "k": "roar_time"
+    }
+   },
+   "intro": "intro"
+  },
+  "morena": {
+   "cell": [
+    360,
+    489
+   ],
+   "origin": [
+    180.0,
+    439.2
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 6,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "move": {
+     "frames": 6,
+     "fps": 8,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "breath_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "breath": {
+     "frames": 4,
+     "fps": 10,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "spears_w": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "spears": {
+     "frames": 4,
+     "fps": 12,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "scythe_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "scythe": {
+     "frames": 4,
+     "fps": 16,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "dive_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "dive": {
+     "frames": 3,
+     "fps": 10,
+     "loop": true,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "stuck": {
+     "frames": 4,
+     "fps": 6,
+     "loop": true,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "unstick": {
+     "frames": 4,
+     "fps": 10,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "mirror_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "summon_w": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "summon": {
+     "frames": 3,
+     "fps": 10,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "roar": {
+     "frames": 8,
+     "fps": 8,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "rage"
+     ]
+    },
+    "intro": {
+     "frames": 10,
+     "fps": 6,
+     "loop": false,
+     "cols": 8,
+     "rows": 2,
+     "variants": []
+    },
+    "death": {
+     "frames": 12,
+     "fps": 4,
+     "loop": false,
+     "cols": 8,
+     "rows": 2,
+     "variants": []
+    }
+   },
+   "parts": {},
+   "states": {
+    "idle": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "breath_w": {
+     "anim": "breath_w",
+     "k": "breath_wind"
+    },
+    "breath": {
+     "anim": "breath"
+    },
+    "spears_w": {
+     "anim": "spears_w",
+     "k": "spears_wind",
+     "after": "spears"
+    },
+    "scythe_w": {
+     "anim": "scythe_w",
+     "k": "scythe_wind"
+    },
+    "scythe": {
+     "anim": "scythe",
+     "k": "scythe_time"
+    },
+    "dive_w": {
+     "anim": "dive_w",
+     "k": "dive_wind"
+    },
+    "dive": {
+     "anim": "dive"
+    },
+    "stuck": {
+     "anim": "stuck",
+     "after": "unstick"
+    },
+    "mirror_w": {
+     "anim": "mirror_w",
+     "k": "mirror_wind"
+    },
+    "summon_w": {
+     "anim": "summon_w",
+     "k": "summon_wind",
+     "after": "summon"
+    },
+    "roar": {
+     "anim": "roar",
+     "k": "roar_time"
+    }
+   },
+   "intro": "intro"
+  }
+ }
+}

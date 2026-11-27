@@ -80,6 +80,13 @@
   date: 2026-11-27
   ai_made: yes (shapes and poses authored as code by an AI agent; no image model, no network generation)
   note: ringer, rootling, bat, sentry, suchkovik, lesavka; 1x density; moonlight back rim for the dark forest; specials (vanish/appear, burrow/under/mound, dive/spit, shield block, throw, whistle/flee); headless / one-armed variants, two deaths, part sprites, suchkovik_spear(_stuck).png. Deterministic rebuild.
+- path: assets/art/sprites/enemies_drawn/{kikimora,likho,morena}/*.png, assets/art/sprites/enemies_drawn/enemies_drawn_bosses.json
+  source: drawn procedurally by tools/asset-pipeline/enemies2d/build_bosses.py (kinds_bosses.py rigs and poses of Кикимора, Лихо Одноглазое and Морена; base.py, hero2d sdf2d renderer), after design/art/art-bible.md §3, §5.2-5.3 and design/narrative/characters.md §4.1-4.3
+  licence: own work (project-owned original work; no third-party art)
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (shapes and poses authored as code by an AI agent; no image model, no network generation)
+  note: idle, move, a wind-up sheet per attack plus follow-through one-shots, hurt, roar (phase change), intro, death (12 frames); a `_rage` copy of every fighting sheet for phase 2. Painted at sheet density (1x, 1.5 sheet px per world px), not the art bible's 2x for bosses (texture memory and build time). Deterministic rebuild.
 - path: assets/art/sprites/weapons_drawn/*.png, assets/art/sprites/weapons_drawn/weapons_drawn.json
   source: drawn procedurally by tools/asset-pipeline/enemies2d/weapons.py (hero2d sdf2d renderer): stick (дрын), blade, spear, hammer, staff, sickles
   licence: own work (project-owned original work; no third-party art)

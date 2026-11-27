@@ -467,6 +467,9 @@ func _redraw_fx() -> void:
 		_ui.queue_redraw()
 
 func _draw() -> void:
+	if _skin_draw():
+		stats["eye"] = String(stats.rage_eye) if phase >= 2 else String(stats.eye)
+		return
 	if dead:
 		var k := clampf(_linger / maxf(stat("death_linger"), 0.01), 0.0, 1.0)
 		draw_set_transform(Vector2(0, h * 0.6 * k), 0.0, Vector2(face, 1.0 - 0.6 * k))
