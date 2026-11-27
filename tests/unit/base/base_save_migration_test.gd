@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 func test_v1_file_gains_base_fields_and_keeps_old_ones() -> void:
 	var v1 := { "version": 1, "meta": { "embers": 77, "runs": 4, "weapons": { "stick": true } }, "run": null }
 	var d := SaveFile.migrate(v1)
-	assert_int(int(d.version)).is_equal(2)
+	assert_int(int(d.version)).is_equal(SaveFile.VERSION)
 	assert_int(int(d.meta.embers)).is_equal(77)
 	assert_int(int(d.meta.armor.head)).is_equal(0)
 	assert_str(String(d.meta.lantern)).is_equal("ring")

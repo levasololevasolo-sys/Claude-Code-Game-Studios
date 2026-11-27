@@ -26,6 +26,8 @@ var stations: Array[Station] = []
 var screen: Control
 ## Called after a purchase (the RunDirector writes the save).
 var on_change: Callable
+## Bank embers last seen (embers_spent detection).
+var _embers: int = 0
 
 ## Builds the yard for `p_world` and `p_meta`; picks and records this visit's lines.
 func setup(p_world: World, p_meta: MetaState) -> void:
@@ -43,6 +45,64 @@ func setup(p_world: World, p_meta: MetaState) -> void:
 		add_child(s)
 		stations.append(s)
 	dress_hero()
+	_embers = meta.embers
+	_streak_line.call_deferred()
+
+## hero.md 16: after a death streak the hero thanks no one at the gate.
+func _streak_line() -> void:
+	var streak := int(meta.story.get("death_streak", 0))
+	if streak >= 3 and is_inside_tree():
+		await get_tree().create_timer(2.0, false).timeout
+		hero_say("death_streak")
+
+## The hero's line after `key` (StoryRules.hero_line), floating over him.
+func hero_say(key: String, force: bool = false) -> String:
+	var l := StoryRules.hero_line(Tune.table("dialogue").get("hero_lines", []), key, meta.story.said)
+	if l.is_empty() or world == null:
+		return ""
+	if HeroBark.say(world, String(l.get("ru", "")), force) == null:
+		return ""
+	StoryRules.note_hero_line(meta, l)
+	return String(l.get("ru", ""))
+
+## After an NPC line closed: a §7 choice (potap_confess, ofenya_confess), the
+## hero's answer line, then the NPC's menu.
+func _after_line(npc: String, line: Dictionary, kind: String) -> void:
+	var id := String(line.get("id", ""))
+	var choice := ""
+	var opts: PackedStringArray = []
+	var keys: Array = []
+	match id:
+		"potap_confess":
+			choice = "potap_confess"
+			opts = ["Простить", "Промолчать"]
+			keys = ["forgive", "silent"]
+		"ofenya_confess":
+			choice = "ofenya_confess"
+			opts = ["Сказать заставе", "Сохранить тайну"]
+			keys = ["tell", "keep"]
+	if choice != "" and not StoryRules.chosen(meta, choice):
+		if choice == "ofenya_confess":
+			hero_say("ofenya_confess", true)
+		var box := DialogueBox.new()
+		box.speaker = String(_station(npc).row.get("name", npc))
+		box.text = DialogueRules.text_of(line, meta, Tune.table("armor").get("titles", []))
+		box.options = opts
+		var pick := [0]
+		box.picked.connect(func(i: int) -> void: pick[0] = i)
+		_show(box)
+		await box.closed
+		screen = null
+		StoryRules.choose(meta, choice, String(keys[pick[0]]))
+		if choice == "potap_confess":
+			hero_say("potap_confess:" + String(keys[pick[0]]), true)
+		_changed()
+	else:
+		var said := hero_say(id)
+		if said == "" and String((line.get("when", {}) as Dictionary).get("event", "")) == "first_visit":
+			hero_say("first_visit:" + npc)
+	if kind != "talk":
+		_open_menu.call_deferred(kind)
 
 ## Dresses the hero in the bought armor (or `armor` for a try-on).
 func dress_hero(armor: Dictionary = {}) -> void:
@@ -86,12 +146,9 @@ func use(id: String) -> void:
 		var box := DialogueBox.new()
 		box.speaker = String(st.row.get("name", id))
 		box.text = DialogueRules.text_of(line, meta, Tune.table("armor").get("titles", []))
-		if kind != "talk":
-			box.closed.connect(func() -> void:
-				screen = null
-				_open_menu.call_deferred(kind))
-		else:
-			box.closed.connect(func() -> void: screen = null)
+		box.closed.connect(func() -> void:
+			screen = null
+			_after_line.call_deferred(id, line, kind))
 		_show(box)
 	elif kind != "talk":
 		_open_menu(kind)
@@ -195,6 +252,9 @@ func _up_rows(base: Dictionary, ids: Array) -> Array:
 	return out
 
 func _changed() -> void:
+	if meta.embers < _embers:
+		StoryRules.note_embers_spent(meta, _embers - meta.embers)
+	_embers = meta.embers
 	if on_change.is_valid():
 		on_change.call()
 

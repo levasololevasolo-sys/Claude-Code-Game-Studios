@@ -25,6 +25,10 @@ var god: String = ""
 ## "take" = take a new rune; "surica" = raise the level of a held rune (§3.10).
 var mode: String = "take"
 var selected: int = 0
+## God voice over the cards (dialogue/gods.md, StoryRules.god_line): who speaks
+## (god id) and the line; empty = none.
+var voice_god: String = ""
+var voice_text: String = ""
 ## Keyboard / gamepad / mouse reader with the confirm lockout (BUG-0002, BUG-0003).
 var input: ChoiceInput
 
@@ -129,6 +133,11 @@ func _draw() -> void:
 	var title := "Дар бога: %s — выбери руну" % _god_name(god) if god != "" else "Выбери руну"
 	if mode == "surica":
 		title = "Сурица — подними уровень своей руны"
+	if voice_text != "":
+		var vc := Enemy.god_colour(voice_god)
+		draw_string(font, Vector2(0, 58), _god_name(voice_god), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(vc, 0.9))
+		draw_string_outline(font, Vector2(0, 98), "«%s»" % voice_text, HORIZONTAL_ALIGNMENT_CENTER, size.x, 32, 6, Color(0, 0, 0, 0.8))
+		draw_string(font, Vector2(0, 98), "«%s»" % voice_text, HORIZONTAL_ALIGNMENT_CENTER, size.x, 32, vc.lerp(Color("#f4ecd8"), 0.55))
 	draw_string(font, Vector2(0, 150), title, HORIZONTAL_ALIGNMENT_CENTER, size.x, 48, Color("#f0e2c0"))
 	draw_string(font, Vector2(0, 200), "← → / крестовина или 1–%d · Enter / E / A / щелчок — взять" % ids.size(), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(0.7, 0.7, 0.65))
 	var rects := card_rects()

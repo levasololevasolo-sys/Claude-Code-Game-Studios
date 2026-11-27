@@ -95,6 +95,33 @@ static func pick_line(lines: Dictionary, moment: String, beaten: int) -> String:
 	var key := moment + ("_first" if beaten <= 0 else "_repeat")
 	return String(lines.get(key, ""))
 
+## The line for `moment` (intro, defeat, hero_death): dialogue.json boss_lines
+## by StoryRules.boss_line (kills = beaten before this fight, deaths to it,
+## flags; repeat-visit variants by count), else the bosses.json row text. Only
+## bosses with a row of their own speak from the bank (the stand-ins stay mute).
+## A `once` line is remembered in meta.story.said.
+func story_line(moment: String) -> String:
+	var meta: MetaState = _meta()
+	if meta != null and Tune.table("bosses").has(boss_id):
+		var bank: Array = Tune.table("dialogue").get("boss_lines", [])
+		var l := StoryRules.boss_line(bank, boss_id, moment, StoryRules.boss_ctx(meta, boss_id, maxi(beaten_before, 0)))
+		if not l.is_empty():
+			if bool(l.get("once", false)):
+				meta.story.said[String(l.id)] = true
+			return String(l.get("ru", ""))
+	var lines: Dictionary = stats.get("lines", {})
+	match moment:
+		"defeat":
+			return pick_line(lines, "death", beaten_before)
+		"hero_death":
+			return String(lines.get("hero_death", ""))
+	return pick_line(lines, moment, beaten_before)
+
+## The hero fell in the lair: the boss says its hero_death line over the body.
+func on_hero_died() -> void:
+	if not dead:
+		say(story_line("hero_death"), stat("death_linger"))
+
 ## New boss node of location boss `id`: the row's "script" class (likho:
 ## LikhoBoss), else LairBoss with that row (Кикимора and the stand-ins).
 static func make(id: String) -> LairBoss:
@@ -157,7 +184,7 @@ func contact_damage() -> float:
 func _behave(dt: float) -> void:
 	if not introduced:
 		introduced = true
-		say(pick_line(stats.get("lines", {}), "intro", beaten_before))
+		say(story_line("intro"))
 	think(dt, hero_pos())
 	_water_on_hero(dt)
 	_redraw_fx()
@@ -191,7 +218,7 @@ func _dead_tick(dt: float) -> void:
 					c.queue_free()
 			world.request_hitstop(stat("death_hitstop"))
 			world.add_shake(stat("death_shake"))
-		say(pick_line(stats.get("lines", {}), "death", beaten_before), stat("death_linger"))
+		say(story_line("defeat"), stat("death_linger"))
 	_linger += dt
 	line_t -= dt
 	_redraw_fx()
@@ -538,6 +565,11 @@ func _draw_ui() -> void:
 func _location_boss() -> String:
 	var row: Dictionary = Tune.table("locations").get(str(tier), {})
 	return String(row.get("boss", FALLBACK_ID))
+
+func _meta() -> MetaState:
+	var tree := Engine.get_main_loop() as SceneTree
+	var g: Node = tree.root.get_node_or_null("Game") if tree else null
+	return g.get("meta") as MetaState if g else null
 
 func _beaten() -> int:
 	var tree := Engine.get_main_loop() as SceneTree

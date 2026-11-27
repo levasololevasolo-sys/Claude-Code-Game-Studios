@@ -29,7 +29,10 @@ var up: Dictionary = { "reroll": 0, "second": 0, "wide": 0 }
 var lanterns: Dictionary = { "ring": true }
 var lantern: String = "ring"
 ## Dialogue memory (living-world §1.4): said, flags, deaths_by, killed_by_count,
-## fresh (events of the last run), visits, last (repeat line -> visit), ambient_recent.
+## fresh (events of the last run), visits, last (repeat line -> visit), ambient_recent;
+## story wiring (StoryRules): gods_seen, duos_seen, weapons_found, needles,
+## death_streak, embers_spent (+_total), wins_no_needle, pending (base events for
+## the next visit), god_seen / god_recent (god lines), history (last runs).
 var story: Dictionary = story_defaults()
 var extra: Dictionary = {}
 
@@ -45,7 +48,10 @@ static func defaults() -> Dictionary:
 ## Empty dialogue memory (living-world §1.4).
 static func story_defaults() -> Dictionary:
 	return { "said": {}, "flags": {}, "deaths_by": {}, "killed_by_count": {}, "fresh": [],
-		"visits": 0, "last": {}, "ambient_recent": [] }
+		"visits": 0, "last": {}, "ambient_recent": [],
+		"gods_seen": {}, "duos_seen": {}, "weapons_found": 0, "needles": 0, "death_streak": 0,
+		"embers_spent": 0, "embers_spent_total": 0, "wins_no_needle": 0, "pending": [],
+		"god_seen": {}, "god_recent": [], "history": [] }
 
 func to_dict() -> Dictionary:
 	var d := extra.duplicate(true)
@@ -103,6 +109,8 @@ static func from_dict(d: Dictionary) -> MetaState:
 	if d.get("story") is Dictionary:
 		st.merge((d.story as Dictionary).duplicate(true), true)
 	st.visits = int(st.visits)
+	for k: String in ["weapons_found", "needles", "death_streak", "embers_spent", "embers_spent_total", "wins_no_needle"]:
+		st[k] = int(st[k])
 	m.story = st
 	for k: String in d:
 		if not base.has(k):

@@ -41,8 +41,49 @@ var knight_tier: int = -1
 var base: Base
 const BASE_SCENE: String = "res://scenes/base/base.tscn"
 
+## Story scene playing (first win), null when none.
+var scene: Node
+## Called instead of finish("win") when the last built boss falls (checks hook it).
+var win_hook: Callable
+
 func _ready() -> void:
 	Events.enemy_killed.connect(_on_enemy_killed)
+	Events.rune_taken.connect(_on_rune_taken)
+
+## Story events of a taken rune (StoryRules.note_rune: rune_first, duo_first).
+func _on_rune_taken(id: String, slot: String, _replaced: String) -> void:
+	if run == null or build == null:
+		return
+	StoryRules.note_rune(game.meta, run.story_ev, id, build.god_of(id), slot)
+
+## The god voice over a rune offer (gods.md §0; StoryRules.god_line): first
+## offer of the god = its first line, a union card = the partner god answers,
+## else a random line not among the last god_line_recent.
+func god_voice(scr: RuneOfferScreen) -> void:
+	if scr == null or scr.god == "" or scr.mode != "take":
+		return
+	var union := ""
+	for id in scr.ids:
+		var gs: Array = build.row(id).get("gods", []) if build else []
+		if String(build.slot_of(id)) == "duo" and gs.size() == 2:
+			union = String(gs[1]) if String(gs[0]) == scr.god else String(gs[0])
+			break
+	var st: Dictionary = game.meta.story
+	var ctx := { "seen": int((st.god_seen as Dictionary).get(scr.god, 0)), "union": union,
+		"recent": st.god_recent, "roll": game.rng.stream("story").randf() if game.rng else randf() }
+	var l := StoryRules.god_line(Tune.table("dialogue").get("god_lines", []), scr.god, ctx)
+	StoryRules.note_god_line(game.meta, scr.god, l, int(Tune.f("god_line_recent")))
+	if l.is_empty():
+		return
+	scr.voice_god = String(l.god)
+	scr.voice_text = String(l.get("ru", ""))
+	scr.queue_redraw()
+	_note("god voice %s: %s" % [scr.voice_god, scr.voice_text])
+
+## True when tier `t` is the last location with a built lair (the next row is a stub).
+static func last_built(t: int) -> bool:
+	var nxt: Dictionary = Tune.table("locations").get(str(t + 1), {})
+	return t >= 5 or nxt.is_empty() or bool(nxt.get("stub", false))
 
 ## Starts: resumes a run saved at the haven (edge case 16), else a new run.
 func begin() -> void:
@@ -132,7 +173,7 @@ func _physics_process(dt: float) -> void:
 	_toast_t -= dt
 	_confirm_t -= dt
 	var p := world.player if world else null
-	if p == null or not is_instance_valid(p):
+	if p == null or not is_instance_valid(p) or (run == null and phase != "base"):
 		return
 	match phase:
 		"fight":
@@ -313,6 +354,7 @@ func _lair_choice() -> void:
 func _offer(god: String, done: Callable) -> void:
 	var scr := world.open_rune_offer(god, false, { "duos_open": game.meta.runs >= int(Tune.f("unlock_all_gods_runs")) })
 	screen = scr
+	god_voice(scr)
 	scr.chosen.connect(func(id: String) -> void:
 		_note("rune taken: %s (offer %s)" % [id, scr.ids])
 		screen = null
@@ -374,6 +416,7 @@ func drop_from(source: String, at: Vector2, kind: String = "", rar: String = "",
 	if d.is_empty():
 		return null
 	var w := Weapon.from_dict(d)
+	StoryRules.note_weapon(m, run.story_ev, w.id)
 	var drop := WeaponDrop.new()
 	drop.weapon = w
 	drop.world = world
@@ -427,6 +470,12 @@ func enter_door(i: int) -> void:
 			run.stage = "lair"
 			run.reward = {}
 		"haven":
+			# Locations 4-5 are not built: beating the last built lair boss is the win
+			# for now (prologue-and-endings §2 trigger stand-in), the first one plays
+			# the first-win scene instead of the haven.
+			if last_built(run.tier) and run.bosses > 0:
+				_win()
+				return
 			run.stage = "haven"
 		"next_loc":
 			# §3.7 step 3: choosing a door wipes the run snapshot from the file.
@@ -472,9 +521,29 @@ func _on_died(hit: Hit) -> void:
 	else:
 		run.killed_by = "неизвестно"
 	run.hp = 0.0
+	for e in world.get_tree().get_nodes_in_group("enemies"):
+		if e is LairBoss:
+			(e as LairBoss).on_hero_died()
 	phase = "dead"
 	_dead_t = Tune.f("death_summary_delay")
 	_note("hero died in %s %d, killed by %s" % [run.stage, run.room_k, run.killed_by])
+
+## The run is won: the first win plays StoryScene "first_win" (a text sequence),
+## then endRun with outcome "win".
+func _win() -> void:
+	phase = "busy"
+	_note("win: last built boss of tier %d beaten (wins before %d)" % [run.tier, game.meta.wins])
+	if win_hook.is_valid():
+		win_hook.call()
+		return
+	if game.meta.wins == 0:
+		scene = StoryScene.first_win(world, game.meta)
+		scene.finished.connect(func() -> void:
+			scene = null
+			finish("win"))
+		world.add_child(scene)
+	else:
+		finish("win")
 
 ## endRun (economy-and-meta §3.7) and the summary; closing it starts a new run.
 func finish(outcome: String) -> void:

@@ -1,0 +1,26 @@
+OK   a new save starts with the prologue
+screenshot story-prologue-1.png
+screenshot story-prologue-pass.png
+  line Потап, с башни: Младший! Не спишь там?
+  line Страж: Не сплю.
+  line Потап, с башни: Ты хоть зевни. Мне спокойней.
+  line Потап, с башни: Змей сопит. Значит, тихо.
+  line Старик: Сынок... Помирать иду. Пусти на ту сторону.
+  line Страж: Ты живой, дед. Живых не пускаю.
+  line Старик: Пока живой. До середины дойду, там и лягу. Ноги не держат.
+  line Потап, с башни: Кто там?
+  line Страж: Дед. Помирать идёт.
+  line Потап, с башни: Твой пост, младший. Тебе решать.
+  line Старик: Спасибо. Я доброту помню.
+  line Потап, с башни: Цепь! Цепь ушла!
+  line Потап, с башни: Держись, младший! Иду!
+OK   prologue finished after 15 confirmed boxes/cards
+OK   beats played: ["meet", "meet", "ask", "pass", "fall", "fall", "after"]
+OK   prologue screenshots taken
+OK   the guard answers Потап with his hero line
+OK   prologue_seen flag set
+OK   save v3 holds prologue_seen
+OK   the Навь start: the run begins with a rune offer
+OK   god line over the cards (svarog, first offer = its first line): «Куй, пока горячо.»
+screenshot story-god-line.png
+DONE: 0 failed checks

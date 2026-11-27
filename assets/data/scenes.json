@@ -1,0 +1,65 @@
+{
+  "_note": "Story scenes as step lists (design/narrative/prologue-and-endings.md §1 prologue, §2 first win; lines copied from there, hero steps read dialogue.json hero_lines by `after` key). Step kinds: {who, ru} a line in the dialogue box (who = key of names), {hero: key} the hero's line, {card, sub, t} a centred card on black for t s (confirm skips), {wait: s}. Prologue parts are played by src/story/prologue.gd between its staging beats; first_win by StoryScene after the last built lair boss (stand-in until Кощей exists). `sets`: flags set when the scene ends.",
+  "names": { "potap": "Потап, с башни", "old_man": "Старик", "guard": "Страж", "voice": "", "koschei": "Кощей", "morena": "Морена", "dolya": "Пряха Доля", "sova": "Ведунья Сова", "ofenya": "Офеня", "chur": "Чур", "bayun": "Кот Баюн", "hero": "Ждан" },
+  "colours": { "potap": "#E0A060", "old_man": "#C9B48A", "guard": "#9FC6E0", "voice": "#D8E4F0", "koschei": "#C9B48A", "morena": "#E8F0FF" },
+  "prologue": {
+    "layout_w": 2600,
+    "guard_x": 1250,
+    "tower_x": 260,
+    "post_x": 1400,
+    "old_start_x": 120,
+    "old_mid_x": 2150,
+    "hero_min_x": 520,
+    "hero_max_x": 1700,
+    "prompt": "[E] Пропустить",
+    "watch": [
+      { "wait": 1.2 },
+      { "who": "potap", "ru": "Младший! Не спишь там?" },
+      { "hero": "prologue:potap" },
+      { "who": "potap", "ru": "Ты хоть зевни. Мне спокойней." },
+      { "who": "potap", "ru": "Змей сопит. Значит, тихо." }
+    ],
+    "meet": [
+      { "who": "old_man", "ru": "Сынок... Помирать иду. Пусти на ту сторону." },
+      { "hero": "prologue:old_man" },
+      { "who": "old_man", "ru": "Пока живой. До середины дойду, там и лягу. Ноги не держат." },
+      { "who": "potap", "ru": "Кто там?" },
+      { "hero": "prologue:potap_2" },
+      { "who": "potap", "ru": "Твой пост, младший. Тебе решать." }
+    ],
+    "nudge_1": "Холодно, сынок.",
+    "nudge_2": "Я недолго. Мне только до середины.",
+    "pass": [
+      { "who": "old_man", "ru": "Спасибо. Я доброту помню." }
+    ],
+    "fall": [
+      { "who": "potap", "ru": "Цепь! Цепь ушла!" },
+      { "wait": 1.0 },
+      { "who": "potap", "ru": "Держись, младший! Иду!" }
+    ],
+    "after": [
+      { "wait": 1.0 },
+      { "card": "«Держу. Держу, не дёргайся.»", "sub": "", "t": 3.5 },
+      { "card": "НАВЬ", "sub": "Мост сломан. Кто-то его сломал.", "t": 4.0 }
+    ],
+    "sets": ["prologue_seen"]
+  },
+  "first_win": {
+    "steps": [
+      { "card": "На нитке", "sub": "", "t": 2.5 },
+      { "who": "koschei", "ru": "Помирать иду, сынок. Пусти." },
+      { "who": "koschei", "ru": "Видишь, не соврал. Помираю. Каждый раз немножко." },
+      { "hero": "scene:first_win:2.4" },
+      { "who": "koschei", "ru": "Тулуп был чужой. Лицо тоже. А доброта твоя. Я её помню." },
+      { "card": "Калинов мост", "sub": "С ближнего берега летит серебряная нить. Мост скрипит.", "t": 3.5 },
+      { "who": "morena", "ru": "Пришёл всё-таки. Поздно. Но пришёл." },
+      { "who": "morena", "ru": "По нитке пойдут. Без меня. Медленно. Но пойдут." },
+      { "who": "dolya", "ru": "Слышишь? Мост скрипит. Первый раз за всё время он скрипит, а не молчит." },
+      { "who": "dolya", "ru": "Ждан. Так тебя звали. Мать ждала, застава ждала. Я тоже." },
+      { "hero": "scene:first_win:2.12" },
+      { "who": "dolya", "ru": "Держит. Пока держит." },
+      { "card": "Конец первой сказки", "sub": "", "t": 4.0 }
+    ],
+    "sets": ["first_win_seen"]
+  }
+}

@@ -37,10 +37,15 @@ var arm: Dictionary = {}
 var sub: Dictionary = {}
 ## Weapons dropped by "auto" sources this run (arms_auto_cap, §3.8).
 var arms_auto: int = 0
+## Story events of this run (StoryRules: rune_first, duo_first, weapon_found,
+## needle_found); they become fresh base events at endRun.
+var story_ev: Array = []
+## The needle of Кощей was found this run (stub until location 5).
+var needle: bool = false
 
 const FIELDS: Array[String] = ["run_seed", "tier", "room_k", "stage", "hp", "max_hp", "charge", "amulet",
 	"build", "embers", "res", "since_god", "gap_need", "reward", "rooms_cleared", "kills", "bosses",
-	"killed_by", "killer_id", "rng_states", "arm", "sub", "arms_auto"]
+	"killed_by", "killer_id", "rng_states", "arm", "sub", "arms_auto", "story_ev", "needle"]
 
 func to_dict() -> Dictionary:
 	var d := {}
@@ -82,7 +87,11 @@ static func from_dict(d: Dictionary) -> RunState:
 			r.set(f, float(v))
 		elif cur is String:
 			r.set(f, String(v))
+		elif cur is bool:
+			r.set(f, bool(v))
 		elif cur is Dictionary and v is Dictionary:
+			r.set(f, plain(v))
+		elif cur is Array and v is Array:
 			r.set(f, plain(v))
 	var clean := {}
 	for k: String in r.res:
