@@ -18,6 +18,10 @@ window/size/window_height_override=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[navi]
+
+art/hero_art="sprite"
+
 [rendering]
 
 renderer/rendering_method="forward_plus"

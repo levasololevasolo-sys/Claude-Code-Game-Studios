@@ -1,8 +1,10 @@
-## Art slice dressing (design/art/visual-upgrade-plan.md), on with `-- --art-slice`:
-## three pre-rendered Топь parallax layers behind the room, a rendered ground
-## strip and mossy-log platforms in place of the Room's own flat drawing (hidden
-## with self_modulate), a CanvasModulate so the amulet light reads, and a
-## CrawlerSprite on every Crawler. Added by World.start_room(); owns no gameplay.
+## Art slice dressing (design/art/visual-upgrade-plan.md). Always on: a
+## CrawlerSprite on every Crawler and the `--art-stage` screenshot staging (the
+## Топь layers themselves now come through Backdrop, visuals.json "tex"). With
+## `-- --art-slice` (full = true) also the original slice dressing: three
+## pre-rendered parallax layers, a rendered ground strip and mossy-log platforms in
+## place of the Room's drawing (hidden with self_modulate) and a CanvasModulate.
+## Added by World.start_room(); owns no gameplay.
 class_name ArtSlice
 extends Node2D
 
@@ -20,6 +22,8 @@ const STAGE_DX: float = 520.0
 
 ## The room being dressed. Set before adding to the tree.
 var room: Room
+## The full slice dressing (`--art-slice`); false = crawler skins and staging only.
+var full: bool = false
 var _layers: Array[Sprite2D] = []
 var _factors: Array[float] = []
 var _zoom: float = 1.5
@@ -30,6 +34,8 @@ var _frames: int = 0
 func _ready() -> void:
 	_zoom = Tune.f("camera_zoom") if Tune.data.has("camera_zoom") else 1.0
 	z_index = -50
+	if not full:
+		return
 	for l: Array in LAYERS:
 		var s := Sprite2D.new()
 		s.texture = load(DIR + String(l[0])) as Texture2D
@@ -67,6 +73,8 @@ func _process(_dt: float) -> void:
 	# Horizontal parallax only: each layer is centred when the camera frames the
 	# room centre and drifts by its factor; vertically it is fixed to the ground.
 	var w: float = float(room.layout.get("w", 2000.0)) if room else 2000.0
+	if not full:
+		w = 0.0
 	var anchor := Vector2(w * 0.5, Tune.f("ground_y") - LAYER_ABOVE_GROUND)
 	for i in _layers.size():
 		var f := _factors[i]
@@ -99,7 +107,7 @@ func _stage() -> void:
 
 
 func _draw() -> void:
-	if room == null or room.layout.is_empty():
+	if not full or room == null or room.layout.is_empty():
 		return
 	for r: Rect2 in room.layout.get("solids", []):
 		draw_rect(r, Color("#1A241D"))

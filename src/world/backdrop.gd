@@ -1,7 +1,9 @@
 ## Background of a combat room (visual-upgrade-plan §2.1, art-bible §6): one
 ## Parallax2D per layer of assets/data/visuals.json, back to front. A layer with a
-## "tex" image shows that image tiled every TILE px (the slot for painted or
-## 3D-rendered backgrounds); without one a BackdropPainter draws a procedural
+## "tex" image shows that image (the slot for painted or 3D-rendered backgrounds,
+## e.g. the Blender Топь layers), scaled by "tex_scale" and repeated every
+## texture width x tex_scale px, tinted by "tex_mod"; without one, or when the
+## file is missing, a BackdropPainter draws the "kind" procedural
 ## placeholder once (static draw list, not redrawn per frame). Visual only.
 ##
 ## Parallax2D places itself at screen_offset × (1 − scroll_scale), where
@@ -44,8 +46,27 @@ func build(vis: Dictionary, ground: float, top: float) -> void:
 			var spr := Sprite2D.new()
 			spr.texture = load(tex_path) as Texture2D
 			spr.centered = false
+			var k := float(spec.get("tex_scale", 1.0))
+			spr.scale = Vector2.ONE * k
+			spr.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+			spr.modulate = Color(String(spec.get("tex_mod", "#ffffff")))
 			spr.position = Vector2(0.0, ground + float(spec.get("tex_y", -900.0)))
+			par.repeat_size = Vector2(spr.texture.get_width() * k, 0.0)
 			holder.add_child(spr)
+			# The image's top rows stretched upward (tex_up px), so a tall room or a
+			# high camera never sees the image's top edge: sky stays sky, trunks go on.
+			var up := float(spec.get("tex_up", 0.0))
+			if up > 0.0:
+				var cap := Sprite2D.new()
+				cap.texture = spr.texture
+				cap.centered = false
+				cap.region_enabled = true
+				cap.region_rect = Rect2(0.0, 0.0, spr.texture.get_width(), 2.0)
+				cap.scale = Vector2(k, up / 2.0)
+				cap.texture_filter = spr.texture_filter
+				cap.modulate = spr.modulate
+				cap.position = spr.position - Vector2(0.0, up)
+				holder.add_child(cap)
 		else:
 			var p := BackdropPainter.new()
 			p.spec = spec

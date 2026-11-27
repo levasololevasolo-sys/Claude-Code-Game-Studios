@@ -27,7 +27,9 @@ func test_crawler_charge_is_attack_and_standing_walk_is_idle() -> void:
 
 func test_hero_art_flag_picks_the_sprite_scene() -> void:
 	assert_str(Player.visual_scene_path(PackedStringArray(["--hero-art=sprite"]))).is_equal(Player.SPRITE_SCENE)
-	assert_str(Player.visual_scene_path(PackedStringArray([]))).is_equal(Player.VISUAL_SCENE)
+	# Default: project setting navi/art/hero_art = "sprite"; rig-inspecting checks keep the rig.
+	assert_str(Player.visual_scene_path(PackedStringArray([]))).is_equal(Player.SPRITE_SCENE)
+	assert_str(Player.visual_scene_path(PackedStringArray(["--base-check=/tmp"]))).is_equal(Player.VISUAL_SCENE)
 	assert_str(Player.visual_scene_path(PackedStringArray(["--hero-art=rig"]))).is_equal(Player.VISUAL_SCENE)
 
 func test_every_chosen_animation_has_a_sheet() -> void:

@@ -1,10 +1,17 @@
 {
-  "_note": "Presentation of each location style (design/art/visual-upgrade-plan.md §2, art-bible §4.2, §6). Keyed by locations.json look.props ('ruins' = swamp) plus 'base'. Visual only: nothing here touches collision or gameplay. layers = Parallax2D background layers back to front: scale = scroll_scale.x (vertical parallax is softer), kind = procedural placeholder painter, col = base colour, fog = 0..1 mix toward the fog colour (atmospheric perspective), tex = optional res:// image that replaces the placeholder (tiled every tile px; tex_y = its top relative to ground_y). terrain = ground and platform colours; dark_tint = colour the darkness multiplies toward (plan §2.9 CanvasModulate); post = vignette / grading / glow / grain, hero_glow = alpha of the warm additive light around the hero; particles = ambient CPUParticles2D around the camera; camera = look-ahead and vertical dead zone.",
+  "_note": "Presentation of each location style (design/art/visual-upgrade-plan.md §2, art-bible §4.2, §6). Keyed by locations.json look.props ('ruins' = swamp) plus 'base'. Visual only: nothing here touches collision or gameplay. layers = Parallax2D background layers back to front: scale = scroll_scale.x (vertical parallax is softer), kind = procedural placeholder painter, col = base colour, fog = 0..1 mix toward the fog colour (atmospheric perspective), tex = optional res:// image that replaces the placeholder (kind stays as the fallback if the file is missing; tex_scale = its scale, it repeats every width x tex_scale px; tex_y = its top relative to ground_y; tex_mod = tint). The swamp uses the Blender renders of tools/asset-pipeline/blender/build_swamp_bg.py (rendered at 1.5x, so tex_scale 0.6667). enemy_rim = the outline / back light drawn on pre-rendered enemies above the darkness so they read in the dark. terrain = ground and platform colours; dark_tint = colour the darkness multiplies toward (plan §2.9 CanvasModulate); post = vignette / grading / glow / grain, hero_glow = alpha of the warm additive light around the hero; particles = ambient CPUParticles2D around the camera; camera = look-ahead and vertical dead zone. tex_up = px of the image's top rows stretched upward (no visible top edge). ambient = optional CanvasModulate colour (the light level 2D lights add to).",
   "camera": {
     "look_ahead": 140,
     "look_time": 0.4,
     "drag_up": 80,
     "drag_down": 40
+  },
+  "enemy_rim": {
+    "col": "#b8e0c4",
+    "alpha": 0.4,
+    "width": 5.0,
+    "back": "#e8f4c8",
+    "back_alpha": 0.55
   },
   "forest": {
     "fog": "#3e5878",
@@ -176,69 +183,40 @@
         ],
         "low": true
       }
-    ]
+    ],
+    "ambient": "#c4ccd8"
   },
   "ruins": {
     "fog": "#5e7a62",
     "layers": [
       {
         "kind": "sky",
-        "scale": 0.02,
+        "scale": 0.12,
         "top": "#2b4034",
         "bottom": "#3e5a4a",
         "moon": false,
-        "stars": 20
-      },
-      {
-        "kind": "hills",
-        "scale": 0.08,
-        "col": "#34503f",
-        "fog": 0.7,
-        "bridge": true
-      },
-      {
-        "kind": "dead",
-        "scale": 0.2,
-        "col": "#24392f",
-        "fog": 0.6,
-        "gap": 150,
-        "h": [
-          180,
-          380
-        ]
+        "stars": 20,
+        "tex": "res://assets/art/sprites/swamp/bg_far.png",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       },
       {
         "kind": "fog",
-        "scale": 0.3,
-        "col": "#5e7a62",
-        "alpha": 0.3,
+        "scale": 0.25,
+        "col": "#6e8f76",
+        "alpha": 0.12,
         "bands": [
           [
-            -90,
-            110
-          ],
-          [
-            10,
+            -60,
             90
           ]
         ]
       },
       {
-        "kind": "rays",
-        "scale": 0.35,
-        "col": "#c8e0a0",
-        "alpha": 0.06,
-        "n": 2
-      },
-      {
-        "kind": "water",
-        "scale": 0.45,
-        "col": "#1c3029",
-        "glint": "#7d9a7f"
-      },
-      {
         "kind": "dead",
-        "scale": 0.5,
+        "scale": 0.35,
         "col": "#1a2b23",
         "fog": 0.3,
         "gap": 300,
@@ -246,28 +224,45 @@
           380,
           620
         ],
-        "reeds": true
+        "reeds": true,
+        "tex": "res://assets/art/sprites/swamp/bg_mid.png",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
+      },
+      {
+        "kind": "rays",
+        "scale": 0.4,
+        "col": "#c8e0a0",
+        "alpha": 0.07,
+        "n": 2
       },
       {
         "kind": "fog",
-        "scale": 0.65,
-        "col": "#5e7a62",
-        "alpha": 0.2,
+        "scale": 0.5,
+        "col": "#6e8f76",
+        "alpha": 0.1,
         "bands": [
           [
-            -20,
-            80
+            -10,
+            60
           ]
         ]
       },
       {
         "kind": "trunks",
-        "scale": 0.8,
+        "scale": 0.6,
         "col": "#121e19",
         "fog": 0.15,
         "gap": 620,
         "rim": "#6e8a78",
-        "crooked": true
+        "crooked": true,
+        "tex": "res://assets/art/sprites/swamp/bg_near.png",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       }
     ],
     "terrain": {
@@ -335,7 +330,8 @@
         ],
         "low": true
       }
-    ]
+    ],
+    "ambient": "#c4d0c8"
   },
   "frost": {
     "fog": "#e6eef5",
@@ -508,7 +504,8 @@
         ],
         "add": true
       }
-    ]
+    ],
+    "ambient": "#b8c0cc"
   },
   "base": {
     "fog": "#2a3248",
@@ -565,6 +562,7 @@
         ],
         "add": true
       }
-    ]
+    ],
+    "ambient": "#d0c8c0"
   }
 }

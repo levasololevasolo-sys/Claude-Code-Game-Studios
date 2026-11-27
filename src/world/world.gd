@@ -207,14 +207,16 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	RenderingServer.set_default_clear_color(Color(String(room.look.get("sky", "#0c1418"))))
 	add_child(room)
 	room.build(layout)
-	# Art slice (design/art/visual-upgrade-plan.md): pre-rendered backdrop, opt-in.
-	if OS.get_cmdline_user_args().has("--art-slice"):
-		for c in get_children():
-			if c is ArtSlice:
-				c.queue_free()
-		var art := ArtSlice.new()
-		art.room = room
-		add_child(art)
+	# Art slice (design/art/visual-upgrade-plan.md): pre-rendered enemy skins always;
+	# the slice's own backdrop dressing only with --art-slice (the swamp's Blender
+	# layers come through Backdrop / visuals.json "tex").
+	for c in get_children():
+		if c is ArtSlice:
+			c.queue_free()
+	var art := ArtSlice.new()
+	art.room = room
+	art.full = OS.get_cmdline_user_args().has("--art-slice")
+	add_child(art)
 	# Sleeping packs of the location roster (enemies-and-elites §3.3, room-generation §3.5).
 	var table := Tune.table("enemies")
 	var fly_y: Array = Tune.get_value("flyer_spawn_y")
@@ -298,6 +300,12 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	atmosphere.vis = vis
 	atmosphere.dust = Color(String((vis.get("terrain", {}) as Dictionary).get("rim", "#8a7a60")))
 	add_child(atmosphere)
+	# Ambient light level (visuals.json "ambient"): a CanvasModulate so the amulet's
+	# PointLight2D shades the normal-mapped sprites instead of blowing them out.
+	if vis.has("ambient"):
+		var cm := CanvasModulate.new()
+		cm.color = Color(String(vis.ambient))
+		atmosphere.add_child(cm)
 
 ## The visuals.json style of a room: "base" for the base yard, else the
 ## location's look.props ("ruins" = swamp, "forest", "frost").

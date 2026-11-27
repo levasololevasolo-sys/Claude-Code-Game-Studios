@@ -116,10 +116,19 @@ const VISUAL_SCENE: String = "res://scenes/hero/hero_visual.tscn"
 ## Pre-rendered 3D-to-2D hero (art slice); chosen by visual_scene_path().
 const SPRITE_SCENE: String = "res://scenes/hero/hero_sprite.tscn"
 
-## The hero visual scene: the sprite hero with `-- --hero-art=sprite` or the
-## project setting navi/art/hero_art = "sprite", otherwise the cutout rig.
+## Check modes that inspect the cutout rig itself (HeroVisual tiers, rig poses):
+## they get the rig unless `--hero-art=` is given explicitly.
+const RIG_MODES: Array[String] = ["--hero-shots=", "--base-check="]
+
+## The hero visual scene: the project setting navi/art/hero_art ("sprite" =
+## pre-rendered hero, default since the art slice; "rig" = cutout rig), forced to
+## the rig in RIG_MODES; `-- --hero-art=sprite|rig` overrides both.
 static func visual_scene_path(args: PackedStringArray) -> String:
 	var art := String(ProjectSettings.get_setting("navi/art/hero_art", "rig"))
+	for a in args:
+		for m in RIG_MODES:
+			if a.begins_with(m):
+				art = "rig"
 	for a in args:
 		if a.begins_with("--hero-art="):
 			art = a.trim_prefix("--hero-art=")
