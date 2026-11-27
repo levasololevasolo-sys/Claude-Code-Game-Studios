@@ -15,6 +15,10 @@ uniform vec4 back_col : source_color = vec4(0.91, 0.96, 0.78, 1.0);
 uniform float back_alpha = 0.55;
 // Hit flash / fade, multiplied in (CrawlerSprite).
 uniform float fade = 1.0;
+// Emissive pass-through (drawn enemies, visuals.json enemy_rim.emit): bright,
+// saturated texels (glowing eyes, sparks, the tip glow) are shown above the
+// darkness too, so the eyes read in the unlit forest. 0 = off.
+uniform float emit = 0.0;
 
 void fragment() {
 	vec2 px = TEXTURE_PIXEL_SIZE * width;
@@ -34,5 +38,10 @@ void fragment() {
 	float above = texture(TEXTURE, UV - vec2(0.0, px.y * 1.4)).a;
 	float back = clamp(a - above, 0.0, 1.0) * back_alpha;
 	vec3 c = mix(rim_col.rgb, back_col.rgb, back / max(back + outline, 0.001));
-	COLOR = vec4(c, max(outline, back) * fade);
+	vec4 t = texture(TEXTURE, UV);
+	float mx = max(t.r, max(t.g, t.b));
+	float sat = (mx - min(t.r, min(t.g, t.b))) / max(mx, 0.001);
+	float glow = emit * smoothstep(0.72, 0.95, mx) * smoothstep(0.38, 0.62, sat) * t.a;
+	float rim = max(outline, back);
+	COLOR = vec4(mix(c, t.rgb, glow / max(glow + rim, 0.001)), max(rim, glow) * fade);
 }

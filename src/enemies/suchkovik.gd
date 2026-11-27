@@ -100,7 +100,6 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				aim_x = wall_x()
 
 func _draw() -> void:
-	_draw_windup_glow()
 	var line_c := Color(String(stats.line))
 	var k := 0.0
 	if st == "wind":
@@ -109,6 +108,9 @@ func _draw() -> void:
 		var m := muzzle() - position
 		draw_line(m, Vector2(aim_x - position.x, m.y), Color(line_c, 0.35 + 0.55 * k), 2.0 + k)
 		draw_circle(Vector2(aim_x - position.x, m.y), 4.0 + 3.0 * k, Color(line_c, 0.6 * k))
+	if _skin_draw():
+		return
+	_draw_windup_glow()
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	var bark := Color(String(stats.bark))

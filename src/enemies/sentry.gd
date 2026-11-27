@@ -62,6 +62,8 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				vel.x = 0.0
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	_draw_windup_glow()
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))

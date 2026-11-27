@@ -11,7 +11,7 @@
     "alpha": 0.4,
     "width": 5.0,
     "back": "#e8f4c8",
-    "back_alpha": 0.55
+    "back_alpha": 0.55, "emit": 1.0
   },
   "forest": {
     "fog": "#3e5878",

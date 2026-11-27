@@ -73,6 +73,13 @@
   date: 2026-11-27
   ai_made: yes (shapes and poses authored as code by an AI agent; no image model, no network generation)
   note: balvan, crawler, thrower, bloat, shishiga, bognitsa, vodyanitsa; 1x density (1.5 sheet px per world px); one-armed / headless variant sheets, two deaths, cut-out arm/head part sprites. Deterministic rebuild.
+- path: assets/art/sprites/enemies_drawn/{ringer,rootling,bat,sentry,suchkovik,lesavka}/*.png, assets/art/sprites/enemies_drawn/enemies_drawn_forest.json
+  source: drawn procedurally by tools/asset-pipeline/enemies2d/build_forest.py (kinds_forest.py rigs and poses of the 6 Тёмный бор enemies, the branch-spear sprites; base.py, hero2d sdf2d renderer), after design/gdd/bestiary.md §3.3 and design/art/art-bible.md §4.2
+  licence: own work (project-owned original work; no third-party art)
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (shapes and poses authored as code by an AI agent; no image model, no network generation)
+  note: ringer, rootling, bat, sentry, suchkovik, lesavka; 1x density; moonlight back rim for the dark forest; specials (vanish/appear, burrow/under/mound, dive/spit, shield block, throw, whistle/flee); headless / one-armed variants, two deaths, part sprites, suchkovik_spear(_stuck).png. Deterministic rebuild.
 - path: assets/art/sprites/weapons_drawn/*.png, assets/art/sprites/weapons_drawn/weapons_drawn.json
   source: drawn procedurally by tools/asset-pipeline/enemies2d/weapons.py (hero2d sdf2d renderer): stick (дрын), blade, spear, hammer, staff, sickles
   licence: own work (project-owned original work; no third-party art)
