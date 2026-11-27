@@ -111,6 +111,7 @@ func pick(i: int) -> void:
 		close()
 		return
 	var row: Dictionary = rows[i]
+	Audio.play(&"ui_forge_buy" if bool(row.get("enabled", true)) else &"ui_error_clank")
 	if not bool(row.get("enabled", true)):
 		status = String(row.get("note", ""))
 	else:

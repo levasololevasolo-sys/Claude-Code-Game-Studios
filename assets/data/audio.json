@@ -1,6 +1,11 @@
 {
-	"_note": "First sound pass (production/qa/evidence/audio-pass.md). db = player volume_db; pitch = random pitch spread (+-); cd = per-sound cooldown in s (stops stacking); files live in assets/audio/sfx/ and are built by tools/asset-pipeline/audio/build_sfx.py.",
-	"buses": { "Master": 0.0, "SFX": -3.0, "Music": -6.0, "UI": -6.0 },
+	"_note": "First sound pass (production/qa/evidence/audio-pass.md). db = player volume_db; pitch = random pitch spread (+-); cd = per-sound cooldown in s (stops stacking); files live in assets/audio/sfx/ and are built by tools/asset-pipeline/audio/build_sfx.py. Second pass (design/audio/sfx-coverage.md): max = voice limit per id (players at once, default voice_limit); loop = ambient bed on the Music bus; hear_radius = polled world sounds farther from the hero than this are skipped. The maps below route hooks to ids, so no id is spelled in code twice.",
+	"buses": {
+		"Master": 0.0,
+		"SFX": -3.0,
+		"Music": -6.0,
+		"UI": -6.0
+	},
 	"pool": 16,
 	"pool_2d": 16,
 	"max_distance": 4000.0,
@@ -10,25 +15,1218 @@
 	"charge_tick_pitch_per_100": 0.35,
 	"land_min": 0.35,
 	"sounds": {
-		"swing": { "files": ["swing_1", "swing_2", "swing_3"], "bus": "SFX", "db": -6.0, "pitch": 0.06, "cd": 0.05 },
-		"hit": { "files": ["hit_flesh_1", "hit_flesh_2", "hit_flesh_3"], "bus": "SFX", "db": -2.0, "pitch": 0.08, "cd": 0.03 },
-		"hit_heavy": { "files": ["hit_heavy"], "bus": "SFX", "db": 0.0, "pitch": 0.05, "cd": 0.06 },
-		"wall_slam": { "files": ["wall_slam"], "bus": "SFX", "db": -1.0, "pitch": 0.07, "cd": 0.08 },
-		"ground_slam": { "files": ["wall_slam"], "bus": "SFX", "db": -2.0, "pitch": 0.05, "cd": 0.1 },
-		"pogo": { "files": ["pogo"], "bus": "SFX", "db": -5.0, "pitch": 0.06, "cd": 0.05 },
-		"roll": { "files": ["roll"], "bus": "SFX", "db": -7.0, "pitch": 0.05, "cd": 0.1 },
-		"dash": { "files": ["dash"], "bus": "SFX", "db": -6.0, "pitch": 0.05, "cd": 0.1 },
-		"jump": { "files": ["jump"], "bus": "SFX", "db": -10.0, "pitch": 0.08, "cd": 0.08 },
-		"land": { "files": ["land"], "bus": "SFX", "db": -9.0, "pitch": 0.08, "cd": 0.1 },
-		"hero_hurt": { "files": ["hero_hurt"], "bus": "SFX", "db": -2.0, "pitch": 0.05, "cd": 0.15 },
-		"enemy_death": { "files": ["enemy_death"], "bus": "SFX", "db": -3.0, "pitch": 0.1, "cd": 0.05 },
-		"amulet_tick": { "files": ["amulet_tick"], "bus": "SFX", "db": -14.0, "pitch": 0.0, "cd": 0.04 },
-		"flare": { "files": ["flare"], "bus": "SFX", "db": 0.0, "pitch": 0.03, "cd": 0.3 },
-		"rune_chime": { "files": ["rune_chime"], "bus": "UI", "db": -4.0, "pitch": 0.0, "cd": 0.2 },
-		"door_open": { "files": ["door_open"], "bus": "SFX", "db": -5.0, "pitch": 0.04, "cd": 0.3 },
-		"ember_pickup": { "files": ["ember_pickup"], "bus": "SFX", "db": -8.0, "pitch": 0.04, "cd": 0.08 },
-		"boss_roar": { "files": ["boss_roar"], "bus": "SFX", "db": 0.0, "pitch": 0.04, "cd": 1.0 },
-		"ui_move": { "files": ["ui_move"], "bus": "UI", "db": -10.0, "pitch": 0.03, "cd": 0.03 },
-		"ui_confirm": { "files": ["ui_confirm"], "bus": "UI", "db": -6.0, "pitch": 0.0, "cd": 0.1 }
-	}
+		"swing": {
+			"files": [
+				"swing_1",
+				"swing_2",
+				"swing_3"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.06,
+			"cd": 0.05
+		},
+		"hit": {
+			"files": [
+				"hit_flesh_1",
+				"hit_flesh_2",
+				"hit_flesh_3"
+			],
+			"bus": "SFX",
+			"db": -2.0,
+			"pitch": 0.08,
+			"cd": 0.03
+		},
+		"hit_heavy": {
+			"files": [
+				"hit_heavy"
+			],
+			"bus": "SFX",
+			"db": 0.0,
+			"pitch": 0.05,
+			"cd": 0.06
+		},
+		"wall_slam": {
+			"files": [
+				"wall_slam"
+			],
+			"bus": "SFX",
+			"db": -1.0,
+			"pitch": 0.07,
+			"cd": 0.08
+		},
+		"ground_slam": {
+			"files": [
+				"wall_slam"
+			],
+			"bus": "SFX",
+			"db": -2.0,
+			"pitch": 0.05,
+			"cd": 0.1
+		},
+		"pogo": {
+			"files": [
+				"pogo"
+			],
+			"bus": "SFX",
+			"db": -5.0,
+			"pitch": 0.06,
+			"cd": 0.05
+		},
+		"roll": {
+			"files": [
+				"roll"
+			],
+			"bus": "SFX",
+			"db": -7.0,
+			"pitch": 0.05,
+			"cd": 0.1
+		},
+		"dash": {
+			"files": [
+				"dash"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.1
+		},
+		"jump": {
+			"files": [
+				"jump"
+			],
+			"bus": "SFX",
+			"db": -10.0,
+			"pitch": 0.08,
+			"cd": 0.08
+		},
+		"land": {
+			"files": [
+				"land"
+			],
+			"bus": "SFX",
+			"db": -9.0,
+			"pitch": 0.08,
+			"cd": 0.1
+		},
+		"hero_hurt": {
+			"files": [
+				"hero_hurt"
+			],
+			"bus": "SFX",
+			"db": -2.0,
+			"pitch": 0.05,
+			"cd": 0.15
+		},
+		"enemy_death": {
+			"files": [
+				"enemy_death",
+				"enemy_death_2",
+				"enemy_death_3"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.06,
+			"cd": 0.05
+		},
+		"amulet_tick": {
+			"files": [
+				"amulet_tick"
+			],
+			"bus": "SFX",
+			"db": -14.0,
+			"pitch": 0.0,
+			"cd": 0.04
+		},
+		"flare": {
+			"files": [
+				"flare"
+			],
+			"bus": "SFX",
+			"db": 0.0,
+			"pitch": 0.03,
+			"cd": 0.3
+		},
+		"rune_chime": {
+			"files": [
+				"rune_chime"
+			],
+			"bus": "UI",
+			"db": -4.0,
+			"pitch": 0.0,
+			"cd": 0.2
+		},
+		"door_open": {
+			"files": [
+				"door_open"
+			],
+			"bus": "SFX",
+			"db": -5.0,
+			"pitch": 0.04,
+			"cd": 0.3
+		},
+		"ember_pickup": {
+			"files": [
+				"ember_pickup"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.04,
+			"cd": 0.08
+		},
+		"boss_roar": {
+			"files": [
+				"boss_roar"
+			],
+			"bus": "SFX",
+			"db": 0.0,
+			"pitch": 0.04,
+			"cd": 1.0
+		},
+		"ui_move": {
+			"files": [
+				"ui_hover_wood"
+			],
+			"bus": "UI",
+			"db": -18.0,
+			"pitch": 0.03,
+			"cd": 0.03
+		},
+		"ui_confirm": {
+			"files": [
+				"ui_confirm_gold"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.0,
+			"cd": 0.1
+		},
+		"ui_hover_wood": {
+			"files": [
+				"ui_hover_wood"
+			],
+			"bus": "UI",
+			"db": -18.0,
+			"pitch": 0.03,
+			"cd": 0.04,
+			"max": 2
+		},
+		"ui_open_wood": {
+			"files": [
+				"ui_open_wood"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.02,
+			"cd": 0.15,
+			"max": 2
+		},
+		"ui_close": {
+			"files": [
+				"ui_close"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.02,
+			"cd": 0.1,
+			"max": 2
+		},
+		"ui_cancel_wood": {
+			"files": [
+				"ui_cancel_wood"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.03,
+			"cd": 0.08,
+			"max": 2
+		},
+		"ui_confirm_gold": {
+			"files": [
+				"ui_confirm_gold"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.02,
+			"cd": 0.1,
+			"max": 2
+		},
+		"ui_error_clank": {
+			"files": [
+				"ui_error_clank"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.03,
+			"cd": 0.15,
+			"max": 2
+		},
+		"ui_open_god": {
+			"files": [
+				"ui_open_god"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.0,
+			"cd": 0.3,
+			"max": 2
+		},
+		"ui_card_deal": {
+			"files": [
+				"ui_card_deal"
+			],
+			"bus": "UI",
+			"db": -15.0,
+			"pitch": 0.05,
+			"cd": 0.05,
+			"max": 2
+		},
+		"ui_rune_select": {
+			"files": [
+				"ui_rune_select"
+			],
+			"bus": "UI",
+			"db": -10.0,
+			"pitch": 0.0,
+			"cd": 0.3,
+			"max": 2
+		},
+		"ui_thread_run": {
+			"files": [
+				"ui_thread_run"
+			],
+			"bus": "UI",
+			"db": -18.0,
+			"pitch": 0.04,
+			"cd": 0.08,
+			"max": 2
+		},
+		"ui_bark_unroll": {
+			"files": [
+				"ui_bark_unroll"
+			],
+			"bus": "UI",
+			"db": -13.0,
+			"pitch": 0.03,
+			"cd": 0.2,
+			"max": 2
+		},
+		"ui_text_tick": {
+			"files": [
+				"ui_text_tick"
+			],
+			"bus": "UI",
+			"db": -22.0,
+			"pitch": 0.05,
+			"cd": 0.06,
+			"max": 2
+		},
+		"ui_shop_knock": {
+			"files": [
+				"ui_shop_knock"
+			],
+			"bus": "UI",
+			"db": -11.0,
+			"pitch": 0.02,
+			"cd": 0.3,
+			"max": 2
+		},
+		"ui_forge_buy": {
+			"files": [
+				"ui_forge_buy"
+			],
+			"bus": "UI",
+			"db": -10.0,
+			"pitch": 0.02,
+			"cd": 0.2,
+			"max": 2
+		},
+		"ui_page_turn": {
+			"files": [
+				"ui_page_turn"
+			],
+			"bus": "UI",
+			"db": -13.0,
+			"pitch": 0.04,
+			"cd": 0.15,
+			"max": 2
+		},
+		"ui_tab_switch": {
+			"files": [
+				"ui_tab_switch"
+			],
+			"bus": "UI",
+			"db": -15.0,
+			"pitch": 0.04,
+			"cd": 0.06,
+			"max": 2
+		},
+		"ui_count_tick": {
+			"files": [
+				"ui_count_tick"
+			],
+			"bus": "UI",
+			"db": -18.0,
+			"pitch": 0.06,
+			"cd": 0.05,
+			"max": 2
+		},
+		"ui_thread_snap": {
+			"files": [
+				"ui_thread_snap"
+			],
+			"bus": "UI",
+			"db": -9.0,
+			"pitch": 0.0,
+			"cd": 0.5,
+			"max": 2
+		},
+		"ui_victory_swell": {
+			"files": [
+				"ui_victory_swell"
+			],
+			"bus": "UI",
+			"db": -9.0,
+			"pitch": 0.0,
+			"cd": 0.5,
+			"max": 2
+		},
+		"ui_door_near": {
+			"files": [
+				"ui_door_near"
+			],
+			"bus": "UI",
+			"db": -15.0,
+			"pitch": 0.0,
+			"cd": 0.4,
+			"max": 2
+		},
+		"ui_codex_new": {
+			"files": [
+				"ui_codex_new"
+			],
+			"bus": "UI",
+			"db": -12.0,
+			"pitch": 0.0,
+			"cd": 0.3,
+			"max": 2
+		},
+		"ui_rebind_wait": {
+			"files": [
+				"ui_rebind_wait"
+			],
+			"bus": "UI",
+			"db": -18.0,
+			"pitch": 0.0,
+			"cd": 0.5,
+			"max": 2
+		},
+		"ui_menu_start": {
+			"files": [
+				"ui_menu_start"
+			],
+			"bus": "UI",
+			"db": -9.0,
+			"pitch": 0.0,
+			"cd": 1.0,
+			"max": 2
+		},
+		"limb_sever": {
+			"files": [
+				"limb_sever_1",
+				"limb_sever_2"
+			],
+			"bus": "SFX",
+			"db": -1.0,
+			"pitch": 0.05,
+			"cd": 0.08,
+			"max": 3
+		},
+		"limb_head_pop": {
+			"files": [
+				"limb_head_pop"
+			],
+			"bus": "SFX",
+			"db": 0.0,
+			"pitch": 0.05,
+			"cd": 0.1,
+			"max": 3
+		},
+		"limb_part_thud": {
+			"files": [
+				"limb_part_thud_1",
+				"limb_part_thud_2"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.06,
+			"max": 3
+		},
+		"parry_clang": {
+			"files": [
+				"parry_clang_1",
+				"parry_clang_2"
+			],
+			"bus": "SFX",
+			"db": -1.0,
+			"pitch": 0.05,
+			"cd": 0.06,
+			"max": 3
+		},
+		"parry_whiff": {
+			"files": [
+				"parry_whiff"
+			],
+			"bus": "SFX",
+			"db": -7.0,
+			"pitch": 0.05,
+			"cd": 0.1,
+			"max": 3
+		},
+		"step_mud": {
+			"files": [
+				"step_mud_1",
+				"step_mud_2",
+				"step_mud_3"
+			],
+			"bus": "SFX",
+			"db": -16.0,
+			"pitch": 0.05,
+			"cd": 0.12,
+			"max": 2
+		},
+		"step_dirt": {
+			"files": [
+				"step_dirt_1",
+				"step_dirt_2",
+				"step_dirt_3"
+			],
+			"bus": "SFX",
+			"db": -16.0,
+			"pitch": 0.05,
+			"cd": 0.12,
+			"max": 2
+		},
+		"step_snow": {
+			"files": [
+				"step_snow_1",
+				"step_snow_2",
+				"step_snow_3"
+			],
+			"bus": "SFX",
+			"db": -16.0,
+			"pitch": 0.05,
+			"cd": 0.12,
+			"max": 2
+		},
+		"step_wood": {
+			"files": [
+				"step_wood_1",
+				"step_wood_2",
+				"step_wood_3"
+			],
+			"bus": "SFX",
+			"db": -16.0,
+			"pitch": 0.05,
+			"cd": 0.12,
+			"max": 2
+		},
+		"hero_death": {
+			"files": [
+				"hero_death"
+			],
+			"bus": "SFX",
+			"db": -1.0,
+			"pitch": 0.05,
+			"cd": 1.0,
+			"max": 3
+		},
+		"hero_revive": {
+			"files": [
+				"hero_revive"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.05,
+			"cd": 1.0,
+			"max": 3
+		},
+		"weapon_swap": {
+			"files": [
+				"weapon_swap"
+			],
+			"bus": "SFX",
+			"db": -9.0,
+			"pitch": 0.05,
+			"cd": 0.15,
+			"max": 3
+		},
+		"weapon_pickup": {
+			"files": [
+				"weapon_pickup"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"amulet_ready": {
+			"files": [
+				"amulet_ready"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.05,
+			"cd": 0.5,
+			"max": 3
+		},
+		"amulet_overcharge": {
+			"files": [
+				"amulet_overcharge"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.6,
+			"max": 3
+		},
+		"amulet_crack": {
+			"files": [
+				"amulet_crack"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.05,
+			"cd": 0.4,
+			"max": 3
+		},
+		"flare_fizzle": {
+			"files": [
+				"flare_fizzle"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"enemy_wake": {
+			"files": [
+				"enemy_wake"
+			],
+			"bus": "SFX",
+			"db": -9.0,
+			"pitch": 0.05,
+			"cd": 0.4,
+			"max": 3
+		},
+		"wolf_growl": {
+			"files": [
+				"wolf_growl"
+			],
+			"bus": "SFX",
+			"db": -7.0,
+			"pitch": 0.05,
+			"cd": 0.4,
+			"max": 3
+		},
+		"bite_snap": {
+			"files": [
+				"bite_snap"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.1,
+			"max": 3
+		},
+		"claw_swipe": {
+			"files": [
+				"claw_swipe"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.1,
+			"max": 3
+		},
+		"bat_screech": {
+			"files": [
+				"bat_screech"
+			],
+			"bus": "SFX",
+			"db": -10.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"spit_wind": {
+			"files": [
+				"spit_wind"
+			],
+			"bus": "SFX",
+			"db": -7.0,
+			"pitch": 0.05,
+			"cd": 0.2,
+			"max": 3
+		},
+		"bloat_swell": {
+			"files": [
+				"bloat_swell"
+			],
+			"bus": "SFX",
+			"db": -7.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"bloat_burst": {
+			"files": [
+				"bloat_burst"
+			],
+			"bus": "SFX",
+			"db": -2.0,
+			"pitch": 0.05,
+			"cd": 0.1,
+			"max": 3
+		},
+		"frost_charge": {
+			"files": [
+				"frost_charge"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"frost_breath": {
+			"files": [
+				"frost_breath"
+			],
+			"bus": "SFX",
+			"db": -5.0,
+			"pitch": 0.05,
+			"cd": 0.4,
+			"max": 3
+		},
+		"knight_windup": {
+			"files": [
+				"knight_windup"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"shield_raise": {
+			"files": [
+				"shield_raise"
+			],
+			"bus": "SFX",
+			"db": -9.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"shield_block": {
+			"files": [
+				"shield_block"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.05,
+			"cd": 0.08,
+			"max": 3
+		},
+		"shield_bash": {
+			"files": [
+				"shield_bash"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.05,
+			"cd": 0.2,
+			"max": 3
+		},
+		"bell_ring": {
+			"files": [
+				"bell_ring"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.5,
+			"max": 3
+		},
+		"spirit_appear": {
+			"files": [
+				"spirit_appear"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"spirit_vanish": {
+			"files": [
+				"spirit_vanish"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"dig_dirt": {
+			"files": [
+				"dig_dirt"
+			],
+			"bus": "SFX",
+			"db": -9.0,
+			"pitch": 0.05,
+			"cd": 0.4,
+			"max": 3
+		},
+		"dirt_burst": {
+			"files": [
+				"dirt_burst"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.05,
+			"cd": 0.2,
+			"max": 3
+		},
+		"bow_draw": {
+			"files": [
+				"bow_draw"
+			],
+			"bus": "SFX",
+			"db": -10.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"shot_fire": {
+			"files": [
+				"shot_fire"
+			],
+			"bus": "SFX",
+			"db": -9.0,
+			"pitch": 0.05,
+			"cd": 0.08,
+			"max": 3
+		},
+		"fire_whoosh": {
+			"files": [
+				"fire_whoosh"
+			],
+			"bus": "SFX",
+			"db": -10.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"boss_summon": {
+			"files": [
+				"boss_summon"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.05,
+			"cd": 1.0,
+			"max": 3
+		},
+		"boss_death": {
+			"files": [
+				"boss_death"
+			],
+			"bus": "SFX",
+			"db": 0.0,
+			"pitch": 0.05,
+			"cd": 1.0,
+			"max": 3
+		},
+		"likho_gaze": {
+			"files": [
+				"likho_gaze"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.05,
+			"cd": 0.8,
+			"max": 3
+		},
+		"darkness_fall": {
+			"files": [
+				"darkness_fall"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.05,
+			"cd": 1.0,
+			"max": 3
+		},
+		"scythe_windup": {
+			"files": [
+				"scythe_windup"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.5,
+			"max": 3
+		},
+		"scythe_swing": {
+			"files": [
+				"scythe_swing"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"dive_whoosh": {
+			"files": [
+				"dive_whoosh"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.05,
+			"cd": 0.5,
+			"max": 3
+		},
+		"heavy_thud": {
+			"files": [
+				"heavy_thud"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"chest_open": {
+			"files": [
+				"chest_open"
+			],
+			"bus": "SFX",
+			"db": -5.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"trap_warn": {
+			"files": [
+				"trap_warn"
+			],
+			"bus": "SFX",
+			"db": -14.0,
+			"pitch": 0.05,
+			"cd": 0.4,
+			"max": 3
+		},
+		"trap_spikes": {
+			"files": [
+				"trap_spikes"
+			],
+			"bus": "SFX",
+			"db": -9.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"trap_log": {
+			"files": [
+				"trap_log"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.05,
+			"cd": 0.3,
+			"max": 3
+		},
+		"wall_crack": {
+			"files": [
+				"wall_crack"
+			],
+			"bus": "SFX",
+			"db": -5.0,
+			"pitch": 0.05,
+			"cd": 0.08,
+			"max": 3
+		},
+		"reward_take": {
+			"files": [
+				"reward_take"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.05,
+			"cd": 0.4,
+			"max": 3
+		},
+		"gate_whoosh": {
+			"files": [
+				"gate_whoosh"
+			],
+			"bus": "SFX",
+			"db": -5.0,
+			"pitch": 0.05,
+			"cd": 0.8,
+			"max": 3
+		},
+		"god_voice": {
+			"files": [
+				"god_voice"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.05,
+			"cd": 1.5,
+			"max": 3
+		},
+		"growl_small": {
+			"files": [
+				"growl_small_1",
+				"growl_small_2"
+			],
+			"bus": "SFX",
+			"db": -8.0,
+			"pitch": 0.05,
+			"cd": 0.2,
+			"max": 3
+		},
+		"lunge_whoosh": {
+			"files": [
+				"lunge_whoosh_1",
+				"lunge_whoosh_2"
+			],
+			"bus": "SFX",
+			"db": -7.0,
+			"pitch": 0.05,
+			"cd": 0.1,
+			"max": 3
+		},
+		"amb_swamp": {
+			"files": [
+				"amb_swamp"
+			],
+			"bus": "Music",
+			"db": -14.0,
+			"pitch": 0.0,
+			"cd": 0.0,
+			"max": 1,
+			"loop": true
+		},
+		"amb_forest": {
+			"files": [
+				"amb_forest"
+			],
+			"bus": "Music",
+			"db": -14.0,
+			"pitch": 0.0,
+			"cd": 0.0,
+			"max": 1,
+			"loop": true
+		},
+		"amb_frost": {
+			"files": [
+				"amb_frost"
+			],
+			"bus": "Music",
+			"db": -14.0,
+			"pitch": 0.0,
+			"cd": 0.0,
+			"max": 1,
+			"loop": true
+		},
+		"amb_base": {
+			"files": [
+				"amb_base"
+			],
+			"bus": "Music",
+			"db": -14.0,
+			"pitch": 0.0,
+			"cd": 0.0,
+			"max": 1,
+			"loop": true
+		}
+	},
+	"voice_limit": 3,
+	"hear_radius": 1400.0,
+	"ambient": {
+		"base": "amb_base",
+		"swamp": "amb_swamp",
+		"forest": "amb_forest",
+		"frost": "amb_frost"
+	},
+	"ambient_fade": 1.5,
+	"surfaces": {
+		"base": "step_wood",
+		"swamp": "step_mud",
+		"forest": "step_dirt",
+		"frost": "step_snow"
+	},
+	"states": {
+		"crawler": {
+			"wind": "growl_small",
+			"leap": "lunge_whoosh",
+			"charge": "lunge_whoosh"
+		},
+		"bat": {
+			"swoop": "bat_screech",
+			"spitwind": "spit_wind"
+		},
+		"bloat": {
+			"swell": "bloat_swell"
+		},
+		"jelly": {
+			"chill_w": "frost_charge"
+		},
+		"knight": {
+			"wind": "knight_windup",
+			"lunge": "lunge_whoosh",
+			"guard": "shield_raise"
+		},
+		"ringer": {
+			"call": "bell_ring",
+			"appear": "spirit_appear",
+			"gone": "spirit_vanish",
+			"swipe": "claw_swipe"
+		},
+		"rootling": {
+			"dig": "dig_dirt",
+			"burst": "dirt_burst"
+		},
+		"sentry": {
+			"aim": "bow_draw",
+			"bash": "shield_bash"
+		},
+		"wolf": {
+			"crouch": "wolf_growl",
+			"bite": "bite_snap"
+		},
+		"kikimora": {
+			"roar": "boss_roar",
+			"lunge": "lunge_whoosh",
+			"summon_w": "boss_summon"
+		},
+		"likho": {
+			"gaze": "likho_gaze",
+			"dark": "darkness_fall",
+			"blink": "spirit_vanish",
+			"leap": "lunge_whoosh",
+			"lunge": "lunge_whoosh",
+			"summon_w": "boss_summon"
+		},
+		"morena": {
+			"breath_w": "frost_charge",
+			"breath": "frost_breath",
+			"scythe_w": "scythe_windup",
+			"scythe": "scythe_swing",
+			"dive": "dive_whoosh",
+			"stuck": "heavy_thud",
+			"summon_w": "boss_summon"
+		}
+	},
+	"deaths": {
+		"bloat": "bloat_burst",
+		"boss": "boss_death",
+		"wall": ""
+	},
+	"traps": {
+		"warn": "trap_warn",
+		"spikes": "trap_spikes",
+		"log": "trap_log"
+	},
+	"god_pitch": {
+		"svarog": 0.9,
+		"perun": 0.8,
+		"stribog": 1.1,
+		"veles": 0.75,
+		"zhiva": 1.2,
+		"rod": 1.0
+	},
+	"cancel_words": [
+		"Назад",
+		"Продолжить",
+		"Нет",
+		"Отмена"
+	],
+	"screens": {
+		"PauseMenu": {
+			"open": "ui_open_wood",
+			"closed": "ui_close"
+		},
+		"SettingsScreen": {
+			"open": "ui_open_wood",
+			"closed": "ui_close",
+			"tab": "ui_tab_switch",
+			"wait": "ui_rebind_wait"
+		},
+		"RuneOfferScreen": {
+			"open": "ui_open_god",
+			"deal": "ui_card_deal",
+			"hover": "selected",
+			"hover_id": "ui_thread_run",
+			"chosen": "ui_rune_select"
+		},
+		"GodChoiceScreen": {
+			"open": "ui_open_god",
+			"deal": "ui_card_deal",
+			"hover": "selected",
+			"hover_id": "ui_thread_run",
+			"chosen": "ui_rune_select"
+		},
+		"DifficultyChoiceScreen": {
+			"open": "ui_menu_start",
+			"deal": "ui_card_deal",
+			"hover": "selected",
+			"hover_id": "ui_hover_wood",
+			"chosen": "ui_confirm_gold"
+		},
+		"RunSummaryScreen": {
+			"open_outcome": {
+				"dead": "ui_thread_snap",
+				"win": "ui_victory_swell",
+				"home": "ui_confirm_gold",
+				"quit": "ui_close"
+			},
+			"count": "ui_count_tick",
+			"hover": "hover",
+			"hover_id": "ui_hover_wood",
+			"closed": "ui_confirm_gold"
+		},
+		"ShopScreen": {
+			"open": "ui_shop_knock",
+			"hover": "sel",
+			"hover_id": "ui_hover_wood",
+			"closed": "ui_close"
+		},
+		"DialogueBox": {
+			"open": "ui_bark_unroll",
+			"hover": "selected",
+			"hover_id": "ui_hover_wood",
+			"picked": "ui_confirm_gold",
+			"closed": "ui_close"
+		},
+		"StoryCard": {
+			"open": "ui_page_turn",
+			"closed": "ui_close"
+		},
+		"StoryScene": {
+			"step_started": "ui_page_turn"
+		},
+		"HeroBark": {
+			"open": "ui_text_tick"
+		}
+	},
+	"count_ticks": 8
 }
