@@ -16,3 +16,8 @@ signal flare_fired(shape: String, power: float)
 ## its slot ("" if none). HUD, sound, save listen.
 @warning_ignore("unused_signal")
 signal rune_taken(id: String, slot: String, replaced: String)
+## The hero did a move with no gameplay signal of its own (sound listens):
+## &"swing" (power = combo step), &"roll", &"dash", &"jump", &"land" (power =
+## landing weight 0.2-1), &"pogo", &"ground_slam".
+@warning_ignore("unused_signal")
+signal hero_acted(action: StringName, power: float)

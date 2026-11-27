@@ -207,6 +207,7 @@ func _step(dt: float) -> void:
 		dash_dir = mx if mx != 0 else face
 		face = dash_dir
 		inv = maxf(inv, dash_dur + 0.05 + build.value(build.slots.dash, "inv_bonus", 0.0))
+		Events.hero_acted.emit(&"roll" if rolling else &"dash", 1.0)
 		atk_t = 0.0
 		if amulet.dash_charge() > 0.0:
 			amulet.add_flat(amulet.dash_charge())
@@ -244,6 +245,7 @@ func _step(dt: float) -> void:
 				velocity.y = -Tune.f("jump_speed")
 				coyote_t = 0.0
 				jump_buf = 0.0
+				Events.hero_acted.emit(&"jump", 1.0)
 	_update_attack(dt, on_floor)
 	_update_sub(dt)
 	since_dash += dt
@@ -256,6 +258,7 @@ func _step(dt: float) -> void:
 		coyote_t = Tune.f("coyote")
 		if not was_on_floor:
 			land = clampf(fall_v / Tune.f("land_ref_speed"), 0.2, 1.0)
+			Events.hero_acted.emit(&"land", land)
 			if atk_t > 0.0 and atk_dir == "down" and not slammed and fall_v > Tune.f("slam_min_fall"):
 				_slam()
 	was_on_floor = on_floor
@@ -295,6 +298,7 @@ func _update_attack(dt: float, on_floor: bool) -> void:
 		slammed = false
 		_quaked = false
 		atk_buf = 0.0
+		Events.hero_acted.emit(&"swing", float(combo))
 		if atk_dir == "side":
 			velocity.x += face * float(b.lunge)
 	if atk_t > 0.0:
@@ -384,6 +388,7 @@ func _strike_hits() -> void:
 		if atk_dir == "down":
 			velocity.y = -Tune.f("pogo_speed") * (float(weapon.row().get("pogo", 1.0)) if weapon.mech() == "down_boost" else 1.0)
 			atk_t = 0.0
+			Events.hero_acted.emit(&"pogo", 1.0)
 		if world:
 			world.request_hitstop(Tune.f("hitstop"))
 			world.add_shake(Tune.f("shake_finisher") if fin else Tune.f("shake_hit"))
@@ -595,6 +600,7 @@ func add_bolt(a: Vector2, b: Vector2) -> void:
 
 func _slam() -> void:
 	slammed = true
+	Events.hero_acted.emit(&"ground_slam", 1.0)
 	if world:
 		world.add_shake(Tune.f("shake_slam"))
 		world.add_ring(position, Tune.f("slam_r"))
