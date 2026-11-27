@@ -416,6 +416,11 @@ func _draw_glow(at: Vector2, radius: float, c: Color, alpha: float) -> void:
 		var k := 1.0 - float(i) / 6.0
 		draw_circle(at, radius * k, Color(c, alpha * 0.18))
 
+## Cap of the hero's light radius this enemy imposes, px (0 = none; Лихо's
+## «гаснет свет», enemies-and-elites §3.10). Darkness takes the smallest cap.
+func light_cap() -> float:
+	return 0.0
+
 ## What glows through the darkness (amulet-and-flare §3.9): Vector4(x, y, radius,
 ## strength) in world space. Eyes always at full strength; the wind-up adds a
 ## windup_glow_r spot at windup_glow_a over the body.
@@ -795,7 +800,7 @@ func _mark_tick(dt: float) -> bool:
 func _call_kin() -> void:
 	if world == null:
 		return
-	var roster: Array = Tune.get_value("swamp_roster")
+	var roster: Array = EnemyRoster.for_tier(tier, Tune.table("locations"), Tune.data).roster
 	for i in mini(int(Tune.f("call_count")), int(Tune.f("call_max")) - called):
 		var kind := String(roster[rng.randi_range(0, roster.size() - 1)])
 		var e := EnemyRoster.make(kind)

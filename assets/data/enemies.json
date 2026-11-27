@@ -31,6 +31,20 @@
     "speed": 75, "bob": 30, "bob_freq": 3, "target_dy": 40, "trigger": 120, "fuse": 0.85, "swell_damp": 0.9,
     "death_fuse": 0.35, "radius": 125, "dmg": 22, "enemy_mult": 2, "enemy_kb": 500, "blast_time": 0.35, "blast_shake": 12
   },
+  "ringer": {
+    "name": "Аука", "role": "flanker", "w": 36, "h": 70, "hp": 40, "flies": false, "weight": 1.2, "embers": 4,
+    "contact": 6, "color": "#3f5240", "eye": "#ffb35c", "arm": "#2e3b2e",
+    "speed": 85, "stop": 150, "range_x": 560, "range_y": 160, "call": 0.7, "gone": 0.35, "behind_dx": 130,
+    "appear": 0.45, "swipe_time": 0.2, "swipe_step": 180, "swipe_x": 90, "swipe_dmg": 13, "recover": 0.8,
+    "cd_min": 2.0, "cd_max": 3.2
+  },
+  "rootling": {
+    "name": "Лешачонок", "role": "burrower", "w": 40, "h": 42, "hp": 30, "flies": false, "weight": 0.9, "embers": 3,
+    "contact": 8, "color": "#5b4632", "eye": "#c8f07a", "dirt": "#4a3b2c", "twig": "#7a6248",
+    "speed": 80, "range_x": 640, "range_y": 200, "dig": 0.5, "under_max": 2.2, "under_speed": 300, "under_stop": 12,
+    "rise_w": 0.6, "burst_up": 620, "burst_time": 0.3, "burst_r": 60, "burst_h": 120, "burst_dmg": 14, "recover": 0.9,
+    "cd_min": 1.8, "cd_max": 3.0
+  },
   "knight": {
     "name": "Навий витязь", "role": "knight", "w": 46, "h": 88, "hp": 230, "flies": false, "weight": 2.6, "embers": 14,
     "contact": 6, "color": "#2c2f3d", "eye": "#ffffff", "speed": 150, "stop": 110, "range_x": 320, "range_y": 170,

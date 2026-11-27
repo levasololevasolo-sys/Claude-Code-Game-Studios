@@ -95,6 +95,15 @@ static func pick_line(lines: Dictionary, moment: String, beaten: int) -> String:
 	var key := moment + ("_first" if beaten <= 0 else "_repeat")
 	return String(lines.get(key, ""))
 
+## New boss node of location boss `id`: the row's "script" class (likho:
+## LikhoBoss), else LairBoss with that row (Кикимора and the stand-ins).
+static func make(id: String) -> LairBoss:
+	var row: Dictionary = Tune.table("bosses").get(id, {})
+	var path := String(row.get("script", ""))
+	var b: LairBoss = (load(path) as GDScript).new() if path != "" else LairBoss.new()
+	b.boss_id = id
+	return b
+
 ## The arena platforms of the lair (Vector3 x, y, width) from bosses.json.
 static func arena_plats(id: String = FALLBACK_ID) -> Array:
 	var t := Tune.table("bosses")

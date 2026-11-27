@@ -1,0 +1,21 @@
+OK   forest room: chunks ["forest_entry_01", "forest_arena_03", "forest_shaft_04", "forest_arena_01", "forest_exit_01"], kinds ["rootling", "sentry", "bat", "ringer"]
+screenshot forest-room.png
+screenshot forest-enemies.png
+OK   forest enemies telegraph: ["walk", "call", "dig", "under", "gone", "appear", "swipe", "rise_w", "recover", "burst"]
+OK   Лихо sleeps, hp 1044, class likho_boss.gd
+OK   intro line: Раз шаг. Два шаг. Звенишь, звенишь, звенишь.
+screenshot boss-likho-intro.png
+OK   gaze beam tracks: ["leap", "leap", "leap", "gaze"]
+screenshot boss-likho-gaze.png
+OK   woe zones: 5
+OK   summon at 65%: 2 minions (hp 670)
+OK   rage below 50%: phase 2, line «Лихо в ярости»
+OK   lights out: hero light 359 (light_min 359)
+screenshot boss-likho-phase2.png
+OK   4 different attacks: ["leap", "leap", "leap", "gaze", "gaze", "gaze", "lunge", "leap", "leap", "leap", "gaze", "leap", "leap", "leap", "woe", "woe", "lunge", "leap", "woe", "gaze", "woe"]
+OK   second summon at 30%: summons 2
+OK   Лихо dies
+screenshot boss-likho-dead.png
+OK   death line: Дай поспать. Дай. Поспать.
+OK   minions and hazards vanished, light back: 0 enemies left
+DONE: 0 failed checks

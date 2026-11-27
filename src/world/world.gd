@@ -184,16 +184,21 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 		# Legacy check modes only (the run passes its layout): old layout without the
 		# BUG-0004 safe start zone, so their recorded logs (--demo) stay comparable.
 		layout = RoomGen.generate(rng, room_k, tier, Tune.data, false)
+	# Location look (art-bible §4.1, locations.json "look" / "darkness").
+	var loc: Dictionary = Tune.table("locations").get(str(tier), {})
 	room = Room.new()
+	room.look = loc.get("look", {})
+	RenderingServer.set_default_clear_color(Color(String(room.look.get("sky", "#0c1418"))))
 	add_child(room)
 	room.build(layout)
 	# Sleeping packs of the location roster (enemies-and-elites §3.3, room-generation §3.5).
 	var table := Tune.table("enemies")
 	var fly_y: Array = Tune.get_value("flyer_spawn_y")
+	var ros := EnemyRoster.for_tier(tier, Tune.table("locations"), Tune.data)
 	for i in layout.packs.size():
 		var pack: Array = layout.packs[i]
 		var kinds := EnemyRoster.pack_kinds(rng, pack.size(), i, room_k, tier,
-			Tune.get_value("swamp_roster"), Tune.get_value("swamp_late"), table, Tune.data)
+			ros.roster, ros.late, table, Tune.data)
 		for j in kinds.size():
 			var e := EnemyRoster.make(kinds[j])
 			# Elites (enemies-and-elites §3.6): the layout picks who, the mark fits the kind.
@@ -251,6 +256,7 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	add_child(layer)
 	darkness = Darkness.new()
 	darkness.world = self
+	darkness.base = float(loc.get("darkness", -1.0))
 	add_child(darkness)
 
 ## Chunk-room props (room-generation §3.6, §3.10, §3.13): the knight on his

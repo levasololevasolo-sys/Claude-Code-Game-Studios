@@ -1,38 +1,163 @@
 {
-  "_note": "Locations by tier, GDD room-generation-and-doors §3.1. Tiers 2-5 reuse the swamp roster and room generator until their chunks and rosters exist.",
+  "_note": "Locations by tier, GDD room-generation-and-doors §3.1, enemies-and-elites §3.3, art-bible §4.1. lib = chunk library chunks_<lib>.json; roster/late = pack kinds; look = room colours (sky = clear colour, far/mid = parallax layers with their scroll factor par_far/par_mid, near = ground, plat, accent = eyes/glow, props = background props kind) and darkness = base darkness of the room (amulet-and-flare F5 'darkness'). Tiers 3-5 reuse the swamp until their content exists.",
   "1": {
     "name": "Топь Кикиморы",
     "boss": "kikimora",
     "boss_name": "Кикимора Болотная",
     "res": "gears",
-    "res_name": "болотное железо"
+    "res_name": "болотное железо",
+    "lib": "swamp",
+    "roster": [
+      "crawler",
+      "sentry",
+      "bat"
+    ],
+    "late": [
+      "bloat"
+    ],
+    "darkness": 0.78,
+    "look": {
+      "sky": "#0c1418",
+      "far": "#16232a",
+      "mid": "#16232a",
+      "near": "#1f2b2a",
+      "edge": "#4f6d5c",
+      "plat": "#3a4a45",
+      "plat_edge": "#7d9a7f",
+      "solid": "#24302c",
+      "accent": "#b6e36b",
+      "par_far": 0.0,
+      "par_mid": 0.0,
+      "props": "ruins"
+    },
+    "beaten": "повержена"
   },
   "2": {
     "name": "Тёмный бор",
     "boss": "likho",
-    "boss_name": "Лихо Одноглазое (заглушка)",
+    "boss_name": "Лихо Одноглазое",
     "res": "bronze",
-    "res_name": "живица"
+    "res_name": "живица",
+    "lib": "forest",
+    "roster": [
+      "ringer",
+      "sentry",
+      "rootling"
+    ],
+    "late": [
+      "bat"
+    ],
+    "darkness": 0.84,
+    "look": {
+      "sky": "#2e4466",
+      "far": "#1b2a44",
+      "mid": "#14203a",
+      "near": "#0f1626",
+      "edge": "#5a4a3a",
+      "plat": "#5a4a3a",
+      "plat_edge": "#8a7254",
+      "solid": "#2a2230",
+      "accent": "#ff8a3d",
+      "par_far": 0.75,
+      "par_mid": 0.45,
+      "props": "forest"
+    },
+    "beaten": "повержено"
   },
   "3": {
     "name": "Царство Морены",
     "boss": "morena",
     "boss_name": "Морена (заглушка)",
     "res": "pearls",
-    "res_name": "иней-камень"
+    "res_name": "иней-камень",
+    "lib": "swamp",
+    "roster": [
+      "crawler",
+      "sentry",
+      "bat"
+    ],
+    "late": [
+      "bloat"
+    ],
+    "darkness": 0.78,
+    "look": {
+      "sky": "#0c1418",
+      "far": "#16232a",
+      "mid": "#16232a",
+      "near": "#1f2b2a",
+      "edge": "#4f6d5c",
+      "plat": "#3a4a45",
+      "plat_edge": "#7d9a7f",
+      "solid": "#24302c",
+      "accent": "#b6e36b",
+      "par_far": 0.0,
+      "par_mid": 0.0,
+      "props": "ruins"
+    },
+    "stub": true
   },
   "4": {
     "name": "Калинов мост",
     "boss": "gorynych",
     "boss_name": "Змей Горыныч (заглушка)",
     "res": "gears",
-    "res_name": "болотное железо"
+    "res_name": "болотное железо",
+    "lib": "swamp",
+    "roster": [
+      "crawler",
+      "sentry",
+      "bat"
+    ],
+    "late": [
+      "bloat"
+    ],
+    "darkness": 0.78,
+    "look": {
+      "sky": "#0c1418",
+      "far": "#16232a",
+      "mid": "#16232a",
+      "near": "#1f2b2a",
+      "edge": "#4f6d5c",
+      "plat": "#3a4a45",
+      "plat_edge": "#7d9a7f",
+      "solid": "#24302c",
+      "accent": "#b6e36b",
+      "par_far": 0.0,
+      "par_mid": 0.0,
+      "props": "ruins"
+    },
+    "stub": true
   },
   "5": {
     "name": "Кощеево царство",
     "boss": "koschei",
     "boss_name": "Кощей (заглушка)",
     "res": "pearls",
-    "res_name": "иней-камень"
+    "res_name": "иней-камень",
+    "lib": "swamp",
+    "roster": [
+      "crawler",
+      "sentry",
+      "bat"
+    ],
+    "late": [
+      "bloat"
+    ],
+    "darkness": 0.78,
+    "look": {
+      "sky": "#0c1418",
+      "far": "#16232a",
+      "mid": "#16232a",
+      "near": "#1f2b2a",
+      "edge": "#4f6d5c",
+      "plat": "#3a4a45",
+      "plat_edge": "#7d9a7f",
+      "solid": "#24302c",
+      "accent": "#b6e36b",
+      "par_far": 0.0,
+      "par_mid": 0.0,
+      "props": "ruins"
+    },
+    "stub": true
   }
 }

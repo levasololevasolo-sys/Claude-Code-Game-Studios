@@ -11,6 +11,8 @@ const KINDS: Dictionary = {
 	"sentry": preload("res://src/enemies/sentry.gd"),
 	"bloat": preload("res://src/enemies/bloat.gd"),
 	"knight": preload("res://src/enemies/knight.gd"),
+	"ringer": preload("res://src/enemies/ringer.gd"),
+	"rootling": preload("res://src/enemies/rootling.gd"),
 }
 
 ## New, not yet set up enemy of `kind` (null for an unknown kind).
@@ -19,6 +21,12 @@ static func make(kind: String) -> Enemy:
 		push_error("EnemyRoster: unknown kind '%s'" % kind)
 		return null
 	return (KINDS[kind] as GDScript).new() as Enemy
+
+## Roster of location `tier` (enemies-and-elites §3.3): {roster, late} from
+## locations.json, falling back to tuning swamp_roster / swamp_late.
+static func for_tier(tier: int, locs: Dictionary, t: Dictionary) -> Dictionary:
+	var row: Dictionary = locs.get(str(tier), {})
+	return { "roster": row.get("roster", t.get("swamp_roster", [])), "late": row.get("late", t.get("swamp_late", [])) }
 
 ## Kinds of the `size` members of pack number `pack_i` (0-based) in room k of `tier`.
 ## `table` is the enemy table (flies flags), `t` the tuning dictionary.

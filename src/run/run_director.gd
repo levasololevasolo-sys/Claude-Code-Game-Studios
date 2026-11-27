@@ -108,7 +108,7 @@ func enter_room() -> void:
 	var layout: Dictionary
 	match run.stage:
 		"lair":
-			layout = { "w": Tune.f("lair_room_w"), "plats": LairBoss.arena_plats(), "packs": [], "portal": false, "lair": true }
+			layout = { "w": Tune.f("lair_room_w"), "plats": LairBoss.arena_plats(String(_loc().get("boss", LairBoss.FALLBACK_ID))), "packs": [], "portal": false, "lair": true }
 		"haven":
 			layout = { "w": Tune.f("haven_room_w"), "plats": [], "packs": [], "portal": false, "haven": true }
 		_:
@@ -118,7 +118,7 @@ func enter_room() -> void:
 	world.player.hp = run.hp
 	world.player.died.connect(_on_died)
 	if run.stage == "lair":
-		var boss := LairBoss.new()
+		var boss := LairBoss.make(String(_loc().get("boss", LairBoss.FALLBACK_ID)))
 		boss.title = String(_loc().get("boss_name", "Хозяин"))
 		world.spawn_enemy(boss, Vector2(layout.w * 0.6, Tune.f("ground_y")), 0, true, rng.randi())
 	phase = "fight"
@@ -175,7 +175,8 @@ func room_opts() -> Dictionary:
 	var types: Array = _unl.get("types", [])
 	return { "knight": knight,
 		"elites_ok": run.tier >= int(Tune.f("elite_from_tier")) and game.meta.bosses_beaten() > 0,
-		"secret_ok": not (run.tier == 1 and run.room_k == 1) and "cache" in types }
+		"secret_ok": not (run.tier == 1 and run.room_k == 1) and "cache" in types,
+		"loc": String(_loc().get("lib", "swamp")) }
 
 ## A chest was opened (§3.13): ordinary 18 embers, 3 resource, drop_from("chest");
 ## secret pocket 40 embers, 6 resource, drop_from("cache"), 50% heal 20.
@@ -302,7 +303,7 @@ func _lair_choice() -> void:
 	var scr := GodChoiceScreen.new()
 	scr.gods = gods
 	scr.held = build.gods_taken()
-	scr.title = "%s повержена — выбери бога" % _loc().get("boss_name", "Хозяин") if run.tier == 1 else "Хозяин повержен — выбери бога"
+	scr.title = "%s %s — выбери бога" % [_loc().get("boss_name", "Хозяин"), _loc().beaten] if _loc().has("beaten") else "Хозяин повержен — выбери бога"
 	scr.chosen.connect(func(g: String) -> void:
 		_note("lair god chosen: %s (of %s)" % [g, gods])
 		_offer.call_deferred(g, func() -> void: _reward_done("god")))
@@ -402,7 +403,7 @@ func _open_doors() -> void:
 		"haven":
 			if run.tier < 5:
 				var nxt: Dictionary = Tune.table("locations").get(str(run.tier + 1), {})
-				infos.append({ "type": "next_loc", "god": "", "arg": String(nxt.get("name", "?")) + " (заглушка)" })
+				infos.append({ "type": "next_loc", "god": "", "arg": String(nxt.get("name", "?")) + (" (заглушка)" if bool(nxt.get("stub", false)) else "") })
 			infos.append({ "type": "base", "god": "" })
 	for i in infos.size():
 		var d := Door.new()

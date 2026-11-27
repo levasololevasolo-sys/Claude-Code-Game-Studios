@@ -18,6 +18,8 @@ const MARGIN: float = 1600.0
 var world: World
 ## Calm room (base, rest stop): darkness × darkness_calm.
 var calm: bool = false
+## Base darkness of the location (locations.json "darkness"; < 0 = tuning "darkness").
+var base: float = -1.0
 ## Ash level "Навь темнее" open (0/1).
 var ash_level: int = 0
 ## Last values sent to the shader (read by checks and the HUD).
@@ -44,7 +46,7 @@ func _process(_dt: float) -> void:
 	var p := world.player
 	var c := p.amulet.charge if p.amulet else 0.0
 	light_r = AmuletRules.light_radius(c, Tune.data)
-	dk = AmuletRules.darkness(Tune.data, calm, ash_level, world.flash)
+	dk = AmuletRules.darkness(Tune.data, calm, ash_level, world.flash, base)
 	if p.flare_t > 0.0:
 		dk = minf(Tune.f("darkness_max"), dk + Tune.f("windup_dim"))
 	var spots: Array[Vector4] = []
@@ -52,6 +54,10 @@ func _process(_dt: float) -> void:
 		var e := n as Enemy
 		if e and not e.dead:
 			spots.append_array(e.light_spots())
+			var cap := e.light_cap()
+			if cap > 0.0:
+				light_r = minf(light_r, cap)
+				dk = Tune.f("darkness_max")
 	for ch in world.get_children():
 		if ch is EnemyShot:
 			spots.append_array((ch as EnemyShot).light_spots())

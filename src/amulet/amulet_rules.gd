@@ -93,10 +93,11 @@ static func light_radius(c: float, tune: Dictionary, hub_mult: float = 1.0) -> f
 	var r := maxf(light_min(tune), base) + float(tune.get("over_glow", 60.0)) * maxf(0.0, c - ready) / ready
 	return r * hub_mult
 
+## `base` >= 0 replaces tuning "darkness" (per-location darkness, locations.json).
 ## F5: dk = clamp(darkness × k_calm + ash_dark × ash_level, 0, max) × (1 − flash_dim × flash).
-static func darkness(tune: Dictionary, calm: bool = false, ash_level: int = 0, flash: float = 0.0) -> float:
+static func darkness(tune: Dictionary, calm: bool = false, ash_level: int = 0, flash: float = 0.0, base: float = -1.0) -> float:
 	var k_calm := float(tune.get("darkness_calm", 0.55)) if calm else 1.0
-	var dk := clampf(float(tune.get("darkness", 0.78)) * k_calm + float(tune.get("ash_dark", 0.08)) * float(ash_level),
+	var dk := clampf((base if base >= 0.0 else float(tune.get("darkness", 0.78))) * k_calm + float(tune.get("ash_dark", 0.08)) * float(ash_level),
 		0.0, float(tune.get("darkness_max", 0.95)))
 	return dk * (1.0 - float(tune.get("flash_dim", 0.9)) * clampf(flash, 0.0, 1.0))
 

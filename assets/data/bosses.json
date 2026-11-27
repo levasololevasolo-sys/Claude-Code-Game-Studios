@@ -1,5 +1,5 @@
 {
-  "_note": "Lair bosses, GDD enemies-and-elites §3.8-3.9; lines from design/narrative/living-world.md §4.1. Keyed by the location boss id (locations.json \"boss\"); the GDD id of kikimora is clockmaker. Attack order in weights: throw, pend, lunge, wave. Tiers without a row of their own fight kikimora's pattern with no lines (stand-in until §3.10-3.13 exist). wave is not in GDD §3.9 (phase 2 only, weight 0 in phase 1).",
+  "_note": "Lair bosses, GDD enemies-and-elites §3.8-3.10 (likho: src/enemies/likho_boss.gd, row key script = the boss class; attacks = its own attack order for weights; wave_speed/gaze_*/woe_n per phase); lines from design/narrative/living-world.md §4.1. Keyed by the location boss id (locations.json \"boss\"); the GDD id of kikimora is clockmaker. Attack order in weights: throw, pend, lunge, wave. Tiers without a row of their own fight kikimora's pattern with no lines (stand-in until §3.10-3.13 exist). wave is not in GDD §3.9 (phase 2 only, weight 0 in phase 1).",
   "kikimora": {
     "name": "Кикимора Болотная",
     "w": 120, "h": 200, "hp": 680, "weight": 6, "embers": 40,
@@ -26,5 +26,33 @@
       "hero_death": "Вот и лёг. Полежи в тине, остынь."
     },
     "arena_plats": [[280, 500, 220], [760, 440, 240], [1640, 440, 240], [1900, 510, 200]]
+  },
+  "likho": {
+    "name": "Лихо Одноглазое", "script": "res://src/enemies/likho_boss.gd",
+    "w": 110, "h": 250, "hp": 720, "weight": 6, "embers": 40,
+    "color": "#3a3d4e", "bark": "#5a4a3a", "eye": "#ff8a3d", "rage_eye": "#ff4a2a", "lid": "#1b1d28",
+    "dmg": 20, "rest": 1.1, "contact_mult": 0.8, "lunge_contact_mult": 1.3,
+    "walk_speed": 60, "walk_keep": 300,
+    "phase_marks": [0.5], "phase_fast": 1.3, "min_windup": 0.5,
+    "attacks": ["leap", "gaze", "lunge", "woe"],
+    "weights": [[40, 25, 20, 15], [28, 30, 14, 28]],
+    "leap_wind": 0.75, "leap_up": 1150, "leap_land": 0.15, "leap_shake": 12,
+    "wave_speed": [440, 560], "wave_h": 50, "wave_w": 30, "wave_life": 2.4, "wave_dmg_mult": 0.7,
+    "gaze_wind": 0.9, "gaze_time": [1.6, 2.2], "gaze_turn": [0.9, 1.4], "gaze_w": 34, "gaze_len": 1500, "gaze_dmg_mult": 0.55, "gaze_hit_cd": 0.5, "gaze_eye_y": 0.8, "gaze_rest_add": 0.4,
+    "lunge_wind": 0.65, "lunge_speed": 560, "lunge_time": 0.9, "lunge_wall": 100, "lunge_shake": 8,
+    "woe_wind": 0.7, "woe_n": [3, 5], "woe_gap": 230, "woe_w": 110, "woe_warn": 1.0, "woe_act": 0.45, "woe_dmg_mult": 1.0, "woe_top": -300, "woe_edge": 60, "woe_rest_add": 0.5,
+    "summon_marks": [0.65, 0.3], "summons": [["ringer", "bat"], ["rootling", "ringer", "bat"]], "summon_wind": 0.8, "summon_dx": 240, "summon_fly_y": 420,
+    "water_drain": 0, "dark_first": 3.0, "dark_every": 12.0, "dark_blink": 1.0, "dark_time": 5.0, "dark_fade": 0.4,
+    "roar_time": 1.2, "phase_hitstop": 0.25, "phase_shake": 14, "phase_flash": 0.45, "death_hitstop": 0.3, "death_shake": 18,
+    "line_time": 2.6, "death_linger": 3.5, "hazard_glow_r": 60, "hazard_glow_a": 0.7,
+    "lines": {
+      "intro_first": "Раз шаг. Два шаг. Звенишь, звенишь, звенишь.",
+      "intro_repeat": "Опять звон. Я тебя слышу с края леса.",
+      "rage": "Лихо в ярости",
+      "death_first": "Дай поспать. Дай. Поспать.",
+      "death_repeat": "Не буди. Не бу...",
+      "hero_death": "Тихо. Наконец тихо."
+    },
+    "arena_plats": [[220, 500, 200], [560, 400, 180], [1560, 400, 180], [1880, 500, 200], [1040, 330, 160]]
   }
 }
