@@ -88,8 +88,8 @@ The first room is gentle; by its third room a mix of fliers and a shielded spitt
 - [x] After each boss a safe save room: heal, the run is saved, choose which location is next or return to base
 - [x] Animation: a jointed knight (legs, arms, cape, wings, antennae), weapon smears, squash and stretch, enemy wind-ups, hit squash, spawn and death dissolves
 - [x] Upgraded monsters: new attacks for old kinds, 2 new kinds (Bell Ringer, Lantern Jelly), elite variants, 2 new bosses
-- [ ] Run and roll animations, separate attack animations per weapon
-- [ ] Up and down strikes (pogo bounce on a down strike), heavier physics (knockback, enemy weight)
+- [x] Run and roll animations, separate attack animations per weapon
+- [x] Up and down strikes (pogo bounce on a down strike), heavier physics (knockback, enemy weight)
 - [x] Runes instead of boons: each adds to the dash, strike or special; pairs of runes unlock synergy runes
 - [x] The top goal: a synergy system where a run can, in theory, build an overpowered hero; every run unique
 - [x] A fork of 2-3 doors after each room, each showing its reward (a resource, a rune, a weapon, a buff)

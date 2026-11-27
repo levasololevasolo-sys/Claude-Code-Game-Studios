@@ -101,6 +101,17 @@ window.CONFIG = {
   witch_dmg: { value: 0.9, min: 0.2, max: 4, step: 0.1 },         // x flare_dmg per wisp
   witch_kill_charge: { value: 12, min: 0, max: 50, step: 1 },     // % charge per kill with the Witch lantern
 
+  // ---- Directional strikes and physics ----
+  pogo_speed: { value: 760, min: 200, max: 1400, step: 20 },      // px/s bounce up after a down strike hits
+  down_fall: { value: 900, min: 0, max: 1800, step: 20 },         // px/s minimum fall speed during a down strike
+  slam_dmg: { value: 14, min: 0, max: 80, step: 1 },              // shockwave when a down strike lands
+  slam_r: { value: 140, min: 40, max: 400, step: 10 },            // px shockwave radius
+  launch_speed: { value: 640, min: 0, max: 1400, step: 20 },      // px/s an up strike throws a ground enemy
+  air_mult: { value: 1.25, min: 1, max: 3, step: 0.05 },          // damage x to an enemy thrown into the air
+  wall_slam_speed: { value: 300, min: 50, max: 1000, step: 10 },  // px/s of knockback needed to slam a wall or another enemy
+  wall_slam_dmg: { value: 12, min: 0, max: 80, step: 1 },         // damage from hitting a wall or another enemy
+  roll_time: { value: 0.3, min: 0.1, max: 0.8, step: 0.02 },      // s a ground roll lasts (air dash uses dash_time)
+
   // ---- Gods' statuses and runes ----
   shock_stacks: { value: 3, min: 1, max: 8, step: 1 },            // Perun charges before a discharge
   shock_dmg: { value: 22, min: 1, max: 100, step: 1 },            // discharge damage to the charged enemy
