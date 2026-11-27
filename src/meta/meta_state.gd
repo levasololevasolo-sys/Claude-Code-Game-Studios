@@ -19,19 +19,41 @@ var sub: String = ""
 var weapons: Dictionary = { "stick": true }
 var subs: Dictionary = {}
 var pity: Dictionary = { "e": 0, "l": 0 }
+## Armor (armor-and-hero-progression §3.7): slot -> bought tier 0..4, and the
+## picked property of tiers 2 / 4 (slot -> {t2, t4}).
+var armor: Dictionary = { "head": 0, "torso": 0, "arms": 0, "legs": 0, "cloak": 0 }
+var armor_pick: Dictionary = {}
+## Капище Рода rules (economy-and-meta §3.4): reroll 0..2, second 0..1, wide 0..1.
+var up: Dictionary = { "reroll": 0, "second": 0, "wide": 0 }
+## Amulets of Сова (economy §3.10 `lanterns` / `lantern`): bought ids and the worn one.
+var lanterns: Dictionary = { "ring": true }
+var lantern: String = "ring"
+## Dialogue memory (living-world §1.4): said, flags, deaths_by, killed_by_count,
+## fresh (events of the last run), visits, last (repeat line -> visit), ambient_recent.
+var story: Dictionary = story_defaults()
 var extra: Dictionary = {}
 
 ## Defaults of every field (save keys as in economy-and-meta §3.10).
 static func defaults() -> Dictionary:
 	return { "embers": 0, "res": { "gears": 0, "bronze": 0, "pearls": 0, "cores": 0 },
 		"runs": 0, "wins": 0, "bestRooms": 0, "bosses": {},
-		"weapon": "stick", "sub": "", "weapons": { "stick": true }, "subs": {}, "pity": { "e": 0, "l": 0 } }
+		"weapon": "stick", "sub": "", "weapons": { "stick": true }, "subs": {}, "pity": { "e": 0, "l": 0 },
+		"armor": { "head": 0, "torso": 0, "arms": 0, "legs": 0, "cloak": 0 }, "armor_pick": {},
+		"up": { "reroll": 0, "second": 0, "wide": 0 }, "lanterns": { "ring": true }, "lantern": "ring",
+		"story": story_defaults() }
+
+## Empty dialogue memory (living-world §1.4).
+static func story_defaults() -> Dictionary:
+	return { "said": {}, "flags": {}, "deaths_by": {}, "killed_by_count": {}, "fresh": [],
+		"visits": 0, "last": {}, "ambient_recent": [] }
 
 func to_dict() -> Dictionary:
 	var d := extra.duplicate(true)
 	d.merge({ "embers": embers, "res": res.duplicate(), "runs": runs, "wins": wins,
 		"bestRooms": best_rooms, "bosses": bosses.duplicate(), "weapon": weapon, "sub": sub,
-		"weapons": weapons.duplicate(), "subs": subs.duplicate(), "pity": pity.duplicate() }, true)
+		"weapons": weapons.duplicate(), "subs": subs.duplicate(), "pity": pity.duplicate(),
+		"armor": armor.duplicate(), "armor_pick": armor_pick.duplicate(true), "up": up.duplicate(),
+		"lanterns": lanterns.duplicate(), "lantern": lantern, "story": story.duplicate(true) }, true)
 	return d
 
 ## Merges `d` over defaults(): a missing field gets its default.
@@ -66,6 +88,22 @@ static func from_dict(d: Dictionary) -> MetaState:
 			m.subs = o
 	if d.get("pity") is Dictionary:
 		m.pity = { "e": int(d.pity.get("e", 0)), "l": int(d.pity.get("l", 0)) }
+	for k: String in ["armor", "up"]:
+		var o: Dictionary = base[k]
+		if d.get(k) is Dictionary:
+			for id: String in d[k]:
+				o[id] = int(d[k][id])
+		m.set(k, o)
+	if d.get("armor_pick") is Dictionary:
+		m.armor_pick = (d.armor_pick as Dictionary).duplicate(true)
+	if d.get("lanterns") is Dictionary and not (d.lanterns as Dictionary).is_empty():
+		m.lanterns = (d.lanterns as Dictionary).duplicate()
+	m.lantern = String(d.get("lantern", "ring")) if d.get("lantern") is String else "ring"
+	var st: Dictionary = story_defaults()
+	if d.get("story") is Dictionary:
+		st.merge((d.story as Dictionary).duplicate(true), true)
+	st.visits = int(st.visits)
+	m.story = st
 	for k: String in d:
 		if not base.has(k):
 			m.extra[k] = d[k]

@@ -1,0 +1,18 @@
+{
+  "_note": "Armor slots and tier prices, GDD armor-and-hero-progression §3.2, §3.4, §4.1. embers(T) = round(e1 * g^(T-1) * cost_scale), resource(T) = round(r1 * gr^(T-1) * cost_scale), hearts(T) = hearts[T-1]. Tier 1 is paid in res1, tiers 2-4 in res. even_gap: tier T needs every slot at T - even_gap or higher. parts: HeroVisual slots dressed by this armor slot; the visual tier is the bought tier + 1 (art bible 5.6). titles: the lowest tier names the hero.",
+  "e1": 150, "g": 2.0, "r1": 12, "gr": 2.0, "hearts": [0, 0, 1, 2], "hearts_res": "cores",
+  "cost_scale": 1.0, "max_tier": 4, "even_gap": 2,
+  "titles": ["Павший", "Странник", "Ополченец", "Витязь", "Богатырь"],
+  "slots": {
+    "head":  { "name": "Голова", "res1": "gears", "res": "pearls", "bonus": "меньше урона", "parts": ["helmet", "aventail"],
+      "looks": ["без шапки", "очелье", "шапка-подшлемник", "стальной шлем", "шишак с бармицей"] },
+    "torso": { "name": "Торс", "res1": "gears", "res": "gears", "bonus": "здоровье", "parts": ["torso_cloth", "torso_armor", "belt", "skirt"],
+      "looks": ["голый", "льняная рубаха", "тегиляй", "кольчуга", "чешуйчатый доспех"] },
+    "arms":  { "name": "Руки", "res1": "gears", "res": "pearls", "bonus": "урон ударов", "parts": ["arm_far", "arm_near"],
+      "looks": ["голые руки", "кожаные обмотки", "наручи с бляхами", "стальные наручи", "наручи с золотой каймой"] },
+    "legs":  { "name": "Ноги", "res1": "gears", "res": "bronze", "bonus": "перезарядка рывка", "parts": ["leg_far", "legs_cloth", "boots"],
+      "looks": ["рваные порты", "онучи и лапти", "кожаные сапоги", "сапоги со щитками", "стальные поножи"] },
+    "cloak": { "name": "Плащ", "res1": "gears", "res": "bronze", "bonus": "угли с дропа", "parts": ["cape_back", "cape_front"],
+      "looks": ["нет", "(пока без плаща)", "красная накидка", "красный плащ", "корзно с фибулой"] }
+  }
+}

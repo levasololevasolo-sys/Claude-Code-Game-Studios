@@ -67,6 +67,9 @@ func end_run(outcome: String) -> Dictionary:
 			meta.res[k] = int(meta.res.get(k, 0)) + int(run.res[k])
 		meta.best_rooms = maxi(meta.best_rooms, run.rooms_cleared)
 	meta.runs += 1
+	# living-world §1.2: the run's fresh events wait for the next base visit.
+	var before_bosses: Dictionary = before.get("bosses", {}) if before.get("bosses") is Dictionary else {}
+	DialogueRules.record_run(meta, outcome, summary.run, before_bosses, Tune.table("dialogue"))
 	run = null
 	rng = null
 	summary["bank_after"] = meta.to_dict()

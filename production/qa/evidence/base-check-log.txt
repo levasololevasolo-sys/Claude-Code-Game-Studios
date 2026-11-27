@@ -1,0 +1,32 @@
+  rune taken: svarog_d (offer ["svarog_d", "svarog_s", "svarog_p"])
+  run ended (dead): Где: Топь Кикиморы, комната 1 | Комнат пройдено: 0   Убито врагов: 0   Хозяев: 0 |   Рывок — Огненный след (ур. 1) | Добыча забега: угли 0    | Банк углей: 0 → 0   (забегов всего: 1)
+OK   summary after the run
+  enter base: visit 1, lines ["dolya", "potap", "sova", "bayun", "chur", "ofenya"], save true
+OK   the base opens after the summary
+OK   stations: 6
+OK   Доля: first death (80) beats the swamp line (45): dolya_first_death
+OK   Потап greets the first visit: potap_first
+OK   Баюн speaks of the crawler: bayun_crawler
+screenshot base-overview.png
+OK   hero stands at Доля
+OK   Доля's dialogue box opens
+screenshot base-dialogue.png
+Доля: Встал. Голый, как из бани, зато живой.
+OK   Капище menu opens after Чур's line
+OK   Второй взгляд bought: reroll 1, embers 19940
+OK   Луч bought and worn at Сова
+OK   Потап's armor menu opens
+OK   torso tier 1 for 150 embers
+OK   even growth blocks torso 3: «Сначала доведи «Голова» до яруса 1»
+screenshot base-potap-shop.png
+OK   every slot at tier 4: { "head": 4, "torso": 4, "arms": 4, "legs": 4, "cloak": 4 }
+OK   hero look: helmet 5, torso 5
+screenshot base-hero-armored.png
+OK   save v2 holds armor { "arms": 4.0, "cloak": 4.0, "head": 4.0, "legs": 4.0, "torso": 4.0 } and said lines
+  gate: new run
+  new run seed 445546241, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "arms", "god": "" }, hp 100
+  start offer: veles
+OK   the gate starts a new run
+OK   new run: armored hero (helmet 5), amulet beam
+DONE: 0 failed checks

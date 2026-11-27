@@ -1,0 +1,758 @@
+{
+ "_note": "Base dialogue (design/narrative/living-world.md §1.3-1.5, §2). Boss ids follow locations.json (kikimora = clockmaker, likho = warden, morena = queen). when.every: a repeat line waits that many base visits (§2.2). locations: tier -> location id of the death events. spark_min: lowest priority that lights the spark; chorus_penalty: one-event rule; ambient_memory: visits an ambient line rests.",
+ "version": 1,
+ "names": {
+  "dolya": "Пряха Доля",
+  "potap": "Кузнец Потап",
+  "sova": "Ведунья Сова",
+  "chur": "Чур",
+  "bayun": "Кот Баюн",
+  "ofenya": "Офеня"
+ },
+ "locations": {
+  "1": "swamp",
+  "2": "forest",
+  "3": "realm",
+  "4": "bridge",
+  "5": "kingdom"
+ },
+ "spark_min": 40,
+ "chorus_penalty": 30,
+ "ambient_memory": 3,
+ "lines": [
+  {
+   "id": "dolya_first_death",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_FIRST_DEATH",
+   "ru": "Встал. Голый, как из бани, зато живой.",
+   "priority": 80,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "first_death"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_first",
+   "npc": "potap",
+   "text": "DLG_POTAP_FIRST",
+   "ru": "Медведя не бойся. Бери дрын, другого пока нет.",
+   "priority": 80,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "first_visit"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "sova_first",
+   "npc": "sova",
+   "text": "DLG_SOVA_FIRST",
+   "ru": "Оберег на тебе светится. Значит, Сварог тебя видит. Интересно, надолго ли.",
+   "priority": 80,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "first_visit"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "chur_first",
+   "npc": "chur",
+   "text": "DLG_CHUR_FIRST",
+   "ru": "Чур. Граница здесь. Угли неси ко мне.",
+   "priority": 80,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "first_visit"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_first",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_FIRST",
+   "ru": "Мур-р, новенький. Не бойся, я сказки рассказываю, а не ем. Почти.",
+   "priority": 80,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "first_visit"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_loc_swamp",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_LOC_SWAMP",
+   "ru": "В Топи пал. Нить вся в тине, отмывать до утра.",
+   "priority": 45,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "death",
+    "location": "swamp",
+    "every": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_loc_forest",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_LOC_FOREST",
+   "ru": "Из Бора тянула. Нить за каждый сук цеплялась, будто лес не пускал.",
+   "priority": 45,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "death",
+    "location": "forest",
+    "every": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_loc_realm",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_LOC_REALM",
+   "ru": "Нить пришла холодная. Морена её трогала. Посмотрела и отпустила.",
+   "priority": 45,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "death",
+    "location": "realm",
+    "every": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_loc_bridge",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_LOC_BRIDGE",
+   "ru": "Опять у моста. Нить там тянется туже, помнит место.",
+   "priority": 45,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "death",
+    "location": "bridge",
+    "every": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_loc_kingdom",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_LOC_KINGDOM",
+   "ru": "С того берега тянуть тяжелее всего. Кощей держит всё, что к нему попало.",
+   "priority": 45,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "death",
+    "location": "kingdom",
+    "every": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "sova_return_home",
+   "npc": "sova",
+   "text": "DLG_SOVA_RETURN_HOME",
+   "ru": "Вернулся сам, не по нити? Умно. Мне нужны живые рассказчики.",
+   "priority": 45,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "return_home",
+    "every": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_kikimora_1",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_KIKIMORA_1",
+   "ru": "Кикимора топит пол, мур-р. Где вода, там и беда. Лезь повыше.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "kikimora",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_kikimora_3",
+   "npc": "potap",
+   "text": "DLG_POTAP_KIKIMORA_3",
+   "ru": "Третий раз тебя Кикимора умыла. Ешь кашу. На сытый живот злее бьёшь.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "kikimora",
+    "n_min": 3,
+    "n_max": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "sova_kikimora_5",
+   "npc": "sova",
+   "text": "DLG_SOVA_KIKIMORA_5",
+   "ru": "Пять раз в Топи. Кикимора, кажется, считает тебя своим. Это плохо.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "kikimora",
+    "n_min": 5,
+    "n_max": 5
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_likho_1",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_LIKHO_1",
+   "ru": "Лихо гасит свет, мур-р. В темноте оно видит, а ты нет. Береги свет оберега.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "likho",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "sova_likho_3",
+   "npc": "sova",
+   "text": "DLG_SOVA_LIKHO_3",
+   "ru": "Лихо любит темноту, а мой свет любит тебя. Зайди, переберём оберег.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "likho",
+    "n_min": 3,
+    "n_max": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_morena_1",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_MORENA_1",
+   "ru": "Морена ставит ледяные столбы. Бей врага о лёд, мур-р. Лёд ей не друг.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "morena",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_morena_3",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_MORENA_3",
+   "ru": "Она могла обрезать. Ножницы были у самой нити. Не обрезала.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "morena",
+    "n_min": 3,
+    "n_max": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_gorynych_1",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_GORYNYCH_1",
+   "ru": "Голов у Змея три, мур-р. Срубишь одну, она отрастает. Руби все, и быстро.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "gorynych",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_gorynych_3",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_GORYNYCH_3",
+   "ru": "Ты падаешь там, где пал тогда. Нить помнит. Попробуй помнить меньше.",
+   "priority": 70,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "death_to_boss",
+    "boss": "gorynych",
+    "n_min": 3,
+    "n_max": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_crawler",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_CRAWLER",
+   "ru": "Трясинник давит всё, что стоит на месте. Не стой на месте, мур-р. Совет на всю жизнь.",
+   "priority": 60,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "killed_by",
+    "enemy": "crawler",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_sentry",
+   "npc": "potap",
+   "text": "DLG_POTAP_SENTRY",
+   "ru": "Упырь со щитом? Обойди. Щит у него один, а спина тоже одна.",
+   "priority": 60,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "killed_by",
+    "enemy": "sentry",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_bat",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_BAT",
+   "ru": "Нетопырь бьёт сверху. Голову береги, она тебе ещё пригодится.",
+   "priority": 60,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "killed_by",
+    "enemy": "bat",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "sova_bloat",
+   "npc": "sova",
+   "text": "DLG_SOVA_BLOAT",
+   "ru": "Утопленник лопается. Сделай так, чтобы он лопнул среди своих.",
+   "priority": 60,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "killed_by",
+    "enemy": "bloat",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_beat_kikimora",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_BEAT_KIKIMORA",
+   "ru": "Кикимора утихла. Болото дышит. Нить пришла сухая, первый раз.",
+   "priority": 90,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "boss_beaten",
+    "boss": "kikimora",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "sova_beat_kikimora",
+   "npc": "sova",
+   "text": "DLG_SOVA_BEAT_KIKIMORA",
+   "ru": "Пойду в Топь, поставлю вешки с огоньками. Пусть беглецы видят дорогу.",
+   "priority": 90,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "boss_beaten",
+    "boss": "kikimora",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "ofenya_first",
+   "npc": "ofenya",
+   "text": "DLG_OFENYA_FIRST",
+   "ru": "Здорово, застава! Офеня пришёл, товар принёс. Для павших скидка, для живых тоже.",
+   "priority": 80,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "boss_beaten",
+    "n_min": 1,
+    "n_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_runs_5",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_RUNS_5",
+   "ru": "Пятый раз пряду. Руки уже помнят твой рост.",
+   "priority": 40,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "runs",
+    "n_min": 5,
+    "n_max": 5
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_runs_10",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_RUNS_10",
+   "ru": "Десять раз ушёл и вернулся, мур-р. Про такое можно сказку сложить. Сложу.",
+   "priority": 40,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "runs",
+    "n_min": 10,
+    "n_max": 10
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_runs_25",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_RUNS_25",
+   "ru": "Руки устают. Не твоя забота. Иди.",
+   "priority": 40,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "runs",
+    "n_min": 25,
+    "n_max": 25
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_runs_25",
+   "npc": "potap",
+   "text": "DLG_POTAP_RUNS_25",
+   "ru": "Двадцать пятый раз за воротами. Я столько раз за мёдом не ходил.",
+   "priority": 40,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "runs",
+    "n_min": 25,
+    "n_max": 25
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "chur_runs_50",
+   "npc": "chur",
+   "text": "DLG_CHUR_RUNS_50",
+   "ru": "Полсотни раз через ворота. Ворота тебя знают.",
+   "priority": 40,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "runs",
+    "n_min": 50,
+    "n_max": 50
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_runs_100",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_RUNS_100",
+   "ru": "Сотый узел на веретене. Нить толстая стала. Крепкая.",
+   "priority": 40,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "runs",
+    "n_min": 100,
+    "n_max": 100
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_title_1",
+   "npc": "potap",
+   "text": "DLG_POTAP_TITLE_1",
+   "ru": "О, в рубахе. Уже не стыдно поставить у ворот.",
+   "priority": 100,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "title",
+    "title_min": 1,
+    "title_max": 1
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_title_1b",
+   "npc": "potap",
+   "text": "DLG_POTAP_TITLE_1B",
+   "ru": "Буду звать тебя Нитка. Своего имени ты всё равно не помнишь.",
+   "priority": 100,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "title",
+    "title_min": 1
+   },
+   "after": [
+    "potap_title_1"
+   ],
+   "sets": []
+  },
+  {
+   "id": "chur_title_2",
+   "npc": "chur",
+   "text": "DLG_CHUR_TITLE_2",
+   "ru": "Свой. Проходи.",
+   "priority": 100,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "title",
+    "title_min": 2,
+    "title_max": 2
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_title_3",
+   "npc": "potap",
+   "text": "DLG_POTAP_TITLE_3",
+   "ru": "Ты похож на себя тогдашнего. Не стой так, у меня лапы дрожат.",
+   "priority": 100,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "title",
+    "title_min": 3,
+    "title_max": 3
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_title_4",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_TITLE_4",
+   "ru": "Теперь ты такой, каким пал. Только теперь знаешь, зачем.",
+   "priority": 100,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "title",
+    "title_min": 4
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_name",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_NAME",
+   "ru": "Ждан. Так тебя звали. Мать ждала, застава ждала. Я тоже.",
+   "priority": 100,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "title",
+    "title_min": 4
+   },
+   "after": [
+    "dolya_title_4"
+   ],
+   "sets": [
+    "hero_named"
+   ]
+  },
+  {
+   "id": "potap_title_4",
+   "npc": "potap",
+   "text": "DLG_POTAP_TITLE_4",
+   "ru": "Не река меня унесла, Ждан. Я сам прыгнул и поплыл. А ты остался.",
+   "priority": 100,
+   "once": true,
+   "chorus": false,
+   "when": {
+    "event": "title",
+    "title_min": 4,
+    "flags_all": [
+     "hero_named"
+    ]
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "dolya_amb",
+   "npc": "dolya",
+   "text": "DLG_DOLYA_AMB",
+   "ru": "Сиди тихо. Я пряду.",
+   "priority": 10,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "ambient"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "potap_amb",
+   "npc": "potap",
+   "text": "DLG_POTAP_AMB",
+   "ru": "Медведю зимой положено спать, а тут Навь. Ну и кто я после этого?",
+   "priority": 10,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "ambient"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "sova_amb",
+   "npc": "sova",
+   "text": "DLG_SOVA_AMB",
+   "ru": "Скажи, темнота в Нави тёплая или холодная? Мне для записей.",
+   "priority": 10,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "ambient"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "chur_amb",
+   "npc": "chur",
+   "text": "DLG_CHUR_AMB",
+   "ru": "Своё к своим. Чужое к чужим. Мост между.",
+   "priority": 10,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "ambient"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "bayun_amb",
+   "npc": "bayun",
+   "text": "DLG_BAYUN_AMB",
+   "ru": "Хочешь сказку? Не хочешь. Ну и спи без сказки, мур-р.",
+   "priority": 10,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "ambient"
+   },
+   "after": [],
+   "sets": []
+  },
+  {
+   "id": "ofenya_amb",
+   "npc": "ofenya",
+   "text": "DLG_OFENYA_AMB",
+   "ru": "Товар не краденый, а найденный. Терял не я.",
+   "priority": 10,
+   "once": false,
+   "chorus": false,
+   "when": {
+    "event": "ambient"
+   },
+   "after": [],
+   "sets": []
+  }
+ ],
+ "boss_lines": []
+}

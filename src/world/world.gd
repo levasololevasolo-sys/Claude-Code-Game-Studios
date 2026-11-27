@@ -61,6 +61,9 @@ var weapon_hud: WeaponHud
 ## c_cap_first_run (amulet-and-flare §3.10, AC 3). Set by RunDirector; false in
 ## the legacy check modes (BUG-0001).
 var first_run: bool = false
+## Bought armor (MetaState.armor) the hero wears in every room; empty in the
+## legacy check modes (their --hero-tier stays in charge). Set by RunDirector.
+var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
 const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots="]
@@ -144,6 +147,10 @@ func _ready() -> void:
 			var hs: Node = (load("res://tests/integration/hero/hero_shots_driver.gd") as GDScript).new()
 			hs.set("out_dir", a.trim_prefix("--hero-shots="))
 			add_child(hs)
+		elif a.begins_with("--base-check="):
+			var bc: Node = (load("res://tests/integration/base/base_check_driver.gd") as GDScript).new()
+			bc.set("out_dir", a.trim_prefix("--base-check="))
+			add_child(bc)
 		elif a.begins_with("--run-check="):
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
@@ -200,6 +207,8 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	player.amulet.charge = minf(keep_charge, player.amulet.cap)
 	player.position = Vector2(Tune.f("hero_spawn_x"), Tune.f("ground_y"))
 	add_child(player)
+	if not hero_armor.is_empty():
+		ShopRules.dress(player.visual, hero_armor, Tune.table("armor"))
 	cam = Camera2D.new()
 	cam.limit_left = 0
 	cam.limit_right = int(layout.w)

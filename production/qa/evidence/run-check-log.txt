@@ -1,9 +1,10 @@
 OK   run starts with a rune offer
-  rune taken: zhiva_f (offer ["zhiva_f", "zhiva_p", "zhiva_d"])
+  rune taken: perun_s (offer ["perun_s", "perun_p", "perun_d"])
 OK   room 1: 4 enemies, no doors while they live
 OK   all 4 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  cleared room 1 -> reward { "type": "loot", "god": "" } at x 1350 (room w 2000)
+  cleared room 1 -> reward { "type": "arms", "god": "" } at x 1350 (room w 2000)
 OK   reward appears at the right edge (x 1350 of 2000)
+  arms drop (door): arm whirlsickles ★★★ [a_reach], pity { "e": 0, "l": 0 }
   doors (since_god 1, gap_need 2): Добыча: угли и ресурс, Оружие, Живой родник
 OK   doors open after the reward: 3
 screenshot run-door-fork.png
@@ -13,25 +14,25 @@ OK   room 2: 11 enemies, no doors while they live
 OK   all 11 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
   cleared room 2 -> reward { "type": "loot", "god": "" } at x 2600 (room w 3250)
 OK   reward appears at the right edge (x 2600 of 3250)
-  doors (since_god 2, gap_need 2): Руна: Стрибог, Руна: Перун, Руна: Сварог
+  doors (since_god 2, gap_need 2): Руна: Велес, Руна: Жива, Руна: Перун
 OK   doors open after the reward: 3
-OK   god door shows its god: Руна: Стрибог
+OK   god door shows its god: Руна: Велес
+OK   god door shows its god: Руна: Жива
 OK   god door shows its god: Руна: Перун
-OK   god door shows its god: Руна: Сварог
-  enter door 0: Руна: Стрибог
-  enter room tier 1 room 3 (w 3700, packs 4), reward { "type": "god", "god": "stribog" }, hp 100
+  enter door 0: Руна: Велес
+  enter room tier 1 room 3 (w 3700, packs 4), reward { "type": "god", "god": "veles" }, hp 100
 OK   room 3: 19 enemies, no doors while they live
 OK   all 19 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  cleared room 3 -> reward { "type": "god", "god": "stribog" } at x 3050 (room w 3700)
+  cleared room 3 -> reward { "type": "god", "god": "veles" } at x 3050 (room w 3700)
 OK   reward appears at the right edge (x 3050 of 3700)
-  rune taken: stribog_p (offer ["stribog_p", "stribog_d", "stribog_f"])
-  doors (since_god 0, gap_need 2): Живой родник, Добыча: угли и ресурс, Оружие
-OK   doors open after the reward: 3
-  enter door 0: Живой родник
-  enter room tier 1 room 4 (w 4150, packs 4), reward { "type": "heal", "god": "" }, hp 100
-OK   room 4: 19 enemies, no doors while they live
-OK   all 19 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  cleared room 4 -> reward { "type": "heal", "god": "" } at x 3500 (room w 4150)
+  rune taken: veles_p (offer ["veles_p", "veles_d", "veles_s"])
+  doors (since_god 0, gap_need 2): Добыча: угли и ресурс, Живой родник
+OK   doors open after the reward: 2
+  enter door 0: Добыча: угли и ресурс
+  enter room tier 1 room 4 (w 4150, packs 5), reward { "type": "loot", "god": "" }, hp 100
+OK   room 4: 24 enemies, no doors while they live
+OK   all 24 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
+  cleared room 4 -> reward { "type": "loot", "god": "" } at x 3500 (room w 4150)
 OK   reward appears at the right edge (x 3500 of 4150)
   doors (since_god 1, gap_need 2): Логово: Кикимора Болотная
 OK   doors open after the reward: 1
@@ -39,37 +40,40 @@ OK   doors open after the reward: 1
   enter lair tier 1 room 4 (w 2200, packs 0), reward {  }, hp 100
 OK   lair 4: 1 enemies, no doors while they live
 OK   all 1 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  arms drop (boss): arm arrowspear ★☆☆ [], pity { "e": 2, "l": 2 }
+  arms drop (boss): arm koromyslo ★★☆ [], pity { "e": 1, "l": 1 }
   boss kikimora killed: +40 embers
   cleared lair 4 -> reward { "type": "lair", "god": "" } at x 1550 (room w 2200)
 OK   reward appears at the right edge (x 1550 of 2200)
-  lair gods offered: ["veles", "svarog", "zhiva"]
-OK   lair reward = 3 different gods ["veles", "svarog", "zhiva"]
+  lair gods offered: ["svarog", "stribog", "perun"]
+OK   lair reward = 3 different gods ["svarog", "stribog", "perun"]
 screenshot run-god-choice.png
-  lair god chosen: veles (of ["veles", "svarog", "zhiva"])
-  rune taken: veles_f (offer ["veles_f", "veles_s", "veles_p"])
-  doors (since_god 0, gap_need 2): Привал
+  lair god chosen: svarog (of ["svarog", "stribog", "perun"])
+  rune taken: svarog_f (offer ["svarog_f", "svarog_p", "svarog_d"])
+  doors (since_god 0, gap_need 1): Привал
 OK   doors open after the reward: 1
   enter door 0: Привал
   enter haven tier 1 room 4 (w 1700, packs 0), reward {  }, hp 100
   haven: healed +40 to 100, save written true to user://run_check_save.json
-  doors (since_god 0, gap_need 2): Дальше: Тёмный бор (заглушка), На заставу с добычей (E дважды)
+  doors (since_god 0, gap_need 1): Дальше: Тёмный бор (заглушка), На заставу с добычей (E дважды)
 OK   reached the haven after 5 rooms
 screenshot run-haven.png
-OK   save holds the run at the haven (seed 858757257, version 1.0)
-OK   saved run matches: embers 244, runes { "dash": "", "flare": "veles_f", "strike": "" }
+OK   save holds the run at the haven (seed 297235368, version 2)
+OK   saved run matches: embers 255, runes { "dash": "", "flare": "svarog_f", "strike": "perun_s" }
   enter door 0: Дальше: Тёмный бор (заглушка)
-  enter room tier 2 room 1 (w 3200, packs 3), reward { "type": "heal", "god": "" }, hp 100
+  enter room tier 2 room 1 (w 3200, packs 3), reward { "type": "arms", "god": "" }, hp 100
 OK   went on to tier 2 room 1
   hero died in room 1, killed by Упырь-щитник
-  run ended (dead): Где: Тёмный бор, комната 1 | Кто убил: Упырь-щитник | Комнат пройдено: 5   Убито врагов: 54   Хозяев: 1 |   Вспышка — Тень Велеса (ур. 1) |   Свойство — Попутный ветер (ур. 1) | Добыча забега: угли 244   болотное железо 36, сердца 1 | Банк углей: 418 → 662   (забегов всего: 2)
+  run ended (dead): Где: Тёмный бор, комната 1 | Кто убил: Упырь-щитник | Комнат пройдено: 5   Убито врагов: 59   Хозяев: 1 |   Удар — Удар Перуна (ур. 1) |   Вспышка — Горнило (ур. 1) |   Свойство — Навья дань (ур. 1) | Добыча забега: угли 255   болотное железо 38, сердца 1 | Банк углей: 867 → 1122   (забегов всего: 2)
 OK   summary after death
 screenshot run-summary.png
 OK   summary names the killer: Упырь-щитник
-OK   embers banked: 418 + 244 = 662
-OK   save after death: run null, meta embers 662.0, runs 2.0
-  new run seed 345380503, finished runs 2, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms", "surica"]
-  enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "loot", "god": "" }, hp 100
-  start offer: veles
-OK   new run started (seed 345380503), its start offer is open
+OK   embers banked: 867 + 255 = 1122
+OK   save after death: run null, meta embers 1122.0, runs 2.0
+  enter base: visit 2, lines ["dolya", "potap", "sova", "bayun", "chur", "ofenya"], save true
+OK   after the summary the hero is at the base
+  gate: new run
+  new run seed 1208804504, finished runs 2, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms", "surica"]
+  enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "arms", "god": "" }, hp 100
+  start offer: zhiva
+OK   new run started (seed 1208804504), its start offer is open
 DONE: 0 failed checks

@@ -4,7 +4,8 @@
 class_name SaveFile
 extends RefCounted
 
-const VERSION: int = 1
+## 2: armor, armor_pick, up, lanterns, lantern, story in meta (base hub).
+const VERSION: int = 2
 
 ## Writes `data` (version is added) to `path`. False on any failure.
 static func write(path: String, data: Dictionary) -> bool:
@@ -50,6 +51,18 @@ static func read(path: String) -> Dictionary:
 		return {}
 	return migrate(d)
 
-## Brings an older file up to VERSION (one step per version; none yet).
+## Brings an older file up to VERSION, one step per version. 1 -> 2 fills the
+## base fields (armor at tier 0, no Капище rules, the free ring, empty story).
 static func migrate(d: Dictionary) -> Dictionary:
-	return d
+	var out := d.duplicate(true)
+	var v := int(out.get("version", 1))
+	if v < 2:
+		var meta: Dictionary = out.get("meta", {}) if out.get("meta") is Dictionary else {}
+		var base := MetaState.defaults()
+		for k: String in ["armor", "armor_pick", "up", "lanterns", "lantern", "story"]:
+			if not meta.has(k):
+				meta[k] = base[k]
+		out["meta"] = meta
+		v = 2
+	out["version"] = v
+	return out

@@ -3,7 +3,8 @@
 ## RunDirector: takes the first card of every choice, kills each room's enemies
 ## directly, walks the hero onto the reward, takes the first door, reaches the
 ## haven (checks the save holds the run), goes on, dies to an enemy, checks the
-## summary and the banked embers, sees the new run start. Saves
+## summary and the banked embers, enters the base, takes its gate and sees
+## the new run start. Saves
 ## <out_dir>/run-door-fork.png, run-god-choice.png, run-haven.png,
 ## run-summary.png and run-check-log.txt. Started by world.gd with
 ## `-- --run-check=<dir>`; run it with `--fresh --save=user://run_check_save.json`
@@ -157,6 +158,10 @@ func _run() -> void:
 	_check(sd.get("run") == null and int(sd.meta.embers) == after and int(sd.meta.runs) == 2, "save after death: run null, meta embers %s, runs %s" % [sd.meta.get("embers"), sd.meta.get("runs")])
 	var old_seed := _d.run.run_seed
 	sum.close()
+	ok = await _wait(func() -> bool: return _d.phase == "base" and _d.base != null, 300)
+	_check(ok, "after the summary the hero is at the base")
+	if ok:
+		_d.base.use("gate")
 	ok = await _wait(func() -> bool: return _d.run != null and _d.run.run_seed != old_seed and _d.screen is RuneOfferScreen)
 	_check(ok, "new run started (seed %d), its start offer is open" % (_d.run.run_seed if _d.run else -1))
 	_note("DONE: %d failed checks" % _fail)
