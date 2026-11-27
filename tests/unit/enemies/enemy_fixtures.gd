@@ -36,6 +36,28 @@ static func bloat() -> Dictionary:
 		"target_dy": 40, "trigger": 120, "fuse": 0.85, "swell_damp": 0.9, "death_fuse": 0.35, "radius": 125, "dmg": 22,
 		"enemy_mult": 2, "enemy_kb": 500, "blast_time": 0.35, "blast_shake": 12 }
 
+static func balvan() -> Dictionary:
+	return { "w": 40, "h": 72, "hp": 24, "flies": false, "weight": 1.2, "contact": 0, "color": "#8a6a4a", "eye": "#c2502a",
+		"speed": 90, "swing_range": 85, "range_y": 90, "wind": 0.7, "swing_time": 0.25, "reach": 70, "swing_dmg": 9.6,
+		"swing_step": 60, "recover": 0.6, "cd_min": 0.8, "cd_max": 1.6 }
+
+static func shishiga() -> Dictionary:
+	return { "w": 30, "h": 32, "hp": 12, "flies": false, "weight": 0.5, "contact": 0, "speed": 120, "leap_range": 320,
+		"range_y": 120, "crouch": 0.6, "leap_speed": 420, "leap_up": 480, "leap_time": 1.2, "leap_min_air": 0.15,
+		"leap_dmg": 3, "cling_dmg": 3, "cling_tick": 0.5, "cling_time": 3.0, "cling_dx": 4, "cling_dy": 50,
+		"shaken_stun": 0.8, "shaken_push": 260, "shaken_up": 300, "recover": 0.5, "cd_min": 1.0, "cd_max": 2.0 }
+
+static func bognitsa() -> Dictionary:
+	return { "w": 64, "h": 58, "hp": 36, "flies": false, "weight": 1.4, "contact": 0, "hummock_w": 120, "hummock_h": 26,
+		"stand_time": 0.4, "shake": 0.5, "dive_time": 0.7, "rise": 0.5, "rise_dx": 120, "speed": 80, "reach": 100,
+		"range_y": 90, "wind": 0.6, "swipe_time": 0.25, "swipe_dmg": 13.2, "recover": 0.6, "cd_min": 0.9, "cd_max": 1.7 }
+
+static func vodyanitsa() -> Dictionary:
+	return { "w": 34, "h": 84, "hp": 27, "flies": false, "weight": 0.9, "contact": 0, "speed": 85, "keep_dx": 400,
+		"song": 0.8, "song_r": 260, "ward_frac": 0.25, "ward_time": 6, "song_cd": 5, "song_break_cd": 2.0,
+		"push_range": 160, "push_wind": 0.5, "push_time": 0.2, "push_dmg": 6, "push_hit_x": 110, "push_hit_y": 90,
+		"push_knock": 380, "push_cd": 1.5 }
+
 ## A set-up enemy outside the tree: fixture row, fixed seed, given tier and position.
 static func make(e: Enemy, row: Dictionary, tier: int, at: Vector2) -> Enemy:
 	e.stats = row
@@ -62,6 +84,17 @@ static func time_in_state(e: Enemy, hero: Vector2, limit: float) -> float:
 	var n := 0
 	while e.st == s:
 		e.call("think", DT, hero)
+		n += 1
+		if n * DT > limit:
+			return -1.0
+	return n * DT
+
+## time_in_state() for kinds whose think() takes a third argument (Водяница's allies).
+static func time_in_state_with(e: Enemy, hero: Vector2, extra: Variant, limit: float) -> float:
+	var s := e.st
+	var n := 0
+	while e.st == s:
+		e.call("think", DT, hero, extra)
 		n += 1
 		if n * DT > limit:
 			return -1.0

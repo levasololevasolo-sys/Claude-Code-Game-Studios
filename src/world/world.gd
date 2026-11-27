@@ -17,6 +17,7 @@
 ## `--boss-check=<dir>` the scripted lair boss fight (Кикимора, enemies-and-elites §3.9),
 ## `--limb-check=<dir>` the limb zones check (arm cut, head pop; GDD limb-zones).
 ## `--parry-check=<dir>` the parry reflect / shield-bearer / thrower check (GDD parry §3.5).
+## `--bestiary-check=<dir>` the Топь roster check, each kind vs the hero (GDD bestiary §3.2).
 ## `--story-check=<dir>` plays the prologue with scripted input and a god line
 ## (tests/integration/story); a new save starts with the Prologue otherwise.
 ## `--hero-shots=<dir>` saves hero rig poses (with `--hero-tier=1..5`, HeroVisual).
@@ -76,7 +77,7 @@ var first_run: bool = false
 var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--parry-check=", "--vis-shots=", "--base-view", "--aim-check="]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--parry-check=", "--vis-shots=", "--base-view", "--aim-check=", "--bestiary-check="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -193,6 +194,10 @@ func _ready() -> void:
 			var pcc: Node = (load("res://tests/integration/enemies/parry_check_driver.gd") as GDScript).new()
 			pcc.set("out_dir", a.trim_prefix("--parry-check="))
 			add_child(pcc)
+		elif a.begins_with("--bestiary-check="):
+			var bsc: Node = (load("res://tests/integration/enemies/bestiary_check_driver.gd") as GDScript).new()
+			bsc.set("out_dir", a.trim_prefix("--bestiary-check="))
+			add_child(bsc)
 		elif a.begins_with("--hero-shots="):
 			var hs: Node = (load("res://tests/integration/hero/hero_shots_driver.gd") as GDScript).new()
 			hs.set("out_dir", a.trim_prefix("--hero-shots="))
@@ -308,10 +313,16 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	var table := Tune.table("enemies")
 	var fly_y: Array = Tune.get_value("flyer_spawn_y")
 	var ros := EnemyRoster.for_tier(tier, Tune.table("locations"), Tune.data)
+	# Bestiary §3.6-3.7: a location with `intro` opens kinds by room and caps roles;
+	# Болотница lies on the room's bog markers, in packs only when there are none.
+	var intro: Dictionary = ros.intro
+	var bogs: Array = layout.get("bogs", [])
+	var bog_kind := EnemyRoster.spot_kind(intro, table, "bog")
+	var bog_open := bog_kind != "" and int(intro[bog_kind]) <= room_k
 	for i in layout.packs.size():
 		var pack: Array = layout.packs[i]
-		var kinds := EnemyRoster.pack_kinds(rng, pack.size(), i, room_k, tier,
-			ros.roster, ros.late, table, Tune.data)
+		var kinds: Array[String] = EnemyRoster.pack_kinds_intro(rng, pack.size(), i, room_k, tier, intro, table, Tune.data, not bogs.is_empty()) \
+			if not intro.is_empty() else EnemyRoster.pack_kinds(rng, pack.size(), i, room_k, tier, ros.roster, ros.late, table, Tune.data)
 		for j in kinds.size():
 			var e := EnemyRoster.make(kinds[j])
 			# Elites (enemies-and-elites §3.6): the layout picks who, the mark fits the kind.
@@ -321,6 +332,11 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 			if bool(table[kinds[j]].get("flies", false)):
 				y = rng.randf_range(float(fly_y[0]), float(fly_y[1]))
 			spawn_enemy(e, Vector2(pack[j], y), i, true, rng.randi())
+	if bog_open:
+		for bi in mini(bogs.size(), int(Tune.f("bog_max"))):
+			var b := EnemyRoster.make(bog_kind)
+			b.set("in_bog", true)
+			spawn_enemy(b, bogs[bi], (layout.packs as Array).size() + 60 + bi, true, rng.randi())
 	_spawn_props(layout, rng)
 	var keep_charge := player.amulet.charge if player and is_instance_valid(player) and player.amulet else 0.0
 	player = Player.new()

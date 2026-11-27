@@ -16,6 +16,10 @@ const KINDS: Dictionary = {
 	"rootling": preload("res://src/enemies/rootling.gd"),
 	"wolf": preload("res://src/enemies/wolf.gd"),
 	"jelly": preload("res://src/enemies/cold_spirit.gd"),
+	"balvan": preload("res://src/enemies/balvan.gd"),
+	"shishiga": preload("res://src/enemies/shishiga.gd"),
+	"bognitsa": preload("res://src/enemies/bognitsa.gd"),
+	"vodyanitsa": preload("res://src/enemies/vodyanitsa.gd"),
 }
 
 ## New, not yet set up enemy of `kind` (null for an unknown kind).
@@ -25,11 +29,91 @@ static func make(kind: String) -> Enemy:
 		return null
 	return (KINDS[kind] as GDScript).new() as Enemy
 
-## Roster of location `tier` (enemies-and-elites §3.3): {roster, late} from
-## locations.json, falling back to tuning swamp_roster / swamp_late.
+## Roster of location `tier` (enemies-and-elites §3.3): {roster, late, intro}
+## from locations.json, falling back to tuning swamp_roster / swamp_late.
+## intro (bestiary §3.6) = kind -> first room k; {} = the old roster rules.
 static func for_tier(tier: int, locs: Dictionary, t: Dictionary) -> Dictionary:
 	var row: Dictionary = locs.get(str(tier), {})
-	return { "roster": row.get("roster", t.get("swamp_roster", [])), "late": row.get("late", t.get("swamp_late", [])) }
+	return { "roster": row.get("roster", t.get("swamp_roster", [])), "late": row.get("late", t.get("swamp_late", [])),
+		"intro": row.get("intro", {}) }
+
+## Kind id with spawn spot `spot` (enemies.json "spot", e.g. "bog") among the
+## keys of `intro`; "" = none.
+static func spot_kind(intro: Dictionary, table: Dictionary, spot: String) -> String:
+	for id: String in intro:
+		var row: Dictionary = table.get(id, {})
+		if String(row.get("spot", "")) == spot:
+			return id
+	return ""
+
+## Pack of a location with an `intro` map (bestiary §3.6-3.7): kinds open from
+## their room k; the lead cycles through them; caps per pack: pack_role_max by
+## enemies.json pack_role (support/ranged/bruiser/flyer/ambusher), a support
+## only from pack_support_min members, pack_min of a kind (Шишиги by 2), at most
+## pack_kinds_max[tier] distinct kinds; the rest is filled from the k = 1 row.
+## Kinds with a spawn spot stay out of packs while `spot_ok` (the room places
+## them on its markers); without spots they join packs already surfaced.
+static func pack_kinds_intro(rng: RandomNumberGenerator, size: int, pack_i: int, k: int, tier: int,
+		intro: Dictionary, table: Dictionary, t: Dictionary, spot_ok: bool = true) -> Array[String]:
+	var out: Array[String] = []
+	var open: Array[String] = []
+	var first: Array[String] = []
+	for id: String in intro:
+		var row: Dictionary = table.get(id, {})
+		if spot_ok and String(row.get("spot", "")) != "":
+			continue
+		if int(intro[id]) <= k:
+			open.append(id)
+			if int(intro[id]) <= 1:
+				first.append(id)
+	if open.is_empty():
+		return out
+	if first.is_empty():
+		first = open
+	_add_kind(out, open[(k + pack_i) % open.size()], size, tier, table, t)
+	var guard := 0
+	while out.size() < size and guard < 48:
+		guard += 1
+		var pool: Array[String] = open if guard < 24 else first
+		_add_kind(out, pool[rng.randi_range(0, pool.size() - 1)], size, tier, table, t)
+	while out.size() < size:
+		var added := false
+		for id: String in out.duplicate() + first:
+			if _add_kind(out, id, size, tier, table, t) > 0:
+				added = true
+				break
+		if not added:
+			break
+	return out
+
+## How many of `id` can join `out` now under the §3.7 caps (0 = none).
+static func kind_fits(out: Array[String], id: String, size: int, tier: int, table: Dictionary, t: Dictionary) -> int:
+	var row: Dictionary = table.get(id, {})
+	var role := String(row.get("pack_role", "fodder"))
+	var kinds := {}
+	var same_role := 0
+	for o: String in out:
+		kinds[o] = true
+		if String((table.get(o, {}) as Dictionary).get("pack_role", "fodder")) == role:
+			same_role += 1
+	var kmax_arr: Array = t.get("pack_kinds_max", [99])
+	if not kinds.has(id) and kinds.size() >= int(kmax_arr[clampi(tier - 1, 0, kmax_arr.size() - 1)]):
+		return 0
+	if role == "support" and size < int(t.get("pack_support_min", 3)):
+		return 0
+	var caps: Dictionary = t.get("pack_role_max", {})
+	var n := maxi(1, int(row.get("pack_min", 1)) - out.count(id))
+	if caps.has(role) and same_role + n > int(caps[role]):
+		return 0
+	if out.size() + n > size:
+		return 0
+	return n
+
+static func _add_kind(out: Array[String], id: String, size: int, tier: int, table: Dictionary, t: Dictionary) -> int:
+	var n := kind_fits(out, id, size, tier, table, t)
+	for i in n:
+		out.append(id)
+	return n
 
 ## Kinds of the `size` members of pack number `pack_i` (0-based) in room k of `tier`.
 ## `table` is the enemy table (flies flags), `t` the tuning dictionary.

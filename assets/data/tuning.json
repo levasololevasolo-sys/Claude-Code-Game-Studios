@@ -400,6 +400,20 @@
     ],
     "bloat": [
       "blast"
+    ],
+    "balvan": [],
+    "thrower": [],
+    "shishiga": [
+      "ward",
+      "call"
+    ],
+    "bognitsa": [
+      "blink",
+      "fire"
+    ],
+    "vodyanitsa": [
+      "ward",
+      "call"
     ]
   },
   "elite_fallback": [
@@ -450,5 +464,25 @@
   "parry_reflect_dmg": 2.0,
   "parry_reflect_kb": 260.0,
   "parry_reflect_life": 3.0,
-  "parry_reflect_colour": "#ffe9a8"
+  "parry_reflect_colour": "#ffe9a8",
+  "_bestiary_note": "Pack composition and swamp mechanics (GDD bestiary §3.6-3.7, §4 B4, B7, §7). pack_kinds_max = distinct kinds per pack by tier; pack_role_max = cap per pack_role (enemies.json); pack_support_min = smallest pack that takes a support; cling_slow = hero speed loss per clinging Шишига, cling_max = clingers at once; bog_max = Болотницы per room on bog spots; tina_colour = Водяница shield contour.",
+  "pack_kinds_max": [
+    2,
+    3,
+    3,
+    4,
+    4
+  ],
+  "pack_role_max": {
+    "support": 1,
+    "ranged": 2,
+    "bruiser": 2,
+    "flyer": 2,
+    "ambusher": 2
+  },
+  "pack_support_min": 3,
+  "cling_slow": 0.15,
+  "cling_max": 2,
+  "bog_max": 1,
+  "tina_colour": "#b6e36b"
 }

@@ -1,5 +1,5 @@
 {
-  "_note": "Locations by tier, GDD room-generation-and-doors §3.1, enemies-and-elites §3.3, art-bible §4.1. lib = chunk library chunks_<lib>.json; roster/late = pack kinds; look = room colours (sky = clear colour, far/mid = parallax layers with their scroll factor par_far/par_mid, near = ground, plat, accent = eyes/glow, props = background props kind) and darkness = base darkness of the room (amulet-and-flare F5 'darkness'). Tiers 4-5 reuse the swamp until their content exists.",
+  "_note": "Locations by tier, GDD room-generation-and-doors §3.1, enemies-and-elites §3.3, art-bible §4.1. lib = chunk library chunks_<lib>.json; roster/late = pack kinds; look = room colours (sky = clear colour, far/mid = parallax layers with their scroll factor par_far/par_mid, near = ground, plat, accent = eyes/glow, props = background props kind) and darkness = base darkness of the room (amulet-and-flare F5 'darkness'). Tiers 4-5 reuse the swamp until their content exists. intro (bestiary §3.6) = room number k from which a kind joins packs; a location with intro builds packs by EnemyRoster.pack_kinds_intro (role caps §3.7) and ignores late.",
   "1": {
     "name": "Топь Кикиморы",
     "boss": "kikimora",
@@ -8,14 +8,15 @@
     "res_name": "болотное железо",
     "lib": "swamp",
     "roster": [
+      "balvan",
       "crawler",
+      "shishiga",
       "thrower",
-      "sentry",
-      "bat"
+      "bloat",
+      "bognitsa",
+      "vodyanitsa"
     ],
-    "late": [
-      "bloat"
-    ],
+    "late": [],
     "darkness": 0.78,
     "look": {
       "sky": "#0c1418",
@@ -31,7 +32,16 @@
       "par_mid": 0.0,
       "props": "ruins"
     },
-    "beaten": "повержена"
+    "beaten": "повержена",
+    "intro": {
+      "balvan": 1,
+      "crawler": 1,
+      "shishiga": 1,
+      "thrower": 2,
+      "bloat": 2,
+      "bognitsa": 3,
+      "vodyanitsa": 3
+    }
   },
   "2": {
     "name": "Тёмный бор",

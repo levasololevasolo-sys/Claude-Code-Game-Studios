@@ -897,4 +897,98 @@ def sounds():
     s["growl_small_2"] = lambda: growl_small(5002 + 100)
     s["lunge_whoosh_1"] = lambda: lunge_whoosh(5301)
     s["lunge_whoosh_2"] = lambda: lunge_whoosh(5302)
+    s.update(SWAMP)
     return s
+
+
+# ---------------------------------------------------------------- Топь roster (bestiary §3.2)
+
+def swing_heavy():
+    """Болванчик raises the clay club: a slow heavy whoosh with a creak of straw."""
+    r = rng_of(8001)
+    air = whoosh(0.6, r, 150, 900, 220, 1.2, "bp", 0.7) * 1.1
+    creak = at(modes(0.25, r, [(310, 1.0, 0.06), (720, 0.5, 0.04), (1350, 0.25, 0.03)]) * 0.35, 0.05)
+    straw = grains(0.4, r, 18, 0.004, 0.2, 2500, 8000) * 0.25
+    return tail(mix(air, creak, straw), r, 0.3, 0.07, 0.12)
+
+
+def shishiga_squeak(seed):
+    """Small imp squeak before the leap: a rising nasal chirp."""
+    r = rng_of(seed)
+    v = seed % 2
+    n = n_of(0.22)
+    sq = voice(0.22, r, 900 + v * 120, 1500 + v * 200, [(1800, 6, 1.0), (3200, 7, 0.5)], 0.15, 0.6)
+    return tail(sq * env(n, 0.01, 0.08) * 1.4, r, 0.15, 0.04, 0.1)
+
+
+def cling_latch():
+    """Шишига lands on the shoulders: a wet slap and a grab of claws."""
+    r = rng_of(8011)
+    slap = burst(0.12, r, 3000, 600, 0.02, 1.2, "bp") * 1.0
+    body = thump(0.15, 160, 70, 0.03) * 0.8
+    claws = at(grains(0.12, r, 6, 0.003, 0.05, 3000, 9000) * 0.6, 0.02)
+    return mix(slap, body, claws)
+
+
+def bog_bubble():
+    """The hummock bubbles and sighs: low gulps in mud and a breathy exhale."""
+    r = rng_of(8021)
+    buf = np.zeros(n_of(0.9))
+    for i in range(6):
+        g = thump(0.12, r.uniform(140, 260), r.uniform(60, 90), 0.03) * r.uniform(0.4, 0.8)
+        g = mix(g, burst(0.06, r, 900, 300, 0.015, 2.0, "bp") * 0.4)
+        st = int((0.05 + i * 0.12 + r.uniform(0, 0.04)) * SR)
+        buf[st:st + len(g)] += g[:len(buf) - st]
+    sigh = at(whoosh(0.5, r, 300, 900, 250, 1.0, "bp", 0.5) * 0.35, 0.35)
+    return tail(mix(buf, sigh), r, 0.3, 0.08, 0.15)
+
+
+def bog_plunge():
+    """Болотница dives or surfaces: a deep splash and sucking mud."""
+    r = rng_of(8031)
+    splash = burst(0.35, r, 2500, 300, 0.08, 0.9) * 1.1
+    boom = thump(0.4, 110, 35, 0.12) * 1.0
+    suck = at(svf(noise(n_of(0.3), r) * env(n_of(0.3), 0.05, 0.1), sweep(n_of(0.3), 1200, 200), 5.0, "bp") * 0.6, 0.12)
+    return tail(drive(mix(splash, boom, suck), 1.4), r, 0.4, 0.1, 0.18)
+
+
+def song_ward():
+    """Водяница's song: a wordless drowned voice, wavering, with water shimmer."""
+    r = rng_of(8041)
+    n = n_of(0.9)
+    v = voice(0.9, r, 440, 520, [(700, 5, 1.0), (1150, 6, 0.6), (2600, 8, 0.25)], 0.08, 1.0)
+    v = v * vib(n, 6.0, 0.25, r) * env(n, 0.15, 0.35)
+    shimmer = grains(0.9, r, 30, 0.006, 0.6, 3000, 7000) * 0.15
+    return tail(mix(v * 0.9, shimmer), r, 0.6, 0.15, 0.3)
+
+
+def ward_gain():
+    """Tina wraps an ally: a soft wet chime."""
+    r = rng_of(8051)
+    chime = modes(0.5, r, [(880, 1.0, 0.12), (1320, 0.6, 0.09), (2210, 0.3, 0.06)]) * 0.5
+    wet = burst(0.2, r, 1500, 400, 0.05, 1.5, "bp") * 0.4
+    return tail(mix(chime, wet), r, 0.3, 0.08, 0.2)
+
+
+def ward_break():
+    """The tina shield tears: a wet rip and a dull crack."""
+    r = rng_of(8061)
+    rip = svf(noise(n_of(0.18), r) * env(n_of(0.18), 0.002, 0.05), sweep(n_of(0.18), 3500, 600), 2.5, "bp") * 1.1
+    crack = at(_bone_crack(r, 0.06) * 0.6, 0.01)
+    body = thump(0.15, 200, 80, 0.03) * 0.6
+    return tail(mix(rip, crack, body), r, 0.25, 0.06, 0.12)
+
+
+def water_push():
+    """Водяница shoves with water: a rushing wave hit."""
+    r = rng_of(8071)
+    rush = whoosh(0.35, r, 400, 2500, 600, 1.0, "bp", 0.4) * 0.9
+    hit = at(burst(0.2, r, 2800, 500, 0.05, 0.9) * 0.8, 0.12)
+    body = at(thump(0.2, 140, 60, 0.05) * 0.6, 0.12)
+    return tail(mix(rush, hit, body), r, 0.3, 0.08, 0.15)
+
+
+SWAMP = {"swing_heavy": swing_heavy, "shishiga_squeak_1": lambda: shishiga_squeak(8081),
+         "shishiga_squeak_2": lambda: shishiga_squeak(8082), "cling_latch": cling_latch, "bog_bubble": bog_bubble,
+         "bog_plunge": bog_plunge, "song_ward": song_ward, "ward_gain": ward_gain, "ward_break": ward_break,
+         "water_push": water_push}

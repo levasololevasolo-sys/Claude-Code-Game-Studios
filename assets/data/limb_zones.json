@@ -136,5 +136,106 @@
       1.0
     ],
     "death_only": true
+  },
+  "balvan": {
+    "arm": [
+      0.2,
+      1.6,
+      0.35,
+      0.95
+    ],
+    "head": [
+      -0.3,
+      0.3,
+      0.78,
+      1.0
+    ],
+    "attack_states": [
+      "wind",
+      "swing"
+    ],
+    "one_arm": {
+      "swing_dmg": 0.6,
+      "reach": 0.6,
+      "wind": 1.2
+    },
+    "arm_colour": "club",
+    "arm_len": 40,
+    "arm_root": [
+      0.25,
+      0.7
+    ]
+  },
+  "shishiga": {
+    "head": [
+      -0.45,
+      0.45,
+      0.55,
+      1.0
+    ],
+    "attack_states": [
+      "leap"
+    ]
+  },
+  "bognitsa": {
+    "arm": [
+      0.2,
+      1.7,
+      0.3,
+      0.8
+    ],
+    "head": [
+      -0.3,
+      0.3,
+      0.72,
+      1.0
+    ],
+    "attack_states": [
+      "wind",
+      "swipe"
+    ],
+    "one_arm": {
+      "reach": 0.5,
+      "wind": 1.3
+    },
+    "arm_colour": "hair",
+    "arm_len": 50,
+    "arm_root": [
+      0.3,
+      0.65
+    ]
+  },
+  "vodyanitsa": {
+    "arm": [
+      0.1,
+      1.5,
+      0.5,
+      0.9
+    ],
+    "head": [
+      -0.3,
+      0.3,
+      0.82,
+      1.0
+    ],
+    "attack_states": [
+      "song",
+      "push_wind",
+      "push"
+    ],
+    "arm_states": [
+      "push_wind",
+      "push"
+    ],
+    "one_arm": {
+      "song": 1.5,
+      "push_dmg": 0.6
+    },
+    "arm_colour": "color",
+    "arm_len": 34,
+    "arm_root": [
+      0.2,
+      0.7
+    ]
   }
 }

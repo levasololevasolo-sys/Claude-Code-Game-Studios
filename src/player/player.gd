@@ -62,6 +62,8 @@ var dash_dur: float = 0.0
 var dash_cd: float = 0.0
 var dash_dir: int = 1
 var rolling: bool = false
+## Шишиги hanging on the hero now (bestiary §3.2, B7); each slows the run.
+var cling_n: int = 0
 var inv: float = 0.0
 var atk_t: float = 0.0
 var atk_dur: float = 0.0
@@ -291,6 +293,7 @@ func _step(dt: float) -> void:
 		var slow := Tune.f("attack_move_slow") if atk_t > 0.0 else 1.0
 		if aiming and sub != null and AimRules.aimable(sub.row()):
 			slow *= Tune.f("aim_move_mult")
+		slow *= SwampRules.cling_slow_mult(cling_n, Tune.f("cling_slow"), int(Tune.f("cling_max")))
 		var target := mx * Tune.f("run_speed") * slow * build.value("stribog_p", "run", 1.0)
 		velocity.x += (target - velocity.x) * minf(1.0, dt * (Tune.f("accel_ground") if on_floor else Tune.f("accel_air")))
 		if mx != 0 and atk_t <= 0.0:
