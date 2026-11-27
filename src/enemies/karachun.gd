@@ -133,6 +133,9 @@ func _draw() -> void:
 				var sx := x1 + d * len * (i + 1) / 10.0
 				draw_colored_polygon(PackedVector2Array([Vector2(sx - 7, g), Vector2(sx, g - 8.0 - 18.0 * k), Vector2(sx + 7, g)]), Color(lane, 0.9))
 				draw_line(Vector2(sx, g - 4.0), Vector2(sx, g - 6.0 - 14.0 * k), Color("#8fd3f5"), 2.0)
+	if art_skin:
+		_draw_overlay()
+		return
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	var shade := Color(String(stats.shade))

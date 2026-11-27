@@ -16,6 +16,8 @@ const REGISTRY: String = ROOT + "enemies_drawn.json"
 const HURT_TIME: float = 0.22
 ## |vel.x| above which the "moving" sheet of a state is shown, px/s.
 const MOVING_SPEED: float = 5.0
+## Pale ice look of Мара's ice copies (bestiary §3.4), on any drawn kind.
+const ICE_COPY_SHADER: String = "res://assets/shaders/ice_copy.gdshader"
 
 static var _reg: Dictionary = {}
 
@@ -37,11 +39,20 @@ var _prev_st: String = ""
 var _oneshot: String = ""
 
 
-## The registry (loaded once).
+## The registry (loaded once): every enemies_drawn*.json in ROOT, kinds merged.
 static func registry() -> Dictionary:
-	if _reg.is_empty() and FileAccess.file_exists(REGISTRY):
-		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(REGISTRY))
-		_reg = d if d is Dictionary else {}
+	if _reg.is_empty():
+		var files := Array(DirAccess.get_files_at(ROOT)).filter(func(f: String) -> bool:
+			return f.begins_with("enemies_drawn") and f.ends_with(".json"))
+		files.sort()
+		for f: String in files:
+			var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(ROOT + f))
+			if not d is Dictionary:
+				continue
+			if _reg.is_empty():
+				_reg = d
+			else:
+				(_reg.get_or_add("kinds", {}) as Dictionary).merge((d as Dictionary).get("kinds", {}))
 	return _reg
 
 
@@ -208,6 +219,10 @@ func _process(dt: float) -> void:
 		_rim.frame = _sprite.frame
 		_rim_mat.set_shader_parameter("fade", 0.0 if enemy.dead else 1.0)
 	modulate = Color(2.2, 2.2, 2.2) if enemy.flash > 0.0 else Color.WHITE
+	if enemy.ice_copy and _sprite.material == null and ResourceLoader.exists(ICE_COPY_SHADER):
+		var m := ShaderMaterial.new()
+		m.shader = load(ICE_COPY_SHADER) as Shader
+		_sprite.material = m
 	if kind == "vodyanitsa":
 		queue_redraw()
 
@@ -236,6 +251,22 @@ func _draw() -> void:
 	var c := enemy.center() - enemy.position
 	draw_arc(c, enemy.stat("song_r"), 0, TAU, 48, Color(ring, 0.25), 2.0)
 	draw_arc(c, enemy.stat("song_r") * k, 0, TAU, 40, Color(ring, 0.6 * (1.0 - k)), 3.0)
+
+
+## Effect sprite of a kind (registry "fx": the spirit's puddle, the wave spike,
+## the frost needle): {tex: Texture2D, origin: Vector2, frames: int, scale: float},
+## or {} when the kind has none or the drawn enemy art is off.
+static func fx(kind_id: String, fx_name: String) -> Dictionary:
+	if art_mode(OS.get_cmdline_user_args()) != "drawn":
+		return {}
+	var m: Dictionary = ((registry().get("kinds", {}) as Dictionary).get(kind_id, {}) as Dictionary).get("fx", {})
+	var e: Dictionary = m.get(fx_name, {})
+	var path := ROOT + "%s/%s" % [kind_id, String(e.get("file", ""))]
+	if e.is_empty() or not ResourceLoader.exists(path):
+		return {}
+	var o: Array = e.get("origin", [0, 0])
+	return { "tex": load(path) as Texture2D, "origin": Vector2(float(o[0]), float(o[1])),
+		"frames": int(e.get("frames", 1)), "scale": 1.0 / maxf(float(registry().get("px_per_world", 1.5)), 0.01) }
 
 
 ## Cut-out part sprite for the flying piece (or null).

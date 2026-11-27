@@ -133,6 +133,9 @@ func _draw() -> void:
 	var shade := Color(String(stats.shade))
 	var core := Color(String(stats.core))
 	var outline := Color("#2c3b52")
+	if dead and art_skin:
+		_draw_overlay()
+		return
 	if dead:
 		var k := clampf(shatter_t / maxf(stat("shatter_time"), 0.01), 0.0, 1.0)
 		for i in 3:
@@ -154,6 +157,9 @@ func _draw() -> void:
 		draw_set_transform(Vector2(0, gy2), 0.0, Vector2(1.0, 0.25))
 		draw_circle(Vector2.ZERO, stat("shadow_r0"), Color(0.05, 0.08, 0.15, 0.3))
 		draw_set_transform(Vector2.ZERO)
+	if art_skin:
+		_draw_overlay()
+		return
 	var jit := Vector2(sin(anim * 70.0) * 3.0, 0) if st == "shake" else Vector2.ZERO
 	if hanging or st == "fall":
 		# Upside-down icicle triangle with the core.
