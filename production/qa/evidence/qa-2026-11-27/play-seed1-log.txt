@@ -1,0 +1,109 @@
+[   0.0s] qa play seed 1, 180 s of game time
+  [run] new run seed 1, finished runs 0, gods open ["svarog"], door types ["god", "loot", "heal"]
+  [run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "heal", "god": "" }, hp 100
+  [run] start offer: svarog
+[   0.0s] screenshot room-01-room.png
+[   0.0s] screen opened: RuneOffer_take
+[   0.0s] screenshot screen-runeoffer_take.png
+  [run] rune taken: svarog_p (offer ["svarog_d", "svarog_s", "svarog_p"])
+  [run] cleared room 1 -> reward { "type": "heal", "god": "" } at x 1350 (room w 2000)
+  [run] doors (since_god 1, gap_need 2): Добыча: угли и ресурс, Живой родник
+[  11.7s] doors: Добыча: угли и ресурс, Живой родник -> pick 0
+[  11.7s] screenshot doors-1.png
+  [run] enter door 0: Добыча: угли и ресурс
+  [run] enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "loot", "god": "" }, hp 99
+[  12.8s] screenshot room-02-room.png
+  [run] hero died in room 2, killed by Упырь-щитник
+  [run] run ended (dead): Где: Топь Кикиморы, комната 2 | Кто убил: Упырь-щитник | Комнат пройдено: 1   Убито врагов: 11   Хозяев: 0 |   Свойство — Жар (ур. 1) | Добыча забега: угли 32   болотное железо 3 | Банк углей: 0 → 32   (забегов всего: 1)
+[  39.2s] screen opened: RunSummary
+[  39.2s] screenshot screen-runsummary.png
+[  39.2s] summary: Где: Топь Кикиморы, комната 2 | Кто убил: Упырь-щитник | Комнат пройдено: 1   Убито врагов: 11   Хозяев: 0 |   Свойство — Жар (ур. 1) | Добыча забега: угли 32   болотное железо 3 | Банк углей: 0 → 32   (забегов всего: 1)
+  [run] new run seed 1341709470, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  [run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "arms", "god": "" }, hp 100
+  [run] start offer: stribog
+[  39.2s] screenshot room-03-room.png
+[  39.2s] screen opened: RuneOffer_take
+  [run] rune taken: stribog_p (offer ["stribog_p", "stribog_s", "stribog_f"])
+  [run] cleared room 1 -> reward { "type": "arms", "god": "" } at x 1350 (room w 2000)
+  [run] doors (since_god 1, gap_need 1): Руна: Стрибог, Руна: Перун, Руна: Жива
+[  50.2s] doors: Руна: Стрибог, Руна: Перун, Руна: Жива -> pick 1
+[  50.2s] screenshot doors-2.png
+  [run] enter door 1: Руна: Перун
+  [run] enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "god", "god": "perun" }, hp 52
+[  51.3s] screenshot room-04-room.png
+  [run] hero died in room 2, killed by Упырь-щитник
+  [run] run ended (dead): Где: Топь Кикиморы, комната 2 | Кто убил: Упырь-щитник | Комнат пройдено: 1   Убито врагов: 4   Хозяев: 0 |   Свойство — Попутный ветер (ур. 1) | Добыча забега: угли 12   болотное железо 4 | Банк углей: 32 → 44   (забегов всего: 2)
+[  59.1s] screen opened: RunSummary
+[  59.1s] summary: Где: Топь Кикиморы, комната 2 | Кто убил: Упырь-щитник | Комнат пройдено: 1   Убито врагов: 4   Хозяев: 0 |   Свойство — Попутный ветер (ур. 1) | Добыча забега: угли 12   болотное железо 4 | Банк углей: 32 → 44   (забегов всего: 2)
+  [run] new run seed 2032227411, finished runs 2, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  [run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "arms", "god": "" }, hp 100
+  [run] start offer: stribog
+[  59.1s] screenshot room-05-room.png
+[  59.1s] screen opened: RuneOffer_take
+  [run] rune taken: stribog_s (offer ["stribog_s", "stribog_d", "stribog_f"])
+  [run] cleared room 1 -> reward { "type": "arms", "god": "" } at x 1350 (room w 2000)
+  [run] doors (since_god 1, gap_need 2): Добыча: угли и ресурс, Оружие, Живой родник
+[  66.8s] doors: Добыча: угли и ресурс, Оружие, Живой родник -> pick 2
+[  66.8s] screenshot doors-3.png
+  [run] enter door 2: Живой родник
+  [run] enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "heal", "god": "" }, hp 64
+[  68.4s] screenshot room-06-room.png
+[  74.1s] flare at charge 150
+  [run] hero died in room 2, killed by Упырь-щитник
+  [run] run ended (dead): Где: Топь Кикиморы, комната 2 | Кто убил: Упырь-щитник | Комнат пройдено: 1   Убито врагов: 14   Хозяев: 0 |   Удар — Удар Стрибога (ур. 1) | Добыча забега: угли 39   болотное железо 3 | Банк углей: 44 → 83   (забегов всего: 3)
+[  95.1s] screen opened: RunSummary
+[  95.1s] summary: Где: Топь Кикиморы, комната 2 | Кто убил: Упырь-щитник | Комнат пройдено: 1   Убито врагов: 14   Хозяев: 0 |   Удар — Удар Стрибога (ур. 1) | Добыча забега: угли 39   болотное железо 3 | Банк углей: 44 → 83   (забегов всего: 3)
+  [run] new run seed 1235481849, finished runs 3, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  [run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "arms", "god": "" }, hp 100
+  [run] start offer: veles
+[  95.1s] screen opened: RuneOffer_take
+  [run] rune taken: veles_p (offer ["veles_s", "veles_f", "veles_p"])
+  [run] cleared room 1 -> reward { "type": "arms", "god": "" } at x 1350 (room w 2000)
+  [run] doors (since_god 1, gap_need 1): Руна: Жива, Руна: Стрибог, Руна Рода
+[ 105.7s] doors: Руна: Жива, Руна: Стрибог, Руна Рода -> pick 0
+  [run] enter door 0: Руна: Жива
+  [run] enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "god", "god": "zhiva" }, hp 58
+  [run] hero died in room 2, killed by Трясинник
+  [run] run ended (dead): Где: Топь Кикиморы, комната 2 | Кто убил: Трясинник | Комнат пройдено: 1   Убито врагов: 6   Хозяев: 0 |   Свойство — Навья дань (ур. 1) | Добыча забега: угли 16   болотное железо 1 | Банк углей: 83 → 99   (забегов всего: 4)
+[ 118.0s] screen opened: RunSummary
+[ 118.0s] summary: Где: Топь Кикиморы, комната 2 | Кто убил: Трясинник | Комнат пройдено: 1   Убито врагов: 6   Хозяев: 0 |   Свойство — Навья дань (ур. 1) | Добыча забега: угли 16   болотное железо 1 | Банк углей: 83 → 99   (забегов всего: 4)
+  [run] new run seed 1490032283, finished runs 4, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  [run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "arms", "god": "" }, hp 100
+  [run] start offer: zhiva
+[ 118.0s] screen opened: RuneOffer_take
+  [run] rune taken: zhiva_f (offer ["zhiva_p", "zhiva_s", "zhiva_f"])
+  [run] cleared room 1 -> reward { "type": "arms", "god": "" } at x 1350 (room w 2000)
+  [run] doors (since_god 1, gap_need 2): Живой родник, Добыча: угли и ресурс
+[ 126.3s] doors: Живой родник, Добыча: угли и ресурс -> pick 1
+  [run] enter door 1: Добыча: угли и ресурс
+  [run] enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "loot", "god": "" }, hp 76
+  [run] hero died in room 2, killed by Нетопырь
+  [run] run ended (dead): Где: Топь Кикиморы, комната 2 | Кто убил: Нетопырь | Комнат пройдено: 1   Убито врагов: 10   Хозяев: 0 |   Вспышка — Живая вода (ур. 1) | Добыча забега: угли 31   болотное железо 4 | Банк углей: 99 → 130   (забегов всего: 5)
+[ 143.6s] screen opened: RunSummary
+[ 143.6s] summary: Где: Топь Кикиморы, комната 2 | Кто убил: Нетопырь | Комнат пройдено: 1   Убито врагов: 10   Хозяев: 0 |   Вспышка — Живая вода (ур. 1) | Добыча забега: угли 31   болотное железо 4 | Банк углей: 99 → 130   (забегов всего: 5)
+  [run] new run seed 496724732, finished runs 5, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  [run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "loot", "god": "" }, hp 100
+  [run] start offer: zhiva
+[ 143.6s] screen opened: RuneOffer_take
+  [run] rune taken: zhiva_p (offer ["zhiva_d", "zhiva_p", "zhiva_s"])
+  [run] cleared room 1 -> reward { "type": "loot", "god": "" } at x 1350 (room w 2000)
+  [run] doors (since_god 1, gap_need 2): Живой родник, Добыча: угли и ресурс
+[ 151.2s] doors: Живой родник, Добыча: угли и ресурс -> pick 0
+  [run] enter door 0: Живой родник
+  [run] enter room tier 1 room 2 (w 3250, packs 4), reward { "type": "heal", "god": "" }, hp 76
+  [run] hero died in room 2, killed by Трясинник
+  [run] run ended (dead): Где: Топь Кикиморы, комната 2 | Кто убил: Трясинник | Комнат пройдено: 1   Убито врагов: 6   Хозяев: 0 |   Свойство — Глубокие корни (ур. 1) | Добыча забега: угли 37   болотное железо 6 | Банк углей: 130 → 167   (забегов всего: 6)
+[ 163.3s] screen opened: RunSummary
+[ 163.3s] summary: Где: Топь Кикиморы, комната 2 | Кто убил: Трясинник | Комнат пройдено: 1   Убито врагов: 6   Хозяев: 0 |   Свойство — Глубокие корни (ур. 1) | Добыча забега: угли 37   болотное железо 6 | Банк углей: 130 → 167   (забегов всего: 6)
+  [run] new run seed 284449908, finished runs 6, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  [run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "loot", "god": "" }, hp 100
+  [run] start offer: veles
+[ 163.3s] screen opened: RuneOffer_take
+  [run] rune taken: veles_f (offer ["veles_f", "veles_d", "veles_p"])
+  [run] cleared room 1 -> reward { "type": "loot", "god": "" } at x 1350 (room w 2000)
+  [run] doors (since_god 1, gap_need 2): Оружие, Добыча: угли и ресурс, Живой родник
+[ 172.9s] doors: Оружие, Добыча: угли и ресурс, Живой родник -> pick 2
+  [run] enter door 2: Живой родник
+  [run] enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "heal", "god": "" }, hp 52
+[ 180.0s] END rooms entered 14, deaths 6, runs 7, anomalies { "screen_RuneOffer_take": 1, "door_shot": 3, "screen_RunSummary": 1 }
+[ 180.0s] last run: seed 284449908 tier 1 stage room room 2 hp 52.0 embers 42 kills 8

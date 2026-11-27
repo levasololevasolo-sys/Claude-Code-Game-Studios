@@ -1,0 +1,92 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.5 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 20.1.2, 256 bits)
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5208:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5731:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+ERROR: Condition "status < 0" is true. Returning: ERR_CANT_OPEN
+   at: init_output_device (drivers/alsa/audio_driver_alsa.cpp:97)
+WARNING: All audio drivers failed, falling back to the dummy driver.
+     at: initialize (servers/audio/audio_server.cpp:258)
+
+[run] new run seed 1426265955, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+[run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "loot", "god": "" }, hp 100
+[run] start offer: perun
+[run-check] OK   run starts with a rune offer
+[run] rune taken: perun_f (offer ["perun_f", "perun_d", "perun_s"])
+[run-check] OK   room 1: 4 enemies, no doors while they live
+[run-check] OK   all 4 enemies sleep on entry
+[run] cleared room 1 -> reward { "type": "loot", "god": "" } at x 1350 (room w 2000)
+[run-check] OK   reward appears at the right edge (x 1350 of 2000)
+[run] doors (since_god 1, gap_need 2): Добыча: угли и ресурс, Живой родник
+[run-check] OK   doors open after the reward: 2
+[run-check] screenshot run-door-fork.png
+[run] enter door 0: Добыча: угли и ресурс
+[run] enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "loot", "god": "" }, hp 100
+[run-check] OK   room 2: 10 enemies, no doors while they live
+[run-check] OK   all 10 enemies sleep on entry
+[run] cleared room 2 -> reward { "type": "loot", "god": "" } at x 2600 (room w 3250)
+[run-check] OK   reward appears at the right edge (x 2600 of 3250)
+[run] doors (since_god 2, gap_need 2): Руна: Велес, Добыча: угли и ресурс
+[run-check] OK   doors open after the reward: 2
+[run-check] OK   god door shows its god: Руна: Велес
+[run] enter door 0: Руна: Велес
+[run] enter room tier 1 room 3 (w 3700, packs 4), reward { "type": "god", "god": "veles" }, hp 100
+[run-check] OK   room 3: 19 enemies, no doors while they live
+[run-check] NOTE 5 of 19 enemies already awake 5 frames after entry (hero at x 160)
+[run] cleared room 3 -> reward { "type": "god", "god": "veles" } at x 3050 (room w 3700)
+[run-check] OK   reward appears at the right edge (x 3050 of 3700)
+[run] rune taken: veles_f (offer ["veles_f", "veles_p", "veles_s"])
+[run] doors (since_god 0, gap_need 2): Добыча: угли и ресурс, Оружие, Живой родник
+[run-check] OK   doors open after the reward: 3
+[run] enter door 0: Добыча: угли и ресурс
+[run] enter room tier 1 room 4 (w 4150, packs 4), reward { "type": "loot", "god": "" }, hp 100
+[run-check] OK   room 4: 17 enemies, no doors while they live
+[run-check] NOTE 4 of 17 enemies already awake 5 frames after entry (hero at x 160)
+[run] cleared room 4 -> reward { "type": "loot", "god": "" } at x 3500 (room w 4150)
+[run-check] OK   reward appears at the right edge (x 3500 of 4150)
+[run] doors (since_god 1, gap_need 2): Логово: Кикимора Болотная
+[run-check] OK   doors open after the reward: 1
+[run] enter door 0: Логово: Кикимора Болотная
+[run] enter lair tier 1 room 4 (w 2200, packs 0), reward {  }, hp 100
+[run-check] OK   lair 4: 1 enemies, no doors while they live
+[run-check] OK   all 1 enemies sleep on entry
+[run] boss kikimora killed: +40 embers
+[run] cleared lair 4 -> reward { "type": "lair", "god": "" } at x 1550 (room w 2200)
+[run-check] OK   reward appears at the right edge (x 1550 of 2200)
+[run] lair gods offered: ["veles", "stribog", "svarog"]
+[run-check] OK   lair reward = 3 different gods ["veles", "stribog", "svarog"]
+[run-check] screenshot run-god-choice.png
+[run] lair god chosen: veles (of ["veles", "stribog", "svarog"])
+[run] rune taken: veles_d (offer ["veles_d", "veles_p", "veles_s"])
+[run] doors (since_god 0, gap_need 1): Привал
+[run-check] OK   doors open after the reward: 1
+[run] enter door 0: Привал
+[run] enter haven tier 1 room 4 (w 1700, packs 0), reward {  }, hp 100
+[run] haven: healed +40 to 100, save written true to user://qa_run_check.json
+[run] doors (since_god 0, gap_need 1): Дальше: Тёмный бор (заглушка), На заставу с добычей (E дважды)
+[run-check] OK   reached the haven after 5 rooms
+[run-check] screenshot run-haven.png
+[run-check] OK   save holds the run at the haven (seed 1426265955, version 1.0)
+[run-check] OK   saved run matches: embers 257, runes { "dash": "veles_d", "flare": "veles_f", "strike": "" }
+[run] enter door 0: Дальше: Тёмный бор (заглушка)
+[run] enter room tier 2 room 1 (w 3200, packs 3), reward { "type": "loot", "god": "" }, hp 100
+[run-check] OK   went on to tier 2 room 1
+[run] hero died in room 1, killed by Упырь-щитник
+[run] run ended (dead): Где: Тёмный бор, комната 1 | Кто убил: Упырь-щитник | Комнат пройдено: 5   Убито врагов: 51   Хозяев: 1 |   Рывок — Навья тропа (ур. 1) |   Вспышка — Тень Велеса (ур. 1) | Добыча забега: угли 257   болотное железо 37, сердца 1 | Банк углей: 0 → 257   (забегов всего: 2)
+[run-check] OK   summary after death
+[run-check] screenshot run-summary.png
+[run-check] OK   summary names the killer: Упырь-щитник
+[run-check] OK   embers banked: 0 + 257 = 257
+[run-check] OK   save after death: run null, meta embers 257.0, runs 2.0
+[run] new run seed 795468516, finished runs 2, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms", "surica"]
+[run] enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "loot", "god": "" }, hp 100
+[run] start offer: perun
+[run-check] OK   new run started (seed 795468516), its start offer is open
+[run-check] DONE: 0 failed checks
