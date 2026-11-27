@@ -1,15 +1,20 @@
-OK   arm cut during the wind-up: cuts ["arm"]
-OK   bonus damage of the cut: [16.5] (plain 11.0 x 1.50)
-OK   attack cancelled: state idle, stun 0.45
+OK   parried swipe cuts the arm: ["arm"]
+OK   no damage to the hero on a parry: hp 1000
+OK   attacker stunned, attack gone: stun 0.60, state recover
 OK   one-armed swipe reach 54.0 (was 90.0)
-OK   arm piece flies: 1
-screenshot limb-arm.png
-OK   second arm cut refused: cuts 1, damage 5.0
-OK   head off from the down-air strike: cuts ["head"]
-OK   head bonus damage: [22.0] (plain 11.0 x 2.00)
-OK   it lives on headless: hp 18.0 / 40.0
-OK   no head zone any more
+screenshot limb-parry.png
+OK   plain swing on the arm in its attack: no cut, damage [11.0]
+knight parry 1: ["nick"], arm_off false
+OK   knight keeps the arm after parry 1
+knight parry 2: ["nick", "nick"], arm_off false
+OK   knight keeps the arm after parry 2
+knight parry 3: ["nick", "nick", "arm"], arm_off true
+OK   knight arm flies on the 3rd parry: ["nick", "nick", "arm"]
+OK   down-air on the head outside an attack: plain [11.0]
+OK   down-air on the head during its attack: head off, damage [22.0]
+OK   it lives on headless: hp 7.0 / 40.0
 screenshot limb-head.png
 OK   the flying head hurts another enemy: [18.0]
-OK   still alive after the head flew
+screenshot limb-death.png
+OK   two wolf deaths, plain and with the head: ["", "head"]
 DONE: 0 failed checks

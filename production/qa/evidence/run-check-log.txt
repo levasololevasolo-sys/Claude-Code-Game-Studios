@@ -1,59 +1,57 @@
 OK   run starts with a rune offer
-  rune taken: svarog_d (offer ["svarog_d", "svarog_p", "svarog_f"])
+  rune taken: veles_p (offer ["veles_p", "veles_d", "veles_f"])
 OK   room 1: 2 enemies, no doors while they live
 OK   all 2 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  cleared room 1 -> reward { "type": "arms", "god": "" } at x 1910 (room w 2560)
-OK   reward appears at the right edge (x 1910 of 2560)
-  arms drop (door): sub javelin ★★☆ [], pity { "e": 3, "l": 3 }
-  doors (since_god 1, gap_need 1): Руна: Стрибог, Добыча: угли и ресурс
-OK   doors open after the reward: 2
-OK   god door shows its god: Руна: Стрибог
-screenshot run-door-fork.png
-  enter door 0: Руна: Стрибог
-  enter room tier 1 room 2 (w 3840, packs 2), reward { "type": "god", "god": "stribog" }, hp 100
-OK   room 2: 7 enemies, no doors while they live
-OK   all 7 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  cleared room 2 -> reward { "type": "god", "god": "stribog" } at x 3190 (room w 3840)
-OK   reward appears at the right edge (x 3190 of 3840)
-  god voice stribog: Что взял, отпусти. Что отпустил, забудь.
-  rune taken: stribog_s (offer ["stribog_s", "stribog_p", "stribog_d"])
-  doors (since_god 0, gap_need 1): Добыча: угли и ресурс, Оружие
-OK   doors open after the reward: 2
-  enter door 0: Добыча: угли и ресурс
-  enter room tier 1 room 3 (w 4480, packs 3), reward { "type": "loot", "god": "" }, hp 100
-OK   room 3: 9 enemies, no doors while they live
-OK   all 9 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  cleared room 3 -> reward { "type": "loot", "god": "" } at x 3830 (room w 4480)
-OK   reward appears at the right edge (x 3830 of 4480)
-  doors (since_god 1, gap_need 1): Руна: Жива, Руна: Сварог
+  cleared room 1 -> reward { "type": "loot", "god": "" } at x 1270 (room w 1920)
+OK   reward appears at the right edge (x 1270 of 1920)
+  doors (since_god 1, gap_need 1): Руна: Жива, Руна: Велес
 OK   doors open after the reward: 2
 OK   god door shows its god: Руна: Жива
-OK   god door shows its god: Руна: Сварог
+OK   god door shows its god: Руна: Велес
+screenshot run-door-fork.png
   enter door 0: Руна: Жива
-  enter room tier 1 room 4 (w 5120, packs 3), reward { "type": "god", "god": "zhiva" }, hp 100
+  enter room tier 1 room 2 (w 3840, packs 2), reward { "type": "god", "god": "zhiva" }, hp 100
+OK   room 2: 6 enemies, no doors while they live
+OK   all 6 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
+  cleared room 2 -> reward { "type": "god", "god": "zhiva" } at x 3190 (room w 3840)
+OK   reward appears at the right edge (x 3190 of 3840)
+  god voice zhiva: Я сплю подо льдом. Ты меня разбудил. Немножко.
+  rune taken: zhiva_p (offer ["zhiva_p", "zhiva_f", "zhiva_d"])
+  doors (since_god 0, gap_need 2): Оружие, Добыча: угли и ресурс
+OK   doors open after the reward: 2
+  enter door 0: Оружие
+  enter room tier 1 room 3 (w 4480, packs 2), reward { "type": "arms", "god": "" }, hp 100
+OK   room 3: 9 enemies, no doors while they live
+OK   all 9 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
+  cleared room 3 -> reward { "type": "arms", "god": "" } at x 3830 (room w 4480)
+OK   reward appears at the right edge (x 3830 of 4480)
+  arms drop (door): arm jumphammer ★★★ [a_veles], pity { "e": 1, "l": 13 }
+  doors (since_god 1, gap_need 2): Оружие, Добыча: угли и ресурс, Живой родник
+OK   doors open after the reward: 3
+  enter door 0: Оружие
+  enter room tier 1 room 4 (w 5120, packs 3), reward { "type": "arms", "god": "" }, hp 100
 OK   room 4: 15 enemies, no doors while they live
 OK   all 15 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
   knight killed at x 1600: reward stones laid
-  cleared room 4 -> reward { "type": "god", "god": "zhiva" } at x 4470 (room w 5120)
+  cleared room 4 -> reward { "type": "arms", "god": "" } at x 4470 (room w 5120)
 OK   reward appears at the right edge (x 4470 of 5120)
-  god voice zhiva: Ты тёплый. Тут это редкость.
-  rune taken: zhiva_p (offer ["zhiva_p", "zhiva_f", "zhiva_d"])
-  doors (since_god 0, gap_need 1): Логово: Кикимора Болотная
+  arms drop (door): sub axes ★★☆ [], pity { "e": 2, "l": 14 }
+  doors (since_god 2, gap_need 2): Логово: Кикимора Болотная
 OK   doors open after the reward: 1
   enter door 0: Логово: Кикимора Болотная
   enter lair tier 1 room 4 (w 2200, packs 0), reward {  }, hp 100
 OK   lair 4: 1 enemies, no doors while they live
 OK   all 1 enemies sleep on entry (0 awake 5 frames after entry, hero at x 160)
-  arms drop (boss): arm perunsword ★★★ [a_svarog], pity { "e": 0, "l": 4 }
+  arms drop (boss): sub spikes ★★☆ [], pity { "e": 3, "l": 15 }
   boss kikimora killed: +40 embers
   cleared lair 4 -> reward { "type": "lair", "god": "" } at x 1550 (room w 2200)
 OK   reward appears at the right edge (x 1550 of 2200)
-  lair gods offered: ["stribog", "svarog", "veles"]
-OK   lair reward = 3 different gods ["stribog", "svarog", "veles"]
+  lair gods offered: ["stribog", "perun", "zhiva"]
+OK   lair reward = 3 different gods ["stribog", "perun", "zhiva"]
 screenshot run-god-choice.png
-  lair god chosen: stribog (of ["stribog", "svarog", "veles"])
-  god voice zhiva: Держу. Не как Пряха. По-своему.
-  rune taken: duo_spring (offer ["duo_spring", "stribog_p", "stribog_d"])
+  lair god chosen: stribog (of ["stribog", "perun", "zhiva"])
+  god voice stribog: Ушёл? Хорошо. Иди дальше.
+  rune taken: stribog_s (offer ["stribog_s", "stribog_f", "stribog_d"])
   doors (since_god 0, gap_need 1): Привал
 OK   doors open after the reward: 1
   enter door 0: Привал
@@ -62,24 +60,24 @@ OK   doors open after the reward: 1
   doors (since_god 0, gap_need 1): Дальше: Тёмный бор, На заставу с добычей (E дважды)
 OK   reached the haven after 5 rooms
 screenshot run-haven.png
-OK   save holds the run at the haven (seed 1175457210, version 4)
-OK   saved run matches: embers 170, runes { "dash": "svarog_d", "flare": "", "strike": "stribog_s" }
+OK   save holds the run at the haven (seed 1842469029, version 4)
+OK   saved run matches: embers 169, runes { "dash": "", "flare": "", "strike": "stribog_s" }
   enter door 0: Дальше: Тёмный бор
-  enter room tier 2 room 1 (w 3200, packs 1), reward { "type": "arms", "god": "" }, hp 100
+  enter room tier 2 room 1 (w 2560, packs 1), reward { "type": "loot", "god": "" }, hp 100
 OK   went on to tier 2 room 1
   hero died in room 1, killed by Упырь-щитник
-  run ended (dead): Где: Тёмный бор, комната 1 | Сложность: Былина | Кто убил: Упырь-щитник | Комнат пройдено: 5   Убито врагов: 34   Хозяев: 1 |   Удар — Удар Стрибога (ур. 1) |   Рывок — Огненный след (ур. 1) |   Свойство — Глубокие корни (ур. 1) |   Союз — Рвущий ветер | Добыча забега: угли 170   болотное железо 24, сердца 1 | Банк углей: 725 → 895   (забегов всего: 2)
+  run ended (dead): Где: Тёмный бор, комната 1 | Сложность: Былина | Кто убил: Упырь-щитник | Комнат пройдено: 5   Убито врагов: 33   Хозяев: 1 |   Удар — Удар Стрибога (ур. 1) |   Свойство — Навья дань (ур. 1) |   Свойство — Глубокие корни (ур. 1) | Добыча забега: угли 169   болотное железо 19, сердца 1 | Банк углей: 1564 → 1733   (забегов всего: 2)
 OK   summary after death
 screenshot run-summary.png
 OK   summary names the killer: Упырь-щитник
-OK   embers banked: 725 + 170 = 895
-OK   save after death: run null, meta embers 895.0, runs 2.0
-  enter base: visit 5, lines ["dolya", "potap", "sova", "bayun", "chur", "ofenya"], save true
+OK   embers banked: 1564 + 169 = 1733
+OK   save after death: run null, meta embers 1733.0, runs 2.0
+  enter base: visit 10, lines ["dolya", "potap", "sova", "bayun", "chur", "ofenya"], save true
 OK   after the summary the hero is at the base
   gate: new run
-  new run seed 511046176, finished runs 2, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms", "surica"]
-  enter room tier 1 room 1 (w 2560, packs 1), reward { "type": "heal", "god": "" }, hp 100
+  new run seed 62032017, finished runs 2, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms", "surica"]
+  enter room tier 1 room 1 (w 2560, packs 1), reward { "type": "loot", "god": "" }, hp 100
   start offer: stribog
-  god voice stribog: Дуй, не жалей.
-OK   new run started (seed 511046176), its start offer is open
+  god voice stribog: Не оглядывайся. Там уже никого.
+OK   new run started (seed 62032017), its start offer is open
 DONE: 0 failed checks

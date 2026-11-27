@@ -1,5 +1,5 @@
 {
-  "_note": "Limb zones of ordinary enemies (GDD limb-zones §3, §7). Rect per zone: [x0, x1, y0, y1], x in fractions of the hit box width w measured FORWARD from the feet (mirrored by face), y in fractions of the height h measured UP from the feet. attack_states: states in which a hit on the arm cuts it (wind-up and the blow). one_arm: stat multipliers after the arm is cut (the one-armed attack). drops_shield: the cut arm held the front shield. arm_colour: a stat key or a colour. arm_len px and arm_root [x, y] fractions: the flying arm piece and the stump. Kinds missing here have no zones (bat, bloat, jelly, crawler, wolf, dummy, bosses).",
+  "_note": "Limb zones of ordinary enemies (GDD limb-zones §3, §7). Rect per zone: [x0, x1, y0, y1], x in fractions of the hit box width w measured FORWARD from the feet (mirrored by face), y in fractions of the height h measured UP from the feet. arm: the attacking arm, cut only by a parry while the enemy is in attack_states (a shield arm is not listed). head: knocked off only by a down-air strike while the enemy is in attack_states. Both zones also decide the death variant (death_sever_chance otherwise). one_arm: stat multipliers after the arm is cut. tough: needs limb_elite_hits_needed parries / hits per limb (as elites do). death_only: beasts, a part flies only as part of the death. arm_colour: a stat key or a colour. arm_len px and arm_root [x, y] fractions: the flying arm and the stump. Kinds missing here have no zones (bat, bloat, jelly, dummy, bosses).",
   "ringer": {
     "arm": [
       0.2,
@@ -31,12 +31,6 @@
     ]
   },
   "sentry": {
-    "arm": [
-      0.25,
-      0.85,
-      0.1,
-      0.85
-    ],
     "head": [
       -0.25,
       0.35,
@@ -46,18 +40,6 @@
     "attack_states": [
       "aim",
       "bash"
-    ],
-    "one_arm": {
-      "bash_dmg": 0.6,
-      "bash_hit_x": 0.7,
-      "bash_wind": 1.4
-    },
-    "drops_shield": true,
-    "arm_colour": "#8d7a55",
-    "arm_len": 30,
-    "arm_root": [
-      0.4,
-      0.8
     ]
   },
   "knight": {
@@ -90,7 +72,8 @@
     "arm_root": [
       0.4,
       0.6
-    ]
+    ],
+    "tough": true
   },
   "rootling": {
     "head": [
@@ -99,6 +82,27 @@
       0.55,
       1.0
     ],
-    "attack_states": []
+    "attack_states": [
+      "dig",
+      "burst"
+    ]
+  },
+  "wolf": {
+    "head": [
+      0.3,
+      0.7,
+      0.45,
+      1.0
+    ],
+    "death_only": true
+  },
+  "crawler": {
+    "head": [
+      0.2,
+      0.55,
+      0.2,
+      1.0
+    ],
+    "death_only": true
   }
 }

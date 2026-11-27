@@ -85,9 +85,13 @@ func _draw() -> void:
 	draw_colored_polygon(body, c)
 	var lean := -6.0 if st == "bash" else 0.0
 	var shield := PackedVector2Array([Vector2(w / 2 - 4 - lean, -h * 0.85), Vector2(w / 2 + 10 - lean, -h * 0.8), Vector2(w / 2 + 10 - lean, -h * 0.15), Vector2(w / 2 - 4 - lean, -h * 0.1)])
+	# The shooting arm over the shield (limb-zones §3.1: the shield arm is never cut).
 	if not arm_off:
-		draw_colored_polygon(shield, Color("#8d7a55") if not (stun > 0.0) else Color("#5a4d36"))
-		draw_polyline(shield + PackedVector2Array([shield[0]]), Color("#c9b88a"), 2.0)
+		var reach := Vector2(w * (1.4 if st == "aim" else 0.7), -h * 0.7)
+		draw_line(Vector2(w * 0.2, -h * 0.74), reach, c.darkened(0.15), 5.0)
+		draw_line(reach + Vector2(0, -10), reach + Vector2(0, 10), Color("#5a4632"), 4.0)
+	draw_colored_polygon(shield, Color("#8d7a55") if not (stun > 0.0) else Color("#5a4d36"))
+	draw_polyline(shield + PackedVector2Array([shield[0]]), Color("#c9b88a"), 2.0)
 	_draw_windup_outline(body)
 	_draw_eyes(Vector2(0, -h * 0.85), Vector2(8, -h * 0.85), 2.5, face)
 	_draw_overlay()

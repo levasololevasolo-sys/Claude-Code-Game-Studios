@@ -32,6 +32,7 @@ var hit_list: Array = []
 var drops: Array[Dictionary] = []
 var _t: float = 0.0
 var _trail_t: float = 0.0
+var _landed: bool = false
 
 func _ready() -> void:
 	z_index = 5
@@ -51,6 +52,9 @@ func step(dt: float) -> void:
 	if position.y >= floor_y - r * 0.5:
 		position.y = floor_y - r * 0.5
 		if vel.y > 0.0:
+			if not _landed and is_inside_tree():
+				Audio.play_at(&"limb_part_thud", global_position)
+			_landed = true
 			vel.y *= -0.35
 			vel.x *= 0.6
 			spin *= 0.5

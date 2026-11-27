@@ -32,6 +32,12 @@ signal sub_landed(enemy: Enemy, dmg: float)
 ## Emitted at the end of every physics tick, hitstop ticks included. Test drivers
 ## await it so the input they set is guaranteed to have been read.
 signal stepped
+## Parry (GDD parry): the window opened / a melee blow was caught (`result` of
+## Enemy.parried: "arm", "nick", "stun") / the window ran out empty. The hero
+## visual hooks its parry pose here (or uses parrying() / parry_pose()).
+signal parry_started
+signal parry_succeeded(enemy: Enemy, result: String)
+signal parry_whiffed
 
 const W: float = 28.0
 const H: float = 64.0
@@ -64,6 +70,13 @@ var combo: int = 0
 var combo_t: float = 0.0
 var slammed: bool = false
 var hit_set: Array[Enemy] = []
+## Parry (GDD parry): window left, cooldown, whiff lock, spark time, catches so far.
+var parry_t: float = 0.0
+var parry_cd: float = 0.0
+var parry_lock: float = 0.0
+var parry_fx: float = 0.0
+var parry_count: int = 0
+var _tap_parry: bool = false
 var run_ph: float = 0.0
 var land: float = 0.0
 var ghosts: Array[Dictionary] = []
@@ -119,14 +132,17 @@ var visual: Node2D
 const VISUAL_SCENE: String = "res://scenes/hero/hero_visual.tscn"
 ## Pre-rendered 3D-to-2D hero (art slice); chosen by visual_scene_path().
 const SPRITE_SCENE: String = "res://scenes/hero/hero_sprite.tscn"
+## Hand-drawn hero «Медвежья шкура» (tools/asset-pipeline/hero2d); the default.
+const DRAWN_SCENE: String = "res://scenes/hero/hero_drawn.tscn"
 
 ## Check modes that inspect the cutout rig itself (HeroVisual tiers, rig poses):
 ## they get the rig unless `--hero-art=` is given explicitly.
 const RIG_MODES: Array[String] = ["--hero-shots=", "--base-check="]
 
-## The hero visual scene: the project setting navi/art/hero_art ("sprite" =
-## pre-rendered hero, default since the art slice; "rig" = cutout rig), forced to
-## the rig in RIG_MODES; `-- --hero-art=sprite|rig` overrides both.
+## The hero visual scene: the project setting navi/art/hero_art ("drawn" =
+## hand-drawn hero sheets, the default; "sprite" = pre-rendered 3D hero; "rig" =
+## cutout rig), forced to the rig in RIG_MODES; `-- --hero-art=drawn|sprite|rig`
+## overrides both.
 static func visual_scene_path(args: PackedStringArray) -> String:
 	var art := String(ProjectSettings.get_setting("navi/art/hero_art", "rig"))
 	for a in args:
@@ -136,6 +152,8 @@ static func visual_scene_path(args: PackedStringArray) -> String:
 	for a in args:
 		if a.begins_with("--hero-art="):
 			art = a.trim_prefix("--hero-art=")
+	if art == "drawn" and ResourceLoader.exists(DRAWN_SCENE):
+		return DRAWN_SCENE
 	return SPRITE_SCENE if art == "sprite" and ResourceLoader.exists(SPRITE_SCENE) else VISUAL_SCENE
 
 func _ready() -> void:
@@ -186,6 +204,8 @@ func _physics_process(dt: float) -> void:
 		_tap_flare = true
 	if _tapped(&"sub"):
 		_tap_sub = true
+	if _tapped(&"parry"):
+		_tap_parry = true
 	if world and world.hitstop > 0.0:
 		_end_tick()
 		return
@@ -212,6 +232,11 @@ func _step(dt: float) -> void:
 	if _tap_sub:
 		sub_buf = Tune.f("sub_buffer")
 	_tap_sub = false
+	_update_parry(dt)
+	if parry_lock > 0.0:
+		# A whiffed parry leaves the hero open: no strike, dash or parry (GDD parry §3.2).
+		atk_buf = 0.0
+		want_dash = false
 	_blasts = 0
 	if flare_t > 0.0:
 		_breath(dt)
@@ -400,6 +425,7 @@ func _strike_hits() -> void:
 		for r in rects:
 			if r.intersects(e.hurt_rect()):
 				hit.limb = e.limb_at(r, atk_dir, position.x, not is_on_floor())
+				hit.zone = e.limb_zone_at(r, atk_dir, position.x)
 				break
 		var blocked := DamageRules.shield_blocks(hit, e.hit_view())
 		_rune_strike(hit, fin)
@@ -782,6 +808,9 @@ func _enemies() -> Array[Enemy]:
 func hurt(hit: Hit) -> float:
 	if dead or inv > 0.0 or dash_t > 0.0 or flare_t > 0.0:
 		return 0.0
+	if ParryRules.catches(parry_t, hit.kind, hit.source is Enemy):
+		_parry_success(hit.source as Enemy)
+		return 0.0
 	var split := DamageRules.split_shield(hit.dmg, shield)
 	shield -= split.x
 	if weapon and weapon.mech() == "thorns":
@@ -817,6 +846,75 @@ func hurt(hit: Hit) -> float:
 		died.emit(hit)
 	return split.y
 
+# ---------------- parry (GDD parry) ----------------
+
+## True while the parry window is open.
+func parrying() -> bool:
+	return parry_t > 0.0
+
+## Pose hint for the hero visual: "parry" (window open), "parry_hit" (just
+## caught a blow), "parry_open" (whiff lock) or "" (none).
+func parry_pose() -> String:
+	if parry_fx > 0.0:
+		return "parry_hit"
+	if parry_t > 0.0:
+		return "parry"
+	if parry_lock > 0.0:
+		return "parry_open"
+	return ""
+
+## Opens the parry window now if allowed (also called by scripted checks).
+func start_parry() -> bool:
+	if dead or not ParryRules.can_start(parry_cd, parry_lock, dash_t > 0.0, atk_t > 0.0):
+		return false
+	parry_t = Tune.f("parry_window")
+	parry_cd = Tune.f("parry_cooldown")
+	parry_started.emit()
+	return true
+
+func _update_parry(dt: float) -> void:
+	parry_cd = maxf(0.0, parry_cd - dt)
+	parry_lock = maxf(0.0, parry_lock - dt)
+	parry_fx = maxf(0.0, parry_fx - dt)
+	if _tap_parry:
+		start_parry()
+	_tap_parry = false
+	var r := ParryRules.tick_window(parry_t, dt)
+	parry_t = float(r.left)
+	if bool(r.whiff):
+		parry_lock = Tune.f("parry_whiff_lock")
+		Audio.play_at(&"parry_whiff", position)
+		parry_whiffed.emit()
+
+func _parry_success(e: Enemy) -> void:
+	parry_t = 0.0
+	parry_cd = 0.0
+	parry_fx = Tune.f("parry_fx_time")
+	var res := e.parried(position.x)
+	parry_count += 1
+	inv = maxf(inv, Tune.f("parry_window"))
+	if world:
+		world.request_hitstop(Tune.f("parry_hitstop"))
+		world.add_shake(Tune.f("parry_shake"))
+	Audio.play_at(&"parry_clang", position)
+	parry_succeeded.emit(e, res)
+	queue_redraw()
+
+## Parry placeholder: a bright arc in front while the window is open, sparks on a catch.
+func _draw_parry() -> void:
+	if parry_t <= 0.0 and parry_fx <= 0.0:
+		return
+	var at := Vector2(face * 22.0, -H * 0.55)
+	if parry_t > 0.0:
+		var k := parry_t / maxf(Tune.f("parry_window"), 0.01)
+		draw_arc(at, 26.0, -PI * 0.5 * face - 1.0, -PI * 0.5 * face + 1.0, 14, Color(0.85, 0.95, 1.0, 0.5 + 0.5 * k), 4.0)
+	if parry_fx > 0.0:
+		var f := parry_fx / maxf(Tune.f("parry_fx_time"), 0.01)
+		for i in 10:
+			var a := TAU * float(i) / 10.0
+			draw_line(at + Vector2(cos(a), sin(a)) * 8.0, at + Vector2(cos(a), sin(a)) * (14.0 + 30.0 * (1.0 - f)), Color(1.0, 0.9, 0.5, f), 2.5)
+		draw_circle(at, 10.0 * f, Color(1, 1, 1, f))
+
 # ---------------- drawing (placeholder art until the asset pass) ----------------
 const CLOAK := Color("#2f4a52")
 const CLOAK_DARK := Color("#1d3036")
@@ -825,6 +923,7 @@ const BLADE := Color("#e8f1f2")
 const GLOW := Color("#ffd27a")
 
 func _draw() -> void:
+	_draw_parry()
 	if visual != null:
 		# Until each weapon has its rig sprite, the weapon and chain bolts stay
 		# procedural over the rig (the rig's own stick sprite is hidden).
@@ -890,6 +989,8 @@ func _blade_angle() -> float:
 
 func _draw_blade() -> void:
 	var hand := Vector2(8.0 * face, -34.0)
+	if visual != null and visual.has_method("hand_point"):
+		hand = visual.call("hand_point")
 	var a := _blade_angle()
 	var dir := Vector2(cos(a) * face, sin(a))
 	var body := weapon.body_id()

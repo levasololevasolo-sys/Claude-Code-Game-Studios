@@ -20,7 +20,7 @@ window/stretch/aspect="expand"
 
 [navi]
 
-art/hero_art="sprite"
+art/hero_art="drawn"
 
 [rendering]
 
