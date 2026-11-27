@@ -54,5 +54,16 @@ func _draw() -> void:
 	for p: Vector3 in layout.plats:
 		draw_rect(Rect2(p.x, p.y, p.z, 14), Color("#3a4a45"))
 		draw_line(Vector2(p.x, p.y), Vector2(p.x + p.z, p.y), Color("#7d9a7f"), 3.0)
-	draw_rect(Rect2(w - 30, ground - 160, 60, 160), Color("#3d2f4f"))
-	draw_rect(Rect2(w - 22, ground - 150, 44, 150), Color("#8a6dd1", 0.6))
+	if bool(layout.get("portal", true)):
+		draw_rect(Rect2(w - 30, ground - 160, 60, 160), Color("#3d2f4f"))
+		draw_rect(Rect2(w - 22, ground - 150, 44, 150), Color("#8a6dd1", 0.6))
+	if bool(layout.get("haven", false)):
+		# Haven campfire (placeholder).
+		var c := Vector2(w * 0.4, ground)
+		draw_rect(Rect2(c.x - 40, c.y - 10, 80, 10), Color("#5b4026"))
+		for k in 3:
+			var fx := c.x + (k - 1) * 18.0
+			draw_colored_polygon(PackedVector2Array([Vector2(fx - 14, c.y - 8), Vector2(fx, c.y - 70 + absf(k - 1) * 22.0), Vector2(fx + 14, c.y - 8)]), Color("#ff9a3c", 0.85))
+		draw_circle(c + Vector2(0, -30), 120, Color("#ffb35c", 0.08))
+	if bool(layout.get("lair", false)):
+		draw_rect(Rect2(-200, ground - 600, w + 400, 600), Color("#2a0e12", 0.25))

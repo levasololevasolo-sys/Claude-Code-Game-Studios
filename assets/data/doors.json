@@ -1,0 +1,43 @@
+{
+  "_note": "Door look and text, GDD room-generation-and-doors §3.8-3.9. label = line under 'за следующей комнатой:'; %s = god name. colour = placeholder sign colour.",
+  "god": {
+    "label": "Руна: %s",
+    "colour": ""
+  },
+  "rod": {
+    "label": "Руна Рода",
+    "colour": "#e0c080"
+  },
+  "surica": {
+    "label": "Сурица: поднять руну",
+    "colour": "#f2c94c"
+  },
+  "loot": {
+    "label": "Добыча: угли и ресурс",
+    "colour": "#d9a35a"
+  },
+  "heal": {
+    "label": "Живой родник",
+    "colour": "#6fd6c8"
+  },
+  "arms": {
+    "label": "Оружие",
+    "colour": "#b8c4cc"
+  },
+  "lair": {
+    "label": "Логово: %s",
+    "colour": "#c0392b"
+  },
+  "haven": {
+    "label": "Привал",
+    "colour": "#ffb35c"
+  },
+  "next_loc": {
+    "label": "Дальше: %s",
+    "colour": "#8fd3ff"
+  },
+  "base": {
+    "label": "На заставу с добычей (E дважды)",
+    "colour": "#e0c080"
+  }
+}

@@ -11,6 +11,10 @@
 ## Runes (gods-and-runes): `--runes=svarog_s:2,perun_d,duo_storm` starts with
 ## those runes (id[:level]), `--rune-offer=<god>[:wide]` opens the rune offer
 ## screen at start, `--god-check=<dir>` runs the scripted per-god check.
+## Run mode (default when none of the legacy check flags above is given): a
+## RunDirector child plays the run of GDD room-generation-and-doors (rooms, doors,
+## lair, haven, summary) on the Game autoload's RunState. `--run-check=<dir>`
+## plays it scripted and saves screenshots.
 class_name World
 extends Node2D
 
@@ -41,8 +45,13 @@ var darkness: Darkness
 var amulet_hud: AmuletHud
 ## The hero's runes for this run; kept across rooms (gods-and-runes §3.2).
 var build: RunBuild
-## Seeded stream of rune offers (stand-in for the RunRng "boons" stream, ADR-0003).
+## Seeded stream of rune offers; in run mode the RunRng "boons" stream (ADR-0003).
 var offer_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## The run flow (null in the legacy check modes).
+var director: RunDirector
+
+## Flags that start the old single-room checks instead of a run.
+const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -76,7 +85,19 @@ func _ready() -> void:
 		push_error("World: unknown amulet '%s', using ring" % amulet_id)
 		amulet_id = "ring"
 	RenderingServer.set_default_clear_color(Color("#0c1418"))
-	start_room()
+	var legacy := false
+	for a in OS.get_cmdline_user_args():
+		for f in LEGACY_FLAGS:
+			if a.begins_with(f):
+				legacy = true
+	if legacy:
+		start_room()
+	else:
+		director = RunDirector.new()
+		director.world = self
+		director.game = get_node("/root/Game")
+		add_child(director)
+		director.begin.call_deferred()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--demo="):
 			var d: Node = (load("res://tests/integration/core/demo_driver.gd") as GDScript).new()
@@ -97,16 +118,27 @@ func _ready() -> void:
 			var fc: Node = (load("res://tests/integration/amulet/flare_check_driver.gd") as GDScript).new()
 			fc.set("out_dir", a.trim_prefix("--flare-check="))
 			add_child(fc)
+		elif a.begins_with("--run-check="):
+			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
+			rc.set("out_dir", a.trim_prefix("--run-check="))
+			add_child(rc)
 
-## Clears the level and builds room number room_k of location tier.
-func start_room() -> void:
+## Clears the level and builds room number room_k of location tier. The run
+## passes its own `layout` and the room stream `p_rng` (RunRng.for_room, already
+## used by the generator); without them the old seed formula is used.
+func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) -> void:
 	for c in get_children():
 		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
-				or c is Flare or c is Darkness:
+				or c is Flare or c is Darkness or c is Door or c is RewardOrb:
+			if c is Enemy:
+				c.remove_from_group("enemies")
 			c.queue_free()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = seed_value * 1000 + tier * 100 + room_k
-	var layout: Dictionary = RoomGen.generate(rng, room_k, tier, Tune.data)
+	var rng := p_rng
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.seed = seed_value * 1000 + tier * 100 + room_k
+	if layout.is_empty():
+		layout = RoomGen.generate(rng, room_k, tier, Tune.data)
 	room = Room.new()
 	add_child(room)
 	room.build(layout)
@@ -159,20 +191,26 @@ func start_room() -> void:
 	add_child(darkness)
 
 ## Opens the rune offer of `god` (§3.4). `wide` = «Широкий выбор» (4 cards).
-func open_rune_offer(god: String, wide: bool = false) -> RuneOfferScreen:
+## `opts` go to RuneOffer.build_offer (duos_open, legend_open).
+func open_rune_offer(god: String, wide: bool = false, opts: Dictionary = {}) -> RuneOfferScreen:
 	var scr := RuneOfferScreen.new()
 	scr.build = build
 	scr.hero = player
 	scr.god = god
 	scr.ids = RuneOffer.build_offer(god, build, offer_rng, Tune.data,
-		int(Tune.f("offer_wide_count") if wide else Tune.f("offer_count")))
+		int(Tune.f("offer_wide_count") if wide else Tune.f("offer_count")), opts)
+	show_screen(scr)
+	return scr
+
+## Puts a full-screen Control on its own CanvasLayer above the game; the layer
+## goes away with the screen. `layer_index` orders screens (summary above offers).
+func show_screen(scr: Control, layer_index: int = 20) -> void:
 	var layer := CanvasLayer.new()
-	layer.layer = 20
+	layer.layer = layer_index
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	layer.add_child(scr)
 	add_child(layer)
 	scr.tree_exited.connect(layer.queue_free)
-	return scr
 
 ## Adds an enemy to the room: injects world, tier and walls, seeds its random
 ## stream, and puts it to sleep in pack `pack_id` (-1 = no pack) if `sleeping`.
@@ -235,7 +273,9 @@ func _physics_process(dt: float) -> void:
 		r.t += dt
 	var ring_time := Tune.f("ring_time")
 	rings.assign(rings.filter(func(r: Dictionary) -> bool: return r.t < ring_time))
-	if hud and player:
+	if hud and player and director:
+		hud.text = director.hud_text()
+	elif hud and player:
 		var awake := 0
 		var total := 0
 		for e in get_tree().get_nodes_in_group("enemies"):

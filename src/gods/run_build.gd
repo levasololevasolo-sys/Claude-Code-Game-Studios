@@ -47,6 +47,46 @@ static func from_arg(arg: String, p_table: Dictionary = {}) -> RunBuild:
 				b.level_up(id)
 	return b
 
+## Save snapshot (ADR-0003 RunState.build): ids and levels only.
+func to_dict() -> Dictionary:
+	return { "slots": slots.duplicate(), "levels": levels.duplicate(), "passives": Array(passives),
+		"duos": Array(duos), "legends": Array(legends) }
+
+## Rebuilds a build from to_dict(). Unknown ids are dropped.
+static func from_dict(d: Dictionary, p_table: Dictionary = {}) -> RunBuild:
+	var b := make(p_table)
+	var s: Dictionary = d.get("slots", {})
+	for k: String in b.slots:
+		var id := String(s.get(k, ""))
+		b.slots[k] = id if b.table.has(id) else ""
+	for id: String in (d.get("levels", {}) as Dictionary):
+		if b.table.has(id):
+			b.levels[id] = int(d.levels[id])
+	for key: String in ["passives", "duos", "legends"]:
+		var arr: Array[String] = b.get(key)
+		for id: Variant in (d.get(key, []) as Array):
+			if b.table.has(String(id)):
+				arr.append(String(id))
+	return b
+
+## Held runes that Сурица can raise (level < MAX_LEVEL), sorted (§3.10).
+func raisable() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in levels:
+		if has(id) and int(levels[id]) < MAX_LEVEL:
+			out.append(id)
+	out.sort()
+	return out
+
+## Every held rune id: slots, passives, duos, legend.
+func held() -> Array[String]:
+	var out: Array[String] = []
+	for s in COMBAT_SLOTS:
+		if slots[s] != "":
+			out.append(slots[s])
+	out.append_array(passives + duos + legends)
+	return out
+
 func row(id: String) -> Dictionary:
 	var r: Variant = table.get(id, {})
 	return r if r is Dictionary else {}

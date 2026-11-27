@@ -1,0 +1,72 @@
+OK   run starts with a rune offer
+  rune taken: perun_d (offer ["perun_d", "perun_f", "perun_p"])
+OK   room 1: 4 enemies, no doors while they live
+NOTE 2 of 4 enemies already awake 5 frames after entry (hero at x 160)
+  cleared room 1 -> reward { "type": "arms", "god": "" } at x 1350 (room w 2000)
+OK   reward appears at the right edge (x 1350 of 2000)
+  doors (since_god 1, gap_need 2): Живой родник, Оружие
+OK   doors open after the reward: 2
+screenshot run-door-fork.png
+  enter door 0: Живой родник
+  enter room tier 1 room 2 (w 3250, packs 3), reward { "type": "heal", "god": "" }, hp 100
+OK   room 2: 10 enemies, no doors while they live
+OK   all 10 enemies sleep on entry
+  cleared room 2 -> reward { "type": "heal", "god": "" } at x 2600 (room w 3250)
+OK   reward appears at the right edge (x 2600 of 3250)
+  doors (since_god 2, gap_need 2): Руна: Велес, Добыча: угли и ресурс
+OK   doors open after the reward: 2
+OK   god door shows its god: Руна: Велес
+  enter door 0: Руна: Велес
+  enter room tier 1 room 3 (w 3700, packs 4), reward { "type": "god", "god": "veles" }, hp 100
+OK   room 3: 18 enemies, no doors while they live
+OK   all 18 enemies sleep on entry
+  cleared room 3 -> reward { "type": "god", "god": "veles" } at x 3050 (room w 3700)
+OK   reward appears at the right edge (x 3050 of 3700)
+  rune taken: veles_f (offer ["veles_f", "veles_d", "veles_s"])
+  doors (since_god 0, gap_need 2): Живой родник, Добыча: угли и ресурс
+OK   doors open after the reward: 2
+  enter door 0: Живой родник
+  enter room tier 1 room 4 (w 4150, packs 4), reward { "type": "heal", "god": "" }, hp 100
+OK   room 4: 19 enemies, no doors while they live
+OK   all 19 enemies sleep on entry
+  cleared room 4 -> reward { "type": "heal", "god": "" } at x 3500 (room w 4150)
+OK   reward appears at the right edge (x 3500 of 4150)
+  doors (since_god 1, gap_need 2): Логово: Кикимора Болотная
+OK   doors open after the reward: 1
+  enter door 0: Логово: Кикимора Болотная
+  enter lair tier 1 room 4 (w 2200, packs 0), reward {  }, hp 100
+OK   lair 4: 1 enemies, no doors while they live
+OK   all 1 enemies sleep on entry
+  boss kikimora killed: +40 embers
+  cleared lair 4 -> reward { "type": "lair", "god": "" } at x 1550 (room w 2200)
+OK   reward appears at the right edge (x 1550 of 2200)
+  lair gods offered: ["svarog", "perun", "zhiva"]
+OK   lair reward = 3 different gods ["svarog", "perun", "zhiva"]
+screenshot run-god-choice.png
+  lair god chosen: svarog (of ["svarog", "perun", "zhiva"])
+  rune taken: svarog_f (offer ["svarog_f", "svarog_d", "svarog_s"])
+  doors (since_god 0, gap_need 2): Привал
+OK   doors open after the reward: 1
+  enter door 0: Привал
+  enter haven tier 1 room 4 (w 1700, packs 0), reward {  }, hp 100
+  haven: healed +40 to 100, save written true to user://run_check_save.json
+  doors (since_god 0, gap_need 2): Дальше: Тёмный бор (заглушка), На заставу с добычей (E дважды)
+OK   reached the haven after 5 rooms
+screenshot run-haven.png
+OK   save holds the run at the haven (seed 50792425, version 1.0)
+OK   saved run matches: embers 201, runes { "dash": "perun_d", "flare": "svarog_f", "strike": "" }
+  enter door 0: Дальше: Тёмный бор (заглушка)
+  enter room tier 2 room 1 (w 3200, packs 3), reward { "type": "loot", "god": "" }, hp 100
+OK   went on to tier 2 room 1
+  hero died in room 1, killed by Упырь-щитник
+  run ended (dead): Где: Тёмный бор, комната 1 | Кто убил: Упырь-щитник | Комнат пройдено: 5   Убито врагов: 52   Хозяев: 1 |   Рывок — Громовой рывок (ур. 1) |   Вспышка — Горнило (ур. 1) | Добыча забега: угли 201   болотное железо 26, сердца 1 | Банк углей: 0 → 201   (забегов всего: 2)
+OK   summary after death
+screenshot run-summary.png
+OK   summary names the killer: Упырь-щитник
+OK   embers banked: 0 + 201 = 201
+OK   save after death: run null, meta embers 201.0, runs 2.0
+  new run seed 117028582, finished runs 2, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms", "surica"]
+  enter room tier 1 room 1 (w 2000, packs 2), reward { "type": "loot", "god": "" }, hp 100
+  start offer: stribog
+OK   new run started (seed 117028582), its start offer is open
+DONE: 0 failed checks

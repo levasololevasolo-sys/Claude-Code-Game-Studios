@@ -1,0 +1,38 @@
+{
+  "_note": "Locations by tier, GDD room-generation-and-doors §3.1. Tiers 2-5 reuse the swamp roster and room generator until their chunks and rosters exist.",
+  "1": {
+    "name": "Топь Кикиморы",
+    "boss": "kikimora",
+    "boss_name": "Кикимора Болотная",
+    "res": "gears",
+    "res_name": "болотное железо"
+  },
+  "2": {
+    "name": "Тёмный бор",
+    "boss": "likho",
+    "boss_name": "Лихо Одноглазое (заглушка)",
+    "res": "bronze",
+    "res_name": "живица"
+  },
+  "3": {
+    "name": "Царство Морены",
+    "boss": "morena",
+    "boss_name": "Морена (заглушка)",
+    "res": "pearls",
+    "res_name": "иней-камень"
+  },
+  "4": {
+    "name": "Калинов мост",
+    "boss": "gorynych",
+    "boss_name": "Змей Горыныч (заглушка)",
+    "res": "gears",
+    "res_name": "болотное железо"
+  },
+  "5": {
+    "name": "Кощеево царство",
+    "boss": "koschei",
+    "boss_name": "Кощей (заглушка)",
+    "res": "pearls",
+    "res_name": "иней-камень"
+  }
+}

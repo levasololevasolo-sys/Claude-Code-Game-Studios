@@ -26,6 +26,7 @@ renderer/rendering_method="forward_plus"
 
 Tune="*res://src/core/tune.gd"
 Events="*res://src/core/events.gd"
+Game="*res://src/core/game.gd"
 
 [editor_plugins]
 

@@ -21,6 +21,8 @@ var hero: Player
 var ids: Array[String] = []
 ## Door god shown in the title.
 var god: String = ""
+## "take" = take a new rune; "surica" = raise the level of a held rune (§3.10).
+var mode: String = "take"
 var selected: int = 0
 
 func _ready() -> void:
@@ -51,6 +53,12 @@ func _unhandled_input(ev: InputEvent) -> void:
 ## Takes card `i`: the rune goes into the build, the screen closes.
 func take(i: int) -> void:
 	var id := ids[i]
+	if mode == "surica":
+		build.level_up(id)
+		get_tree().paused = false
+		chosen.emit(id)
+		queue_free()
+		return
 	var replaced := build.take(id)
 	if id == "rest" and hero:
 		hero.hp = minf(Tune.f("player_hp"), hero.hp + float(build.row(id).get("heal", Tune.f("rest_heal"))))
@@ -61,6 +69,8 @@ func take(i: int) -> void:
 
 ## Text of the "what happens to the slot" line of a card.
 func replace_line(id: String) -> String:
+	if mode == "surica":
+		return "Уровень %d → %d" % [build.level(id), build.level(id) + 1]
 	var slot := build.slot_of(id)
 	match slot:
 		"strike", "dash", "flare":
@@ -89,6 +99,8 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.02, 0.03, 0.04, 0.82))
 	var title := "Дар бога: %s — выбери руну" % _god_name(god) if god != "" else "Выбери руну"
+	if mode == "surica":
+		title = "Сурица — подними уровень своей руны"
 	draw_string(font, Vector2(0, 150), title, HORIZONTAL_ALIGNMENT_CENTER, size.x, 48, Color("#f0e2c0"))
 	draw_string(font, Vector2(0, 200), "← → или 1–%d · Enter — взять" % ids.size(), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(0.7, 0.7, 0.65))
 	var total := ids.size() * CARD.x + (ids.size() - 1) * GAP
@@ -108,42 +120,12 @@ func _draw_card(font: Font, r: Rect2, id: String, i: int) -> void:
 	var gr := row.get("gods", [g]) as Array
 	for k in gr.size():
 		var gc := r.position + Vector2(r.size.x / 2.0 + (k - (gr.size() - 1) / 2.0) * 120.0, 150)
-		_draw_glyph(String(gr[k]), gc, 52.0, Enemy.god_colour(String(gr[k])))
+		GodGlyph.draw(self, String(gr[k]), gc, 52.0, Enemy.god_colour(String(gr[k])))
 	var gods_txt := " + ".join(PackedStringArray(gr.map(func(x: Variant) -> String: return _god_name(String(x)))))
 	draw_string(font, r.position + Vector2(0, 240), gods_txt, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 24, Color(col, 0.9))
 	draw_string(font, r.position + Vector2(0, 290), String(row.get("name", id)), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 34, Color("#f4ecd8"))
 	draw_multiline_string(font, r.position + Vector2(24, 345), String(row.get("desc", "")), HORIZONTAL_ALIGNMENT_CENTER, r.size.x - 48, 24, 5, Color(0.85, 0.85, 0.8))
 	var line := replace_line(id)
-	var lc := Color("#ffb070") if line.begins_with("Заменит") else Color(0.7, 0.8, 0.7)
+	var lc := Color("#ffb070") if line.begins_with("Заменит") or line.begins_with("Уровень") else Color(0.7, 0.8, 0.7)
 	draw_string(font, r.position + Vector2(0, r.size.y - 30), line, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 24, lc)
 
-## Placeholder god signs (art-bible §4.3 shapes): drawn, not font glyphs.
-func _draw_glyph(g: String, c: Vector2, s: float, col: Color) -> void:
-	draw_circle(c, s, Color(col, 0.12))
-	draw_arc(c, s, 0.0, TAU, 48, col, 3.0)
-	match String((Tune.table("gods").get(g, {}) as Dictionary).get("glyph", "circle")):
-		"flames":
-			for k in 3:
-				var x := (k - 1) * s * 0.4
-				draw_colored_polygon(PackedVector2Array([c + Vector2(x - 10, s * 0.45), c + Vector2(x, -s * 0.55 + abs(k - 1) * 12), c + Vector2(x + 10, s * 0.45)]), col)
-		"rosette":
-			for k in 6:
-				var a := k * TAU / 6.0
-				draw_arc(c + Vector2(cos(a), sin(a)) * s * 0.33, s * 0.33, a + PI * 0.66, a + PI * 1.34, 12, col, 3.0)
-		"wind":
-			for k in 3:
-				var y := (k - 1) * s * 0.35
-				draw_arc(c + Vector2(s * 0.15, y), s * 0.22, -PI * 0.5, PI * 1.0, 12, col, 3.0)
-				draw_line(c + Vector2(-s * 0.6, y - s * 0.22), c + Vector2(s * 0.15, y - s * 0.22), col, 3.0)
-		"horns":
-			draw_arc(c + Vector2(-s * 0.25, 0), s * 0.45, PI * 0.6, PI * 1.5, 16, col, 4.0)
-			draw_arc(c + Vector2(s * 0.25, 0), s * 0.45, -PI * 0.5, PI * 0.4, 16, col, 4.0)
-			draw_circle(c + Vector2(0, s * 0.3), s * 0.18, col)
-		"sprout":
-			draw_line(c + Vector2(0, s * 0.6), c + Vector2(0, -s * 0.5), col, 4.0)
-			for k in 3:
-				var y := -s * 0.3 + k * s * 0.3
-				draw_line(c + Vector2(0, y), c + Vector2(-s * 0.3, y - s * 0.2), col, 3.0)
-				draw_line(c + Vector2(0, y), c + Vector2(s * 0.3, y - s * 0.2), col, 3.0)
-		_:
-			draw_circle(c, s * 0.3, col)
