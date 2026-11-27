@@ -202,10 +202,11 @@ func _strike(e: Enemy, from_x: float, kb: float) -> void:
 	if e in hit_set or e.dead:
 		return
 	hit_set.append(e)
-	var k := kb * FlareElement.kb_mult(element) * (Tune.f("boss_flare_kb_mult") if e.boss else 1.0)
+	var b: RunBuild = hero.build if hero else null
+	var k := kb * FlareElement.kb_mult(element, b) * (Tune.f("boss_flare_kb_mult") if e.boss else 1.0)
 	var hit := Hit.make(Hit.Kind.FLARE, dmg, from_x, k)
 	hit.source = hero
-	FlareElement.apply(element, hit, power, Tune.data)
+	FlareElement.apply(element, hit, power, Tune.data, b)
 	var dealt := e.hurt(hit)
 	struck.emit(e, dealt, hit)
 

@@ -8,6 +8,9 @@
 ## the hero's amulet (ring, beam, wave, knot; amulets.json), `--flare-check=<dir>`
 ## for the scripted Flare check (GDD amulet-and-flare). Also owns the world slow
 ## of the Flare "breath" (request_slow, time_mult) and the screen flash.
+## Runes (gods-and-runes): `--runes=svarog_s:2,perun_d,duo_storm` starts with
+## those runes (id[:level]), `--rune-offer=<god>[:wide]` opens the rune offer
+## screen at start, `--god-check=<dir>` runs the scripted per-god check.
 class_name World
 extends Node2D
 
@@ -36,6 +39,10 @@ var slow: float = 1.0
 var slow_t: float = 0.0
 var darkness: Darkness
 var amulet_hud: AmuletHud
+## The hero's runes for this run; kept across rooms (gods-and-runes §3.2).
+var build: RunBuild
+## Seeded stream of rune offers (stand-in for the RunRng "boons" stream, ADR-0003).
+var offer_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -60,6 +67,11 @@ func _ready() -> void:
 			ai_debug = true
 		elif a.begins_with("--amulet="):
 			amulet_id = a.trim_prefix("--amulet=")
+		elif a.begins_with("--runes="):
+			build = RunBuild.from_arg(a.trim_prefix("--runes="))
+	if build == null:
+		build = RunBuild.make()
+	offer_rng.seed = seed_value * 7919 + 17
 	if not Tune.table("amulets").has(amulet_id) or amulet_id.begins_with("_"):
 		push_error("World: unknown amulet '%s', using ring" % amulet_id)
 		amulet_id = "ring"
@@ -74,6 +86,13 @@ func _ready() -> void:
 			var c: Node = (load("res://tests/integration/enemies/enemy_check_driver.gd") as GDScript).new()
 			c.set("out_dir", a.trim_prefix("--enemy-check="))
 			add_child(c)
+		elif a.begins_with("--rune-offer="):
+			var bits := a.trim_prefix("--rune-offer=").split(":")
+			open_rune_offer.call_deferred(bits[0], bits.size() > 1 and bits[1] == "wide")
+		elif a.begins_with("--god-check="):
+			var gc: Node = (load("res://tests/integration/gods/god_check_driver.gd") as GDScript).new()
+			gc.set("out_dir", a.trim_prefix("--god-check="))
+			add_child(gc)
 		elif a.begins_with("--flare-check="):
 			var fc: Node = (load("res://tests/integration/amulet/flare_check_driver.gd") as GDScript).new()
 			fc.set("out_dir", a.trim_prefix("--flare-check="))
@@ -108,6 +127,7 @@ func start_room() -> void:
 	player = Player.new()
 	player.world = self
 	player.amulet = Amulet.make(amulet_id, Tune.data)
+	player.build = build
 	# The charge stays between rooms of one location (amulet-and-flare §3.1).
 	player.amulet.charge = minf(keep_charge, player.amulet.cap)
 	player.position = Vector2(160, Tune.f("ground_y"))
@@ -137,6 +157,22 @@ func start_room() -> void:
 	darkness = Darkness.new()
 	darkness.world = self
 	add_child(darkness)
+
+## Opens the rune offer of `god` (§3.4). `wide` = «Широкий выбор» (4 cards).
+func open_rune_offer(god: String, wide: bool = false) -> RuneOfferScreen:
+	var scr := RuneOfferScreen.new()
+	scr.build = build
+	scr.hero = player
+	scr.god = god
+	scr.ids = RuneOffer.build_offer(god, build, offer_rng, Tune.data,
+		int(Tune.f("offer_wide_count") if wide else Tune.f("offer_count")))
+	var layer := CanvasLayer.new()
+	layer.layer = 20
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	layer.add_child(scr)
+	add_child(layer)
+	scr.tree_exited.connect(layer.queue_free)
+	return scr
 
 ## Adds an enemy to the room: injects world, tier and walls, seeds its random
 ## stream, and puts it to sleep in pack `pack_id` (-1 = no pack) if `sleeping`.
@@ -206,7 +242,7 @@ func _physics_process(dt: float) -> void:
 			total += 1
 			if not (e as Enemy).asleep:
 				awake += 1
-		hud.text = "Навь — проверка основы (Godot)    Комната %d, ширина %d px    Враги: %d (не спят %d)    HP %d\nA/D бег · Пробел прыжок · J удар (W вверх, S в воздухе вниз) · Shift перекат/рывок · S+Пробел спрыгнуть · L / ПКМ Вспышка" % [room_k, int(room.layout.w), total, awake, roundi(player.hp)]
+		hud.text = "Навь — проверка основы (Godot)    Комната %d, ширина %d px    Враги: %d (не спят %d)    HP %d  Щит %d\n%s\nA/D бег · Пробел прыжок · J удар (W вверх, S в воздухе вниз) · Shift перекат/рывок · S+Пробел спрыгнуть · L / ПКМ Вспышка" % [room_k, int(room.layout.w), total, awake, roundi(player.hp), roundi(player.shield), build.hud_text()]
 	queue_redraw()
 
 func _draw() -> void:

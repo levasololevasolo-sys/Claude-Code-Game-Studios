@@ -1,41 +1,41 @@
 ## The element of the Flare: what lands on every enemy the shape touched (GDD
-## amulet-and-flare §3.6). The element comes from the god of the rune in the hero's
-## Flare slot; the shape comes from the amulet.
-##
-## HOOK FOR GODS (gods-and-runes.md, not ported yet): Player.flare_element holds
-## the element id. When the build system exists, set it from
-## `build.slot_god("flare")` ("" / "pure" when the slot is empty) and add a branch
-## per god below: "svarog" burn 2 × burn_time × P, "perun" one discharge per enemy,
-## "stribog" +2 cuts and kb × 1.5, "veles" curse 1.5 × curse_time × P, "zhiva"
-## roots 1.5 × root_time × P plus hero shield/heal (see apply_to_hero()). Every god
-## element also gives the short stun `flare_god_stun` (Zhiva: none).
+## amulet-and-flare §3.6, gods-and-runes §3.5 column «Вспышка»). The element is
+## the god of the rune in the hero's Flare slot (RunBuild.flare_element(), set
+## at each press); the shape comes from the amulet. The statuses come from
+## RunBuild.payload("flare", P) so rune levels and Гнев богов apply.
 class_name FlareElement
 extends RefCounted
 
-## Element ids known to the code. Only PURE is implemented.
+## Element ids known to the code.
 const PURE: String = "pure"
 const GODS: Array[String] = ["svarog", "perun", "stribog", "veles", "zhiva"]
 
 ## Puts the element's statuses on `hit` for one touched enemy at power `p`.
-## Unknown or not-yet-ported gods fall back to pure light (with a warning once).
-static func apply(element: String, hit: Hit, p: float, tune: Dictionary) -> void:
-	match element:
-		"", PURE:
-			hit.stun = float(tune.get("flare_stun", 1.4)) * p
-		_:
-			# Gods are not ported: keep the Flare a breather (short stun) so the
-			# hook is usable, the statuses come with gods-and-runes.
-			if element in GODS and element != "zhiva":
-				hit.stun = float(tune.get("flare_god_stun", 0.4))
-			else:
-				hit.stun = float(tune.get("flare_stun", 1.4)) * p
+## Every god but Zhiva also gives the short stun `flare_god_stun`. God statuses
+## land only at P >= flare_god_min_power (§3.5: «Эхо» 0.5 counts).
+static func apply(element: String, hit: Hit, p: float, tune: Dictionary, build: RunBuild = null) -> void:
+	if element in GODS:
+		if element != "zhiva":
+			hit.stun = float(tune.get("flare_god_stun", 0.4))
+		if build and p >= float(tune.get("flare_god_min_power", 0.5)):
+			hit.add_payload(build.payload("flare", p, tune))
+			hit.mods.merge(build.damage_mods(false), true)
+	else:
+		hit.stun = float(tune.get("flare_stun", 1.4)) * p
 	hit.mods["flare_element"] = element if element != "" else PURE
 
-## Knockback multiplier of the element (Stribog × 1.5 later).
-static func kb_mult(_element: String) -> float:
+## Knockback multiplier: «Буйный ветер» ×1.5 (weight is applied later by
+## DamageRules.knockback — «с учётом веса»).
+static func kb_mult(element: String, build: RunBuild = null) -> float:
+	if element == "stribog" and build:
+		return build.kb_mult("flare")
 	return 1.0
 
-## Effects on the hero after the Flare (Zhiva heal and shield later). `touched` =
-## number of enemies the shape hit.
-static func apply_to_hero(_element: String, _hero: Node, _touched: int, _tune: Dictionary) -> void:
-	pass
+## Effects on the hero after the Flare: «Живая вода» +shield per touched enemy
+## and a heal. `touched` = number of enemies the shape hit.
+static func apply_to_hero(element: String, hero: Node, touched: int, tune: Dictionary, build: RunBuild = null) -> void:
+	if element != "zhiva" or build == null or not hero is Player:
+		return
+	var pl := hero as Player
+	pl.add_shield(build.value(build.slots.flare, "shield", 0.0) * touched)
+	pl.hp = minf(float(tune.get("player_hp", 100.0)), pl.hp + build.value(build.slots.flare, "heal", 0.0))

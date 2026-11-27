@@ -12,3 +12,7 @@ signal player_hurt(amount: float, hit: RefCounted)
 ## The hero released a Flare: amulet shape id, power P (amulet-and-flare §3.3).
 @warning_ignore("unused_signal")
 signal flare_fired(shape: String, power: float)
+## The hero took a rune (gods-and-runes §3.2). `replaced` = id it pushed out of
+## its slot ("" if none). HUD, sound, save listen.
+@warning_ignore("unused_signal")
+signal rune_taken(id: String, slot: String, replaced: String)

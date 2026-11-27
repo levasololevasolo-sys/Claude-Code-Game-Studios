@@ -80,6 +80,10 @@ var orphan_shots: Array[EnemyShot] = []
 ## Eye points in local space recorded by the last _draw_eyes() (light_spots()).
 var eye_pts: Array[Vector2] = []
 var eye_size: float = 0.0
+## God statuses on this enemy (gods-and-runes §3.7). Created in setup().
+var status: StatusSet = StatusSet.new()
+## Seconds until the next wall / enemy slam may count (movement-and-combat §3.8).
+var wall_cd: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -235,6 +239,8 @@ func hit_view() -> Dictionary:
 		"x": position.x, "face": face, "flies": flies, "boss": boss,
 		"airborne": DamageRules.is_airborne(position.y, Tune.f("ground_y"), Tune.f("air_target_margin")),
 		"shield": front_shield, "stunned": stun > 0.0, "weight": weight, "kb_scale": kb_scale,
+		"burning": status.burning(), "cursed": status.cursed(), "rooted": status.rooted(),
+		"clean": not status.has_god_status(),
 	}
 
 ## The ONLY way to damage an enemy (GDD §3.7 order). Returns the damage taken.
@@ -243,21 +249,29 @@ func hurt(hit: Hit) -> float:
 	if dead:
 		return 0.0
 	var view := hit_view()
+	var ctx := status_ctx()
 	var dmg := DamageRules.final(hit, view, Tune.data)
 	hp -= dmg
 	flash = Tune.f("enemy_flash_time")
 	if hit.kind != Hit.Kind.TICK:
-		kb = DamageRules.knockback(hit, view, Tune.data)
+		# Roots hold against knockback, except with Рвущий ветер (gods-and-runes §5).
+		if not status.rooted() or (ctx.duos as Dictionary).has("duo_spring"):
+			var k := DamageRules.knockback(hit, view, Tune.data)
+			if hit.kind != Hit.Kind.STATUS or k != 0.0:
+				kb = k
 		numbers.append({ "v": roundi(dmg), "t": Tune.f("damage_number_time"), "x": rng.randf_range(-10.0, 10.0) if rng else 0.0 })
 	if hit.stun > 0.0:
 		stun = maxf(stun, hit.stun * (Tune.f("boss_stun_mult") if boss else 1.0))
 	damaged.emit(self, dmg, hit)
+	if hit.has_status() or hit.boss_burst_min > 0:
+		_apply_statuses(hit, ctx)
 	_after_hurt(hit)
 	if asleep:
 		_wake_my_pack()
-	if hp <= 0.0:
+	if hp <= 0.0 and not dead:
 		hp = 0.0
 		dead = true
+		_status_death(status_ctx())
 		died.emit(self, hit)
 		Events.enemy_killed.emit(self, hit)
 	return dmg
@@ -291,6 +305,11 @@ func _physics_process(dt: float) -> void:
 		_dead_tick(dt)
 		queue_redraw()
 		return
+	wall_cd -= dt
+	_tick_status(dt)
+	if dead:
+		queue_redraw()
+		return
 	if asleep:
 		vel.x = 0.0
 		if should_wake(hero_pos() - position, hp, max_hp, Tune.f("aggro_range"), Tune.f("aggro_range_y")) and hero():
@@ -303,6 +322,10 @@ func _physics_process(dt: float) -> void:
 			vel.y *= k
 	else:
 		_behave(dt)
+	if status.rooted():
+		# Roots (§3.7): no walking, no jumping; flyers hang; attacks still allowed.
+		vel.x = 0.0
+		vel.y = 0.0 if flies else maxf(vel.y, 0.0)
 	_move(dt)
 	if not asleep and not dead and stun <= 0.0:
 		_touch_hero()
@@ -319,9 +342,15 @@ func _move(dt: float) -> void:
 	elif position.y >= ground:
 		position.y = ground
 		vel.y = 0.0
+	var at_wall := 0
 	if room_w > 0.0:
 		var m := w / 2.0 + Tune.f("wall_margin")
+		if position.x <= m:
+			at_wall = -1
+		elif position.x >= room_w - m:
+			at_wall = 1
 		position.x = clampf(position.x, m, room_w - m)
+	_check_slams(at_wall)
 	kb *= pow(drag, dt)
 
 ## Touch damage (GDD §3.1): only awake, not stunned enemies with contact > 0.
@@ -390,6 +419,7 @@ func _draw_overlay() -> void:
 		draw_string(font, Vector2(-6, -h - 26), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color("#ffd36a"))
 	if show_state:
 		draw_string(font, Vector2(-30, -h - 52), "%s %.2f" % ["zz" if asleep else st, t], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.8, 1, 0.9))
+	_draw_status(font)
 	for n: Dictionary in numbers:
 		draw_string(font, Vector2(n.x - 8, -h - 26 - (life - n.t) * 60.0), str(n.v), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 0.9, 0.5, n.t / life))
 
@@ -397,3 +427,259 @@ func _draw_overlay() -> void:
 func _draw_windup_glow() -> void:
 	if is_winding():
 		_draw_glow(center() - position, Tune.f("windup_glow_r"), Color(1.0, 0.85, 0.6), Tune.f("windup_glow_a"))
+
+# ---------------- god statuses (gods-and-runes §3.7-3.9, §3.11, §3.14) ----------------
+
+## Build context of the hero (RunBuild.ctx) or the base one without a hero.
+func status_ctx() -> Dictionary:
+	var p := hero()
+	if p and p.build:
+		return p.build.ctx(Tune.data)
+	return StatusSet.default_ctx(Tune.data)
+
+## Colour of a god (gods.json), white for an unknown id.
+static func god_colour(god: String) -> Color:
+	var r: Dictionary = Tune.table("gods").get(god, {})
+	return Color(String(r.get("colour", "#ffffff")))
+
+func _say(text: String, god: String, always: bool = false) -> void:
+	status.say(text, god, Tune.f("status_word_time"), Tune.f("status_word_cd"), always)
+
+## A status-made hit on this enemy (discharge, burst, burn tick, duo effects).
+func _status_hit(kind: Hit.Kind, dmg: float, ctx: Dictionary) -> Hit:
+	var h := Hit.make(kind, dmg, position.x, 0.0)
+	h.nested = true
+	h.mods = (ctx.get("mods", {}) as Dictionary).duplicate()
+	h.source = hero()
+	return h
+
+## Puts the statuses carried by `hit` on this enemy (§3.7 "Повторное наложение").
+func _apply_statuses(hit: Hit, ctx: Dictionary) -> void:
+	var duos: Dictionary = ctx.get("duos", {})
+	if status.add_burn(hit.burn) or hit.burn > 0.0:
+		_say("ГОРИТ", "svarog")
+	if hit.curse > 0.0:
+		status.add_curse(hit.curse)
+		_say("ПРОКЛЯТ", "veles")
+	if hit.root > 0.0:
+		var dur := hit.root * float(ctx.get("root_mult", 1.0)) * (Tune.f("boss_root_mult") if boss else 1.0)
+		if status.add_root(dur, Tune.f("root_immune")):
+			_say("ОПЛЕТЁН", "zhiva")
+		else:
+			status.add_fx("dry", Tune.f("status_fx_time"))
+	if hit.cuts > 0:
+		var added := status.add_cuts(hit.cuts, int(Tune.f("cut_max")), Tune.f("cut_time"))
+		_say("ПОРЕЗ %d" % status.cuts, "stribog", true)
+		if added > 0 and duos.has("duo_naviwind"):
+			status.add_curse(Tune.f("curse_time") * float((duos["duo_naviwind"] as Dictionary).get("curse", 0.5)))
+			_say("ПРОКЛЯТ", "veles")
+		if boss and hit.boss_burst_min > 0 and status.cuts >= hit.boss_burst_min:
+			cut_burst(1.0)
+	if hit.shock > 0:
+		var need := int(ctx.get("shock_need", 3))
+		var fire := status.add_shock(hit.shock, need)
+		if not fire:
+			_say("ЗАРЯД %d/%d" % [status.shock, need], "perun", true)
+		elif not dead:
+			discharge(false, hit.extra_jumps)
+	if hit.discharge and not dead:
+		discharge(false, hit.extra_jumps)
+
+## Perun's discharge (§3.8, F3). `fed` = the last charge came from the
+## Огненная гроза feed: no jumps, only this enemy is set on fire (loop cap).
+func discharge(fed: bool, extra: int = 0) -> void:
+	var ctx := status_ctx()
+	var duos: Dictionary = ctx.get("duos", {})
+	status.shock = 0
+	var jumps := StatusSet.discharge_jumps(ctx, fed, status.rooted(), extra, int(Tune.f("shock_jumps")))
+	var chain: Array[Enemy] = [self]
+	if jumps > 0 and is_inside_tree():
+		var others: Array[Enemy] = []
+		var pts: Array[Vector2] = []
+		for n in get_tree().get_nodes_in_group("enemies"):
+			var o := n as Enemy
+			if o and o != self and not o.dead:
+				others.append(o)
+				pts.append(o.center())
+		for i in StatusSet.chain(center(), pts, jumps, Tune.f("shock_jump_r")):
+			chain.append(others[i])
+	var black := float((duos.get("duo_black", {}) as Dictionary).get("dmg_mult", 0.0))
+	var prev := center()
+	for i in chain.size():
+		var e := chain[i]
+		var h := _status_hit(Hit.Kind.STATUS, StatusSet.discharge_dmg(Tune.f("shock_dmg"), i,
+			e.status.cursed(), black, Tune.f("shock_jump_mult")), ctx)
+		if duos.has("duo_firestorm") and (i == 0 or not fed):
+			h.burn = Tune.f("burn_time")
+		if duos.has("duo_black"):
+			h.curse = Tune.f("curse_time") * float((duos["duo_black"] as Dictionary).get("curse", 0.6))
+		if duos.has("duo_lifebolt"):
+			h.root = Tune.f("root_time") * float((duos["duo_lifebolt"] as Dictionary).get("root", 0.5))
+		e.status.add_fx("bolt", Tune.f("status_fx_time"), prev)
+		e._say("РАЗРЯД", "perun", true)
+		prev = e.center()
+		e.hurt(h)
+
+## Stribog's burst (§3.9, F2): all cuts open at once. `k` = Рвущий ветер ×2.
+func cut_burst(k: float) -> float:
+	var n := status.take_cuts()
+	if n <= 0:
+		return 0.0
+	status.add_fx("burst", Tune.f("status_fx_time") * 1.5)
+	_say("ВСКРЫТ", "stribog", true)
+	return hurt(_status_hit(Hit.Kind.STATUS, StatusSet.burst_dmg(Tune.f("cut_burst"), n, k), status_ctx()))
+
+## One status tick: burn damage, firestorm feed, firewind spread.
+func _tick_status(dt: float) -> void:
+	var ctx := status_ctx()
+	var r := status.tick(dt, Tune.data, ctx)
+	if float(r.burn) > 0.0:
+		hurt(_status_hit(Hit.Kind.TICK, float(r.burn), ctx))
+	if dead:
+		return
+	if bool(r.feed) and status.add_shock(1, int(ctx.get("shock_need", 3))):
+		discharge(true)
+	elif bool(r.feed):
+		_say("ЗАРЯД %d/%d" % [status.shock, int(ctx.get("shock_need", 3))], "perun", true)
+	if bool(r.firewind):
+		var fw: Dictionary = (ctx.duos as Dictionary)["duo_firewind"]
+		_burn_around(float(fw.get("r", 180.0)), Tune.f("burn_time") * float(fw.get("burn", 0.7)), ctx)
+
+## Enemies around this one (alive, not self) within `r` of its centre.
+func _around(r: float) -> Array[Enemy]:
+	var out: Array[Enemy] = []
+	if not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group("enemies"):
+		var o := n as Enemy
+		if o and o != self and not o.dead and o.center().distance_to(center()) <= r:
+			out.append(o)
+	return out
+
+func _burn_around(r: float, dur: float, ctx: Dictionary) -> void:
+	for o in _around(r):
+		var h := _status_hit(Hit.Kind.TICK, 0.0, ctx)
+		h.burn = dur
+		o.hurt(h)
+
+## statusDeath (§3.11 death duos). Boss deaths of the room skip this (caller).
+func _status_death(ctx: Dictionary) -> void:
+	var duos: Dictionary = ctx.get("duos", {})
+	if duos.has("duo_pyre") and status.cursed() and status.burning():
+		var brow: Dictionary = Tune.table("enemies").get("bloat", {})
+		var dmg := float(brow.get("dmg", 22.0)) * float((duos["duo_pyre"] as Dictionary).get("dmg_mult", 2.0))
+		status.add_fx("burst", Tune.f("status_fx_time") * 1.5)
+		for o in _around(float(brow.get("radius", 125.0))):
+			o.hurt(_status_hit(Hit.Kind.STATUS, dmg, ctx))
+	if duos.has("duo_cleanse") and status.rooted() and status.burning():
+		_burn_around(float((duos["duo_cleanse"] as Dictionary).get("r", 150.0)), Tune.f("burn_time"), ctx)
+	if duos.has("duo_cycle") and status.cursed():
+		for o in _around(float((duos["duo_cycle"] as Dictionary).get("r", 200.0))):
+			var h := _status_hit(Hit.Kind.TICK, 0.0, ctx)
+			h.root = Tune.f("root_time")
+			o.hurt(h)
+
+## movement-and-combat §3.8 F10/F11: wall slam and enemy-into-enemy ("кегли").
+## Both open Stribog cuts (gods-and-runes §3.9). Bosses and the dummy take no part.
+func _check_slams(at_wall: int) -> void:
+	if boss or kind_id == "dummy" or wall_cd > 0.0 or absf(kb) <= Tune.f("wall_slam_speed"):
+		return
+	var spring := (status_ctx().duos as Dictionary).has("duo_spring") and status.rooted()
+	if at_wall != 0 and signi(int(signf(kb))) == at_wall:
+		var speed := absf(kb)
+		wall_cd = Tune.f("wall_slam_cd")
+		if spring:
+			status.break_roots()
+		cut_burst(2.0 if spring else 1.0)
+		var h := Hit.make(Hit.Kind.WALL, Tune.f("wall_slam_dmg") * speed / Tune.f("wall_slam_speed"), position.x, 0.0)
+		h.stun = Tune.f("wall_slam_stun")
+		hurt(h)
+		kb = -signf(at_wall) * speed * Tune.f("wall_bounce")
+		if world:
+			world.request_hitstop(Tune.f("wall_slam_hitstop"))
+			world.add_shake(Tune.f("wall_slam_shake"))
+		return
+	if not is_inside_tree():
+		return
+	for n in get_tree().get_nodes_in_group("enemies"):
+		var o := n as Enemy
+		if o == null or o == self or o.dead or o.boss or o.kind_id == "dummy" or o.wall_cd > 0.0:
+			continue
+		if not o.hurt_rect().intersects(hurt_rect()):
+			continue
+		var speed := absf(kb)
+		var dir := signf(kb)
+		wall_cd = Tune.f("wall_slam_cd")
+		o.wall_cd = Tune.f("wall_slam_cd")
+		var o_spring := spring or ((status_ctx().duos as Dictionary).has("duo_spring") and o.status.rooted())
+		if o_spring:
+			o.status.break_roots()
+		o.cut_burst(2.0 if o_spring else 1.0)
+		cut_burst(2.0 if spring else 1.0)
+		var ho := Hit.make(Hit.Kind.WALL, Tune.f("kegli_mult") * Tune.f("wall_slam_dmg"), o.position.x - dir, speed * Tune.f("kegli_kb") * weight)
+		ho.stun = Tune.f("kegli_stun")
+		o.hurt(ho)
+		hurt(Hit.make(Hit.Kind.WALL, Tune.f("kegli_mult") * Tune.f("wall_slam_dmg"), position.x, 0.0))
+		kb = dir * speed * Tune.f("kegli_keep")
+		return
+
+## Status visuals (§3.14) and the words, drawn by _draw_overlay().
+func _draw_status(font: Font) -> void:
+	var c := center() - position
+	var top := -h
+	if status.cursed():
+		var vc := god_colour("veles")
+		draw_circle(c, maxf(w, h) * 0.7, Color(vc, 0.18))
+		for i in 3:
+			draw_arc(c, maxf(w, h) * 0.55 + i * 6.0, -PI * 0.9 + anim * 1.5 + i, -PI * 0.3 + anim * 1.5 + i, 10, Color(vc, 0.8), 2.0)
+	if status.burning():
+		var fc := god_colour("svarog")
+		for i in 4:
+			var x := -w * 0.4 + w * 0.8 * float(i) / 3.0
+			var fh := 14.0 + 6.0 * sin(anim * 14.0 + i * 1.7)
+			draw_colored_polygon(PackedVector2Array([Vector2(x - 6, top * 0.35), Vector2(x, top * 0.35 - fh - 10), Vector2(x + 6, top * 0.35)]), Color(fc, 0.85))
+	if status.shock > 0:
+		var pc := god_colour("perun")
+		for i in 2 + status.shock:
+			var a := anim * 7.0 + i * TAU / float(2 + status.shock)
+			var p0 := c + Vector2(cos(a), sin(a)) * maxf(w, h) * 0.45
+			var p1 := p0 + Vector2(cos(a + 1.2), sin(a + 1.2)) * 9.0
+			var p2 := p1 + Vector2(cos(a - 0.6), sin(a - 0.6)) * 9.0
+			draw_polyline(PackedVector2Array([p0, p1, p2]), pc, 2.0)
+	for i in status.cuts:
+		var y := top * 0.8 + i * (h * 0.6 / 5.0)
+		draw_line(Vector2(-w * 0.35, y), Vector2(w * 0.35, y + 10), Color("#e0303a"), 3.0)
+	if status.cuts > 0:
+		draw_circle(Vector2(w * 0.25, top * 0.2 + fmod(anim * 40.0, 20.0)), 2.5, Color("#c01a24"))
+	var stems := status.rooted() or status.immune > 0.0
+	if stems:
+		var gc := god_colour("zhiva") if status.rooted() else Color("#7a5a30")
+		for i in 5:
+			var x := -w * 0.45 + w * 0.9 * float(i) / 4.0
+			draw_polyline(PackedVector2Array([Vector2(x, 0), Vector2(x + 5 * sin(i + anim), top * 0.25), Vector2(x - 3, top * 0.5)]), gc, 3.0)
+	for f: Dictionary in status.fx:
+		match String(f.kind):
+			"bolt":
+				var from: Vector2 = (f.to as Vector2) - position
+				var pts := PackedVector2Array([from])
+				for k in range(1, 6):
+					var q := from.lerp(c, float(k) / 6.0)
+					pts.append(q + Vector2(sin(k * 7.3 + anim * 30.0) * 10.0, cos(k * 5.1) * 8.0))
+				pts.append(c)
+				draw_polyline(pts, Color(god_colour("perun"), clampf(f.t * 5.0, 0.0, 1.0)), 4.0)
+				draw_polyline(pts, Color(1, 1, 1, clampf(f.t * 5.0, 0.0, 1.0)), 1.5)
+			"burst":
+				var k2 := 1.0 - float(f.t) / (Tune.f("status_fx_time") * 1.5)
+				draw_circle(c, 10.0 + 40.0 * k2, Color(0.9, 0.1, 0.15, 0.6 * (1.0 - k2)))
+				for j in 8:
+					var a2 := j * TAU / 8.0
+					draw_circle(c + Vector2(cos(a2), sin(a2)) * (20.0 + 50.0 * k2), 3.0, Color(0.8, 0.05, 0.1, 1.0 - k2))
+			"dry":
+				draw_rect(Rect2(-w * 0.5, top * 0.5, w, -top * 0.5), Color(0.5, 0.35, 0.2, 0.4), false, 2.0)
+	# Words sit above the damage numbers (which rise from -h - 26 for ~42 px).
+	var y0 := -h - 78.0
+	for wd: Dictionary in status.words:
+		var col := Color(god_colour(String(wd.god)), clampf(float(wd.t) * 3.0, 0.0, 1.0))
+		draw_string_outline(font, Vector2(-110, y0), String(wd.text), HORIZONTAL_ALIGNMENT_CENTER, 220, 22, 5, Color(0, 0, 0, col.a))
+		draw_string(font, Vector2(-110, y0), String(wd.text), HORIZONTAL_ALIGNMENT_CENTER, 220, 22, col)
+		y0 -= 24.0

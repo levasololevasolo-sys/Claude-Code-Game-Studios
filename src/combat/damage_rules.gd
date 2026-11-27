@@ -5,7 +5,15 @@
 ## A target is described by a `view` Dictionary built by Enemy.hit_view():
 ##   x: float, face: int (-1/1), flies: bool, boss: bool, airborne: bool,
 ##   shield: bool (has a front shield right now), stunned: bool,
-##   weight: float (> 0), kb_scale: float (k_target of F8 for this kind).
+##   weight: float (> 0), kb_scale: float (k_target of F8 for this kind),
+##   burning, cursed, rooted: bool (StatusSet), clean: bool (no god status, for
+##   «Заточенный край»; checked BEFORE the hit's own statuses land).
+##
+## Modifier order (step 2 of §3.7, gods-and-runes F1/§3.6). ADR-0007 that should
+## fix this order is not written yet; the GDD order is used:
+##   base → air (strikes) → edge (strikes, clean target) → reaper (not ticks,
+##   stunned or rooted) → curse → heat (burning) → front shield.
+## Hit.mods keys read here: "edge", "reaper", "heat" (multipliers from RunBuild).
 class_name DamageRules
 extends RefCounted
 
@@ -45,6 +53,7 @@ static func final(hit: Hit, view: Dictionary, tune: Dictionary) -> float:
 	if hit.kind == Hit.Kind.STRIKE and bool(view.get("airborne", false)) \
 			and not bool(view.get("flies", false)) and not bool(view.get("boss", false)):
 		d *= float(tune.get("air_mult", 1.0))
+	d *= status_mult(hit, view, tune)
 	if shield_blocks(hit, view):
 		d *= float(tune.get("sentry_block", 1.0))
 	return maxf(0.0, d)
@@ -52,7 +61,7 @@ static func final(hit: Hit, view: Dictionary, tune: Dictionary) -> float:
 ## F8: signed horizontal knockback speed for the target, px/s. Ticks push nothing;
 ## a hit from exactly the target's x pushes nothing (as in the Godot port).
 static func knockback(hit: Hit, view: Dictionary, tune: Dictionary) -> float:
-	if hit.kind == Hit.Kind.TICK:
+	if hit.kind == Hit.Kind.TICK or hit.kind == Hit.Kind.STATUS:
 		return 0.0
 	var x := float(view.get("x", 0.0))
 	if x == hit.from_x:
@@ -70,3 +79,17 @@ static func launch_speed(speed: float, weight: float) -> float:
 static func split_shield(dmg: float, shield: float) -> Vector2:
 	var absorbed := clampf(shield, 0.0, maxf(dmg, 0.0))
 	return Vector2(absorbed, maxf(dmg, 0.0) - absorbed)
+
+## §3.7 step 2: rune and status multipliers of `hit` on the target `view`.
+static func status_mult(hit: Hit, view: Dictionary, tune: Dictionary) -> float:
+	var m := 1.0
+	if hit.kind == Hit.Kind.STRIKE and hit.mods.has("edge") and bool(view.get("clean", false)):
+		m *= float(hit.mods["edge"])
+	if hit.kind != Hit.Kind.TICK and hit.mods.has("reaper") \
+			and (bool(view.get("stunned", false)) or bool(view.get("rooted", false))):
+		m *= float(hit.mods["reaper"])
+	if bool(view.get("cursed", false)):
+		m *= float(tune.get("curse_mult", 1.0))
+	if hit.mods.has("heat") and bool(view.get("burning", false)):
+		m *= float(hit.mods["heat"])
+	return m

@@ -56,7 +56,11 @@ var was_on_floor: bool = false
 var fall_v: float = 0.0
 ## The worn amulet (injected by World; a ring amulet is made if left null).
 var amulet: Amulet
-## Element of the Flare. HOOK: set from the god of the Flare-slot rune when
+## The hero's runes (gods-and-runes). Injected by World; empty if left null.
+var build: RunBuild
+## Enemies the current dash already passed through (each once per dash).
+var dash_set: Array[Enemy] = []
+## Element of the Flare, set from build.flare_element() at each press. HOOK: set from the god of the Flare-slot rune when
 ## gods-and-runes is ported (FlareElement documents the ids); "pure" = no rune.
 var flare_element: String = FlareElement.PURE
 ## Seconds of the breath left (frozen, invulnerable, world slowed); 0 = none.
@@ -87,6 +91,8 @@ func _ready() -> void:
 	floor_snap_length = Tune.f("floor_snap")
 	if amulet == null:
 		amulet = Amulet.make("ring", Tune.data)
+	if build == null:
+		build = RunBuild.make()
 	Events.enemy_killed.connect(_on_enemy_killed)
 	# Input before damage in one tick (amulet-and-flare §5): the hero's tick runs
 	# before the enemies', the World's (hitstop/slow clocks) before the hero's.
@@ -147,10 +153,11 @@ func _step(dt: float) -> void:
 		rolling = on_floor
 		dash_dur = Tune.f("roll_time") if rolling else Tune.f("dash_time")
 		dash_t = dash_dur
-		dash_cd = Tune.f("dash_cooldown")
+		dash_cd = build.dash_cd(Tune.data, dash_dur)
+		dash_set.clear()
 		dash_dir = mx if mx != 0 else face
 		face = dash_dir
-		inv = maxf(inv, dash_dur + 0.05)
+		inv = maxf(inv, dash_dur + 0.05 + build.value(build.slots.dash, "inv_bonus", 0.0))
 		atk_t = 0.0
 		if amulet.dash_charge() > 0.0:
 			amulet.add_flat(amulet.dash_charge())
@@ -165,11 +172,13 @@ func _step(dt: float) -> void:
 			var gi := Tune.f("ghost_interval")
 			if int(dash_t / gi) != int((dash_t + dt) / gi):
 				ghosts.append({ "p": position, "t": Tune.f("ghost_life"), "face": face })
+		_dash_hits()
 		if dash_t <= 0.0:
 			velocity.x = dash_dir * Tune.f("run_speed")
+			_dash_end()
 	else:
 		var slow := Tune.f("attack_move_slow") if atk_t > 0.0 else 1.0
-		var target := mx * Tune.f("run_speed") * slow
+		var target := mx * Tune.f("run_speed") * slow * build.value("stribog_p", "run", 1.0)
 		velocity.x += (target - velocity.x) * minf(1.0, dt * (Tune.f("accel_ground") if on_floor else Tune.f("accel_air")))
 		if mx != 0 and atk_t <= 0.0:
 			face = mx
@@ -222,7 +231,8 @@ func _update_attack(dt: float, on_floor: bool) -> void:
 	if atk_buf > 0.0 and dash_t <= 0.0 and atk_t <= 0.0:
 		atk_dir = "up" if _held(&"move_up") else ("down" if _held(&"move_down") and not on_floor else "side")
 		combo = (combo % times.size()) + 1 if atk_dir == "side" and combo_t > 0.0 else 1
-		atk_t = float(times[combo - 1]) * (1.0 if atk_dir == "side" else Tune.f("vertical_strike_time_mult"))
+		atk_t = float(times[combo - 1]) * (1.0 if atk_dir == "side" else Tune.f("vertical_strike_time_mult")) \
+			/ build.value("stribog_p", "swing", 1.0)
 		atk_dur = atk_t
 		combo_t = atk_t + Tune.f("combo_window")
 		hit_set.clear()
@@ -241,7 +251,7 @@ func _update_attack(dt: float, on_floor: bool) -> void:
 
 ## The strike's hit rectangle in world space, for the current direction.
 func strike_rect() -> Rect2:
-	var reach := float(_blade().reach)
+	var reach := float(_blade().reach) * (build.value("arc", "reach", 1.0) if build else 1.0)
 	var vr := reach * 0.9 + 20.0
 	match atk_dir:
 		"up":
@@ -270,7 +280,10 @@ func _strike_hits() -> void:
 		hit.finisher = fin
 		hit.source = self
 		var blocked := DamageRules.shield_blocks(hit, e.hit_view())
+		_rune_strike(hit, fin)
+		var was_rooted := e.status.rooted()
 		var dealt := e.hurt(hit)
+		_rune_after_strike(blocked, was_rooted)
 		_gain_hit(Tune.f("charge_f_shield") if blocked else 1.0)
 		if atk_dir == "up":
 			e.launch(Tune.f("launch_speed"))
@@ -293,8 +306,70 @@ func _slam() -> void:
 		if absf(e.position.x - position.x) < Tune.f("slam_r") and absf(e.position.y - position.y) < Tune.f("slam_reach_y"):
 			var hit := Hit.make(Hit.Kind.SLAM, Tune.f("slam_dmg"), position.x, Tune.f("slam_knockback"))
 			hit.source = self
+			# The ground slam counts as a strike for the Удар slot (gods-and-runes §3.5).
+			_rune_strike(hit, false)
+			var was_rooted := e.status.rooted()
 			e.hurt(hit)
+			_rune_after_strike(false, was_rooted)
 			_gain_hit(amulet.slam_f())
+
+# ---------------- runes (gods-and-runes §3.5, §3.6) ----------------
+
+## Puts the Удар-slot rune on a strike/slam hit: statuses, Stribog knockback,
+## build damage mods (edge, reaper, heat).
+func _rune_strike(hit: Hit, fin: bool) -> void:
+	hit.mods.merge(build.damage_mods(true), true)
+	hit.add_payload(build.payload("strike", 1.0, Tune.data, fin))
+	hit.kb *= build.kb_mult("strike")
+
+## After a strike landed: Zhiva shield, «Глубокие корни», «Жаждущий клинок».
+func _rune_after_strike(blocked: bool, was_rooted: bool) -> void:
+	if build.slot_god("strike") == "zhiva":
+		add_shield(build.value(build.slots.strike, "shield", 0.0))
+	if was_rooted:
+		add_shield(build.value("zhiva_p", "shield_on_rooted", 0.0))
+	if not blocked and build.has("thirst"):
+		hp = minf(Tune.f("player_hp"), hp + build.value("thirst", "heal", 0.0))
+
+## Shield (F5): sums up to shield_max, the rest is lost.
+func add_shield(v: float) -> void:
+	if v > 0.0:
+		shield = minf(Tune.f("shield_max"), shield + v)
+
+## Rune dash (§3.5 "Общее для слота Рывок"): each enemy passed through once
+## takes rune_dash_dmg, the god's status and gives 1 amulet charge.
+func _dash_hits() -> void:
+	var id: String = build.slots.dash
+	if id == "" or not is_inside_tree():
+		return
+	var me := Rect2(position.x - W / 2.0, position.y - H, W, H)
+	for e: Enemy in _enemies():
+		if e.dead or e in dash_set or not me.intersects(e.hurt_rect()):
+			continue
+		dash_set.append(e)
+		var hit := Hit.make(Hit.Kind.DASH, Tune.f("rune_dash_dmg"), position.x - dash_dir, float(build.row(id).get("dash_kb", 0.0)))
+		hit.source = self
+		hit.mods = build.damage_mods(false)
+		hit.add_payload(build.payload("dash", 1.0, Tune.data))
+		e.hurt(hit)
+		_gain_hit(1.0)
+
+## «Живая отдача» (F8): at the end of a dash, a shield of zhiva_wave_min+ is
+## spent in a wave: shield × k_wave damage and roots within zhiva_wave_r.
+func _dash_end() -> void:
+	if build.slots.dash != "zhiva_d" or shield < Tune.f("zhiva_wave_min"):
+		return
+	var dmg := shield * build.value("zhiva_d", "wave", 0.0)
+	shield = 0.0
+	if world:
+		world.add_ring(position, Tune.f("zhiva_wave_r"))
+	for e: Enemy in _enemies():
+		if e.dead or e.center().distance_to(position - Vector2(0, H / 2.0)) > Tune.f("zhiva_wave_r"):
+			continue
+		var hit := Hit.make(Hit.Kind.DASH, dmg, position.x, 0.0)
+		hit.source = self
+		hit.root = Tune.f("root_time")
+		e.hurt(hit)
 
 # ---------------- amulet and Flare (GDD amulet-and-flare §3.1-3.3) ----------------
 
@@ -303,7 +378,7 @@ func _slam() -> void:
 func _gain_hit(f: float) -> void:
 	if flare_t > 0.0 or amulet == null:
 		return
-	amulet.add_hit(f, float(_blade().get("charge", 1.0)))
+	amulet.add_hit(f * (build.value("kindling", "charge", 1.0) if build else 1.0), float(_blade().get("charge", 1.0)))
 
 func _on_enemy_killed(_enemy: Node2D, _hit: RefCounted) -> void:
 	if amulet and amulet.kill_charge() > 0.0 and flare_t <= 0.0:
@@ -315,6 +390,7 @@ func _press_flare() -> bool:
 	if p <= 0.0:
 		return false
 	flare_p = p
+	flare_element = build.flare_element()
 	flare_t = Tune.f("flare_windup")
 	atk_t = 0.0
 	atk_buf = 0.0
@@ -342,7 +418,7 @@ func _release_flare() -> void:
 		world.add_child(f)
 	elif get_parent():
 		get_parent().add_child(f)
-	FlareElement.apply_to_hero(flare_element, self, f.touched(), Tune.data)
+	FlareElement.apply_to_hero(flare_element, self, f.touched(), Tune.data, build)
 	Events.flare_fired.emit(amulet.shape(), flare_p)
 
 func _enemies() -> Array[Enemy]:
@@ -423,6 +499,9 @@ func _draw() -> void:
 		var k := flare_t / maxf(Tune.f("flare_windup"), 0.01)
 		draw_arc(Vector2(-11, 13), 12.0 + 80.0 * k, 0.0, TAU, 32, Color(GLOW, 0.9), 3.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if shield > 0.0:
+		# Zhiva shield (§3.14): green ring around the hero.
+		draw_arc(Vector2(0, -H / 2.0), H * 0.75, 0.0, TAU, 40, Color("#9ff0b0", 0.4 + 0.5 * shield / maxf(Tune.f("shield_max"), 1.0)), 3.0)
 	_draw_blade()
 
 func _blade_angle() -> float:

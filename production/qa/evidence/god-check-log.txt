@@ -1,0 +1,6 @@
+svarog: words ГОРИТ, dummy damage over 3 s = 55.55
+perun: words ЗАРЯД 1/3, ЗАРЯД 2/3, РАЗРЯД, dummy damage over 3 s = 63.80, second dummy at +250 px = 15.40
+stribog: words ПОРЕЗ 1, ПОРЕЗ 2, dummy damage over 3 s = 22.00
+veles: words ПРОКЛЯТ, dummy damage over 3 s = 51.04
+zhiva: words ОПЛЕТЁН, dummy damage over 3 s = 41.80
+stribog wall: hits on crawler [STRIKE 11.0, STRIKE 11.0, STATUS 18.0, WALL 14.6, STRIKE 19.8], words ПОРЕЗ 1, ПОРЕЗ 2, ВСКРЫТ
