@@ -3,7 +3,7 @@
 ## what it replaces ("Заменит: …"). Arrows / d-pad / stick / mouse hover / 1-4
 ## choose; Enter / E / pad A / click take (ChoiceInput: lockout, never J/Space). Pauses the
 ## tree while open (architecture §4 «Пауза»). Laid out for 1920x1080 (ADR-0004).
-## Placeholder look: procedural cards until the UI theme exists.
+## Cards are procedural until the UI theme exists; the rune icon (GodGlyph) is drawn large.
 class_name RuneOfferScreen
 extends Control
 
@@ -146,13 +146,17 @@ func _draw_card(font: Font, r: Rect2, id: String, i: int) -> void:
 	draw_rect(Rect2(r.position, Vector2(r.size.x, 48)), Color(col, 0.25))
 	draw_string(font, r.position + Vector2(0, 34), "%d · %s" % [i + 1, RunBuild.SLOT_LABEL.get(slot, slot)], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 26, col)
 	var gr := row.get("gods", [g]) as Array
-	for k in gr.size():
-		var gc := r.position + Vector2(r.size.x / 2.0 + (k - (gr.size() - 1) / 2.0) * 120.0, 150)
-		GodGlyph.draw(self, String(gr[k]), gc, 52.0, Enemy.god_colour(String(gr[k])))
+	var dy := 0.0
+	if GodGlyph.draw_icon(self, "rune", id, r.position + Vector2(r.size.x / 2.0, 150), 100.0):
+		dy = 40.0  # the large rune icon carries the god sign(s)
+	else:
+		for k in gr.size():
+			var gc := r.position + Vector2(r.size.x / 2.0 + (k - (gr.size() - 1) / 2.0) * 120.0, 150)
+			GodGlyph.draw(self, String(gr[k]), gc, 52.0, Enemy.god_colour(String(gr[k])))
 	var gods_txt := " + ".join(PackedStringArray(gr.map(func(x: Variant) -> String: return _god_name(String(x)))))
-	draw_string(font, r.position + Vector2(0, 240), gods_txt, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 24, Color(col, 0.9))
-	draw_string(font, r.position + Vector2(0, 290), String(row.get("name", id)), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 34, Color("#f4ecd8"))
-	draw_multiline_string(font, r.position + Vector2(24, 345), String(row.get("desc", "")), HORIZONTAL_ALIGNMENT_CENTER, r.size.x - 48, 24, 5, Color(0.85, 0.85, 0.8))
+	draw_string(font, r.position + Vector2(0, 240 + dy), gods_txt, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 24, Color(col, 0.9))
+	draw_string(font, r.position + Vector2(0, 290 + dy * 0.8), String(row.get("name", id)), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 34, Color("#f4ecd8"))
+	draw_multiline_string(font, r.position + Vector2(24, 345 + dy * 0.6), String(row.get("desc", "")), HORIZONTAL_ALIGNMENT_CENTER, r.size.x - 48, 24, 4, Color(0.85, 0.85, 0.8))
 	var line := replace_line(id)
 	var lc := Color("#ffb070") if line.begins_with("Заменит") or line.begins_with("Уровень") else Color(0.7, 0.8, 0.7)
 	draw_string(font, r.position + Vector2(0, r.size.y - 30), line, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 24, lc)
