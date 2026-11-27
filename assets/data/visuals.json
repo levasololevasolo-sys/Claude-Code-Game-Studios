@@ -1,5 +1,5 @@
 {
-  "_note": "Presentation of each location style (design/art/visual-upgrade-plan.md §2, art-bible §4.2, §6). Keyed by locations.json look.props ('ruins' = swamp) plus 'base'. Visual only: nothing here touches collision or gameplay. layers = Parallax2D background layers back to front: scale = scroll_scale.x (vertical parallax is softer), kind = procedural placeholder painter, col = base colour, fog = 0..1 mix toward the fog colour (atmospheric perspective), tex = optional res:// image that replaces the placeholder (kind stays as the fallback if the file is missing; tex_scale = its scale, it repeats every width x tex_scale px; tex_y = its top relative to ground_y; tex_mod = tint). The swamp uses the Blender renders of tools/asset-pipeline/blender/build_swamp_bg.py (rendered at 1.5x, so tex_scale 0.6667). enemy_rim = the outline / back light drawn on pre-rendered enemies above the darkness so they read in the dark. terrain = ground and platform colours; dark_tint = colour the darkness multiplies toward (plan §2.9 CanvasModulate); post = vignette / grading / glow / grain, hero_glow = alpha of the warm additive light around the hero; particles = ambient CPUParticles2D around the camera; camera = look-ahead and vertical dead zone. tex_up = px of the image's top rows stretched upward (no visible top edge). ambient = optional CanvasModulate colour (the light level 2D lights add to).",
+  "_note": "Presentation of each location style (design/art/visual-upgrade-plan.md §2, art-bible §4.2, §6). Keyed by locations.json look.props ('ruins' = swamp) plus 'base'. Visual only: nothing here touches collision or gameplay. layers = Parallax2D background layers back to front: scale = scroll_scale.x (vertical parallax is softer), kind = procedural placeholder painter, col = base colour, fog = 0..1 mix toward the fog colour (atmospheric perspective), tex = optional res:// image that replaces the placeholder (kind stays as the fallback if the file is missing; tex_scale = its scale, it repeats every width x tex_scale px; tex_y = its top relative to ground_y; tex_mod = tint). The swamp uses the Blender renders of tools/asset-pipeline/blender/build_swamp_bg.py (rendered at 1.5x, so tex_scale 0.6667). enemy_rim = the outline / back light drawn on pre-rendered enemies above the darkness so they read in the dark. terrain = ground and platform colours; dark_tint = colour the darkness multiplies toward (plan §2.9 CanvasModulate); post = vignette / grading / glow / grain, hero_glow = alpha of the warm additive light around the hero; particles = ambient CPUParticles2D around the camera; camera = look-ahead and vertical dead zone. tex_up = px of the image's top rows stretched upward (no visible top edge). ambient = optional CanvasModulate colour (the light level 2D lights add to). Тёмный бор, Царство Морены and the base Застава use build_location_bg.py renders (WebP); the base draws its old procedural yard only when its images are missing (src/base/base.gd).",
   "camera": {
     "look_ahead": 140,
     "look_time": 0.4,
@@ -18,56 +18,32 @@
     "layers": [
       {
         "kind": "sky",
-        "scale": 0.02,
+        "scale": 0.12,
         "top": "#1e2e48",
         "bottom": "#2e4466",
         "moon": true,
-        "stars": 50
-      },
-      {
-        "kind": "hills",
-        "scale": 0.08,
-        "col": "#2a3d5c",
-        "fog": 0.75,
-        "bridge": true
-      },
-      {
-        "kind": "spruce",
-        "scale": 0.2,
-        "col": "#1b2a44",
-        "fog": 0.6,
-        "gap": 48,
-        "h": [
-          180,
-          380
-        ]
+        "stars": 50,
+        "tex": "res://assets/art/sprites/forest/bg_far.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       },
       {
         "kind": "fog",
-        "scale": 0.3,
+        "scale": 0.25,
         "col": "#3e5878",
-        "alpha": 0.22,
+        "alpha": 0.12,
         "bands": [
           [
-            -150,
+            -120,
             90
-          ],
-          [
-            -40,
-            70
           ]
         ]
       },
       {
-        "kind": "rays",
-        "scale": 0.35,
-        "col": "#9fb8e0",
-        "alpha": 0.2,
-        "n": 4
-      },
-      {
         "kind": "spruce",
-        "scale": 0.5,
+        "scale": 0.35,
         "col": "#16233a",
         "fog": 0.32,
         "gap": 240,
@@ -76,27 +52,37 @@
           600
         ],
         "trunk": true,
-        "eyes": "#ff8a3d"
+        "eyes": "#ff8a3d",
+        "tex": "res://assets/art/sprites/forest/bg_mid.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       },
       {
         "kind": "fog",
-        "scale": 0.6,
+        "scale": 0.5,
         "col": "#3e5878",
-        "alpha": 0.14,
+        "alpha": 0.1,
         "bands": [
           [
-            -30,
+            -20,
             60
           ]
         ]
       },
       {
         "kind": "trunks",
-        "scale": 0.8,
+        "scale": 0.6,
         "col": "#0f1626",
         "fog": 0.15,
         "gap": 520,
-        "rim": "#5a6e92"
+        "rim": "#5a6e92",
+        "tex": "res://assets/art/sprites/forest/bg_near.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       }
     ],
     "terrain": {
@@ -184,7 +170,7 @@
         "low": true
       }
     ],
-    "ambient": "#c4ccd8"
+    "ambient": "#dce3f0"
   },
   "ruins": {
     "fog": "#5e7a62",
@@ -338,57 +324,32 @@
     "layers": [
       {
         "kind": "sky",
-        "scale": 0.02,
+        "scale": 0.12,
         "top": "#9fb4ca",
         "bottom": "#c9d8e6",
         "sun": true,
-        "stars": 0
-      },
-      {
-        "kind": "hills",
-        "scale": 0.08,
-        "col": "#b4c6d8",
-        "fog": 0.6,
-        "bridge": true,
-        "snow": true
-      },
-      {
-        "kind": "spires",
-        "scale": 0.2,
-        "col": "#94a9c0",
-        "fog": 0.45,
-        "gap": 170,
-        "h": [
-          220,
-          560
-        ]
+        "stars": 0,
+        "tex": "res://assets/art/sprites/frost/bg_far.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       },
       {
         "kind": "fog",
-        "scale": 0.3,
+        "scale": 0.25,
         "col": "#e6eef5",
-        "alpha": 0.28,
+        "alpha": 0.14,
         "bands": [
           [
-            -200,
-            160
-          ],
-          [
-            -40,
-            90
+            -120,
+            110
           ]
         ]
       },
       {
-        "kind": "rays",
-        "scale": 0.35,
-        "col": "#ffffff",
-        "alpha": 0.12,
-        "n": 3
-      },
-      {
         "kind": "spruce",
-        "scale": 0.5,
+        "scale": 0.35,
         "col": "#7c93ad",
         "fog": 0.25,
         "gap": 260,
@@ -397,28 +358,38 @@
           580
         ],
         "trunk": true,
-        "snow": "#dde8f0"
+        "snow": "#dde8f0",
+        "tex": "res://assets/art/sprites/frost/bg_mid.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       },
       {
         "kind": "fog",
-        "scale": 0.6,
+        "scale": 0.5,
         "col": "#e6eef5",
-        "alpha": 0.12,
+        "alpha": 0.1,
         "bands": [
           [
-            -30,
-            70
+            -20,
+            60
           ]
         ]
       },
       {
         "kind": "trunks",
-        "scale": 0.8,
+        "scale": 0.6,
         "col": "#2c3b52",
         "fog": 0.1,
         "gap": 600,
         "rim": "#dde8f0",
-        "snow": "#dde8f0"
+        "snow": "#dde8f0",
+        "tex": "res://assets/art/sprites/frost/bg_near.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
       }
     ],
     "terrain": {
@@ -509,7 +480,58 @@
   },
   "base": {
     "fog": "#2a3248",
-    "layers": [],
+    "layers": [
+      {
+        "kind": "sky",
+        "scale": 0.12,
+        "top": "#0b0f1a",
+        "bottom": "#26304a",
+        "moon": true,
+        "stars": 80,
+        "tex": "res://assets/art/sprites/base/bg_far.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
+      },
+      {
+        "kind": "fog",
+        "scale": 0.25,
+        "col": "#2a3248",
+        "alpha": 0.1,
+        "bands": [
+          [
+            -60,
+            80
+          ]
+        ]
+      },
+      {
+        "kind": "hills",
+        "scale": 0.35,
+        "col": "#1a2236",
+        "fog": 0.4,
+        "bridge": true,
+        "tex": "res://assets/art/sprites/base/bg_mid.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
+      },
+      {
+        "kind": "trunks",
+        "scale": 0.6,
+        "col": "#2a1a12",
+        "fog": 0.1,
+        "gap": 900,
+        "rim": "#ffb070",
+        "tex": "res://assets/art/sprites/base/bg_near.webp",
+        "tex_scale": 0.6667,
+        "tex_y": -485,
+        "tex_mod": "#ffffff",
+        "tex_up": 1600
+      }
+    ],
     "terrain": {},
     "dark_tint": "#4a5578",
     "post": {
@@ -563,6 +585,6 @@
         "add": true
       }
     ],
-    "ambient": "#d0c8c0"
+    "ambient": "#e4d8c8"
   }
 }

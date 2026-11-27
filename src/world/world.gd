@@ -67,7 +67,7 @@ var first_run: bool = false
 var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--vis-shots="]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--vis-shots=", "--base-view"]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -98,6 +98,8 @@ func _ready() -> void:
 			seed_value = int(a.trim_prefix("--seed="))
 		elif a.begins_with("--room="):
 			room_k = maxi(1, int(a.trim_prefix("--room=")))
+		elif a.begins_with("--tier="):
+			tier = clampi(int(a.trim_prefix("--tier=")), 1, 5)
 		elif a == "--ai-debug":
 			ai_debug = true
 		elif a == "--debug-hud":
@@ -122,7 +124,9 @@ func _ready() -> void:
 		for f in LEGACY_FLAGS:
 			if a.begins_with(f):
 				legacy = true
-	if legacy:
+	if legacy and OS.get_cmdline_user_args().has("--base-view"):
+		_base_view()
+	elif legacy:
 		start_room()
 	else:
 		director = RunDirector.new()
@@ -178,6 +182,15 @@ func _ready() -> void:
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
 			add_child(rc)
+
+## `--base-view`: the base yard «Застава» alone (stations, no run, no save
+## written), for art screenshots (production/qa/evidence/art3d-pipeline.md).
+func _base_view() -> void:
+	var w := float(Tune.table("base").get("width", 2700))
+	start_room({ "w": w, "plats": [], "packs": [], "portal": false, "base": true })
+	var b := (load("res://scenes/base/base.tscn") as PackedScene).instantiate() as Base
+	add_child(b)
+	b.setup(self, get_node("/root/Game").get("meta") as MetaState)
 
 ## Clears the level and builds room number room_k of location tier. The run
 ## passes its own `layout` and the room stream `p_rng` (RunRng.for_room, already

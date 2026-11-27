@@ -201,6 +201,32 @@ func _changed() -> void:
 func _draw() -> void:
 	var g := Tune.f("ground_y")
 	var w := float(Tune.table("base").get("width", 2700))
+	# The rendered Застава backdrop (visuals.json "base" layers, Room's Backdrop)
+	# replaces the sky, palisade and houses below; they stay as the fallback.
+	if not has_backdrop_art():
+		_draw_yard(g, w)
+	# boards
+	draw_rect(Rect2(-400, g, w + 800, 400), Color("#2A1A12"))
+	var bx := -400.0
+	while bx < w + 400:
+		draw_rect(Rect2(bx, g, 118, 22), Color("#7A5232"))
+		bx += 122.0
+	draw_line(Vector2(-400, g), Vector2(w + 400, g), Color("#C8902E"), 3.0)
+
+## True when every image layer of visuals.json "base" exists (the backdrop shows them).
+static func has_backdrop_art() -> bool:
+	var layers: Array = (Tune.table("visuals").get("base", {}) as Dictionary).get("layers", [])
+	var n := 0
+	for spec: Dictionary in layers:
+		var t := String(spec.get("tex", ""))
+		if t != "":
+			if not ResourceLoader.exists(t):
+				return false
+			n += 1
+	return n > 0
+
+## The old procedural yard: night sky, palisade, log houses (fallback).
+func _draw_yard(g: float, w: float) -> void:
 	draw_rect(Rect2(-400, g - 1100, w + 800, 1100), Color("#1D2433"))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 11
@@ -227,10 +253,3 @@ func _draw() -> void:
 		# chimney smoke
 		for k in 4:
 			draw_circle(Vector2(hx + hw * 0.7 + k * 14, g - 430 - k * 40), 16 + k * 6, Color("#A99C86", 0.08))
-	# boards
-	draw_rect(Rect2(-400, g, w + 800, 400), Color("#2A1A12"))
-	var bx := -400.0
-	while bx < w + 400:
-		draw_rect(Rect2(bx, g, 118, 22), Color("#7A5232"))
-		bx += 122.0
-	draw_line(Vector2(-400, g), Vector2(w + 400, g), Color("#C8902E"), 3.0)

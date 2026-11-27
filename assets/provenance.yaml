@@ -33,3 +33,10 @@
   date: 2026-11-27
   ai_made: yes (geometry, rigs, poses and shaders authored as code by an AI agent; no image model)
   note: art slice (design/art/visual-upgrade-plan.md). Hero tier 1, Трясинник, Топь backdrop (3 parallax layers, ground strip, log platform). Each sheet has a _n.png normal map (OpenGL convention). Blender is GPL; its rendered output is not covered by the GPL.
+- path: assets/art/sprites/{forest,frost,base}/bg_{far,mid,near}.webp
+  source: rendered by tools/asset-pipeline/blender/build_location_bg.py <place> (Blender 4.0.2 EEVEE, headless), converted by to_webp.py (lossy WebP q90); models built from primitives by script
+  licence: project-owned (original work); no third-party models, textures or HDRIs
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (geometry and shaders authored as code by an AI agent; no image model)
+  note: Тёмный бор, Царство Морены and Застава parallax backdrops (3 tiling layers each, 2560/3200/3840 x 1080, 0.84 MB total). Used through visuals.json tex slots.

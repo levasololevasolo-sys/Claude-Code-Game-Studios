@@ -19,6 +19,7 @@ Godot 2D lights (the amulet's PointLight2D) shade the sprites.
 | Hero tier 1 «Павший» (14 animations) | `tools/asset-pipeline/blender/build_hero.py` |
 | Трясинник (6 animations) | `tools/asset-pipeline/blender/build_crawler.py` |
 | Топь backdrop: 3 parallax layers, ground strip, log platform | `tools/asset-pipeline/blender/build_swamp_bg.py` |
+| Бор / Морена / Застава backdrops: 3 tiling layers each, WebP | `tools/asset-pipeline/blender/build_location_bg.py`, `to_webp.py` |
 | Frames -> sheets + normal maps + JSON | `tools/asset-pipeline/blender/pack_sheets.py` |
 | Evidence images | `tools/asset-pipeline/blender/make_evidence.py` |
 | Godot: hero visual (drop-in for HeroVisual) | `src/player/hero_sprite.gd`, `scenes/hero/hero_sprite.tscn` |
@@ -34,6 +35,7 @@ python3 tools/asset-pipeline/blender/pack_sheets.py /tmp/hraw assets/art/sprites
 eval $B tools/asset-pipeline/blender/build_crawler.py -- /tmp/craw
 python3 tools/asset-pipeline/blender/pack_sheets.py /tmp/craw assets/art/sprites/crawler crawler 640 400 300 372 230
 eval $B tools/asset-pipeline/blender/build_swamp_bg.py -- assets/art/sprites/swamp
+for p in forest frost base; do eval $B tools/asset-pipeline/blender/build_location_bg.py -- $p assets/art/sprites/$p; python3 tools/asset-pipeline/blender/to_webp.py assets/art/sprites/$p; done   # ~25 s each
 ```
 
 `--only=run,roll` re-renders some animations (the other ones stay in `meta.json`),
@@ -44,6 +46,8 @@ Run the slice: `godot --path . -- --room=2 --seed=3 --hero-art=sprite --art-slic
 (`--art-stage` puts a crawler in front of the hero for screenshots). The hero
 sprite alone is `--hero-art=sprite` or the project setting `navi/art/hero_art = "sprite"`;
 without it the old cutout rig is used, unchanged.
+
+Other places for screenshots: `--tier=2` (Тёмный бор) / `--tier=3` (Морена) with `--room=` and `--seed=`; `--base-view` shows the base yard «Застава» without a run (evidence: art3d-forest.png, art3d-frost.png, art3d-base.png, overview art3d-locations.png). Keep anything except tall trunks out of the top rows of a layer image: its top edge sits mid-screen in game and Backdrop stretches the top row upward (`tex_up`).
 
 ## Timings on this machine (4 vCPU Xeon 2.3 GHz, no GPU, EEVEE on llvmpipe)
 

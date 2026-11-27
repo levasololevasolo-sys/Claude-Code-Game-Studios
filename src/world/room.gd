@@ -34,11 +34,12 @@ func build(l: Dictionary) -> void:
 		shape.position = Vector2(p.x + p.z / 2.0, p.y + 8)
 		body.add_child(shape)
 		add_child(body)
+	# Visual layers (visual-upgrade-plan §2.1, §2.2); collision above is untouched.
+	# The base yard gets the backdrop too (visuals.json "base"); it draws its own floor.
+	var bd := Backdrop.new()
+	add_child(bd)
+	bd.build(vis, ground, float(l.get("top", ground)) - 900.0)
 	if not bool(l.get("base", false)):
-		# Visual layers (visual-upgrade-plan §2.1, §2.2); collision above is untouched.
-		var bd := Backdrop.new()
-		add_child(bd)
-		bd.build(vis, ground, float(l.get("top", ground)) - 900.0)
 		var ta := TerrainArt.new()
 		ta.layout = l
 		ta.t = vis.get("terrain", {})
