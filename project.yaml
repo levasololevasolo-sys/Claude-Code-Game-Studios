@@ -28,6 +28,7 @@ framework:
 
 modes:
   automation: autonomous
+  workflow: full  # the developer asked (2026-11-27) to use every studio agent and skill
 
 project:
   goal: sell
