@@ -1,0 +1,26 @@
+room: tier 2 (Тёмный бор), width 3650
+OK   Аука calls (state call)
+OK   Аука stepped out behind the hero (x 570, hero 700)
+OK   Лешачонок went under (state under)
+OK   Лешачонок burst up by the hero (dx 10)
+OK   Нетопырь attacked from above (state spitwind)
+OK   Упырь-щитник shield: front 0.0 < back 10.0 (hp 72.5 -> 62.5)
+OK   Сучковик winds up facing the hero
+screenshot bestiary-suchkovik.png
+OK   Сучковик threw a spear
+OK   the spear flies horizontally (vel (-700.0, 0.0))
+OK   the spear stuck in the wall at x 2 (step [P: (2.0, 596.0), S: (80.0, 8.0)])
+OK   hero stands on the spear (feet 596.0, step top 596.0)
+screenshot bestiary-suchkovik-step.png
+OK   the step still holds after 0.4 s
+OK   the spear broke after plat_time
+OK   hero dropped to the floor when it broke (y 640)
+OK   the parry reflected the spear (["reflect"])
+OK   the reflected spear stunned the Сучковик (stun 1.00)
+OK   Лесавка whistles
+screenshot bestiary-lesavka.png
+OK   ally in reach hasted x1.30 for 5.0 s; far one not (0.0)
+OK   hasted ally covered 46 px, plain one 35 px
+OK   Лесавка keeps away from the hero (260 -> 350 px)
+screenshot forest-roster.png
+DONE: 0 failed checks

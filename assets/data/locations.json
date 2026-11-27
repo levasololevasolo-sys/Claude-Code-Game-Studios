@@ -52,12 +52,13 @@
     "lib": "forest",
     "roster": [
       "ringer",
+      "rootling",
       "sentry",
-      "rootling"
+      "bat",
+      "suchkovik",
+      "lesavka"
     ],
-    "late": [
-      "bat"
-    ],
+    "late": [],
     "darkness": 0.84,
     "look": {
       "sky": "#2e4466",
@@ -73,7 +74,15 @@
       "par_mid": 0.45,
       "props": "forest"
     },
-    "beaten": "повержено"
+    "beaten": "повержено",
+    "intro": {
+      "ringer": 1,
+      "rootling": 1,
+      "sentry": 2,
+      "bat": 2,
+      "suchkovik": 3,
+      "lesavka": 3
+    }
   },
   "3": {
     "name": "Царство Морены",

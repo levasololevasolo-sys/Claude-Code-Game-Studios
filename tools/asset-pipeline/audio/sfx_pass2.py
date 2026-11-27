@@ -905,6 +905,7 @@ def sounds():
     s["lunge_whoosh_2"] = lambda: lunge_whoosh(5302)
     s.update(SWAMP)
     s.update(FROST)
+    s.update(FOREST)
     return s
 
 
@@ -1114,3 +1115,69 @@ def frozen_crack():
 
 FROST = {f.__name__: f for f in [staff_raise, ice_wave, needle_cast, needle_fly, hero_freeze, freeze_shatter,
                                   icicle_creak, icicle_fall, ice_shatter, mara_raise, frozen_rise, frozen_crack]}
+# ---------------------------------------------------------------- Тёмный бор roster (bestiary §3.3)
+
+def auka_call():
+    """Аука calls: a hollow far-off "a-u" through the trees, falling, with a forest echo."""
+    r = rng_of(8101)
+    n = n_of(0.75)
+    a = voice(0.35, r, 520, 480, [(800, 5, 1.0), (1250, 6, 0.5)], 0.12, 1.0) * env(n_of(0.35), 0.04, 0.2)
+    u = at(voice(0.4, r, 470, 360, [(350, 5, 1.0), (800, 6, 0.3)], 0.1, 1.0) * env(n_of(0.4), 0.03, 0.25), 0.3)
+    v = mix(a, u)
+    v = v[:n] * vib(min(n, len(v)), 5.0, 0.2, r)[:len(v[:n])]
+    return tail(v * 1.2, r, 0.7, 0.22, 0.4, 250.0, 3500.0)
+
+
+def branch_creak():
+    """Сучковик draws the branch back: a slow wooden creak, strained fibres."""
+    r = rng_of(8111)
+    n = n_of(0.7)
+    fric = svf(noise(n, r) * env(n, 0.2, 0.4), sweep(n, 250, 520), 12.0, "bp") * 1.2
+    groan = modes(0.7, r, [(180, 1.0, 0.3), (410, 0.5, 0.25), (930, 0.25, 0.15)], 0.15) * 0.5
+    ticks = grains(0.7, r, 14, 0.004, 0.6, 900, 3000) * 0.3
+    return tail(mix(fric, groan, ticks), r, 0.3, 0.08, 0.15)
+
+
+def branch_spear():
+    """The branch-spear leaves: a sharp woody whip and a fast airy swish."""
+    r = rng_of(8121)
+    whip = burst(0.06, r, 4000, 1200, 0.015, 1.4, "bp") * 1.0
+    knock = modes(0.15, r, [(620, 1.0, 0.04), (1480, 0.5, 0.03)]) * 0.6
+    air = at(whoosh(0.3, r, 800, 3500, 900, 1.4, "bp", 0.3) * 0.9, 0.02)
+    return tail(mix(whip, knock, air), r, 0.25, 0.05, 0.1)
+
+
+def spear_thunk():
+    """The spear sticks in the wall: a hard wooden thunk with a short twang of the shaft."""
+    r = rng_of(8131)
+    hit = thump(0.18, 210, 90, 0.04) * 1.1
+    wood = modes(0.3, r, [(340, 1.0, 0.08), (780, 0.6, 0.05), (1620, 0.3, 0.03)]) * 0.7
+    twang = at(modes(0.35, r, [(95, 1.0, 0.12), (190, 0.4, 0.08)]) * vib(n_of(0.35), 18.0, 0.6, r) * 0.35, 0.01)
+    return tail(mix(hit, wood, twang), r, 0.3, 0.08, 0.14)
+
+
+def lesavka_whistle():
+    """Лесавка whistles: a shrill rising two-note whistle through the leaves."""
+    r = rng_of(8141)
+    n1, n2 = n_of(0.22), n_of(0.38)
+    f1 = sweep(n1, 1900, 2300)
+    f2 = sweep(n2, 2300, 3100, 0.6)
+    w1 = np.sin(2 * np.pi * np.cumsum(f1) / SR) * env(n1, 0.02, 0.12)
+    w2 = np.sin(2 * np.pi * np.cumsum(f2) / SR) * env(n2, 0.03, 0.2)
+    breath = svf(noise(n1 + n2, r) * 0.25, 2600, 3.0, "bp")
+    buf = np.concatenate([w1, w2]) * 0.6 + breath * env(n1 + n2, 0.02, 0.3)
+    leaves = grains(0.6, r, 20, 0.005, 0.5, 2500, 8000) * 0.2
+    return tail(mix(buf, leaves), r, 0.4, 0.1, 0.2)
+
+
+def haste_on():
+    """Haste takes an ally: a quick rising rustle and a dry ember crackle."""
+    r = rng_of(8151)
+    rise = whoosh(0.3, r, 500, 3000, 4500, 1.6, "bp", 0.7) * 0.7
+    crack = grains(0.3, r, 16, 0.003, 0.2, 2000, 9000) * 0.5
+    tick = at(modes(0.12, r, [(1760, 1.0, 0.03), (2640, 0.5, 0.02)]) * 0.35, 0.2)
+    return tail(mix(rise, crack, tick), r, 0.25, 0.06, 0.12)
+
+
+FOREST = {"auka_call": auka_call, "branch_creak": branch_creak, "branch_spear": branch_spear,
+          "spear_thunk": spear_thunk, "lesavka_whistle": lesavka_whistle, "haste_on": haste_on}

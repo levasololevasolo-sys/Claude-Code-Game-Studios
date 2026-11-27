@@ -7,7 +7,8 @@
 ## Saves <out_dir>/swamp-roster.png (all 7 side by side, labelled),
 ## bestiary-balvan.png, bestiary-shishiga.png, bestiary-bognitsa.png,
 ## bestiary-vodyanitsa.png and bestiary-check-log.txt.
-## Started by world.gd with `-- --bestiary-check=<dir>`.
+## Started by world.gd with `-- --bestiary-check=<dir>`; with `--loc=2` it hands
+## over to forest_check_driver.gd (Тёмный бор roster, bestiary §3.3).
 extends Node
 
 const HERO_X: float = 700.0
@@ -21,6 +22,13 @@ var _labels: Array[Node] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	if OS.get_cmdline_user_args().has("--loc=2"):
+		# Тёмный бор roster (bestiary §3.3): its own driver, same out_dir.
+		var fc: Node = (load("res://tests/integration/enemies/forest_check_driver.gd") as GDScript).new()
+		fc.set("out_dir", out_dir)
+		get_parent().add_child.call_deferred(fc)
+		queue_free()
+		return
 	_w = get_parent() as World
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_run.call_deferred()

@@ -394,7 +394,24 @@
   },
   "elite_forbid": {
     "crawler": [],
-    "bat": [],
+    "bat": [
+      "fire"
+    ],
+    "ringer": [
+      "blink"
+    ],
+    "rootling": [
+      "fire",
+      "blink"
+    ],
+    "suchkovik": [
+      "blink",
+      "fire"
+    ],
+    "lesavka": [
+      "call",
+      "ward"
+    ],
     "sentry": [
       "ward"
     ],
@@ -497,6 +514,11 @@
     "ambusher": 2
   },
   "pack_support_min": 3,
+  "_forest_note": "Тёмный бор (GDD bestiary §3.3, §3.7.2): pack_role_per_kind = roles capped per kind, not per role (two ambushers of one kind); haste_colour = sparks at the feet of allies hasted by Лесавка.",
+  "pack_role_per_kind": [
+    "ambusher"
+  ],
+  "haste_colour": "#ff8a3d",
   "cling_slow": 0.15,
   "cling_max": 2,
   "bog_max": 1,

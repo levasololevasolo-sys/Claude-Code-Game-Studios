@@ -1278,6 +1278,66 @@
 			],
 			"db": -3.0,
 			"cd": 0.1
+		},
+		"auka_call": {
+			"files": [
+				"auka_call"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.3,
+			"max": 2
+		},
+		"branch_creak": {
+			"files": [
+				"branch_creak"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.2,
+			"max": 3
+		},
+		"branch_spear": {
+			"files": [
+				"branch_spear"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.06,
+			"cd": 0.08,
+			"max": 3
+		},
+		"spear_thunk": {
+			"files": [
+				"spear_thunk"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.06,
+			"cd": 0.08,
+			"max": 3
+		},
+		"lesavka_whistle": {
+			"files": [
+				"lesavka_whistle"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.4,
+			"max": 2
+		},
+		"haste_on": {
+			"files": [
+				"haste_on"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.06,
+			"cd": 0.15,
+			"max": 3
 		}
 	},
 	"voice_limit": 3,
@@ -1317,7 +1377,7 @@
 			"guard": "shield_raise"
 		},
 		"ringer": {
-			"call": "bell_ring",
+			"call": "auka_call",
 			"appear": "spirit_appear",
 			"gone": "spirit_vanish",
 			"swipe": "claw_swipe"
@@ -1394,6 +1454,13 @@
 		"mara": {
 			"raise_w": "mara_raise",
 			"scratch": "claw_swipe"
+		},
+		"suchkovik": {
+			"wind": "branch_creak"
+		},
+		"lesavka": {
+			"whistle": "lesavka_whistle",
+			"bite_wind": "shishiga_squeak"
 		}
 	},
 	"deaths": {
