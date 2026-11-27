@@ -710,8 +710,8 @@ func _draw_overlay() -> void:
 		# Ice copy (bestiary §3.4 Мара): a pale ice contour with glints.
 		var ic := Color(String(Tune.get_value("ice_tint")))
 		var ir := Rect2(-w / 2.0 - 4.0, -h - 4.0, w + 8.0, h + 6.0)
-		draw_rect(ir, Color(ic, 0.16), true)
-		draw_rect(ir, Color(Color.WHITE, 0.6 + 0.3 * sin(anim * 5.0)), false, 2.0)
+		draw_rect(ir, Color(ic, 0.5), true)
+		draw_rect(ir, Color(Color.WHITE, 0.7 + 0.3 * sin(anim * 5.0)), false, 3.0)
 		for gi in 3:
 			var gp := Vector2(-w * 0.3 + gi * w * 0.3, -h * (0.3 + 0.25 * gi))
 			draw_line(gp + Vector2(-5, 0), gp + Vector2(5, 0), Color.WHITE, 2.0)

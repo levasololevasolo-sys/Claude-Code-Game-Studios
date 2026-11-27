@@ -126,11 +126,13 @@ func _draw() -> void:
 		for d: int in FrostRules.wave_dirs(face, int(roundf(stat("wave_dirs")))):
 			var len := stat("wave_dist") * (0.3 + 0.7 * k)
 			var x1 := d * w * 0.4
-			draw_rect(Rect2(minf(x1, x1 + d * len), g - 6.0, len, 6.0), Color(lane, 0.25 + 0.45 * k), true)
-			draw_rect(Rect2(minf(x1, x1 + d * len), g - 2.0, len, 2.0), Color(Color("#8fd3f5"), 0.9), true)
-			for i in 6:
-				var sx := x1 + d * len * (i + 1) / 6.0
-				draw_colored_polygon(PackedVector2Array([Vector2(sx - 5, g), Vector2(sx, g - 10 * k), Vector2(sx + 5, g)]), Color(lane, 0.8))
+			draw_rect(Rect2(minf(x1, x1 + d * len), g - 18.0, len, 18.0), Color(lane, 0.12 + 0.25 * k), true)
+			draw_rect(Rect2(minf(x1, x1 + d * len), g - 7.0, len, 7.0), Color(lane, 0.45 + 0.4 * k), true)
+			draw_rect(Rect2(minf(x1, x1 + d * len), g - 3.0, len, 3.0), Color("#8fd3f5"), true)
+			for i in 10:
+				var sx := x1 + d * len * (i + 1) / 10.0
+				draw_colored_polygon(PackedVector2Array([Vector2(sx - 7, g), Vector2(sx, g - 8.0 - 18.0 * k), Vector2(sx + 7, g)]), Color(lane, 0.9))
+				draw_line(Vector2(sx, g - 4.0), Vector2(sx, g - 6.0 - 14.0 * k), Color("#8fd3f5"), 2.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	var shade := Color(String(stats.shade))
@@ -143,6 +145,9 @@ func _draw() -> void:
 		inner.append(p * 0.93 + Vector2(0, -2))
 	draw_colored_polygon(inner, c)
 	draw_colored_polygon(PackedVector2Array([Vector2(-w * 0.52, -3), Vector2(-w * 0.05, -h * 0.74), Vector2(-w * 0.15, -3)]), shade)
+	var closed := body.duplicate()
+	closed.append(body[0])
+	draw_polyline(closed, outline, 3.0)
 	# Small head with an icicle beard.
 	if not head_off:
 		draw_circle(Vector2(w * 0.05, -h * 0.88), 13.0, outline)

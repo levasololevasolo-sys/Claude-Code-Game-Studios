@@ -20,7 +20,7 @@ func step(dt: float) -> void:
 
 func _draw() -> void:
 	var d := vel.normalized() if vel != Vector2.ZERO else Vector2.RIGHT
-	draw_circle(Vector2.ZERO, r * 2.2, Color(color, 0.18))
-	draw_line(-d * 16.0, d * 6.0, Color("#2c3b52"), 5.0)
-	draw_line(-d * 15.0, d * 5.0, color, 3.0)
-	draw_line(-d * 4.0, d * 7.0, Color.WHITE, 2.0)
+	draw_circle(Vector2.ZERO, r * 3.0, Color(color, 0.25))
+	draw_line(-d * 26.0, d * 10.0, Color("#2c3b52"), 7.0)
+	draw_line(-d * 24.0, d * 9.0, color, 4.0)
+	draw_line(-d * 6.0, d * 11.0, Color.WHITE, 2.5)

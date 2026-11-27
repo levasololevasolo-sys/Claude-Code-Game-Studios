@@ -73,7 +73,6 @@ func raise_copy(c: Dictionary) -> Enemy:
 	e.stats["embers"] = 0
 	e.max_hp = FrostRules.copy_hp(float(c.max_hp), stat("raise_frac"))
 	e.hp = e.max_hp
-	e.modulate = Color(String(Tune.get_value("ice_tint"))).lightened(0.25)
 	e.died.connect(func(_e: Enemy, _h: Hit) -> void: Audio.play_at(&"frozen_crack", _e.position))
 	copies.append(e)
 	Audio.play_at(&"frozen_rise", e.position)
@@ -164,9 +163,11 @@ func _draw() -> void:
 		for i in 13:
 			var u := i / 12.0
 			pts.append(from.lerp(to + Vector2(0, -12), u) + Vector2(0, sin(u * 9.0 + anim * 10.0) * 7.0 * (1.0 - u)))
-		draw_polyline(pts, Color(thread, 0.9), 3.0)
-		draw_polyline(pts, Color(1, 1, 1, 0.5), 1.0)
-		_draw_glow(to + Vector2(0, -16), 24.0 + 26.0 * k, Color("#8fd3f5"), 0.9)
+		draw_polyline(pts, Color(thread, 0.35), 12.0)
+		draw_polyline(pts, thread, 5.0)
+		draw_polyline(pts, Color(1, 1, 1, 0.7), 1.5)
+		_draw_glow(to + Vector2(0, -16), 30.0 + 30.0 * k, thread, 1.0)
+		_draw_glow(to + Vector2(0, -16), 20.0 + 20.0 * k, Color("#8fd3f5"), 1.0)
 		for i in 5:
 			var a := TAU * i / 5.0 + anim
 			draw_line(to + Vector2(0, -16), to + Vector2(0, -16) + Vector2(cos(a), sin(a)) * (10.0 + 20.0 * k), Color.WHITE, 2.0)

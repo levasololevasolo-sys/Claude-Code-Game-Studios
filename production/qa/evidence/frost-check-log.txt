@@ -1,0 +1,28 @@
+OK   frost room has ceiling markers: 3
+OK   room spawned 2 Сосульник on ceiling markers
+OK   60 frost packs: wolves in pairs, no Сосульник, at most 1 Мара (bad 0)
+hero x 2000 in a room 5120 px long
+OK   a wolf of the pair bit (bite / crouch)
+OK   Студёный дух froze the floor (zones 1)
+screenshot frost-karachun.png
+OK   Карачун slam wind-up 0.87 s (want 0.90)
+OK   the slam sent 2 waves (both ways)
+OK   the wave hit the standing hero: hp 1000.0 -> 978.4
+OK   a jump cleared the spikes: hp 1000.0 -> 1000.0
+screenshot frost-snezhnitsa.png
+OK   needles left marks on the hero (2)
+OK   3 marks froze the hero for 0.68 s (want 0.70)
+screenshot frost-snezhnitsa-frozen.png
+OK   while frozen: no walking or dashing (moved -1.6 px), thawed after 35 more ticks
+OK   freeze guard: no new marks for 3.0 s
+OK   Сосульник hangs at the marker (state hang, y 448)
+OK   the hero below: it shakes
+screenshot frost-sosulnik.png
+OK   it fell on the hero: hp 1000.0 -> 973.0
+OK   Мара winds up the raise
+screenshot frost-mara.png
+OK   the wolf rose as an ice copy: hp 24.3 (want 24.3)
+screenshot frost-mara-copy.png
+OK   Мара died: the copy cracked
+screenshot frost-roster.png
+DONE: 0 failed checks

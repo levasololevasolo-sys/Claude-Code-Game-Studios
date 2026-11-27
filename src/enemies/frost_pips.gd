@@ -45,8 +45,8 @@ func _draw() -> void:
 	if hero.frost <= 0:
 		return
 	for i in n:
-		var p := Vector2((i - (n - 1) / 2.0) * 18.0, -Player.H - 26)
-		var pts := PackedVector2Array([p + Vector2(0, -9), p + Vector2(7, 0), p + Vector2(0, 9), p + Vector2(-7, 0)])
+		var p := Vector2((i - (n - 1) / 2.0) * 26.0, -Player.H - 34)
+		var pts := PackedVector2Array([p + Vector2(0, -13), p + Vector2(10, 0), p + Vector2(0, 13), p + Vector2(-10, 0)])
 		draw_colored_polygon(pts, dark)
 		if i < hero.frost:
 			var inner := PackedVector2Array()
