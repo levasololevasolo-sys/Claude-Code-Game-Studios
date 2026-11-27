@@ -1,0 +1,789 @@
+{
+ "_note": "Hand-drawn Царство Морены enemies (tools/asset-pipeline/enemies2d/build_frost.py), same format as enemies_drawn.json; fx: effect sprites of the kind (file, origin px, cell/frames when a strip).",
+ "px_per_world": 1.5,
+ "kinds": {
+  "wolf": {
+   "cell": [
+    216,
+    118
+   ],
+   "origin": [
+    104.4,
+    104.4
+   ],
+   "anims": {
+    "idle": {
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "move": {
+     "frames": 8,
+     "fps": 14,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 10,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "attack": {
+     "frames": 5,
+     "fps": 14,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "hop": {
+     "frames": 5,
+     "fps": 12,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": []
+    },
+    "death": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "head": {
+     "file": "wolf_part_head.png",
+     "pivot": [
+      6.7,
+      28.3
+     ],
+     "size": [
+      51,
+      43
+     ]
+    }
+   },
+   "states": {
+    "idle": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "run": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "crouch": {
+     "anim": "windup",
+     "k": "crouch"
+    },
+    "bite": {
+     "anim": "attack",
+     "k": "bite_time"
+    },
+    "hop": {
+     "anim": "hop",
+     "k": "hop_time"
+    },
+    "recover": {
+     "anim": "idle"
+    }
+   }
+  },
+  "jelly": {
+   "cell": [
+    144,
+    140
+   ],
+   "origin": [
+    72.0,
+    118.8
+   ],
+   "anims": {
+    "idle": {
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "move": {
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "attack": {
+     "frames": 5,
+     "fps": 12,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": []
+    },
+    "death": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {},
+   "states": {
+    "idle": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "drift": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "chill_w": {
+     "anim": "windup",
+     "k": "chill_w",
+     "after": "attack"
+    }
+   },
+   "fx": {
+    "puddle": {
+     "origin": [
+      134.7,
+      45.0
+     ],
+     "file": "jelly_puddle.png",
+     "size": [
+      269,
+      55
+     ]
+    }
+   }
+  },
+  "karachun": {
+   "cell": [
+    252,
+    288
+   ],
+   "origin": [
+    108.0,
+    273.6
+   ],
+   "anims": {
+    "idle": {
+     "frames": 8,
+     "fps": 6,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "attack": {
+     "frames": 5,
+     "fps": 16,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "slam_end": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "poke_wind": {
+     "frames": 4,
+     "fps": 8,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "poke": {
+     "frames": 4,
+     "fps": 16,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 9,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_arm": {
+     "frames": 8,
+     "fps": 9,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 9,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "arm": {
+     "file": "karachun_part_arm.png",
+     "pivot": [
+      26.0,
+      118.0
+     ],
+     "size": [
+      58,
+      226
+     ]
+    },
+    "head": {
+     "file": "karachun_part_head.png",
+     "pivot": [
+      27.9,
+      56.5
+     ],
+     "size": [
+      72,
+      101
+     ]
+    }
+   },
+   "states": {
+    "walk": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "slam_wind": {
+     "anim": "windup",
+     "k": "slam_wind"
+    },
+    "slam": {
+     "anim": "attack",
+     "k": "slam_time",
+     "after": "slam_end"
+    },
+    "poke_wind": {
+     "anim": "poke_wind",
+     "k": "poke_wind"
+    },
+    "poke": {
+     "anim": "poke",
+     "k": "poke_time"
+    },
+    "recover": {
+     "anim": "idle"
+    }
+   },
+   "fx": {
+    "spike": {
+     "cell": [
+      43,
+      75
+     ],
+     "frames": 3,
+     "origin": [
+      21.5,
+      72.0
+     ],
+     "file": "karachun_spike.png",
+     "size": [
+      129,
+      75
+     ]
+    }
+   }
+  },
+  "snezhnitsa": {
+   "cell": [
+    201,
+    194
+   ],
+   "origin": [
+    75.6,
+    180.0
+   ],
+   "anims": {
+    "idle": {
+     "frames": 8,
+     "fps": 7,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "attack": {
+     "frames": 6,
+     "fps": 13,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 9,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 9,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "head": {
+     "file": "snezhnitsa_part_head.png",
+     "pivot": [
+      26.8,
+      45.4
+     ],
+     "size": [
+      60,
+      106
+     ]
+    }
+   },
+   "states": {
+    "walk": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "cast": {
+     "anim": "windup",
+     "k": "cast"
+    },
+    "volley": {
+     "anim": "attack"
+    }
+   },
+   "fx": {
+    "needle": {
+     "origin": [
+      46.8,
+      10.8
+     ],
+     "file": "snezhnitsa_needle.png",
+     "size": [
+      68,
+      21
+     ]
+    }
+   }
+  },
+  "sosulnik": {
+   "cell": [
+    219,
+    158
+   ],
+   "origin": [
+    90.0,
+    140.4
+   ],
+   "anims": {
+    "hang": {
+     "frames": 6,
+     "fps": 6,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": []
+    },
+    "shake": {
+     "frames": 6,
+     "fps": 14,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": []
+    },
+    "fall": {
+     "frames": 2,
+     "fps": 12,
+     "loop": true,
+     "cols": 2,
+     "rows": 1,
+     "variants": []
+    },
+    "land": {
+     "frames": 8,
+     "fps": 14,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "idle": {
+     "frames": 6,
+     "fps": 6,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": []
+    },
+    "move": {
+     "frames": 6,
+     "fps": 12,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": []
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "attack": {
+     "frames": 4,
+     "fps": 14,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": []
+    },
+    "death": {
+     "frames": 8,
+     "fps": 12,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {},
+   "states": {
+    "idle": {
+     "anim": "hang"
+    },
+    "hang": {
+     "anim": "hang"
+    },
+    "shake": {
+     "anim": "shake",
+     "k": "shake"
+    },
+    "fall": {
+     "anim": "fall"
+    },
+    "land": {
+     "anim": "land",
+     "k": "land"
+    },
+    "walk": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "poke_wind": {
+     "anim": "windup",
+     "k": "poke_wind"
+    },
+    "poke": {
+     "anim": "attack",
+     "k": "poke_time"
+    },
+    "recover": {
+     "anim": "idle"
+    }
+   }
+  },
+  "mara": {
+   "cell": [
+    216,
+    198
+   ],
+   "origin": [
+    93.6,
+    183.6
+   ],
+   "anims": {
+    "idle": {
+     "frames": 8,
+     "fps": 7,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "attack": {
+     "frames": 4,
+     "fps": 14,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "raise": {
+     "frames": 6,
+     "fps": 8,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "death_sever_arm": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "arm": {
+     "file": "mara_part_arm.png",
+     "pivot": [
+      11.3,
+      11.6
+     ],
+     "size": [
+      32,
+      98
+     ]
+    },
+    "head": {
+     "file": "mara_part_head.png",
+     "pivot": [
+      21.2,
+      47.4
+     ],
+     "size": [
+      51,
+      63
+     ]
+    }
+   },
+   "states": {
+    "walk": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "raise_w": {
+     "anim": "raise",
+     "k": "raise"
+    },
+    "scratch_wind": {
+     "anim": "windup",
+     "k": "scratch_wind"
+    },
+    "scratch": {
+     "anim": "attack",
+     "k": "scratch_time"
+    }
+   }
+  }
+ }
+}

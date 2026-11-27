@@ -82,10 +82,19 @@ func _draw() -> void:
 	var eye := Color(String(stats.eye))
 	var core := Color(String(stats.get("core", "#a3206f")))
 	# Zones and the wind-up ring are drawn in world space (local = world - position).
+	var puddle := DrawnEnemyVisual.fx(kind_id, "puddle") if art_skin else {}
 	for z: Dictionary in zones:
 		var zp := Vector2(float(z.x), float(z.y)) - position
 		var hw := stat("zone_w") / 2.0
 		var a := clampf(float(z.t), 0.0, 1.0)
+		if not puddle.is_empty():
+			# Drawn ice puddle (enemies_drawn_frost.json fx), sized to zone_w.
+			var tex: Texture2D = puddle.tex
+			var sc := stat("zone_w") / maxf(tex.get_width() * float(puddle.scale), 1.0) * float(puddle.scale)
+			draw_set_transform(zp, 0.0, Vector2(sc, float(puddle.scale)))
+			draw_texture(tex, -(puddle.origin as Vector2), Color(1, 1, 1, a))
+			draw_set_transform(Vector2.ZERO)
+			continue
 		draw_rect(Rect2(zp.x - hw, zp.y - 8.0, hw * 2.0, 8.0), Color(eye, 0.55 * a))
 		for i in 6:
 			var sx := zp.x - hw + 10.0 + i * (hw * 2.0 - 20.0) / 5.0
@@ -96,6 +105,8 @@ func _draw() -> void:
 		var hw2 := stat("zone_w") / 2.0
 		draw_dashed_line(Vector2(mp.x - hw2, mp.y - 3.0), Vector2(mp.x + hw2, mp.y - 3.0), Color(core, 0.5 + 0.5 * k), 4.0, 10.0)
 		draw_dashed_line(Vector2(0, -h * 0.2), mp + Vector2(0, -6), Color(eye, 0.25 + 0.4 * k), 2.0, 12.0)
+	if _skin_draw():
+		return
 	_draw_windup_glow()
 	var swell := 1.0 + (0.25 * (1.0 - clampf(t / maxf(stat("chill_w"), 0.01), 0.0, 1.0)) if st == "chill_w" else 0.06 * sin(anim * 3.0))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))

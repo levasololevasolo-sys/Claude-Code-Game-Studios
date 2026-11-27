@@ -80,6 +80,19 @@
   date: 2026-11-27
   ai_made: yes (shapes and poses authored as code by an AI agent; no image model, no network generation)
   note: ringer, rootling, bat, sentry, suchkovik, lesavka; 1x density; moonlight back rim for the dark forest; specials (vanish/appear, burrow/under/mound, dive/spit, shield block, throw, whistle/flee); headless / one-armed variants, two deaths, part sprites, suchkovik_spear(_stuck).png. Deterministic rebuild.
+- path: assets/art/sprites/enemies_drawn/{wolf,jelly,karachun,snezhnitsa,sosulnik,mara}/*.png, assets/art/sprites/enemies_drawn/enemies_drawn_frost.json
+  source: drawn procedurally by tools/asset-pipeline/enemies2d/build_frost.py (kinds_frost.py rigs and poses of the 6 Царство Морены enemies; reuses build.py, base.py and the hero2d sdf2d ink-and-paint renderer), after design/gdd/bestiary.md §3.4 and design/art/art-bible.md §4.2
+  licence: own work (project-owned original work; no third-party art)
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (shapes and poses authored as code by an AI agent; no image model, no network generation)
+  note: wolf, jelly (Студёный дух), karachun, snezhnitsa, sosulnik, mara; 1x density; one-armed / headless variants, sever deaths, cut-out parts; fx sprites (ice puddle, wave spike x3, frost needle). Deterministic rebuild.
+- path: assets/shaders/ice_copy.gdshader
+  source: written by the technical-artist agent (Claude): pale ice look of Мара's ice copies on drawn enemy sprites
+  licence: own work (project-owned original work)
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (code authored by an AI agent)
 - path: assets/art/sprites/weapons_drawn/*.png, assets/art/sprites/weapons_drawn/weapons_drawn.json
   source: drawn procedurally by tools/asset-pipeline/enemies2d/weapons.py (hero2d sdf2d renderer): stick (дрын), blade, spear, hammer, staff, sickles
   licence: own work (project-owned original work; no third-party art)

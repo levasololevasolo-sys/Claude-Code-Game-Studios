@@ -20,6 +20,9 @@ var hit_done: bool = false
 var world: World
 ## Hero injected in tests (else world.player).
 var target: Player
+## Drawn spike strip (DrawnEnemyVisual.fx "karachun"/"spike"), {} = code shapes.
+var _spike: Dictionary = {}
+var _spike_checked: bool = false
 
 ## Current front x.
 func front() -> float:
@@ -50,6 +53,23 @@ func step(dt: float) -> void:
 		var h := Hit.make(Hit.Kind.PROJECTILE, dmg, front() - dir, 0.0)
 		p.hurt(h)
 
+## Draws one drawn spike sprite of height hh at sx; false without the sprite.
+func _draw_spike(sx: float, hh: float, i: int) -> bool:
+	if not _spike_checked:
+		_spike_checked = true
+		_spike = DrawnEnemyVisual.fx("karachun", "spike")
+	if _spike.is_empty():
+		return false
+	var tex: Texture2D = _spike.tex
+	var n := maxi(1, int(_spike.frames))
+	var cw := tex.get_width() / float(n)
+	var o: Vector2 = _spike.origin
+	var sc := float(_spike.scale) * hh / maxf(spike_h, 1.0)
+	draw_set_transform(Vector2(sx, 0.0), 0.0, Vector2(float(_spike.scale) * (-1.0 if i % 2 else 1.0), sc))
+	draw_texture_rect_region(tex, Rect2(-o.x, -o.y, cw, tex.get_height()), Rect2(cw * (i % n), 0.0, cw, tex.get_height()))
+	draw_set_transform(Vector2.ZERO)
+	return true
+
 func _draw() -> void:
 	# Drawn in local space: position = (x0, floor y).
 	var fx := front() - x0
@@ -68,6 +88,8 @@ func _draw() -> void:
 			continue
 		var sx := d * dir
 		var hh := spike_h * k * (0.8 + 0.2 * sin(i * 2.3))
+		if _draw_spike(sx, hh, i):
+			continue
 		draw_colored_polygon(PackedVector2Array([Vector2(sx - 9, 0), Vector2(sx, -hh - 4), Vector2(sx + 9, 0)]), Color("#2c3b52"))
 		draw_colored_polygon(PackedVector2Array([Vector2(sx - 7, 0), Vector2(sx, -hh), Vector2(sx + 7, 0)]), ice)
 		draw_line(Vector2(sx, -hh * 0.9), Vector2(sx - 2, -2), Color(1, 1, 1, 0.8), 2.0)

@@ -749,8 +749,9 @@ func _draw_overlay() -> void:
 		var r := Rect2(-w / 2.0 - 5.0, -h - 5.0, w + 10.0, h + 8.0)
 		draw_rect(r, Color(tc, 0.18), true)
 		draw_rect(r, Color(tc, 0.75 + 0.25 * sin(anim * 6.0)), false, 3.0)
-	if ice_copy:
-		# Ice copy (bestiary §3.4 Мара): a pale ice contour with glints.
+	if ice_copy and not art_skin:
+		# Ice copy (bestiary §3.4 Мара): a pale ice contour with glints (a drawn
+		# skin shows the copy through ice_copy.gdshader instead).
 		var ic := Color(String(Tune.get_value("ice_tint")))
 		var ir := Rect2(-w / 2.0 - 4.0, -h - 4.0, w + 8.0, h + 6.0)
 		draw_rect(ir, Color(ic, 0.5), true)
