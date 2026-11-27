@@ -103,7 +103,6 @@ func think(dt: float, hp_pos: Vector2, allies: Array = []) -> void:
 				vel.x = 0.0
 
 func _draw() -> void:
-	_draw_windup_glow()
 	var spark := Color(String(stats.spark))
 	var k := 0.0
 	if st == "whistle":
@@ -114,6 +113,9 @@ func _draw() -> void:
 			var a := anim * 5.0 + i * TAU / 8.0
 			var rr := 18.0 + 22.0 * k + 6.0 * sin(anim * 9.0 + i)
 			draw_circle(Vector2(cos(a) * rr, -h * 0.6 + sin(a) * rr * 0.6 - 10.0 * k), 2.5, Color(spark, 0.9))
+	if _skin_draw():
+		return
+	_draw_windup_glow()
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	var outline := Color("#120d12")

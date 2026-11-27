@@ -96,7 +96,50 @@ func light_spots() -> Array[Vector4]:
 		return []
 	return super.light_spots()
 
+## Drawn spear sprites (enemies_drawn_forest.json, kinds.suchkovik.projectile),
+## loaded once: {ok, fly, stuck, tip}; ok false = the code shape below.
+static var _art: Dictionary = {}
+
+static func _load_art() -> Dictionary:
+	if not _art.is_empty():
+		return _art
+	_art = { "ok": false }
+	var kinds: Dictionary = DrawnEnemyVisual.registry().get("kinds", {})
+	var pr: Dictionary = (kinds.get("suchkovik", {}) as Dictionary).get("projectile", {})
+	var base := DrawnEnemyVisual.ROOT + "suchkovik/"
+	if pr.is_empty() or DrawnEnemyVisual.art_mode(OS.get_cmdline_user_args()) != "drawn" \
+			or not ResourceLoader.exists(base + String(pr.file)) or not ResourceLoader.exists(base + String(pr.stuck)):
+		return _art
+	var tip: Array = pr.get("tip", [0, 0])
+	_art = { "ok": true, "fly": load(base + String(pr.file)), "stuck": load(base + String(pr.stuck)),
+		"tip": Vector2(float(tip[0]), float(tip[1])),
+		"scale": 1.0 / maxf(float(DrawnEnemyVisual.registry().get("px_per_world", 1.5)), 0.01) }
+	return _art
+
+## Paints the drawn sprite (tip at the origin, shaft behind); false = no art.
+func _draw_art() -> bool:
+	var art := _load_art()
+	if not bool(art.ok):
+		return false
+	var s := float(dir)
+	if reflected:
+		s = signf(vel.x) if vel.x != 0.0 else -s
+	var tint := Color.WHITE
+	if reflected:
+		tint = Color(1.0, 0.8, 0.6).lerp(color, 0.35)
+	elif stuck and stuck_t < 1.0 and fmod(stuck_t * 8.0, 1.0) < 0.5:
+		tint = Color(1.5, 1.4, 1.2)
+	if not stuck:
+		draw_line(Vector2(-s * plat_w, 0), Vector2(-s * plat_w * 1.6, 0), Color(Color("#ff8a3d"), 0.35), 2.0)
+	var k := float(art.scale)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(s * k, k))
+	draw_texture(art.stuck if stuck else art.fly, -(art.tip as Vector2), tint)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	return true
+
 func _draw() -> void:
+	if _draw_art():
+		return
 	var outline := Color("#120d12")
 	var c := color if reflected else wood
 	# The shaft trails behind the tip (flying) or juts from the wall (stuck).

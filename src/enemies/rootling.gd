@@ -84,7 +84,8 @@ func _draw() -> void:
 	if is_under():
 		# The ripple of dirt moving under the floor, a glowing mound before the burst.
 		var bump := 6.0 + sin(anim * 18.0) * 3.0
-		draw_colored_polygon(PackedVector2Array([Vector2(-28, 0), Vector2(-10, -bump), Vector2(10, -bump - 2), Vector2(28, 0)]), dirt)
+		if not art_skin:
+			draw_colored_polygon(PackedVector2Array([Vector2(-28, 0), Vector2(-10, -bump), Vector2(10, -bump - 2), Vector2(28, 0)]), dirt)
 		if st == "rise_w":
 			var k := 1.0 - clampf(t / maxf(stat("rise_w"), 0.01), 0.0, 1.0)
 			var r := stat("burst_r")
@@ -93,6 +94,8 @@ func _draw() -> void:
 			for i in 3:
 				draw_line(Vector2(-12 + i * 12, -4), Vector2(-14 + i * 14, -18.0 - 14.0 * k), Color(eye, 0.7), 2.0)
 		_draw_overlay()
+		return
+	if _skin_draw():
 		return
 	_draw_windup_glow()
 	var shake := sin(anim * 60.0) * 3.0 if st == "dig" else 0.0

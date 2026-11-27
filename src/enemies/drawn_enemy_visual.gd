@@ -37,11 +37,18 @@ var _prev_st: String = ""
 var _oneshot: String = ""
 
 
-## The registry (loaded once).
+## The registry (loaded once): every enemies_drawn*.json in ROOT, "kinds" merged.
 static func registry() -> Dictionary:
-	if _reg.is_empty() and FileAccess.file_exists(REGISTRY):
-		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(REGISTRY))
-		_reg = d if d is Dictionary else {}
+	if _reg.is_empty():
+		for f in DirAccess.get_files_at(ROOT):
+			if not (f.begins_with("enemies_drawn") and f.ends_with(".json")):
+				continue
+			var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(ROOT + f))
+			if d is Dictionary:
+				var kinds: Dictionary = _reg.get("kinds", {})
+				kinds.merge((d as Dictionary).get("kinds", {}))
+				_reg.merge(d)
+				_reg["kinds"] = kinds
 	return _reg
 
 
@@ -110,6 +117,8 @@ func _ready() -> void:
 		enemy.art_skin = true
 		enemy.queue_redraw()
 		enemy.limb_severed.connect(_on_limb_severed)
+		if _meta.has("block"):
+			enemy.damaged.connect(_on_damaged)
 		_prev_st = enemy.st
 	_show("idle")
 
@@ -132,6 +141,7 @@ func _make_rim() -> void:
 	_rim_mat.set_shader_parameter("width", float(rim.get("width", 5.0)) * 0.6)
 	_rim_mat.set_shader_parameter("back_col", Color(String(rim.get("back", "#e8f4c8"))))
 	_rim_mat.set_shader_parameter("back_alpha", float(rim.get("back_alpha", 0.55)))
+	_rim_mat.set_shader_parameter("emit", float(rim.get("emit", 0.0)))
 	_rim.material = _rim_mat
 	_rim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	add_child(_rim)
@@ -261,3 +271,11 @@ func _on_limb_severed(_e: Enemy, limb: String) -> void:
 		# The head part flies about its centre (LimbPart puts the origin there).
 		pivot = tex.get_size() * 0.5
 	part.use_sprite(tex, pivot, 1.0 / maxf(float(registry().get("px_per_world", 1.5)), 0.01), enemy.face)
+
+
+## Front shield took the hit (registry "block", the shield-bearer): the block one-shot.
+func _on_damaged(_e: Enemy, _amount: float, hit: Hit) -> void:
+	if hit == null or enemy.dead or enemy.is_winding() or not DamageRules.shield_blocks(hit, enemy.hit_view()):
+		return
+	_oneshot = String(_meta.block)
+	_cur = ""

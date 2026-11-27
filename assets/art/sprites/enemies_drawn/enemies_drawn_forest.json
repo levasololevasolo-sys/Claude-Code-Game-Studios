@@ -1,0 +1,759 @@
+{
+ "_note": "Hand-drawn Тёмный бор enemies (tools/asset-pipeline/enemies2d/build_forest.py); format as enemies_drawn.json. block: one-shot when the front shield stops a hit; projectile: the branch-spear sprites (tip = sprite px of the point, the spear lies along +x).",
+ "px_per_world": 1.5,
+ "kinds": {
+  "ringer": {
+   "cell": [
+    216,
+    165
+   ],
+   "origin": [
+    93.6,
+    151.2
+   ],
+   "anims": {
+    "idle": {
+     "frames": 8,
+     "fps": 7,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 10,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "call": {
+     "frames": 6,
+     "fps": 9,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "vanish": {
+     "frames": 6,
+     "fps": 14,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": []
+    },
+    "appear": {
+     "frames": 6,
+     "fps": 12,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "windup": {
+     "frames": 4,
+     "fps": 9,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "attack": {
+     "frames": 5,
+     "fps": 18,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "noarm",
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_arm": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "arm": {
+     "file": "ringer_part_arm.png",
+     "pivot": [
+      12.1,
+      10.5
+     ],
+     "size": [
+      65,
+      82
+     ]
+    },
+    "head": {
+     "file": "ringer_part_head.png",
+     "pivot": [
+      20.8,
+      56.9
+     ],
+     "size": [
+      50,
+      69
+     ]
+    }
+   },
+   "states": {
+    "walk": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "call": {
+     "anim": "call",
+     "k": "call"
+    },
+    "gone": {
+     "anim": "vanish",
+     "k": "gone"
+    },
+    "appear": {
+     "anim": "appear",
+     "k": "appear"
+    },
+    "swipe": {
+     "anim": "attack",
+     "k": "swipe_time"
+    },
+    "recover": {
+     "anim": "idle"
+    }
+   }
+  },
+  "rootling": {
+   "cell": [
+    147,
+    126
+   ],
+   "origin": [
+    72.0,
+    108.0
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 7,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 12,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "burrow": {
+     "frames": 6,
+     "fps": 12,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "under": {
+     "frames": 4,
+     "fps": 10,
+     "loop": true,
+     "cols": 4,
+     "rows": 1,
+     "variants": []
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 9,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "attack": {
+     "frames": 5,
+     "fps": 16,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "head": {
+     "file": "rootling_part_head.png",
+     "pivot": [
+      37.7,
+      64.2
+     ],
+     "size": [
+      80,
+      78
+     ]
+    }
+   },
+   "states": {
+    "walk": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "dig": {
+     "anim": "burrow",
+     "k": "dig"
+    },
+    "under": {
+     "anim": "under"
+    },
+    "rise_w": {
+     "anim": "windup",
+     "k": "rise_w"
+    },
+    "burst": {
+     "anim": "attack",
+     "k": "burst_time"
+    },
+    "recover": {
+     "anim": "idle"
+    }
+   }
+  },
+  "bat": {
+   "cell": [
+    208,
+    151
+   ],
+   "origin": [
+    104.4,
+    104.4
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 12,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": []
+    },
+    "move": {
+     "frames": 6,
+     "fps": 14,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": []
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 9,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "attack": {
+     "frames": 4,
+     "fps": 18,
+     "loop": true,
+     "cols": 4,
+     "rows": 1,
+     "variants": []
+    },
+    "dive": {
+     "frames": 4,
+     "fps": 18,
+     "loop": true,
+     "cols": 4,
+     "rows": 1,
+     "variants": []
+    },
+    "spit": {
+     "frames": 5,
+     "fps": 9,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": []
+    },
+    "death": {
+     "frames": 8,
+     "fps": 11,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {},
+   "states": {
+    "hover": {
+     "anim": "idle"
+    },
+    "wind": {
+     "anim": "windup",
+     "k": "wind"
+    },
+    "swoop": {
+     "anim": "dive"
+    },
+    "spitwind": {
+     "anim": "spit",
+     "k": "wind"
+    }
+   }
+  },
+  "sentry": {
+   "cell": [
+    212,
+    183
+   ],
+   "origin": [
+    82.8,
+    169.2
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 7,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 9,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "attack": {
+     "frames": 5,
+     "fps": 14,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "block": {
+     "frames": 4,
+     "fps": 16,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "head": {
+     "file": "sentry_part_head.png",
+     "pivot": [
+      13.0,
+      28.5
+     ],
+     "size": [
+      36,
+      39
+     ]
+    }
+   },
+   "states": {
+    "walk": {
+     "anim": "idle",
+     "moving": "move"
+    },
+    "bash": {
+     "anim": "windup",
+     "k": "bash_wind"
+    },
+    "recover": {
+     "anim": "attack",
+     "k": "bash_recover"
+    }
+   },
+   "block": "block"
+  },
+  "suchkovik": {
+   "cell": [
+    226,
+    194
+   ],
+   "origin": [
+    104.4,
+    180.0
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 6,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "windup": {
+     "frames": 5,
+     "fps": 8,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "throw": {
+     "frames": 5,
+     "fps": 12,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "attack": {
+     "frames": 5,
+     "fps": 12,
+     "loop": false,
+     "cols": 5,
+     "rows": 1,
+     "variants": []
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 9,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 9,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "head": {
+     "file": "suchkovik_part_head.png",
+     "pivot": [
+      41.1,
+      68.4
+     ],
+     "size": [
+      82,
+      89
+     ]
+    }
+   },
+   "states": {
+    "stand": {
+     "anim": "idle"
+    },
+    "wind": {
+     "anim": "windup",
+     "k": "wind"
+    },
+    "recover": {
+     "anim": "throw",
+     "k": "recover"
+    }
+   },
+   "projectile": {
+    "file": "suchkovik_spear.png",
+    "tip": [
+     130.8,
+     18.0
+    ],
+    "stuck": "suchkovik_spear_stuck.png",
+    "size": [
+     147,
+     36
+    ]
+   }
+  },
+  "lesavka": {
+   "cell": [
+    147,
+    120
+   ],
+   "origin": [
+    68.4,
+    108.0
+   ],
+   "anims": {
+    "idle": {
+     "frames": 6,
+     "fps": 7,
+     "loop": true,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "move": {
+     "frames": 8,
+     "fps": 14,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "flee": {
+     "frames": 8,
+     "fps": 14,
+     "loop": true,
+     "cols": 8,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "whistle": {
+     "frames": 6,
+     "fps": 9,
+     "loop": false,
+     "cols": 6,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "windup": {
+     "frames": 4,
+     "fps": 8,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "attack": {
+     "frames": 4,
+     "fps": 14,
+     "loop": false,
+     "cols": 4,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "hurt": {
+     "frames": 3,
+     "fps": 12,
+     "loop": false,
+     "cols": 3,
+     "rows": 1,
+     "variants": [
+      "nohead"
+     ]
+    },
+    "death": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    },
+    "death_sever_head": {
+     "frames": 8,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 1,
+     "variants": []
+    }
+   },
+   "parts": {
+    "head": {
+     "file": "lesavka_part_head.png",
+     "pivot": [
+      37.3,
+      49.6
+     ],
+     "size": [
+      78,
+      60
+     ]
+    }
+   },
+   "states": {
+    "run": {
+     "anim": "idle",
+     "moving": "flee"
+    },
+    "whistle": {
+     "anim": "whistle",
+     "k": "whistle"
+    },
+    "bite_wind": {
+     "anim": "windup",
+     "k": "bite_wind"
+    },
+    "bite": {
+     "anim": "attack",
+     "k": "bite_time"
+    }
+   }
+  }
+ }
+}
