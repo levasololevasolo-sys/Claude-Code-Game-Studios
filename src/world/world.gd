@@ -13,6 +13,7 @@
 ## screen at start, `--god-check=<dir>` runs the scripted per-god check.
 ## Weapons (weapons-and-loot): `--weapon=<id>` / `--sub=<id>` pick the hero's
 ## weapons in the legacy modes, `--weapon-check=<dir>` runs the weapon check,
+## `--aim-check=<dir>` the secondary-weapon aim check,
 ## `--boss-check=<dir>` the scripted lair boss fight (Кикимора, enemies-and-elites §3.9),
 ## `--limb-check=<dir>` the limb zones check (arm cut, head pop; GDD limb-zones).
 ## `--story-check=<dir>` plays the prologue with scripted input and a god line
@@ -74,7 +75,7 @@ var first_run: bool = false
 var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--vis-shots=", "--base-view"]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--vis-shots=", "--base-view", "--aim-check="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -211,6 +212,10 @@ func _ready() -> void:
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
 			add_child(rc)
+		elif a.begins_with("--aim-check="):
+			var ac: Node = (load("res://tests/integration/loot/aim_check_driver.gd") as GDScript).new()
+			ac.set("out_dir", a.trim_prefix("--aim-check="))
+			add_child(ac)
 		elif a.begins_with("--settings-check="):
 			var stc: Node = (load("res://tests/integration/core/settings_check_driver.gd") as GDScript).new()
 			stc.set("out_dir", a.trim_prefix("--settings-check="))

@@ -116,6 +116,13 @@ var sub_cd: float = 0.0
 var sub_buf: float = 0.0
 ## «Двойное»: seconds until the second fire (< 0 = none pending).
 var sub_twice_t: float = -1.0
+## Aim (§3.4 «Прицел», AimRules): `aim` held this tick; unit direction of the
+## next aimed shot; the last input came from a gamepad (then the right stick
+## aims). Scripted runs set fake["aim"] and `fake_aim_point` (world px).
+var aiming: bool = false
+var aim_dir: Vector2 = Vector2.RIGHT
+var aim_pad: bool = false
+var fake_aim_point: Vector2 = Vector2.ZERO
 ## Ярый меч: current damage bonus (0 .. cap).
 var rage: float = 0.0
 ## Seconds since the last dash ended (Сулица-стрела); 0 while dashing.
@@ -183,6 +190,9 @@ func _ready() -> void:
 		add_child(visual)
 		if visual.has_method("set_weapon_sprite"):
 			visual.call("set_weapon_sprite", null)
+	var reticle := AimReticle.new()
+	reticle.hero = self
+	add_child(reticle)
 
 func _held(a: StringName) -> bool:
 	return bool(fake.get(a, false)) if scripted else Input.is_action_pressed(a)
@@ -279,6 +289,8 @@ func _step(dt: float) -> void:
 			_dash_end()
 	else:
 		var slow := Tune.f("attack_move_slow") if atk_t > 0.0 else 1.0
+		if aiming and sub != null and AimRules.aimable(sub.row()):
+			slow *= Tune.f("aim_move_mult")
 		var target := mx * Tune.f("run_speed") * slow * build.value("stribog_p", "run", 1.0)
 		velocity.x += (target - velocity.x) * minf(1.0, dt * (Tune.f("accel_ground") if on_floor else Tune.f("accel_air")))
 		if mx != 0 and atk_t <= 0.0:
@@ -296,6 +308,7 @@ func _step(dt: float) -> void:
 				coyote_t = 0.0
 				jump_buf = 0.0
 				Events.hero_acted.emit(&"jump", 1.0)
+	_update_aim()
 	_update_attack(dt, on_floor)
 	_update_sub(dt)
 	since_dash += dt
@@ -602,6 +615,35 @@ func _update_sub(dt: float) -> void:
 	if sub_buf > 0.0 and sub_cd <= 0.0 and dash_t <= 0.0:
 		sub_buf = 0.0
 		fire_sub()
+
+## The hand the secondary weapon fires from (world px).
+func hand() -> Vector2:
+	return position - Vector2(0, H * 0.55)
+
+## Direction of the next shot: the aim while `aim` is held, else by facing.
+func shot_dir() -> Vector2:
+	return aim_dir if aiming else Vector2(face, 0)
+
+## True when `aim` is held and a weapon of `row` follows it.
+func aiming_with(row: Dictionary) -> bool:
+	return aiming and AimRules.aimable(row)
+
+## Reads the aim (mouse in world space, right stick, or the scripted point) and
+## turns the hero to its side (not mid-dash or mid-swing).
+func _update_aim() -> void:
+	aiming = _held(&"aim")
+	var cursor := fake_aim_point if scripted else get_global_mouse_position()
+	var stick := Vector2.ZERO if scripted else Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
+	aim_dir = AimRules.direction(aiming, aim_pad and not scripted, hand(), cursor, stick, face, Tune.f("aim_stick_deadzone"))
+	if aiming and dash_t <= 0.0 and atk_t <= 0.0:
+		face = AimRules.face_of(aim_dir, face)
+
+## Tracks the last input device for the aim (mouse vs right stick).
+func _input(ev: InputEvent) -> void:
+	if ev is InputEventJoypadButton or (ev is InputEventJoypadMotion and absf((ev as InputEventJoypadMotion).axis_value) > 0.3):
+		aim_pad = true
+	elif ev is InputEventMouseMotion or ev is InputEventMouseButton or ev is InputEventKey:
+		aim_pad = false
 
 ## Fires the secondary weapon now (cooldown and «Двойное» included). False if
 ## the slot is empty or cooling down.

@@ -1,0 +1,7 @@
+OK   no aim: arrow flies right by facing ((1100.0, 0.0))
+OK   aiming up-left turns the hero left (face -1)
+OK   aimed arrow flies toward the cursor (vel (-895.1068, -639.3621), want (-0.813733, -0.581238))
+OK   arrow speed unchanged (1100.0)
+screenshot aim-shot.png
+OK   run speed while aiming 216 = 360 x aim_move_mult
+DONE: 0 failed checks

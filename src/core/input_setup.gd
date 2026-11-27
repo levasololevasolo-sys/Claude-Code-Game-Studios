@@ -14,6 +14,7 @@ const KEYS := {
 	"interact": [KEY_E],
 	"sub": [KEY_U],
 	"parry": [KEY_I],
+	"aim": [KEY_Q],
 }
 const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON_RIGHT_SHOULDER, "flare": JOY_BUTTON_Y, "interact": JOY_BUTTON_B,
 	"sub": JOY_BUTTON_LEFT_SHOULDER, "parry": JOY_BUTTON_RIGHT_STICK,
@@ -24,7 +25,12 @@ const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON
 ## strike LMB, Flare RMB, secondary weapon MMB (weapons-and-loot §3.4).
 ## Parry (GDD parry): I / mouse back side button / R3. The developer asked for
 ## L / MMB / RB, all three already taken (Flare, secondary weapon, dash): open question.
-const MOUSE := { "strike": MOUSE_BUTTON_LEFT, "flare": MOUSE_BUTTON_RIGHT, "sub": MOUSE_BUTTON_MIDDLE, "parry": MOUSE_BUTTON_XBUTTON1 }
+## Aim (hold, weapons-and-loot §3.4 «Прицел»): Q / mouse forward side button /
+## LT. RMB, the natural aim button, is the Flare's (open question).
+const MOUSE := { "strike": MOUSE_BUTTON_LEFT, "flare": MOUSE_BUTTON_RIGHT, "sub": MOUSE_BUTTON_MIDDLE, "parry": MOUSE_BUTTON_XBUTTON1,
+	"aim": MOUSE_BUTTON_XBUTTON2 }
+## Pad triggers bound as buttons (GameSettings code "padaxis:<axis>"); rebindable.
+const PAD_AXES := { "aim": JOY_AXIS_TRIGGER_LEFT }
 ## Left stick directions; never rebound (GameSettings keeps them).
 const AXES := { "move_left": [JOY_AXIS_LEFT_X, -1.0], "move_right": [JOY_AXIS_LEFT_X, 1.0],
 	"move_up": [JOY_AXIS_LEFT_Y, -1.0], "move_down": [JOY_AXIS_LEFT_Y, 1.0] }
@@ -53,6 +59,11 @@ static func register() -> void:
 			var mb := InputEventMouseButton.new()
 			mb.button_index = MOUSE[action]
 			InputMap.action_add_event(action, mb)
+		if PAD_AXES.has(action):
+			var tr := InputEventJoypadMotion.new()
+			tr.axis = PAD_AXES[action]
+			tr.axis_value = 1.0
+			InputMap.action_add_event(action, tr)
 		if AXES.has(action):
 			var ax := InputEventJoypadMotion.new()
 			ax.axis = AXES[action][0]

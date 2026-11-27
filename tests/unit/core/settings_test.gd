@@ -102,3 +102,28 @@ func test_reset_controls_restores_defaults() -> void:
 	assert_float(float(s.volumes.UI)).is_equal(0.5)
 	s.reset_all()
 	assert_float(float(s.volumes.UI)).is_equal(1.0)
+
+func test_aim_defaults_q_mouse5_lt() -> void:
+	var s := _s()
+	assert_str(s.code_at("aim", "kbm", 0)).is_equal(_key(KEY_Q))
+	assert_str(s.code_at("aim", "kbm", 1)).is_equal("mouse:%d" % MOUSE_BUTTON_XBUTTON2)
+	assert_str(s.code_at("aim", "pad", 0)).is_equal("padaxis:%d" % JOY_AXIS_TRIGGER_LEFT)
+	assert_str(GameSettings.label_of("padaxis:%d" % JOY_AXIS_TRIGGER_LEFT)).is_equal("LT")
+
+func test_trigger_code_round_trips_and_stick_is_not_bindable() -> void:
+	var code := "padaxis:%d" % JOY_AXIS_TRIGGER_RIGHT
+	assert_str(GameSettings.device_of(code)).is_equal("pad")
+	assert_str(GameSettings.code_of(GameSettings.event_of(code))).is_equal(code)
+	var stick := InputEventJoypadMotion.new()
+	stick.axis = JOY_AXIS_RIGHT_X
+	stick.axis_value = 1.0
+	assert_str(GameSettings.code_of(stick)).is_equal("")
+
+func test_default_bindings_have_no_conflicts() -> void:
+	var s := _s()
+	for a: String in GameSettings.ACTIONS:
+		for dev: String in ["kbm", "pad"]:
+			for i in int(GameSettings.SLOTS[dev]):
+				var c := s.code_at(a, dev, i)
+				if c != "":
+					assert_dict(s.find_conflict(a, i, c)).is_empty()

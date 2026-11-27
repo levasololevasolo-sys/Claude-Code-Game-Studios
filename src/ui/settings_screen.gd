@@ -194,7 +194,8 @@ func feed_capture(ev: InputEvent) -> bool:
 		return false
 	var pressed := (ev is InputEventKey and (ev as InputEventKey).pressed and not (ev as InputEventKey).echo) \
 		or (ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed) \
-		or (ev is InputEventJoypadButton and (ev as InputEventJoypadButton).pressed)
+		or (ev is InputEventJoypadButton and (ev as InputEventJoypadButton).pressed) \
+		or GameSettings.is_trigger_press(ev)
 	if not pressed:
 		return false
 	if PauseMenu.is_open_event(ev) or (ev is InputEventJoypadButton and capture.device == "kbm" and (ev as InputEventJoypadButton).button_index == JOY_BUTTON_B):
