@@ -40,7 +40,8 @@ func _solid(r: Rect2) -> void:
 	add_child(body)
 
 func _draw() -> void:
-	if layout.is_empty():
+	if layout.is_empty() or bool(layout.get("base", false)):
+		# The base draws its own yard (src/base/base.gd).
 		return
 	var ground := Tune.f("ground_y")
 	var w: float = layout.w

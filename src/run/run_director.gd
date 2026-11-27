@@ -2,10 +2,11 @@
 ## §3.14, §3.16; economy-and-meta §3.2-3.3, §3.7; ADR-0003). Flow: start rune
 ## offer → combat rooms 1..rooms_per_loc (packs sleep, all dead → reward at the
 ## right edge → doors) → lair (stand-in boss, choice of 3 gods) → haven (heal,
-## save, next location or base) → death / base → summary → new run.
+## save, next location or base) → death / base → summary → the base «Застава»
+## (src/base/base.gd, economy-and-meta §3.6) → its gate → new run.
 ## Owns no rules of its own: forks and pacing are DoorRules, state is RunState,
 ## files are the injected Game autoload. Phases: "fight" → "reward" → "busy"
-## (a screen is open) → "doors"; "dead" → "summary".
+## (a screen is open) → "doors"; "dead" → "summary" → "base".
 class_name RunDirector
 extends Node
 
@@ -36,6 +37,9 @@ var _toast_t: float = 0.0
 var _unl: Dictionary = {}
 ## Tier whose Навий витязь has already stood in a room (one per location, §3.6).
 var knight_tier: int = -1
+## The base between runs (null during a run).
+var base: Base
+const BASE_SCENE: String = "res://scenes/base/base.tscn"
 
 func _ready() -> void:
 	Events.enemy_killed.connect(_on_enemy_killed)
@@ -65,6 +69,12 @@ func new_run(run_seed: int = -1) -> void:
 				run_seed = int(a.trim_prefix("--seed="))
 	run = game.start_run(run_seed)
 	build = RunBuild.make()
+	# Сова's amulet (economy §3.10 `lantern`) unless --amulet= picks one for a check.
+	var amulet_arg := false
+	for a in OS.get_cmdline_user_args():
+		amulet_arg = amulet_arg or a.begins_with("--amulet=")
+	if not amulet_arg and Tune.table("amulets").has(game.meta.lantern):
+		world.amulet_id = game.meta.lantern
 	run.amulet = world.amulet_id
 	_bind_build()
 	_start_weapons()
@@ -82,6 +92,7 @@ func new_run(run_seed: int = -1) -> void:
 	_offer(god, func() -> void: _save_build())
 
 func _bind_build() -> void:
+	world.hero_armor = game.meta.armor
 	world.build = build
 	world.offer_rng = game.rng.stream("boons")
 	_unl = DoorRules.unlocks(game.meta.runs, game.meta.bosses_beaten(), _all_gods(), Tune.data)
@@ -456,6 +467,7 @@ func _on_died(hit: Hit) -> void:
 	var src: Node = hit.source if hit and is_instance_valid(hit.source) else null
 	if src is Enemy:
 		run.killed_by = String((src as Enemy).stats.get("name", (src as Enemy).kind_id))
+		run.killer_id = String(_loc().get("boss", "boss")) if (src as Enemy).boss else (src as Enemy).kind_id
 	else:
 		run.killed_by = "неизвестно"
 	run.hp = 0.0
@@ -472,9 +484,40 @@ func finish(outcome: String) -> void:
 	var scr := RunSummaryScreen.new()
 	scr.summary = summary
 	scr.build = b
-	scr.closed.connect(func() -> void: new_run.call_deferred())
+	scr.closed.connect(func() -> void: enter_base.call_deferred())
 	_note("run ended (%s): %s" % [outcome, " | ".join(scr.lines())])
 	_show(scr, 30)
+
+## The base between runs (economy-and-meta §3.6): the yard is a room without
+## enemies, the hero walks it; this visit's lines are picked and the save
+## written. The gate (Base.gate_used) starts the next run.
+func enter_base() -> void:
+	phase = "base"
+	run = null
+	orb = null
+	doors.clear()
+	world.hero_armor = game.meta.armor
+	world.first_run = false
+	var w := float(Tune.table("base").get("width", 2700))
+	world.start_room({ "w": w, "plats": [], "packs": [], "portal": false, "base": true })
+	base = (load(BASE_SCENE) as PackedScene).instantiate() as Base
+	world.add_child(base)
+	base.setup(world, game.meta)
+	base.gate_used.connect(leave_base)
+	base.on_change = func() -> void: game.write_save()
+	base.screen_opened.connect(func(scr: Control) -> void: screen_opened.emit(scr))
+	var ok: bool = game.write_save()
+	_note("enter base: visit %d, lines %s, save %s" % [int(game.meta.story.visits), base.picked.keys(), ok])
+	room_started.emit("base", 0)
+
+## Leaves the base through the gate: a new run.
+func leave_base() -> void:
+	if base == null:
+		return
+	base.queue_free()
+	base = null
+	_note("gate: new run")
+	new_run.call_deferred()
 
 func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 	if run == null or not enemy is Enemy:
@@ -511,6 +554,10 @@ func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 ## HUD text (World shows it): hp, embers and resources of this run (§3.2: no
 ## bank line), location and room x/4, rune slots with names and levels.
 func hud_text() -> String:
+	if phase == "base" and base:
+		var n := base.nearest()
+		return "Застава    %s    Звание: %s\n%s" % [base._bank(), base._title(),
+			("E — " + String(n.row.get("name", ""))) if n else "Подойди к NPC и нажми E · Ворота — новый забег"]
 	if run == null:
 		return ""
 	var p := world.player

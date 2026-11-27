@@ -29,6 +29,8 @@ var rooms_cleared: int = 0
 var kills: int = 0
 var bosses: int = 0
 var killed_by: String = ""
+## Id of the killer (enemy kind, or the location's boss id) for the dialogue events.
+var killer_id: String = ""
 var rng_states: Dictionary = {}
 ## Weapons in hand (weapons-and-loot §3.9 p.6): Weapon.to_dict(), {} = empty.
 var arm: Dictionary = {}
@@ -38,7 +40,7 @@ var arms_auto: int = 0
 
 const FIELDS: Array[String] = ["run_seed", "tier", "room_k", "stage", "hp", "max_hp", "charge", "amulet",
 	"build", "embers", "res", "since_god", "gap_need", "reward", "rooms_cleared", "kills", "bosses",
-	"killed_by", "rng_states", "arm", "sub", "arms_auto"]
+	"killed_by", "killer_id", "rng_states", "arm", "sub", "arms_auto"]
 
 func to_dict() -> Dictionary:
 	var d := {}
