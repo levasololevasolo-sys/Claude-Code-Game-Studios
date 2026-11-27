@@ -212,25 +212,113 @@ sockets, pale white body, horns on helmet, thin ink lines, monochrome, greek,
 castle, swastika, text, watermark, signature, blurry, extra limbs
 ```
 
-#### Промпт 1 — герой (павший богатырь)
+#### Промпт 1 — герой (павший богатырь), по ярусам облика
+
+Герой меняет вид по мере прокачки (art bible, раздел 5.6), и все детали
+должны садиться на **одно и то же тело** (раздел 5.7). Порядок работы:
+
+1. Сначала сгенерировать **манекен** (промпт 1.0) и выбрать одну удачную
+   картинку. Она — эталон тела на всю игру.
+2. Каждый ярус генерировать **с этим манекеном как образцом**: функция
+   «референс персонажа» / «image prompt» / «перерисовать поверх картинки»
+   (inpaint) в выбранном инструменте, один и тот же seed, если он есть.
+   Поза — та же нейтральная, что у манекена.
+3. Детали вырезать из картинки яруса или сгенерировать листом частей
+   (промпт 1.6), затем положить поверх манекена и подогнать по суставам.
+4. Отбраковка: если лицо, борода, ширина плеч или рост не совпадают с
+   манекеном — картинка в работу не идёт.
+
+**Постоянная часть** (вставлять в каждый промпт 1.1–1.5 вместо
+`[тело героя]`):
 
 ```
-A fallen Slavic bogatyr warrior, heroic stocky proportions about 4.5 heads tall,
-broad shoulders, pointed steel shishak helmet with chainmail aventail, visible
-human face with determined eyes and a short light-brown beard, steel scale armor
-(#B8C4CC), long flowing cinnabar red cloak (#B3262E) with one thin gold folk
-ornament border, glowing golden amulet on the chest (#FFC94A), holding a
-straight sword, dynamic ready stance facing right,
+the same Slavic man, heroic stocky proportions about 4.5 heads tall, broad
+shoulders, large hands, warm tanned skin (#E0A07A), visible human face with
+determined eyes and a short light-brown beard (#8A5A34), a thin red thread
+tied around his left wrist, the wrist nearest to the viewer (#B3262E), a small glowing amulet on a cord on
+his chest, neutral standing pose, feet slightly apart, arms slightly away from
+the body, facing right
+```
+
+**1.0 — манекен (тело без одежды для рига):**
+```
+character base body template, [тело героя], wearing only plain short linen
+underwear, no hair on the head, no clothes, no weapon, clean simple shapes for
+cutout animation,
 [общий хвост стиля]
 ```
 
-Вариант для частей перекладки:
+**1.1 — ярус 1, «Павший» (старт):**
 ```
-character parts sheet of the same warrior, separated body parts laid out
-with space between them: head with helmet, torso, upper arm, forearm with
-hand, thigh, shin with boot, cloak, sword, each part complete, same colors,
+a fallen Slavic bogatyr who has lost everything, [тело героя], bare-chested
+with a few scratches, messy light-brown hair, torn rough canvas trousers
+(#CDBB98), bare feet wrapped in worn cloth strips, a simple carved wooden
+amulet disc on a cord, holding a long gnarled wooden stick (#8C6A44),
+tired but unbroken,
 [общий хвост стиля]
 ```
+
+**1.2 — ярус 2, «Странник»:**
+```
+[тело героя], bleached linen shirt (#E9DFC9) with red folk embroidery on the
+collar and hem, rope belt, linen headband with red embroidery on the forehead,
+leather wraps on the forearms (#7A4A2A), cloth leg wraps and bast shoes,
+small bronze amulet on a leather cord, holding [оружие],
+[общий хвост стиля]
+```
+
+**1.3 — ярус 3, «Ополченец»:**
+```
+[тело героя], thick quilted padded jacket (#9A7448) with a leather belt and
+bronze buckle, round leather cap without a point, leather bracers with bronze
+studs, knee-high leather boots (#6B4428), a short red shoulder cape to the
+shoulder blades (#B3262E), bronze amulet, holding [оружие],
+[общий хвост стиля]
+```
+
+**1.4 — ярус 4, «Витязь»:**
+```
+[тело героя], chainmail shirt to mid-thigh (#8E9AA3) over a padded jacket,
+simple low conical steel helmet without aventail, face fully visible, steel
+bracers, boots with iron shin plates, plain red cloak to the knees (#B3262E),
+gilded amulet, holding [оружие],
+[общий хвост стиля]
+```
+
+**1.5 — ярус 5, «Богатырь» (финал):**
+```
+[тело героя], pointed steel shishak helmet with a thin gold band and a
+chainmail aventail over the neck and shoulders, face and beard fully visible,
+steel scale armor (#B8C4CC) over chainmail, belt with a gold buckle, steel
+bracers with gold trim, boots with steel greaves, long flowing cinnabar red
+cloak (#B3262E) to the calves with one thin gold folk ornament border and a
+clasp on the shoulder, glowing golden amulet (#FFC94A), holding [оружие],
+[общий хвост стиля]
+```
+
+`[оружие]` — экипированное оружие: `a long gnarled wooden stick`,
+`a straight sword`, `a spear`, `two short sickles`, `a flanged mace` и т. д.
+Оружие лучше генерировать отдельно (промпт 1.6), а не в руке.
+
+**1.6 — лист частей одного яруса (чтобы детали совпали с телом):**
+```
+character parts sheet for cutout animation, all parts belong to the same
+character as the reference image, same body size and proportions, same
+colors, same lighting from top front, each part complete and separated with
+empty space between them, laid out in a grid: [список частей],
+[общий хвост стиля]
+```
+`[список частей]` — только то, что меняется на этом ярусе, по слотам
+art bible 5.7, например для яруса 4: `conical steel helmet, chainmail shirt
+torso piece, chainmail skirt piece, upper arm sleeve, forearm with steel
+bracer, thigh with trousers, shin with boot and iron plate, foot with boot,
+red cloak in three overlapping segments, cloak collar with clasp, gilded
+amulet on cord`. Для оружия: `[оружие] laid horizontally, grip on the left,
+no hand`.
+
+**Добавка к негативу для ярусов 1–2:** `bodybuilder, oiled muscles, pale
+skin, skinny, anime shirtless, loincloth only, tribal, caveman` — герой
+полуголый, но это бедный славянский мужик, а не варвар и не бледная фигурка.
 
 #### Промпт 2 — враг (болотник-ползун, Топь Кикиморы)
 
