@@ -346,7 +346,10 @@ function startRun(resume) {
   s.run = { route: ['clock'], locI: 0, order };
   s.p = makePlayer();
   save.run = null; writeSave();
+  s.sinceGod = 0; s.gapNeed = rng() < 0.5 ? 1 : 2;
   enterRoom('combat', 'clock', 1);
+  // the run opens with a rune of a random god, then the first room starts
+  s.boonBack = 'intro'; openBoon(GOD_ORDER[Math.floor(rng() * GOD_ORDER.length)]);
   events.push({ t: s.t, type: 'run' });
 }
 function snapshotRun() {
@@ -405,7 +408,7 @@ function enterRoom(kind, loc, k) {
     sfx.bell();
   } else {
     s.mode = 'intro'; s.modeT = 0.9;
-    s.room.reward = s.nextReward || { type: 'god', god: GOD_ORDER[Math.floor(rng() * GOD_ORDER.length)] };
+    s.room.reward = s.nextReward || pacedReward();
     s.nextReward = null;
     s.waves = genWaves(loc, tier(), k);
   }
@@ -960,8 +963,20 @@ function rewardLabel(r) {
   if (r.type === 'arms') return 'оружие';
   return 'горсть углей';
 }
+const godTime = () => (state.sinceGod ?? 9) >= (state.gapNeed ?? 1);
+// A reward that is not a rune, different from those already on offer.
+function plainReward(opts) {
+  const pool = [['res', 0.45], ['arms', 0.2 + tune.door_arms], ['heal', 0.18], ['embers', 0.15]].filter(([t]) => !opts.some(o => o.type === t));
+  let tot = pool.reduce((a, [, w]) => a + w, 0), r = rng() * tot;
+  for (const [t, w] of pool) { r -= w; if (r <= 0) return { type: t }; }
+  return { type: pool.length ? pool[0][0] : 'embers' };
+}
+// The reward of a room entered without a door choice (the first room of a location).
+function pacedReward() { return godTime() ? { type: 'god', god: GOD_ORDER[Math.floor(rng() * GOD_ORDER.length)] } : plainReward([]); }
 function grantReward() {
   const r = state.room.reward || { type: 'god', god: GOD_ORDER[0] }, p = state.p;
+  if (r.type === 'god' || r.type === 'rod') { state.sinceGod = 0; state.gapNeed = rng() < 0.5 ? 1 : 2; }
+  else state.sinceGod = (state.sinceGod || 0) + 1;
   if (r.type === 'god' || r.type === 'rod') { openBoon(r.type === 'god' ? r.god : 'rod'); return; }
   if (r.type === 'res') { dropLoot(p.x + 40, p.y - 60, REWARD_RES(), 6); dropLoot(p.x + 40, p.y - 60, 'ember', 8); }
   else if (r.type === 'heal') heal(Math.round(p.maxHp * 0.35));
@@ -981,16 +996,15 @@ function makeDoors() {
   }
   const n = rng() < tune.fork_three ? 3 : 2;
   const gods = GOD_ORDER.slice(), opts = [];
-  for (let i = 0; i < n; i++) {
-    const roll = rng();
-    if (roll < 0.62 && gods.length) opts.push({ type: 'god', god: gods.splice(Math.floor(rng() * gods.length), 1)[0] });
-    else if (roll < 0.72 && !opts.some(o => o.type === 'rod')) opts.push({ type: 'rod' });
-    else if (roll < 0.84 && !opts.some(o => o.type === 'res')) opts.push({ type: 'res' });
-    else if (roll < 0.86 + tune.door_arms && !opts.some(o => o.type === 'arms')) opts.push({ type: 'arms' });
-    else if (roll < 0.93 + tune.door_arms && !opts.some(o => o.type === 'heal')) opts.push({ type: 'heal' });
-    else if (!opts.some(o => o.type === 'embers')) opts.push({ type: 'embers' });
-    else opts.push({ type: 'god', god: gods.length ? gods.splice(Math.floor(rng() * gods.length), 1)[0] : 'svarog' });
-  }
+  // Pacing: after a rune room come 1-2 rooms of resources, weapons or healing; then the gods return.
+  if (godTime()) {
+    opts.push({ type: 'god', god: gods.splice(Math.floor(rng() * gods.length), 1)[0] });
+    while (opts.length < n) {
+      if (rng() < 0.5) opts.push({ type: 'god', god: gods.splice(Math.floor(rng() * gods.length), 1)[0] });
+      else if (!opts.some(o => o.type === 'rod') && rng() < 0.4) opts.push({ type: 'rod' });
+      else opts.push(plainReward(opts));
+    }
+  } else while (opts.length < n) opts.push(plainReward(opts));
   opts.forEach((r, i) => room.inter.push({ x: room.w - 90 - i * 230, door: 'fork', reward: r, label: `Дверь: ${rewardLabel(r)}`,
     act: () => { s.nextReward = r; enterRoom('combat', L, k + 1); } }));
 }
@@ -1961,7 +1975,7 @@ function updatePlay(dt) {
     state.modeT -= dt;
     if (state.modeT <= 0) {
       if (room.kind === 'boss' && state.run.locI >= LOC_ORDER.length - 1) { endRun(true); return; }
-      sfx.door(); makeDoors(); grantReward();
+      sfx.door(); grantReward(); makeDoors();
     }
   } else if (state.mode === 'open' && room.kind === 'boss') {
     if (p.x > room.w - 90) {
@@ -2093,7 +2107,7 @@ function updateBoon() {
       if (b.id === 'shell') { p.maxHp += 25; heal(25); }
       if (b.id === 'zhiva_p') { p.maxHp += 30; p.hp = p.maxHp; }
     }
-    sfx.pick(); state.mode = 'open'; state.hint = `Руна: ${b.name}`; state.hintT = 2;
+    sfx.pick(); state.mode = state.boonBack || 'open'; state.boonBack = null; state.hint = `Руна: ${b.name}`; state.hintT = 2;
     events.push({ t: state.t, type: 'boon', id: b.id });
   }
 }

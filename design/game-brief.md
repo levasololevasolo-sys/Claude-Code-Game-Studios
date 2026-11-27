@@ -39,6 +39,7 @@ After play: по итогу от анимаций и физики и текст�
 Chosen: «Механики, потом Godot» (mechanics finished in the browser first, then the game moves to Godot 4 with real art)
 After play: взять и бесплатные варианты по графике и ии генерации
 After play: боги есть, но механики их не доработаны, все что увидел, это то что работает бог огня и он поджигает, остальные не заметил разницы, проклятия и светлячки даже во врагов не летят
+After play: надо бы еще уменьшить колличество комнат с богами, пусть это будет руна случайного бога на старте, потом будут 1-2 случайно рум с ресурсами и потом опять появляются боги
 
 **Pitch:** A fallen bogatyr, held to life by the thread of the goddess Mokosh, cuts his way through Nav, the Slavic underworld that has flooded into the living world, taking back the gods' elemental powers from the monsters of the tales; every blow charges his god's amulet until it bursts in that god's wrath. *(you chose the world; details inferred)*
 
