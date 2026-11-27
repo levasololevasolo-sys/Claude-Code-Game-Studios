@@ -1025,9 +1025,9 @@ func _parry_fx_common() -> void:
 		world.add_shake(Tune.f("parry_shake"))
 	Audio.play_at(&"parry_clang", position)
 
-## Parry placeholder: a bright arc in front while the window is open, sparks on a catch.
+## Parry guard arc: a bright arc in front while the window is open.
 func _draw_parry() -> void:
-	if parry_t <= 0.0 and parry_fx <= 0.0:
+	if parry_t <= 0.0:
 		return
 	var at := Vector2(face * 22.0, -H * 0.55)
 	if visual != null and visual.has_method("hand_point"):
@@ -1038,13 +1038,7 @@ func _draw_parry() -> void:
 	if parry_t > 0.0:
 		var k := parry_t / maxf(Tune.f("parry_window"), 0.01)
 		draw_arc(at, 26.0, -PI * 0.5 * face - 1.0, -PI * 0.5 * face + 1.0, 14, Color(0.85, 0.95, 1.0, 0.5 + 0.5 * k), 4.0)
-	if parry_fx > 0.0:
-		var f := parry_fx / maxf(Tune.f("parry_fx_time"), 0.01)
-		for i in 10:
-			var a := TAU * float(i) / 10.0
-			draw_line(at + Vector2(cos(a), sin(a)) * 8.0, at + Vector2(cos(a), sin(a)) * (14.0 + 30.0 * (1.0 - f)), Color(1.0, 0.9, 0.5, f), 2.5)
-		draw_circle(at, 34.0 * f, Color(1.0, 0.85, 0.45, 0.35 * f))
-		draw_circle(at, 16.0 * f, Color(1, 1, 1, f))
+	# The catch burst itself is drawn by the VFX layer (Vfx.parry_burst).
 
 # ---------------- drawing (placeholder art until the asset pass) ----------------
 const CLOAK := Color("#2f4a52")
