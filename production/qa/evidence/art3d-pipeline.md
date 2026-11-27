@@ -193,3 +193,17 @@ the held follow-through; there is no 3D torso twist (the rig is planar).
    `assets/provenance.yaml` (art bible §8).
 5. **Cloth / hair simulation** in Blender for beard, hair and the future cape,
    baked before rendering.
+
+## Трясинник v2 (2026-11-27)
+
+`tools/asset-pipeline/blender/navi_sculpt.py`: sculpt-like creature bodies from metaball
+fields (ellipsoids, tapered limbs, warts and knuckles as surface balls) baked to
+one mesh, surface noise, distance-to-bone skin weights, flat ribbon strands
+(weeds, moss hair) weighted root -> spring bone. `build_crawler.py` v2 uses it:
+one clay body + belly plate + lumpy moss cap + separate jaw, painted hide,
+irregular yellowed teeth, hooked rust claws, eyes with a white-hot core, 34
+weeds on four spring bones (they trail behind the slam). Same cell, origin,
+frame names; `src/slice/crawler_sprite.gd` unchanged. 41 frames in 134 s.
+Evidence: `art3d-v2-crawler-compare.png`, `art3d-v2-crawler-sheet.png`.
+Weak points: the death keys are still v1 (it slumps, does not collapse flat);
+small warts get outline specks; the body is metaball-smooth, no wrinkles/creases.

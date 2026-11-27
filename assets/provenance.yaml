@@ -47,3 +47,9 @@
   date: 2026-11-27
   ai_made: partly (third-party CC0 human base mesh; everything built on it - pose, proportions, clothes, hair, beard, props, procedural painted materials, animation - authored as code by an AI agent; no image model)
   note: the MakeHuman repository itself is not shipped or committed; fetch_makehuman.sh re-fetches the exact files. MakeHuman's code is AGPL but no code of it is used, only CC0 data.
+- path: assets/art/sprites/crawler/*.png (v2, 2026-11-27)
+  source: rendered by tools/asset-pipeline/blender/build_crawler.py with navi_sculpt.py (metaball bodies built by script), packed by pack_sheets.py
+  licence: project-owned (original work); no third-party models, textures or animations
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (geometry, rig, poses and shaders authored as code by an AI agent; no image model)
