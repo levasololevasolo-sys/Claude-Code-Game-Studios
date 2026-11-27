@@ -13,15 +13,18 @@ const KEYS := {
 	"flare": [KEY_L],
 	"interact": [KEY_E],
 	"sub": [KEY_U],
+	"parry": [KEY_I],
 }
 const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON_RIGHT_SHOULDER, "flare": JOY_BUTTON_Y, "interact": JOY_BUTTON_B,
-	"sub": JOY_BUTTON_LEFT_SHOULDER,
+	"sub": JOY_BUTTON_LEFT_SHOULDER, "parry": JOY_BUTTON_RIGHT_STICK,
 	"move_left": JOY_BUTTON_DPAD_LEFT, "move_right": JOY_BUTTON_DPAD_RIGHT,
 	"move_up": JOY_BUTTON_DPAD_UP, "move_down": JOY_BUTTON_DPAD_DOWN }
 
 ## Mouse buttons of the defaults (keyboard + mouse slots of GameSettings):
 ## strike LMB, Flare RMB, secondary weapon MMB (weapons-and-loot §3.4).
-const MOUSE := { "strike": MOUSE_BUTTON_LEFT, "flare": MOUSE_BUTTON_RIGHT, "sub": MOUSE_BUTTON_MIDDLE }
+## Parry (GDD parry): I / mouse back side button / R3. The developer asked for
+## L / MMB / RB, all three already taken (Flare, secondary weapon, dash): open question.
+const MOUSE := { "strike": MOUSE_BUTTON_LEFT, "flare": MOUSE_BUTTON_RIGHT, "sub": MOUSE_BUTTON_MIDDLE, "parry": MOUSE_BUTTON_XBUTTON1 }
 ## Left stick directions; never rebound (GameSettings keeps them).
 const AXES := { "move_left": [JOY_AXIS_LEFT_X, -1.0], "move_right": [JOY_AXIS_LEFT_X, 1.0],
 	"move_up": [JOY_AXIS_LEFT_Y, -1.0], "move_down": [JOY_AXIS_LEFT_Y, 1.0] }

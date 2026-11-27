@@ -17,10 +17,10 @@ const DEFAULT_PATH: String = "user://settings.cfg"
 ## Format of settings.cfg; a newer file is ignored (defaults), an older one migrates.
 const FORMAT: int = 1
 ## Rebindable actions in menu order with their labels.
-const ACTIONS: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "strike", "dash", "flare", "sub", "interact"]
+const ACTIONS: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "strike", "dash", "flare", "sub", "parry", "interact"]
 const LABELS: Dictionary = { "move_left": "Влево", "move_right": "Вправо", "move_up": "Вверх / удар вверх",
 	"move_down": "Вниз / удар вниз", "jump": "Прыжок", "strike": "Удар", "dash": "Рывок / перекат",
-	"flare": "Вспышка", "sub": "Доп. оружие", "interact": "Взять / говорить" }
+	"flare": "Вспышка", "sub": "Доп. оружие", "parry": "Парирование", "interact": "Взять / говорить" }
 ## Slots per device kind.
 const SLOTS: Dictionary = { "kbm": 2, "pad": 1 }
 ## Keys and buttons owned by the menus (pause, debug); binding them is refused.

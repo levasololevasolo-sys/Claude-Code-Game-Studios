@@ -16,7 +16,8 @@ signal damaged(enemy: Enemy, amount: float, hit: Hit)
 signal died(enemy: Enemy, hit: Hit)
 ## Emitted when the enemy wakes up (its pack was woken).
 signal woke(enemy: Enemy)
-## Emitted once per part when a limb is cut (GDD limb-zones §3.4): "arm" or "head".
+## Emitted once per part when a limb is cut (GDD limb-zones §3.4): "arm" or "head"
+## (also when the part flies as part of the death, then `dead` is already true).
 ## The visual hook: the art pass swaps the placeholder LimbPart / LimbMark here.
 signal limb_severed(enemy: Enemy, limb: String)
 
@@ -116,6 +117,10 @@ var head_off: bool = false
 ## Cut parts spawned while not in a world (tests read and free them).
 var orphan_parts: Array[LimbPart] = []
 var _limb_mark: LimbMark
+## Precise hits landed per limb so far ({"arm": n, "head": n}; tough kinds, elites).
+var limb_hits: Dictionary = {}
+## Part thrown by the death (§3.5): "head", "arm" or "" (plain death).
+var death_severed: String = ""
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -299,7 +304,12 @@ func hurt(hit: Hit) -> float:
 	var dmg := DamageRules.final(hit, view, Tune.data)
 	# Limb zones (limb-zones §3.2-3.3, F2): the cutting hit is re-checked here, so a
 	# part is never cut twice; a plain hit keeps its damage.
-	var limb := hit.limb if hit.kind == Hit.Kind.STRIKE and limbs_on() and LimbRules.can_cut(hit.limb, limb_row(), arm_off, head_off) else ""
+	# Only the head is cut by a strike (§3.3); the arm only by a parry (parried()).
+	var limb := hit.limb if hit.kind == Hit.Kind.STRIKE and hit.limb == LimbRules.HEAD and limbs_on() and LimbRules.can_cut(hit.limb, limb_row(), arm_off, head_off) else ""
+	var nick := 0
+	if limb != "" and not _count_limb_hit(limb):
+		nick = int(limb_hits[limb])
+		limb = ""
 	dmg *= LimbRules.bonus_mult(limb, Tune.data)
 	if mark == "ward":
 		var wa := EliteMarks.ward_absorb(ward, dmg, hit.kind == Hit.Kind.SLAM or hit.kind == Hit.Kind.WALL, Tune.f("shield_break_mult"))
@@ -319,7 +329,9 @@ func hurt(hit: Hit) -> float:
 		stun = maxf(stun, hit.stun * (Tune.f("boss_stun_mult") if boss else 1.0))
 	damaged.emit(self, dmg, hit)
 	if limb != "":
-		_cut(limb, hit)
+		_cut(limb, hit.from_x)
+	elif nick > 0:
+		_nick(nick)
 	if hit.has_status() or hit.boss_burst_min > 0:
 		_apply_statuses(hit, ctx)
 	_after_hurt(hit)
@@ -328,6 +340,8 @@ func hurt(hit: Hit) -> float:
 	if hp <= 0.0 and not dead:
 		hp = 0.0
 		dead = true
+		if limb == "":
+			_death_variant(hit)
 		_status_death(status_ctx())
 		died.emit(self, hit)
 		Events.enemy_killed.emit(self, hit)
@@ -369,9 +383,9 @@ func limb_at(strike: Rect2, dir: String, hero_x: float, hero_airborne: bool) -> 
 
 ## Cuts `limb` (already checked by hurt()): sets the flag, changes the attack,
 ## throws the part, shows the word, hit-stop and shake, emits limb_severed.
-func _cut(limb: String, hit: Hit) -> void:
+func _cut(limb: String, from_x: float) -> void:
 	var row := limb_row()
-	var away := 1 if position.x >= hit.from_x else -1
+	var away := 1 if position.x >= from_x else -1
 	if limb == LimbRules.ARM:
 		arm_off = true
 		stats = LimbRules.one_arm_stats(stats, row.get("one_arm", {}))
@@ -388,16 +402,88 @@ func _cut(limb: String, hit: Hit) -> void:
 		eye_pts.clear()
 	_spawn_part(limb, row, away)
 	status.add_fx("burst", Tune.f("status_fx_time") * 1.5)
+	_mark().say("Без руки!" if limb == LimbRules.ARM else "Голова с плеч!", Tune.f("limb_word_time"))
+	Audio.play_at(&"limb_sever" if limb == LimbRules.ARM else &"limb_head_pop", position)
+	if world:
+		world.request_hitstop(Tune.f("limb_hitstop"))
+		world.add_shake(Tune.f("limb_shake"))
+	limb_severed.emit(self, limb)
+
+## Counts one precise hit on `limb` (§3.6); true when this one cuts it.
+func _count_limb_hit(limb: String) -> bool:
+	limb_hits[limb] = int(limb_hits.get(limb, 0)) + 1
+	return LimbRules.cuts_now(int(limb_hits[limb]), LimbRules.hits_needed(limb_row(), mark != "", Tune.data))
+
+## A precise hit that did not cut yet (tough kinds, elites): blood and «Надруб n/N».
+func _nick(n: int) -> void:
+	status.add_fx("burst", Tune.f("status_fx_time"))
+	_mark().say("Надруб %d/%d" % [n, LimbRules.hits_needed(limb_row(), mark != "", Tune.data)], Tune.f("limb_word_time") * 0.6)
+	Audio.play_at(&"limb_sever", position, -1, 1.3)
+
+## The hero parried this enemy's melee blow (GDD parry §3.3). Ordinary enemies
+## lose the attack and are stunned for parry_stun; the arm flies when the row
+## has a cuttable arm and it was attacking (on a tough kind or an elite only on
+## the N-th parry). Bosses get parry_boss_stun only. Returns "arm", "nick",
+## "stun" or "" (dead).
+func parried(from_x: float) -> String:
+	if dead:
+		return ""
+	var s := ParryRules.stun_for(boss, Tune.data)
+	if boss:
+		stun = maxf(stun, s)
+		return "stun"
+	var was := st
+	var row := limb_row()
+	var takes := limbs_on() and LimbRules.parry_takes_arm(row, was, arm_off)
+	st = "idle"
+	t = 0.0
+	vel.x = 0.0
+	stun = maxf(stun, s)
+	cd = maxf(cd, Tune.f("limb_arm_recover"))
+	if not takes:
+		return "stun"
+	if _count_limb_hit(LimbRules.ARM):
+		_cut(LimbRules.ARM, from_x)
+		stun = maxf(stun, s)
+		return "arm"
+	_nick(int(limb_hits[LimbRules.ARM]))
+	return "nick"
+
+## The death of an ordinary enemy, one of two (§3.5): plain, or with the head
+## or the arm flying (harmless) when the killing blow met that zone or by
+## death_sever_chance. Bosses and kinds without a row always die plainly.
+func _death_variant(hit: Hit) -> void:
+	if not limbs_on():
+		return
+	var roll := rng.randf() if rng else 1.0
+	var part := LimbRules.death_part(hit.zone, roll, limb_row(), arm_off, head_off, Tune.data)
+	if part == "":
+		return
+	if part == LimbRules.HEAD:
+		head_off = true
+		eye_pts.clear()
+	else:
+		arm_off = true
+	var p := _spawn_part(part, limb_row(), 1 if position.x >= hit.from_x else -1)
+	p.dmg = 0.0
+	status.add_fx("burst", Tune.f("status_fx_time") * 1.5)
+	Audio.play_at(&"limb_head_pop" if part == LimbRules.HEAD else &"limb_sever", position)
+	death_severed = part
+	limb_severed.emit(self, part)
+
+## Geometric zone a hero strike rect meets ("head", "arm", "body"; "" = no zones).
+func limb_zone_at(strike: Rect2, dir: String, hero_x: float) -> String:
+	if not limbs_on() or dead:
+		return ""
+	return LimbRules.zone_of(strike, hurt_rect(), limb_row(), position, w, h, face, dir, hero_x, arm_off, head_off, Tune.data)
+
+func _mark() -> LimbMark:
 	if _limb_mark == null:
 		_limb_mark = LimbMark.new()
 		_limb_mark.name = "LimbMark"
 		_limb_mark.enemy = self
 		add_child(_limb_mark)
-	_limb_mark.say("Без руки!" if limb == LimbRules.ARM else "Голова с плеч!", Tune.f("limb_word_time"))
-	if world:
-		world.request_hitstop(Tune.f("limb_hitstop"))
-		world.add_shake(Tune.f("limb_shake"))
-	limb_severed.emit(self, limb)
+	return _limb_mark
 
 ## The flying piece (placeholder shape in the kind's colours, LimbPart).
 func _spawn_part(limb: String, row: Dictionary, away: int) -> LimbPart:
