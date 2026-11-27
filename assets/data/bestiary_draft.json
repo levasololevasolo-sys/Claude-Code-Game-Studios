@@ -1,538 +1,552 @@
 {
- "_note": "DRAFT bestiary, design/gdd/bestiary.md §3.9. Not read by code yet. hp/dmg = multiples of ref_hp/ref_dmg. limbs: arm (cut only by parry during attack), head (down-air during attack), death (part flies only on death), none. parry: arm_cut / stun / deflect (projectile reflected) / none. forbid = elite mark ids (fire, curse, blink, call, ward, blast). intro = room k from which the kind can appear. Numbers are temporary.",
- "ref_hp": 30,
- "ref_dmg": 12,
- "wind_floor": [
-  0.6,
-  0.5,
-  0.5,
-  0.45,
-  0.4
- ],
- "pack_kinds_max": [
-  2,
-  3,
-  3,
-  4,
-  4
- ],
- "pack_support_max": 1,
- "pack_ranged_max": 2,
- "pack_bruiser_max": 2,
- "teach_wake_dist": 400,
- "knobs": {
-  "ward_frac": 0.25,
-  "ward_time": 6,
-  "cling_slow": 0.15,
-  "cling_max": 2,
-  "frost_decay": 1.5,
-  "freeze_time": 0.7,
-  "freeze_guard": 3,
-  "raise_frac": 0.4,
-  "raise_max": 2,
-  "link_heal": 0.04,
-  "link_range": 350,
-  "debt_mult": 2,
-  "debt_time": 5,
-  "reassemble_hp": 0.5,
-  "reassemble_max": 2,
-  "reassemble_time": 3,
-  "spear_platform_time": 4,
-  "thief_escape_time": 6
- },
- "locations": {
-  "1": "Топь Кикиморы",
-  "2": "Тёмный бор",
-  "3": "Царство Морены",
-  "4": "Калинов мост",
-  "5": "Кощеево царство"
- },
- "kinds": {
-  "crawler": {
-   "name": "Трясинник",
-   "location": 1,
-   "role": "bruiser",
-   "hp_mult": 1.13,
-   "dmg_mult": 1.0,
-   "limbs": "death",
-   "parry": "stun",
-   "mechanic": "charge_line",
-   "status": "existing",
-   "flies": false,
-   "forbid": [],
-   "intro": 1
+  "_note": "DRAFT bestiary, design/gdd/bestiary.md §3.9. Not read by code yet. hp/dmg = multiples of ref_hp/ref_dmg. limbs: arm (cut only by parry during attack), head (down-air during attack), death (part flies only on death), none. parry: arm_cut / stun / deflect (projectile reflected) / none. forbid = elite mark ids (fire, curse, blink, call, ward, blast). intro = room k from which the kind can appear. Numbers are temporary.",
+  "ref_hp": 30,
+  "ref_dmg": 12,
+  "wind_floor": [
+    0.6,
+    0.5,
+    0.5,
+    0.45,
+    0.4
+  ],
+  "pack_kinds_max": [
+    2,
+    3,
+    3,
+    4,
+    4
+  ],
+  "pack_support_max": 1,
+  "pack_ranged_max": 2,
+  "pack_bruiser_max": 2,
+  "teach_wake_dist": 400,
+  "knobs": {
+    "ward_frac": 0.25,
+    "ward_time": 6,
+    "cling_slow": 0.15,
+    "cling_max": 2,
+    "frost_decay": 1.5,
+    "freeze_time": 0.7,
+    "freeze_guard": 3,
+    "raise_frac": 0.4,
+    "raise_max": 2,
+    "link_heal": 0.04,
+    "link_range": 350,
+    "debt_mult": 2,
+    "debt_time": 5,
+    "reassemble_hp": 0.5,
+    "reassemble_max": 2,
+    "reassemble_time": 3,
+    "spear_platform_time": 4,
+    "thief_escape_time": 6
   },
-  "thrower": {
-   "name": "Упырь-метатель",
-   "location": 1,
-   "role": "ranged",
-   "hp_mult": 1.1,
-   "dmg_mult": 1.0,
-   "limbs": "head",
-   "parry": "deflect",
-   "mechanic": "lob_arc",
-   "status": "new_split",
-   "flies": false,
-   "forbid": [],
-   "intro": 2
+  "locations": {
+    "1": "Топь Кикиморы",
+    "2": "Тёмный бор",
+    "3": "Царство Морены",
+    "4": "Калинов мост",
+    "5": "Кощеево царство"
   },
-  "bloat": {
-   "name": "Утопленник",
-   "location": 1,
-   "role": "flyer",
-   "hp_mult": 0.87,
-   "dmg_mult": 1.83,
-   "limbs": "none",
-   "parry": "none",
-   "mechanic": "chain_blast",
-   "status": "existing",
-   "flies": true,
-   "forbid": [
-    "blast",
-    "fire"
-   ],
-   "intro": 2
-  },
-  "shishiga": {
-   "name": "Шишига",
-   "location": 1,
-   "role": "fodder",
-   "hp_mult": 0.4,
-   "dmg_mult": 0.25,
-   "limbs": "head",
-   "parry": "stun",
-   "mechanic": "cling",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "ward",
-    "call"
-   ],
-   "intro": 1
-  },
-  "bolotnitsa": {
-   "name": "Болотница",
-   "location": 1,
-   "role": "ambusher",
-   "hp_mult": 1.2,
-   "dmg_mult": 1.1,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "false_floor",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blink",
-    "fire"
-   ],
-   "intro": 3
-  },
-  "vodyanitsa": {
-   "name": "Водяница",
-   "location": 1,
-   "role": "support",
-   "hp_mult": 0.9,
-   "dmg_mult": 0.5,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "ward_song",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "ward",
-    "call"
-   ],
-   "intro": 3
-  },
-  "ringer": {
-   "name": "Аука",
-   "location": 2,
-   "role": "ambusher",
-   "hp_mult": 1.33,
-   "dmg_mult": 1.08,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "blink_behind",
-   "status": "existing",
-   "flies": false,
-   "forbid": [
-    "blink"
-   ],
-   "intro": 1
-  },
-  "rootling": {
-   "name": "Лешачонок",
-   "location": 2,
-   "role": "ambusher",
-   "hp_mult": 1.0,
-   "dmg_mult": 1.17,
-   "limbs": "head",
-   "parry": "stun",
-   "mechanic": "burrow_burst",
-   "status": "existing",
-   "flies": false,
-   "forbid": [
-    "fire",
-    "blink"
-   ],
-   "intro": 1
-  },
-  "bat": {
-   "name": "Нетопырь",
-   "location": 2,
-   "role": "flyer",
-   "hp_mult": 0.67,
-   "dmg_mult": 0.83,
-   "limbs": "none",
-   "parry": "stun+deflect",
-   "mechanic": "dive_swoop",
-   "status": "existing_moved",
-   "flies": true,
-   "forbid": [
-    "fire"
-   ],
-   "intro": 2
-  },
-  "sentry": {
-   "name": "Упырь-щитник",
-   "location": 2,
-   "role": "bruiser",
-   "hp_mult": 1.67,
-   "dmg_mult": 1.17,
-   "limbs": "head",
-   "parry": "stun",
-   "mechanic": "front_block",
-   "status": "existing_changed",
-   "flies": false,
-   "forbid": [
-    "ward"
-   ],
-   "intro": 2
-  },
-  "suchkovik": {
-   "name": "Сучковик",
-   "location": 2,
-   "role": "ranged",
-   "hp_mult": 1.3,
-   "dmg_mult": 1.25,
-   "limbs": "head",
-   "parry": "deflect",
-   "mechanic": "spear_platform",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blink",
-    "fire"
-   ],
-   "intro": 3
-  },
-  "lesavka": {
-   "name": "Лесавка",
-   "location": 2,
-   "role": "support",
-   "hp_mult": 0.6,
-   "dmg_mult": 0.6,
-   "limbs": "head",
-   "parry": "stun",
-   "mechanic": "haste_aura",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "call",
-    "ward"
-   ],
-   "intro": 3
-  },
-  "wolf": {
-   "name": "Снежный волк",
-   "location": 3,
-   "role": "fodder",
-   "hp_mult": 1.07,
-   "dmg_mult": 1.07,
-   "limbs": "death",
-   "parry": "stun",
-   "mechanic": "pair_bite",
-   "status": "existing",
-   "flies": false,
-   "forbid": [],
-   "intro": 1
-  },
-  "jelly": {
-   "name": "Студёный дух",
-   "location": 3,
-   "role": "flyer",
-   "hp_mult": 1.0,
-   "dmg_mult": 0.33,
-   "limbs": "none",
-   "parry": "stun",
-   "mechanic": "slow_zone",
-   "status": "existing",
-   "flies": true,
-   "forbid": [
-    "curse",
-    "fire"
-   ],
-   "intro": 2
-  },
-  "karachun": {
-   "name": "Карачун",
-   "location": 3,
-   "role": "bruiser",
-   "hp_mult": 2.0,
-   "dmg_mult": 1.2,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "ground_wave",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "ward"
-   ],
-   "intro": 1
-  },
-  "snezhnitsa": {
-   "name": "Снежница",
-   "location": 3,
-   "role": "ranged",
-   "hp_mult": 0.9,
-   "dmg_mult": 0.4,
-   "limbs": "head",
-   "parry": "deflect",
-   "mechanic": "freeze_stack",
-   "status": "new",
-   "flies": false,
-   "forbid": [],
-   "intro": 2
-  },
-  "sosulnik": {
-   "name": "Сосульник",
-   "location": 3,
-   "role": "ambusher",
-   "hp_mult": 0.8,
-   "dmg_mult": 1.5,
-   "limbs": "none",
-   "parry": "stun",
-   "mechanic": "ceiling_drop",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blink",
-    "fire"
-   ],
-   "intro": 3
-  },
-  "mara": {
-   "name": "Мара",
-   "location": 3,
-   "role": "support",
-   "hp_mult": 1.0,
-   "dmg_mult": 0.6,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "raise_frozen",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "call"
-   ],
-   "intro": 3
-  },
-  "drakeling": {
-   "name": "Змеёныш",
-   "location": 4,
-   "role": "area",
-   "hp_mult": 0.9,
-   "dmg_mult": 1.0,
-   "limbs": "death",
-   "parry": "deflect",
-   "mechanic": "fire_puddle",
-   "status": "planned",
-   "flies": false,
-   "forbid": [
-    "fire"
-   ],
-   "intro": 1
-  },
-  "letavets": {
-   "name": "Летавец",
-   "location": 4,
-   "role": "flyer",
-   "hp_mult": 0.8,
-   "dmg_mult": 0.9,
-   "limbs": "none",
-   "parry": "deflect",
-   "mechanic": "fire_bombard",
-   "status": "new",
-   "flies": true,
-   "forbid": [
-    "fire"
-   ],
-   "intro": 2
-  },
-  "polkan": {
-   "name": "Полкан",
-   "location": 4,
-   "role": "bruiser",
-   "hp_mult": 2.6,
-   "dmg_mult": 1.5,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "rear_kick",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "ward"
-   ],
-   "intro": 2
-  },
-  "ognevitsa": {
-   "name": "Огневица",
-   "location": 4,
-   "role": "ranged",
-   "hp_mult": 0.9,
-   "dmg_mult": 1.3,
-   "limbs": "head",
-   "parry": "deflect",
-   "mechanic": "homing_ember",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blink"
-   ],
-   "intro": 3
-  },
-  "anchutka": {
-   "name": "Анчутка",
-   "location": 4,
-   "role": "support",
-   "hp_mult": 0.7,
-   "dmg_mult": 0.6,
-   "limbs": "head",
-   "parry": "stun",
-   "mechanic": "heal_link",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "call",
-    "ward"
-   ],
-   "intro": 3
-  },
-  "shulikun": {
-   "name": "Шуликун",
-   "location": 4,
-   "role": "fodder",
-   "hp_mult": 0.55,
-   "dmg_mult": 0.8,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "hook_pull",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blink",
-    "call"
-   ],
-   "intro": 1
-  },
-  "ratnik": {
-   "name": "Костяной полонянин",
-   "location": 5,
-   "role": "bruiser",
-   "hp_mult": 2.4,
-   "dmg_mult": 2.0,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "unstoppable_swing",
-   "status": "planned",
-   "flies": false,
-   "forbid": [
-    "ward"
-   ],
-   "intro": 1
-  },
-  "bone_archer": {
-   "name": "Костяной стрелец",
-   "location": 5,
-   "role": "ranged",
-   "hp_mult": 1.0,
-   "dmg_mult": 1.2,
-   "limbs": "head",
-   "parry": "deflect",
-   "mechanic": "ricochet_shot",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blink"
-   ],
-   "intro": 2
-  },
-  "vran": {
-   "name": "Вран",
-   "location": 5,
-   "role": "flyer",
-   "hp_mult": 0.7,
-   "dmg_mult": 0.8,
-   "limbs": "none",
-   "parry": "stun",
-   "mechanic": "loot_thief",
-   "status": "new",
-   "flies": true,
-   "forbid": [
-    "fire"
-   ],
-   "intro": 2
-  },
-  "kladovik": {
-   "name": "Кладовик",
-   "location": 5,
-   "role": "support",
-   "hp_mult": 1.2,
-   "dmg_mult": 0.8,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "debt_mark",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "curse",
-    "call"
-   ],
-   "intro": 3
-  },
-  "istukan": {
-   "name": "Кощеев истукан",
-   "location": 5,
-   "role": "ambusher",
-   "hp_mult": 1.8,
-   "dmg_mult": 1.6,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "look_freeze",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blink",
-    "fire"
-   ],
-   "intro": 3
-  },
-  "kostnik": {
-   "name": "Костник",
-   "location": 5,
-   "role": "fodder",
-   "hp_mult": 0.5,
-   "dmg_mult": 0.7,
-   "limbs": "arm+head",
-   "parry": "arm_cut",
-   "mechanic": "reassemble",
-   "status": "new",
-   "flies": false,
-   "forbid": [
-    "blast",
-    "call"
-   ],
-   "intro": 1
+  "kinds": {
+    "balvan": {
+      "name": "Болванчик",
+      "location": 1,
+      "role": "fodder",
+      "hp_mult": 0.8,
+      "dmg_mult": 0.8,
+      "limbs": "arm_head",
+      "parry": "arm_cut",
+      "mechanic": "plain_swing",
+      "status": "new",
+      "flies": false,
+      "forbid": [],
+      "intro": 1
+    },
+    "crawler": {
+      "name": "Трясинник",
+      "location": 1,
+      "role": "bruiser",
+      "hp_mult": 1.13,
+      "dmg_mult": 1.0,
+      "limbs": "death",
+      "parry": "stun",
+      "mechanic": "charge_line",
+      "status": "existing",
+      "flies": false,
+      "forbid": [],
+      "intro": 1
+    },
+    "thrower": {
+      "name": "Упырь-метатель",
+      "location": 1,
+      "role": "ranged",
+      "hp_mult": 1.1,
+      "dmg_mult": 1.0,
+      "limbs": "head",
+      "parry": "deflect",
+      "mechanic": "lob_arc",
+      "status": "new_split",
+      "flies": false,
+      "forbid": [],
+      "intro": 2
+    },
+    "bloat": {
+      "name": "Утопленник",
+      "location": 1,
+      "role": "flyer",
+      "hp_mult": 0.87,
+      "dmg_mult": 1.83,
+      "limbs": "none",
+      "parry": "none",
+      "mechanic": "chain_blast",
+      "status": "existing",
+      "flies": true,
+      "forbid": [
+        "blast",
+        "fire"
+      ],
+      "intro": 2
+    },
+    "shishiga": {
+      "name": "Шишига",
+      "location": 1,
+      "role": "fodder",
+      "hp_mult": 0.4,
+      "dmg_mult": 0.25,
+      "limbs": "head",
+      "parry": "stun",
+      "mechanic": "cling",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "ward",
+        "call"
+      ],
+      "intro": 1
+    },
+    "bolotnitsa": {
+      "name": "Болотница",
+      "location": 1,
+      "role": "ambusher",
+      "hp_mult": 1.2,
+      "dmg_mult": 1.1,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "false_floor",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blink",
+        "fire"
+      ],
+      "intro": 3
+    },
+    "vodyanitsa": {
+      "name": "Водяница",
+      "location": 1,
+      "role": "support",
+      "hp_mult": 0.9,
+      "dmg_mult": 0.5,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "ward_song",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "ward",
+        "call"
+      ],
+      "intro": 3
+    },
+    "ringer": {
+      "name": "Аука",
+      "location": 2,
+      "role": "ambusher",
+      "hp_mult": 1.33,
+      "dmg_mult": 1.08,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "blink_behind",
+      "status": "existing",
+      "flies": false,
+      "forbid": [
+        "blink"
+      ],
+      "intro": 1
+    },
+    "rootling": {
+      "name": "Лешачонок",
+      "location": 2,
+      "role": "ambusher",
+      "hp_mult": 1.0,
+      "dmg_mult": 1.17,
+      "limbs": "head",
+      "parry": "stun",
+      "mechanic": "burrow_burst",
+      "status": "existing",
+      "flies": false,
+      "forbid": [
+        "fire",
+        "blink"
+      ],
+      "intro": 1
+    },
+    "bat": {
+      "name": "Нетопырь",
+      "location": 2,
+      "role": "flyer",
+      "hp_mult": 0.67,
+      "dmg_mult": 0.83,
+      "limbs": "none",
+      "parry": "stun+deflect",
+      "mechanic": "dive_swoop",
+      "status": "existing_moved",
+      "flies": true,
+      "forbid": [
+        "fire"
+      ],
+      "intro": 2
+    },
+    "sentry": {
+      "name": "Упырь-щитник",
+      "location": 2,
+      "role": "bruiser",
+      "hp_mult": 1.67,
+      "dmg_mult": 1.17,
+      "limbs": "head",
+      "parry": "stun",
+      "mechanic": "front_block",
+      "status": "existing_changed",
+      "flies": false,
+      "forbid": [
+        "ward"
+      ],
+      "intro": 2
+    },
+    "suchkovik": {
+      "name": "Сучковик",
+      "location": 2,
+      "role": "ranged",
+      "hp_mult": 1.3,
+      "dmg_mult": 1.25,
+      "limbs": "head",
+      "parry": "deflect",
+      "mechanic": "spear_platform",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blink",
+        "fire"
+      ],
+      "intro": 3
+    },
+    "lesavka": {
+      "name": "Лесавка",
+      "location": 2,
+      "role": "support",
+      "hp_mult": 0.6,
+      "dmg_mult": 0.6,
+      "limbs": "head",
+      "parry": "stun",
+      "mechanic": "haste_aura",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "call",
+        "ward"
+      ],
+      "intro": 3
+    },
+    "wolf": {
+      "name": "Снежный волк",
+      "location": 3,
+      "role": "fodder",
+      "hp_mult": 1.07,
+      "dmg_mult": 1.07,
+      "limbs": "death",
+      "parry": "stun",
+      "mechanic": "pair_bite",
+      "status": "existing",
+      "flies": false,
+      "forbid": [],
+      "intro": 1
+    },
+    "jelly": {
+      "name": "Студёный дух",
+      "location": 3,
+      "role": "flyer",
+      "hp_mult": 1.0,
+      "dmg_mult": 0.33,
+      "limbs": "none",
+      "parry": "stun",
+      "mechanic": "slow_zone",
+      "status": "existing",
+      "flies": true,
+      "forbid": [
+        "curse",
+        "fire"
+      ],
+      "intro": 2
+    },
+    "karachun": {
+      "name": "Карачун",
+      "location": 3,
+      "role": "bruiser",
+      "hp_mult": 2.0,
+      "dmg_mult": 1.2,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "ground_wave",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "ward"
+      ],
+      "intro": 1
+    },
+    "snezhnitsa": {
+      "name": "Снежница",
+      "location": 3,
+      "role": "ranged",
+      "hp_mult": 0.9,
+      "dmg_mult": 0.4,
+      "limbs": "head",
+      "parry": "deflect",
+      "mechanic": "freeze_stack",
+      "status": "new",
+      "flies": false,
+      "forbid": [],
+      "intro": 2
+    },
+    "sosulnik": {
+      "name": "Сосульник",
+      "location": 3,
+      "role": "ambusher",
+      "hp_mult": 0.8,
+      "dmg_mult": 1.5,
+      "limbs": "none",
+      "parry": "stun",
+      "mechanic": "ceiling_drop",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blink",
+        "fire"
+      ],
+      "intro": 3
+    },
+    "mara": {
+      "name": "Мара",
+      "location": 3,
+      "role": "support",
+      "hp_mult": 1.0,
+      "dmg_mult": 0.6,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "raise_frozen",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "call"
+      ],
+      "intro": 3
+    },
+    "drakeling": {
+      "name": "Змеёныш",
+      "location": 4,
+      "role": "area",
+      "hp_mult": 0.9,
+      "dmg_mult": 1.0,
+      "limbs": "death",
+      "parry": "deflect",
+      "mechanic": "fire_puddle",
+      "status": "planned",
+      "flies": false,
+      "forbid": [
+        "fire"
+      ],
+      "intro": 1
+    },
+    "letavets": {
+      "name": "Летавец",
+      "location": 4,
+      "role": "flyer",
+      "hp_mult": 0.8,
+      "dmg_mult": 0.9,
+      "limbs": "none",
+      "parry": "deflect",
+      "mechanic": "fire_bombard",
+      "status": "new",
+      "flies": true,
+      "forbid": [
+        "fire"
+      ],
+      "intro": 2
+    },
+    "polkan": {
+      "name": "Полкан",
+      "location": 4,
+      "role": "bruiser",
+      "hp_mult": 2.6,
+      "dmg_mult": 1.5,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "rear_kick",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "ward"
+      ],
+      "intro": 2
+    },
+    "ognevitsa": {
+      "name": "Огневица",
+      "location": 4,
+      "role": "ranged",
+      "hp_mult": 0.9,
+      "dmg_mult": 1.3,
+      "limbs": "head",
+      "parry": "deflect",
+      "mechanic": "homing_ember",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blink"
+      ],
+      "intro": 3
+    },
+    "anchutka": {
+      "name": "Анчутка",
+      "location": 4,
+      "role": "support",
+      "hp_mult": 0.7,
+      "dmg_mult": 0.6,
+      "limbs": "head",
+      "parry": "stun",
+      "mechanic": "heal_link",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "call",
+        "ward"
+      ],
+      "intro": 3
+    },
+    "shulikun": {
+      "name": "Шуликун",
+      "location": 4,
+      "role": "fodder",
+      "hp_mult": 0.55,
+      "dmg_mult": 0.8,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "hook_pull",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blink",
+        "call"
+      ],
+      "intro": 1
+    },
+    "ratnik": {
+      "name": "Костяной полонянин",
+      "location": 5,
+      "role": "bruiser",
+      "hp_mult": 2.4,
+      "dmg_mult": 2.0,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "unstoppable_swing",
+      "status": "planned",
+      "flies": false,
+      "forbid": [
+        "ward"
+      ],
+      "intro": 1
+    },
+    "bone_archer": {
+      "name": "Костяной стрелец",
+      "location": 5,
+      "role": "ranged",
+      "hp_mult": 1.0,
+      "dmg_mult": 1.2,
+      "limbs": "head",
+      "parry": "deflect",
+      "mechanic": "ricochet_shot",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blink"
+      ],
+      "intro": 2
+    },
+    "vran": {
+      "name": "Вран",
+      "location": 5,
+      "role": "flyer",
+      "hp_mult": 0.7,
+      "dmg_mult": 0.8,
+      "limbs": "none",
+      "parry": "stun",
+      "mechanic": "loot_thief",
+      "status": "new",
+      "flies": true,
+      "forbid": [
+        "fire"
+      ],
+      "intro": 2
+    },
+    "kladovik": {
+      "name": "Кладовик",
+      "location": 5,
+      "role": "support",
+      "hp_mult": 1.2,
+      "dmg_mult": 0.8,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "debt_mark",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "curse",
+        "call"
+      ],
+      "intro": 3
+    },
+    "istukan": {
+      "name": "Кощеев истукан",
+      "location": 5,
+      "role": "ambusher",
+      "hp_mult": 1.8,
+      "dmg_mult": 1.6,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "look_freeze",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blink",
+        "fire"
+      ],
+      "intro": 3
+    },
+    "kostnik": {
+      "name": "Костник",
+      "location": 5,
+      "role": "fodder",
+      "hp_mult": 0.5,
+      "dmg_mult": 0.7,
+      "limbs": "arm+head",
+      "parry": "arm_cut",
+      "mechanic": "reassemble",
+      "status": "new",
+      "flies": false,
+      "forbid": [
+        "blast",
+        "call"
+      ],
+      "intro": 1
+    }
   }
- }
 }
