@@ -1,11 +1,41 @@
-## Placeholder signs drawn with CanvasItem calls (art-bible §4.3 shapes): god
-## signs (gods.json "glyph") and door reward icons (room-generation §3.8-3.9).
+## God signs (gods.json "glyph"), rune icons and door reward icons
+## (room-generation §3.8-3.9, art-bible §4.3, §7). Draws the SVG icons of
+## assets/art/icons/ (tools/asset-pipeline/icons/build_icons.py) when they
+## exist, loaded once and cached; otherwise the old CanvasItem shapes.
 ## Shared by the rune offer, god choice, doors and reward orbs.
 class_name GodGlyph
 extends RefCounted
 
+const ICON_DIR: String = "res://assets/art/icons/"
+## Icon half-size per unit of sign radius `s` (the medallion rim is r=114 of a
+## 256 px canvas, its glow reaches the edge).
+const SIGN_SCALE: float = 1.12
+
+static var _cache: Dictionary = {}
+
+## Path of an icon: kind = "god" | "rune" | "door".
+static func icon_path(kind: String, id: String) -> String:
+	return ICON_DIR + "ui_icon_%s_%s.svg" % [kind, id]
+
+## The icon texture (cached), or null when the file does not exist.
+static func icon(kind: String, id: String) -> Texture2D:
+	var p := icon_path(kind, id)
+	if not _cache.has(p):
+		_cache[p] = load(p) as Texture2D if ResourceLoader.exists(p) else null
+	return _cache[p]
+
+## Draws the icon centred at `c` with half-size `half`; false if it is missing.
+static func draw_icon(ci: CanvasItem, kind: String, id: String, c: Vector2, half: float, alpha: float = 1.0) -> bool:
+	var t := icon(kind, id)
+	if t == null:
+		return false
+	ci.draw_texture_rect(t, Rect2(c - Vector2(half, half), Vector2(half, half) * 2.0), false, Color(1, 1, 1, alpha))
+	return true
+
 ## God sign of `g` centred at `c`, radius `s`.
 static func draw(ci: CanvasItem, g: String, c: Vector2, s: float, col: Color) -> void:
+	if draw_icon(ci, "god", g, c, s * SIGN_SCALE, col.a):
+		return
 	ci.draw_circle(c, s, Color(col, 0.12))
 	ci.draw_arc(c, s, 0.0, TAU, 48, col, 3.0)
 	match String((Tune.table("gods").get(g, {}) as Dictionary).get("glyph", "circle")):
@@ -42,9 +72,13 @@ static func door_icon(ci: CanvasItem, type: String, god: String, c: Vector2, s: 
 			draw(ci, god, c, s, col)
 			return
 		"rod":
+			if draw_icon(ci, "god", "rod", c, s * SIGN_SCALE, col.a):
+				return
 			draw(ci, "rod", c, s, col)
 			ci.draw_arc(c, s * 0.55, 0.0, TAU, 24, col, 3.0)
 			return
+	if draw_icon(ci, "door", type, c, s * SIGN_SCALE, col.a):
+		return
 	ci.draw_circle(c, s, Color(col, 0.12))
 	ci.draw_arc(c, s, 0.0, TAU, 48, col, 3.0)
 	match type:
