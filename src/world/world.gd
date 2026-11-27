@@ -21,6 +21,14 @@ var room_k: int = 2
 var tier: int = 1
 var seed_value: int = 1
 
+## Camera framing offset in world units (prototype px): the hero sits below centre.
+const CAM_OFFSET: Vector2 = Vector2(0, -120)
+## HUD text size in 1080p screen px (ADR-0004: HUD is laid out for 1920x1080, not
+## scaled by the camera). Moves to assets/ui/theme.tres when the theme exists.
+const HUD_FONT_SIZE: int = 27
+## HUD margin from the top-left corner, 1080p screen px.
+const HUD_MARGIN: Vector2 = Vector2(24, 18)
+
 func _ready() -> void:
 	InputSetup.register()
 	for a in OS.get_cmdline_user_args():
@@ -62,12 +70,15 @@ func start_room() -> void:
 	cam.limit_top = -400
 	cam.position_smoothing_enabled = true
 	cam.position_smoothing_speed = 8.0
+	# ADR-0004: the screen is 1920x1080 but the world stays in prototype units;
+	# zoom maps them, so the view shows 1280x720 units on 16:9 (more width on 21:9).
+	cam.zoom = Vector2.ONE * Tune.f("camera_zoom")
 	player.add_child(cam)
-	cam.offset = Vector2(0, -120)
+	cam.offset = CAM_OFFSET
 	var layer := CanvasLayer.new()
 	hud = Label.new()
-	hud.position = Vector2(16, 12)
-	hud.add_theme_font_size_override("font_size", 18)
+	hud.position = HUD_MARGIN
+	hud.add_theme_font_size_override("font_size", HUD_FONT_SIZE)
 	layer.add_child(hud)
 	add_child(layer)
 
@@ -88,7 +99,8 @@ func _physics_process(dt: float) -> void:
 	hitstop = maxf(0.0, hitstop - dt)
 	shake = maxf(0.0, shake - dt * Tune.f("shake_decay"))
 	if cam:
-		cam.offset = Vector2(randf_range(-shake, shake), -120 + randf_range(-shake, shake))
+		# Shake moves the offset, never the zoom (ADR-0004).
+		cam.offset = CAM_OFFSET + Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
 	for r: Dictionary in rings:
 		r.t += dt
 	var ring_time := Tune.f("ring_time")

@@ -71,5 +71,6 @@
   "hurt_knock_y": 330,
   "shake_hurt": 9,
   "hitstop_hurt": 0.07,
-  "hitstop_player_death": 0.25
+  "hitstop_player_death": 0.25,
+  "camera_zoom": 1.5
 }
