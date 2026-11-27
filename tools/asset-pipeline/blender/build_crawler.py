@@ -122,10 +122,10 @@ anims["attack"] = dict(frames=6, fps=16, keys=[(0, REAR2, "io"), (1, SLAM, "snap
                                                (6, dict(SLAM, rx=0.24, armR=-20, armL=-24, jaw=-18), "io")])
 HURT = dict(BASE, rx=-0.12, rz=0.03, body=14, head=-24, jaw=-20, armR=30, armL=20, foreR=20)
 anims["hurt"] = dict(frames=3, fps=12, keys=[(0, HURT, "out"), (1, dict(HURT, head=-28), "io"), (3, BASE, "io")])
-SLUMP = dict(BASE, rz=-0.32, body=-10, head=14, jaw=-25, armR=-70, foreR=60, armL=-60, foreL=70, legR=-60, shinR=80, legL=-55, shinL=75)
-FLAT = dict(SLUMP, rz=-0.4, root=-8, body=-6, head=20)
+SLUMP = dict(BASE, rz=-0.18, body=-10, head=14, jaw=-25, armR=-70, foreR=60, armL=-60, foreL=70, legR=-60, shinR=80, legL=-55, shinL=75)
+FLAT = dict(SLUMP, rz=-0.24, root=-8, body=-6, head=20)
 anims["death"] = dict(frames=10, fps=12, keys=[(0, HURT, "out"), (2, dict(HURT, body=20, head=-30, rz=0.06), "out"),
-                                               (6, SLUMP, "in"), (7, dict(SLUMP, rz=-0.36), "out"), (9, FLAT, "io"), (10, FLAT, "hold")])
+                                               (6, SLUMP, "in"), (7, dict(SLUMP, rz=-0.22), "out"), (9, FLAT, "io"), (10, FLAT, "hold")])
 if ONLY:
     anims = {k: v for k, v in anims.items() if k in ONLY}
 if STILL:

@@ -70,7 +70,7 @@ def tree(x, y, z, h, mat, rng, lean=0.0):
         if rng.random() < 0.7:
             a2 = a + math.radians(rng.uniform(-50, 40))
             L2 = L * 0.5
-            nc.capsule("tw", (ex, y, ez), (ex + side * math.cos(a2) * L2, y, ez + math.sin(a2) * L2), rb * 0.5, 0.01, mat, seg=6)
+            nc.capsule("tw", (ex, y, ez), (ex + side * math.cos(a2) * L2, y, ez + math.sin(a2) * L2), rb * 0.5, rb * 0.3, mat, seg=6)
 
 
 def idol(x, y, z, h, wood, dark, tilt=0.0, glow=None):
@@ -128,7 +128,7 @@ W = 2560
 setup(W, 1080, False)
 hw = W / PPM / 2
 nc.plane("sky", -hw - 1, hw + 1, -1, 10, 80, grad_mat("sky", SKY_T, SKY_H))
-moon = nc.glow("moon", "#E6F0D0", 1.6)
+moon = nc.glow("moon", "#C9D8B8", 0.95)
 nc.ellip("moon", (4.5, 70, 7.0), (0.75, 0.1, 0.75), moon)
 for i, (r, a) in enumerate(((1.4, 0.18), (2.4, 0.09), (4.0, 0.05))):
     nc.ellip("halo%d" % i, (4.5, 72 + i, 7.0), (r, 0.05, r), nc.fade_mat("halo", "#CFE3C0", 1.0, alpha=a, axis="v", power=0.0))
@@ -212,6 +212,7 @@ while x < hw + 0.5:
 render("ground.png")
 setup(512, 96, True, center=(0.0, 0.0))
 log = nc.toon("log", "#5A4632", rim="#E8C890", rim_k=0.4)
+mossm = nc.toon("moss_top", PLAT, rim="#D8F0A0", rim_k=0.5)
 nc.capsule("log", (-2.2, 0, -0.05), (2.2, 0, -0.05), 0.16, 0.15, log, seg=16, squash=(1, 1))
 for i in range(9):
     lx = -2 + i * 0.5

@@ -36,7 +36,9 @@ nc.sun((0.8, 0.6, 0.3), 0.6, "#7FA3C8", shadow=False)
 nc.ortho_camera(CELL[0], CELL[1], PPM, ORIGIN, SS)
 
 m_skin = nc.toon("skin", SKIN, shadow_tint="#7A5A7A", rim="#FFD9A8")
-m_lin = nc.toon("linen", LINEN, shadow_tint="#6A6E8E")
+m_lin = nc.toon("linen", LINEN, shadow_tint="#4E527E", rim="#FFE8C0", rim_k=0.5, levels=(0.2, 0.5))
+m_fold = nc.toon("linen_fold", "#A8987A", shadow_tint="#4E527E", rim_k=0.2)
+m_patch = nc.toon("patch", "#7A5A3A", shadow_tint="#5A4A6E", rim_k=0.2)
 m_wrap = nc.toon("wrap", WRAP, shadow_tint="#6A6E8E")
 m_stick = nc.toon("stick", STICK, shadow_tint="#6A5A7A")
 m_hair = nc.toon("hair", HAIR, shadow_tint="#6A5070", rim="#E8B070")
@@ -119,7 +121,12 @@ for s, y in (("R", -0.1), ("L", 0.1)):
     part(nc.capsule("th" + s, (0, y, 0.95), (0, y, 0.55), 0.11, 0.085, m_lin), "th" + s)
     part(nc.capsule("sh" + s, (0, y, 0.53), (0, y, 0.13), 0.075, 0.058, m_wrap), "sh" + s)
     part(nc.ellip("hem" + s, (0, y, 0.54), (0.092, 0.092, 0.05), m_lin, rot=(0.15, 0, 0)), "th" + s)
+    for k, (z, tl) in enumerate(((0.86, 0.25), (0.74, -0.2), (0.63, 0.3))):   # cloth folds
+        rig.attach(nc.torus("fold%s%d" % (s, k), (0.0, y, z), 0.098 - 0.008 * k, 0.012, m_fold, rot=(tl, 0.35, 0)), "th" + s)
+    for k in range(4):   # foot wraps spiral
+        rig.attach(nc.torus("wrap%s%d" % (s, k), (0, y, 0.45 - k * 0.09), 0.072 - 0.004 * k, 0.01, m_fold, rot=(0.3, 0.25, 0)), "sh" + s)
     part(nc.ellip("ft" + s, (0.06, y, 0.055), (0.12, 0.062, 0.052), m_wrap), "ft" + s)
+rig.attach(nc.ellip("patch", (0.05, -0.19, 0.76), (0.065, 0.025, 0.08), m_patch, rot=(0, 0.2, 0), seg=12), "thR")
 # knotted stick (grip in the near hand, points along +X at rest)
 part(nc.capsule("stick", (-0.16, R, 0.77), (0.98, R, 0.77), 0.03, 0.022, m_stick, bend=0.015), "stick")
 for i, x in enumerate((0.3, 0.62, 0.86)):
@@ -162,10 +169,12 @@ def run_keys():
             x = 0.4 * math.cos(ph)
             z = 0.1 + (0.26 * math.sin(ph - math.pi) if math.sin(ph) < 0 else 0.0)
             return (x, z)
-        pose = {"ik:R": foot(p), "ik:L": foot(p + math.pi), "rx": 0.05,
-                "rz": -0.07 + 0.05 * abs(math.sin(p)), "hips": 0, "spine": -20 + 3 * math.cos(2 * p),
-                "head": 12, "upR": -35 + 22 * math.cos(p + math.pi), "foR": 55,
-                "upL": 45 * math.cos(p), "foL": 50 + 20 * math.cos(p), "w:stick": 192,
+        # Dead Cells run: deep lean, big counter-swing, the stick rides the near
+        # arm (local angle, so it swings with it) held forward-diagonal.
+        pose = {"ik:R": foot(p), "ik:L": foot(p + math.pi), "rx": 0.08,
+                "rz": -0.1 + 0.07 * abs(math.sin(p)), "hips": 4 * math.cos(p), "spine": -30 + 4 * math.cos(2 * p),
+                "head": 18, "upR": -5 + 48 * math.cos(p + math.pi), "foR": 72 + 12 * math.sin(p),
+                "upL": 58 * math.cos(p), "foL": 62 + 25 * math.cos(p), "w:stick": None, "stick": -8 - 10 * math.cos(p),
                 "w:ftR": -15 + 25 * math.sin(p), "w:ftL": -15 + 25 * math.sin(p + math.pi)}
         keys.append((i, pose, "lin"))
     return keys
