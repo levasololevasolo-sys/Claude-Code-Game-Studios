@@ -1,0 +1,50 @@
+time	2026-11-27 06:40:02
+keep	lines	0	pinned	0
+checklist	L1	unlisted	-	Look: modern smooth 2D, no pixels: clean vector shapes with soft gradients and glow, painterly dark backgrounds in layered parallax (deep teal and indigo, cool shadows), the player in warm amber and cream, threats in rust red and sick magenta, loot and light in gold. Bold dark outlines on figures, none on the background. Signature: the screen is dark and the player's lantern really lights it; a Flare floods the room with light for a moment. Every figure drawn, no emoji, no plain circles.	
+checklist	L2	unlisted	-	References: Dead Cells (speed of movement and combat, side-view rooms, the run and permanent unlock loop: values only), Hades I and II (a boon chosen after each room, clear readable upgrade text, a death that still moves you forward: values only).	
+checklist	L3	unlisted	-	View: 2D side view · Camera: follows the player smoothly inside each room (`follow2d`), 1280x720 base, scales to fit.	
+checklist	F1	unlisted	-	Side-view movement: run, double jump, dash untouchable from its first moment	
+checklist	F2	unlisted	-	Melee strike combo with hit stop and knockback; health	
+checklist	F3	unlisted	-	The Lantern: charge from hits, Flare when full, light radius tied to charge	
+checklist	F4	unlisted	-	4 enemy kinds, each attacking differently (Rust Crawler charger, Wisp Bat swooper, Pike Sentry shielded spitter, Bloat exploder) and a Bell Warden boss	
+checklist	F5	unlisted	-	Rooms from hand-made layouts in a new order each run, safe first room, seed shown at the end	
+checklist	F6	unlisted	-	Boon choice after each room (one of three, each saying what it does), about 12 boons	
+checklist	F7	unlisted	-	Embers drop and fly to the player; Shrine between runs with permanent upgrades, saved	
+checklist	F8	unlisted	-	Ash levels: after a win, a harder run can be chosen	
+checklist	S1	unlisted	-	run system (runs that end in death) · in the slice	
+checklist	S2	unlisted	-	upgrades during a run (boons) · in the slice	
+checklist	S3	unlisted	-	permanent progression between runs · in the slice	
+checklist	S4	unlisted	-	rising difficulty on replay (Ash levels) · thin stand-in *(guessed)*	
+checklist	M1	unlisted	-	The title shows the knight with a dim lantern; Enter starts.	
+checklist	M2	unlisted	-	Room one is safe: a short corridor with on-screen key hints for move, jump and dash; the lantern barely lights the way.	
+checklist	M3	unlisted	-	Room two has two Rust Crawlers; striking them fills the lantern ring on the HUD, and at full the hint "L: Flare" pulses.	
+checklist	M4	unlisted	-	The Flare lights the whole room, stuns both, and the last one falls with a hard hit, a pause, and the door opens with a chime.	
+checklist	M5	unlisted	-	Three glowing boon cards appear: the player picks one, and the next room is already different.	
+checklist	C1	unlisted	-	Room two is gentle; by room four (about minute three) a mix of fliers and a shielded spitter forces dashing through shots.	
+checklist	C2	unlisted	-	Floor 2 adds the exploding Bloat and denser rooms; the run ends with a Bell Warden boss.	
+checklist	C3	unlisted	-	A death ends the run: boons are lost, collected Embers are kept and spent at the Shrine on small permanent upgrades (more health, a stronger Flare, a reroll).	
+checklist	C4	unlisted	-	After a win, the next run can be started at Ash level 1+ (enemies tougher and faster) for more Embers.	
+browser	HeadlessChrome/158.0.0.0
+scene	play	0	title
+scene	play	1	play
+digits	log	bold 16px "Trebuchet MS", "Segoe UI", Arial, sans-serif	proportional	3.922
+digits	log	bold 17px "Trebuchet MS", "Segoe UI", Arial, sans-serif	proportional	4.167
+digits	log	bold 20px "Trebuchet MS", "Segoe UI", Arial, sans-serif	proportional	4.902
+digits	log	14px "Trebuchet MS", "Segoe UI", Arial, sans-serif	proportional	3.35
+digits	log	bold 18px "Trebuchet MS", "Segoe UI", Arial, sans-serif	proportional	4.412
+measure	step-time	play	0.023	1.400	190
+lane	play	stop	3.2	135
+uncaught	play	0
+text	play	canvas	128,25,203,40	24.0	6.07	inside	100 / 100
+text	play	canvas	112,83,209,101	25.5	14.38	inside	Фонарь 0%
+text	play	canvas	1140,28,1153,44	30.0	15.64	inside	0
+text	play	canvas	1205,30,1250,42	22.5	9.21	inside	банк 0
+text	play	canvas	489,21,791,37	27.0	15.58	inside	Затопленные Часы · комната 1/5
+text	play	canvas	70,391,170,407	27.0	15.91	inside	A / D — бег
+text	play	canvas	267,331,614,349	27.0	16.00	inside	Пробел — прыжок, ещё раз в воздухе
+text	play	canvas	615,391,944,409	27.0	16.10	inside	Shift — рывок: в рывке ты неуязвим
+text	play	canvas	832,291,1247,309	27.0	16.10	inside	J — удар · L — Вспышка, когда фонарь полон
+text	play	canvas	926,221,1133,239	27.0	14.85	inside	Иди вправо, к двери →
+screen	play	drawn
+shot	play	prototypes/last-lumen/evidence/play.png
+responds	changed	4

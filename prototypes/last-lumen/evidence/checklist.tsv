@@ -1,0 +1,24 @@
+L1	pass	evidence/play.png	smooth vector figures with gradients and dark outlines, teal parallax background, dark room lit by the lantern (index.html:1233)
+L2	pass	evidence/boon.png	side-view rooms and fast moves; one-of-three boon cards with readable text; Embers kept on death
+L3	pass	evidence/play.png	2D side view, camera follows the knight inside the room (index.html updatePlay camera lines)
+F1	pass	index.html:439	run, double jump (airJumps), dash with inv set from its first step
+F2	pass	index.html:472	three-hit combo, hitstop and knockback; health bar in evidence/play.png
+F3	pass	index.html:402	charge per hit, Flare at 100, lightR() radius grows with charge; Фонарь 70% in evidence/boon.png
+F4	pass	evidence/figures.png	crawler charger, bat swooper, shielded sentry spitter, bloat exploder, Bell Warden; each its own silhouette (index.html:541-610)
+F5	pass	index.html:259	safe room first, ROOMS1/ROOMS2 shuffled by the run seed; seed shown on the end screen (drawEnd)
+F6	pass	evidence/boon.png	three cards with name, kind and what it does; 14 boons
+F7	pass	index.html:363	Embers burst out then fly to the knight; Shrine in evidence/shrine.png; saved with localStorage (index.html:181)
+F8	pass	index.html:819	a win unlocks the next Ash level; picked with left/right at the Shrine
+S1	pass	index.html:813	death ends the run and banks Embers; the win ends it at the Bell Warden
+S2	pass	evidence/boon.png	boons during a run
+S3	pass	evidence/shrine.png	six permanent upgrades bought with Embers
+S4	pass	index.html:281	Ash level scales enemy health, damage, speed and Embers (thin stand-in)
+M1	pass	evidence/title.png	the knight with a lantern on the title; Enter starts the run
+M2	pass	evidence/play.png	safe first room with key hints; small light radius at an empty lantern
+M3	pass	index.html:1353	room two (combat 1) is two Rust Crawlers; hits fill the lantern icon; at full the HUD pulses ВСПЫШКА ГОТОВА and a hint says press L
+M4	not_assessed	index.html:404	Flare flash, stun and room-clear hitstop and door sound are in the code; no shot caught a Flare, and the chime is a sound
+M5	pass	evidence/boon.png	three glowing cards; the pick is applied at once
+C1	not_assessed	index.html:243	rooms 3-4 mix bats and the shielded spitter by the wave table; whether it lands about minute three needs play
+C2	pass	index.html:224	floor 2 waves add Bloats and more enemies; the last room is the Bell Warden
+C3	pass	index.html:813	boons reset with the run, Embers kept and spent at the Shrine (health, Flare damage, reroll)
+C4	pass	index.html:819	Ash 1+ after a win: tougher, faster enemies and more Embers

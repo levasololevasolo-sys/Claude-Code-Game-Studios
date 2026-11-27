@@ -1,0 +1,139 @@
+# The one-shot's small check (check-run/1).
+# Written by one-shot-check.sh --record: the results are /prototype's reading of
+# evidence/self-check.tsv; never edited by hand.
+kind: check-run/1
+engine: web
+browser: "HeadlessChrome/158.0.0.0"
+time: "2026-11-27 06:40:02"
+checks:
+  - id: boots
+    result: pass
+    evidence:
+      - "evidence/self-check.tsv"
+  - id: shot
+    result: pass
+    evidence:
+      - "evidence/play.png"
+  - id: outlines
+    result: pass
+    evidence:
+      - "evidence/figures.png"
+  - id: brief-words
+    result: pass
+    evidence:
+      - "evidence/brief-words.tsv"
+  - id: emoji
+    result: pass
+    evidence:
+      - "evidence/self-check.tsv"
+  - id: nearest-game
+    result: pass
+    evidence:
+      - "evidence/nearest-game.txt"
+brief_checklist:
+  - id: L1
+    result: pass
+    evidence: "evidence/play.png"
+    item: "Look: modern smooth 2D, no pixels: clean vector shapes with soft gradients and glow, painterly dark backgrounds in layered parallax (deep teal and indigo, cool shadows), the player in warm amber and cream, threats in rust red and sick magenta, loot and light in gold. Bold dark outlines on figures, none on the background. Signature: the screen is dark and the player's lantern really lights it; a Flare floods the room with light for a moment. Every figure drawn, no emoji, no plain circles."
+  - id: L2
+    result: pass
+    evidence: "evidence/boon.png"
+    item: "References: Dead Cells (speed of movement and combat, side-view rooms, the run and permanent unlock loop: values only), Hades I and II (a boon chosen after each room, clear readable upgrade text, a death that still moves you forward: values only)."
+  - id: L3
+    result: pass
+    evidence: "evidence/play.png"
+    item: "View: 2D side view · Camera: follows the player smoothly inside each room (`follow2d`), 1280x720 base, scales to fit."
+  - id: F1
+    result: pass
+    evidence: "index.html:439"
+    item: "Side-view movement: run, double jump, dash untouchable from its first moment"
+  - id: F2
+    result: pass
+    evidence: "index.html:472"
+    item: "Melee strike combo with hit stop and knockback; health"
+  - id: F3
+    result: pass
+    evidence: "index.html:402"
+    item: "The Lantern: charge from hits, Flare when full, light radius tied to charge"
+  - id: F4
+    result: pass
+    evidence: "evidence/figures.png"
+    item: "4 enemy kinds, each attacking differently (Rust Crawler charger, Wisp Bat swooper, Pike Sentry shielded spitter, Bloat exploder) and a Bell Warden boss"
+  - id: F5
+    result: pass
+    evidence: "index.html:259"
+    item: "Rooms from hand-made layouts in a new order each run, safe first room, seed shown at the end"
+  - id: F6
+    result: pass
+    evidence: "evidence/boon.png"
+    item: "Boon choice after each room (one of three, each saying what it does), about 12 boons"
+  - id: F7
+    result: pass
+    evidence: "index.html:363"
+    item: "Embers drop and fly to the player; Shrine between runs with permanent upgrades, saved"
+  - id: F8
+    result: pass
+    evidence: "index.html:819"
+    item: "Ash levels: after a win, a harder run can be chosen"
+  - id: S1
+    result: pass
+    evidence: "index.html:813"
+    item: "run system (runs that end in death) · in the slice"
+  - id: S2
+    result: pass
+    evidence: "evidence/boon.png"
+    item: "upgrades during a run (boons) · in the slice"
+  - id: S3
+    result: pass
+    evidence: "evidence/shrine.png"
+    item: "permanent progression between runs · in the slice"
+  - id: S4
+    result: pass
+    evidence: "index.html:281"
+    item: "rising difficulty on replay (Ash levels) · thin stand-in *(guessed)*"
+  - id: M1
+    result: pass
+    evidence: "evidence/title.png"
+    item: "The title shows the knight with a dim lantern; Enter starts."
+  - id: M2
+    result: pass
+    evidence: "evidence/play.png"
+    item: "Room one is safe: a short corridor with on-screen key hints for move, jump and dash; the lantern barely lights the way."
+  - id: M3
+    result: pass
+    evidence: "index.html:1353"
+    item: "Room two has two Rust Crawlers; striking them fills the lantern ring on the HUD, and at full the hint \"L: Flare\" pulses."
+  - id: M4
+    result: not_run
+    mark: not assessed
+    why: "Flare flash, stun and room-clear hitstop and door sound are in the code; no shot caught a Flare, and the chime is a sound"
+    evidence: "index.html:404"
+    item: "The Flare lights the whole room, stuns both, and the last one falls with a hard hit, a pause, and the door opens with a chime."
+  - id: M5
+    result: pass
+    evidence: "evidence/boon.png"
+    item: "Three glowing boon cards appear: the player picks one, and the next room is already different."
+  - id: C1
+    result: not_run
+    mark: not assessed
+    why: "rooms 3-4 mix bats and the shielded spitter by the wave table; whether it lands about minute three needs play"
+    evidence: "index.html:243"
+    item: "Room two is gentle; by room four (about minute three) a mix of fliers and a shielded spitter forces dashing through shots."
+  - id: C2
+    result: pass
+    evidence: "index.html:224"
+    item: "Floor 2 adds the exploding Bloat and denser rooms; the run ends with a Bell Warden boss."
+  - id: C3
+    result: pass
+    evidence: "index.html:813"
+    item: "A death ends the run: boons are lost, collected Embers are kept and spent at the Shrine on small permanent upgrades (more health, a stronger Flare, a reroll)."
+  - id: C4
+    result: pass
+    evidence: "index.html:819"
+    item: "After a win, the next run can be started at Ash level 1+ (enemies tougher and faster) for more Embers."
+measures:
+  - id: step-time
+    value: 1.400
+    unit: ms
+    by: browser
+    detail: "mean 0.023 ms, slowest 1.400 ms, 190 steps"
