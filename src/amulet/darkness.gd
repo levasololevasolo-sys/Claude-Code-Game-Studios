@@ -20,6 +20,9 @@ var world: World
 var calm: bool = false
 ## Base darkness of the location (locations.json "darkness"; < 0 = tuning "darkness").
 var base: float = -1.0
+## Night tint the darkness multiplies toward (visuals.json dark_tint); alpha 0 =
+## the tuning "darkness_color".
+var tint: Color = Color(0, 0, 0, 0)
 ## Ash level "Навь темнее" open (0/1).
 var ash_level: int = 0
 ## Last values sent to the shader (read by checks and the HUD).
@@ -36,6 +39,8 @@ func _ready() -> void:
 	var c: Variant = Tune.get_value("darkness_color")
 	if c is String:
 		_mat.set_shader_parameter("dark_color", Color(String(c)))
+	if tint.a > 0.0:
+		_mat.set_shader_parameter("dark_color", tint)
 	_mat.set_shader_parameter("full_frac", Tune.f("light_full_frac"))
 	_mat.set_shader_parameter("mid_frac", Tune.f("light_mid_frac"))
 	_mat.set_shader_parameter("mid_level", Tune.f("light_mid_level"))

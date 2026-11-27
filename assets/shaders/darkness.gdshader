@@ -2,7 +2,12 @@
 // space covers the room; alpha = dk × (1 − hero light) × Π(1 − spot_i).
 // Plain canvas_item shader: uniform arrays and a bounded loop only, so it runs on
 // Forward+, Mobile and gl_compatibility alike (no 2D lights, no screen texture).
+// Visual upgrade (visual-upgrade-plan §2.4, §2.9): the darkness multiplies the
+// scene toward dark_color (the location's night tint, CanvasModulate-like) instead
+// of covering it with flat black, so depth, hue and contrast survive in the dark.
+// The amount is still dk × keep (F4, F5 unchanged).
 shader_type canvas_item;
+render_mode blend_mul;
 
 const int MAX_SPOTS = 64;
 
@@ -41,5 +46,5 @@ void fragment() {
 		float f = s.w * clamp((s.z - d) / max(s.z * 0.5, 0.001), 0.0, 1.0);
 		keep *= 1.0 - f;
 	}
-	COLOR = vec4(dark_color.rgb, dk * keep);
+	COLOR = vec4(mix(vec3(1.0), dark_color.rgb, clamp(dk * keep, 0.0, 1.0)), 1.0);
 }

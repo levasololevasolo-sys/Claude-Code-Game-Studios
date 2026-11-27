@@ -1,0 +1,570 @@
+{
+  "_note": "Presentation of each location style (design/art/visual-upgrade-plan.md §2, art-bible §4.2, §6). Keyed by locations.json look.props ('ruins' = swamp) plus 'base'. Visual only: nothing here touches collision or gameplay. layers = Parallax2D background layers back to front: scale = scroll_scale.x (vertical parallax is softer), kind = procedural placeholder painter, col = base colour, fog = 0..1 mix toward the fog colour (atmospheric perspective), tex = optional res:// image that replaces the placeholder (tiled every tile px; tex_y = its top relative to ground_y). terrain = ground and platform colours; dark_tint = colour the darkness multiplies toward (plan §2.9 CanvasModulate); post = vignette / grading / glow / grain, hero_glow = alpha of the warm additive light around the hero; particles = ambient CPUParticles2D around the camera; camera = look-ahead and vertical dead zone.",
+  "camera": {
+    "look_ahead": 140,
+    "look_time": 0.4,
+    "drag_up": 80,
+    "drag_down": 40
+  },
+  "forest": {
+    "fog": "#3e5878",
+    "layers": [
+      {
+        "kind": "sky",
+        "scale": 0.02,
+        "top": "#1e2e48",
+        "bottom": "#2e4466",
+        "moon": true,
+        "stars": 50
+      },
+      {
+        "kind": "hills",
+        "scale": 0.08,
+        "col": "#2a3d5c",
+        "fog": 0.75,
+        "bridge": true
+      },
+      {
+        "kind": "spruce",
+        "scale": 0.2,
+        "col": "#1b2a44",
+        "fog": 0.6,
+        "gap": 48,
+        "h": [
+          180,
+          380
+        ]
+      },
+      {
+        "kind": "fog",
+        "scale": 0.3,
+        "col": "#3e5878",
+        "alpha": 0.22,
+        "bands": [
+          [
+            -150,
+            90
+          ],
+          [
+            -40,
+            70
+          ]
+        ]
+      },
+      {
+        "kind": "rays",
+        "scale": 0.35,
+        "col": "#9fb8e0",
+        "alpha": 0.2,
+        "n": 4
+      },
+      {
+        "kind": "spruce",
+        "scale": 0.5,
+        "col": "#16233a",
+        "fog": 0.32,
+        "gap": 240,
+        "h": [
+          380,
+          600
+        ],
+        "trunk": true,
+        "eyes": "#ff8a3d"
+      },
+      {
+        "kind": "fog",
+        "scale": 0.6,
+        "col": "#3e5878",
+        "alpha": 0.14,
+        "bands": [
+          [
+            -30,
+            60
+          ]
+        ]
+      },
+      {
+        "kind": "trunks",
+        "scale": 0.8,
+        "col": "#0f1626",
+        "fog": 0.15,
+        "gap": 520,
+        "rim": "#5a6e92"
+      }
+    ],
+    "terrain": {
+      "body": "#2c2530",
+      "body_bottom": "#120f18",
+      "rim": "#5f6b3c",
+      "rim_light": "#8a9a52",
+      "plat": "#5a4a3a",
+      "plat_bottom": "#2a2028",
+      "plat_rim": "#7d8a48",
+      "hang": "#3a4a2c",
+      "solid": "#3a2e30",
+      "grain": 0.22,
+      "streak": 0.6
+    },
+    "dark_tint": "#3b5280",
+    "post": {
+      "vignette": 0.32,
+      "vignette_col": "#070a14",
+      "shadow": "#1a2a50",
+      "light": "#ffd8a0",
+      "sat": 0.95,
+      "glow_thr": 0.62,
+      "glow": 0.75,
+      "grain": 0.035,
+      "hero_glow": 0.12
+    },
+    "particles": [
+      {
+        "kind": "firefly",
+        "amount": 22,
+        "life": 6.5,
+        "col": "#ffe08a",
+        "size": [
+          0.06,
+          0.12
+        ],
+        "vel": [
+          6,
+          22
+        ],
+        "gravity": [
+          0,
+          -4
+        ],
+        "add": true
+      },
+      {
+        "kind": "leaf",
+        "amount": 9,
+        "life": 8.0,
+        "col": "#a08560",
+        "size": [
+          0.07,
+          0.11
+        ],
+        "vel": [
+          10,
+          30
+        ],
+        "gravity": [
+          6,
+          14
+        ],
+        "spin": 90
+      },
+      {
+        "kind": "mist",
+        "amount": 8,
+        "life": 10.0,
+        "col": "#5a7aa0",
+        "alpha": 0.1,
+        "size": [
+          3.0,
+          5.0
+        ],
+        "vel": [
+          4,
+          10
+        ],
+        "gravity": [
+          3,
+          0
+        ],
+        "low": true
+      }
+    ]
+  },
+  "ruins": {
+    "fog": "#5e7a62",
+    "layers": [
+      {
+        "kind": "sky",
+        "scale": 0.02,
+        "top": "#2b4034",
+        "bottom": "#3e5a4a",
+        "moon": false,
+        "stars": 20
+      },
+      {
+        "kind": "hills",
+        "scale": 0.08,
+        "col": "#34503f",
+        "fog": 0.7,
+        "bridge": true
+      },
+      {
+        "kind": "dead",
+        "scale": 0.2,
+        "col": "#24392f",
+        "fog": 0.6,
+        "gap": 150,
+        "h": [
+          180,
+          380
+        ]
+      },
+      {
+        "kind": "fog",
+        "scale": 0.3,
+        "col": "#5e7a62",
+        "alpha": 0.3,
+        "bands": [
+          [
+            -90,
+            110
+          ],
+          [
+            10,
+            90
+          ]
+        ]
+      },
+      {
+        "kind": "rays",
+        "scale": 0.35,
+        "col": "#c8e0a0",
+        "alpha": 0.06,
+        "n": 2
+      },
+      {
+        "kind": "water",
+        "scale": 0.45,
+        "col": "#1c3029",
+        "glint": "#7d9a7f"
+      },
+      {
+        "kind": "dead",
+        "scale": 0.5,
+        "col": "#1a2b23",
+        "fog": 0.3,
+        "gap": 300,
+        "h": [
+          380,
+          620
+        ],
+        "reeds": true
+      },
+      {
+        "kind": "fog",
+        "scale": 0.65,
+        "col": "#5e7a62",
+        "alpha": 0.2,
+        "bands": [
+          [
+            -20,
+            80
+          ]
+        ]
+      },
+      {
+        "kind": "trunks",
+        "scale": 0.8,
+        "col": "#121e19",
+        "fog": 0.15,
+        "gap": 620,
+        "rim": "#6e8a78",
+        "crooked": true
+      }
+    ],
+    "terrain": {
+      "body": "#26302a",
+      "body_bottom": "#0e1512",
+      "rim": "#4d5f3a",
+      "rim_light": "#7d9a5a",
+      "plat": "#4a4a38",
+      "plat_bottom": "#1e231c",
+      "plat_rim": "#6d8a4a",
+      "hang": "#3f5a32",
+      "solid": "#2a3530",
+      "grain": 0.24,
+      "streak": 0.2
+    },
+    "dark_tint": "#45684f",
+    "post": {
+      "vignette": 0.3,
+      "vignette_col": "#08120d",
+      "shadow": "#163828",
+      "light": "#e8f0a0",
+      "sat": 0.9,
+      "glow_thr": 0.6,
+      "glow": 0.8,
+      "grain": 0.035,
+      "hero_glow": 0.1
+    },
+    "particles": [
+      {
+        "kind": "spore",
+        "amount": 50,
+        "life": 5.0,
+        "col": "#b6e36b",
+        "size": [
+          0.04,
+          0.09
+        ],
+        "vel": [
+          4,
+          16
+        ],
+        "gravity": [
+          0,
+          -6
+        ],
+        "add": true
+      },
+      {
+        "kind": "mist",
+        "amount": 10,
+        "life": 11.0,
+        "col": "#6e8a72",
+        "alpha": 0.13,
+        "size": [
+          3.5,
+          6.0
+        ],
+        "vel": [
+          4,
+          10
+        ],
+        "gravity": [
+          3,
+          0
+        ],
+        "low": true
+      }
+    ]
+  },
+  "frost": {
+    "fog": "#e6eef5",
+    "layers": [
+      {
+        "kind": "sky",
+        "scale": 0.02,
+        "top": "#9fb4ca",
+        "bottom": "#c9d8e6",
+        "sun": true,
+        "stars": 0
+      },
+      {
+        "kind": "hills",
+        "scale": 0.08,
+        "col": "#b4c6d8",
+        "fog": 0.6,
+        "bridge": true,
+        "snow": true
+      },
+      {
+        "kind": "spires",
+        "scale": 0.2,
+        "col": "#94a9c0",
+        "fog": 0.45,
+        "gap": 170,
+        "h": [
+          220,
+          560
+        ]
+      },
+      {
+        "kind": "fog",
+        "scale": 0.3,
+        "col": "#e6eef5",
+        "alpha": 0.28,
+        "bands": [
+          [
+            -200,
+            160
+          ],
+          [
+            -40,
+            90
+          ]
+        ]
+      },
+      {
+        "kind": "rays",
+        "scale": 0.35,
+        "col": "#ffffff",
+        "alpha": 0.12,
+        "n": 3
+      },
+      {
+        "kind": "spruce",
+        "scale": 0.5,
+        "col": "#7c93ad",
+        "fog": 0.25,
+        "gap": 260,
+        "h": [
+          360,
+          580
+        ],
+        "trunk": true,
+        "snow": "#dde8f0"
+      },
+      {
+        "kind": "fog",
+        "scale": 0.6,
+        "col": "#e6eef5",
+        "alpha": 0.12,
+        "bands": [
+          [
+            -30,
+            70
+          ]
+        ]
+      },
+      {
+        "kind": "trunks",
+        "scale": 0.8,
+        "col": "#2c3b52",
+        "fog": 0.1,
+        "gap": 600,
+        "rim": "#dde8f0",
+        "snow": "#dde8f0"
+      }
+    ],
+    "terrain": {
+      "body": "#8aa0b8",
+      "body_bottom": "#3a4a62",
+      "rim": "#dde8f0",
+      "rim_light": "#ffffff",
+      "plat": "#9fc6dc",
+      "plat_bottom": "#4a6a88",
+      "plat_rim": "#eef4f8",
+      "hang": "#8fd3f5",
+      "solid": "#6f88a6",
+      "grain": 0.16,
+      "streak": 0.0,
+      "icicles": true
+    },
+    "dark_tint": "#21517f",
+    "post": {
+      "vignette": 0.25,
+      "vignette_col": "#2a3a58",
+      "shadow": "#304878",
+      "light": "#ffffff",
+      "sat": 0.9,
+      "glow_thr": 0.93,
+      "glow": 0.3,
+      "grain": 0.03,
+      "hero_glow": 0.0
+    },
+    "particles": [
+      {
+        "kind": "snow",
+        "amount": 120,
+        "life": 9.0,
+        "col": "#ffffff",
+        "size": [
+          0.04,
+          0.08
+        ],
+        "vel": [
+          20,
+          40
+        ],
+        "gravity": [
+          10,
+          26
+        ]
+      },
+      {
+        "kind": "snow",
+        "amount": 60,
+        "life": 7.0,
+        "col": "#ffffff",
+        "size": [
+          0.09,
+          0.14
+        ],
+        "vel": [
+          30,
+          60
+        ],
+        "gravity": [
+          16,
+          40
+        ],
+        "front": true
+      },
+      {
+        "kind": "spore",
+        "amount": 20,
+        "life": 4.0,
+        "col": "#8fd3f5",
+        "size": [
+          0.03,
+          0.06
+        ],
+        "vel": [
+          4,
+          12
+        ],
+        "gravity": [
+          0,
+          -3
+        ],
+        "add": true
+      }
+    ]
+  },
+  "base": {
+    "fog": "#2a3248",
+    "layers": [],
+    "terrain": {},
+    "dark_tint": "#4a5578",
+    "post": {
+      "vignette": 0.3,
+      "vignette_col": "#0a0a14",
+      "shadow": "#1d2a48",
+      "light": "#ffc070",
+      "sat": 1.0,
+      "glow_thr": 0.65,
+      "glow": 0.7,
+      "grain": 0.03,
+      "hero_glow": 0.08
+    },
+    "particles": [
+      {
+        "kind": "ember",
+        "amount": 24,
+        "life": 2.6,
+        "col": "#ff9a3c",
+        "size": [
+          0.04,
+          0.08
+        ],
+        "vel": [
+          20,
+          50
+        ],
+        "gravity": [
+          4,
+          -30
+        ],
+        "add": true
+      },
+      {
+        "kind": "firefly",
+        "amount": 12,
+        "life": 6.0,
+        "col": "#ffe08a",
+        "size": [
+          0.05,
+          0.1
+        ],
+        "vel": [
+          6,
+          18
+        ],
+        "gravity": [
+          0,
+          -4
+        ],
+        "add": true
+      }
+    ]
+  }
+}

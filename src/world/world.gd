@@ -67,7 +67,7 @@ var first_run: bool = false
 var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check="]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--vis-shots="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -75,11 +75,19 @@ const CAM_OFFSET: Vector2 = Vector2(0, -120)
 ## scaled by the camera). Moves to assets/ui/theme.tres when the theme exists.
 const HUD_FONT_SIZE: int = 27
 ## HUD margin from the top-left corner, 1080p screen px.
-const HUD_MARGIN: Vector2 = Vector2(24, 18)
-## Top-left of the amulet charge ring, 1080p screen px.
-const HUD_RING_POS: Vector2 = Vector2(28, 900)
-## Top-left of the weapon panel (weapons-and-loot §6 HUD), 1080p screen px.
-const HUD_WEAPON_POS: Vector2 = Vector2(360, 900)
+## The debug text sits under the amulet and weapon panel and shows only after F3
+## (visual-upgrade-plan §2.8).
+const HUD_MARGIN: Vector2 = Vector2(24, 190)
+## Top-left of the amulet charge ring, 1080p screen px (top-left, art-bible §7).
+const HUD_RING_POS: Vector2 = Vector2(28, 24)
+## Top-left of the weapon panel (weapons-and-loot §6 HUD), next to the amulet, 1080p screen px.
+const HUD_WEAPON_POS: Vector2 = Vector2(360, 30)
+## Debug text shown (F3 toggles; kept across rooms). `--debug-hud` starts with it on.
+static var debug_hud: bool = false
+## Current camera look-ahead, world px (visual-upgrade-plan §2.7).
+var _look: float = 0.0
+## Air of the room (particles, dust, hero glow).
+var atmosphere: Atmosphere
 
 func _ready() -> void:
 	# Hit-feel clocks tick before the hero and the enemies (Player sets -1).
@@ -92,6 +100,8 @@ func _ready() -> void:
 			room_k = maxi(1, int(a.trim_prefix("--room=")))
 		elif a == "--ai-debug":
 			ai_debug = true
+		elif a == "--debug-hud":
+			debug_hud = true
 		elif a.begins_with("--amulet="):
 			amulet_id = a.trim_prefix("--amulet=")
 		elif a.begins_with("--runes="):
@@ -160,6 +170,10 @@ func _ready() -> void:
 			var bc: Node = (load("res://tests/integration/base/base_check_driver.gd") as GDScript).new()
 			bc.set("out_dir", a.trim_prefix("--base-check="))
 			add_child(bc)
+		elif a.begins_with("--vis-shots="):
+			var vs: Node = (load("res://tests/integration/visual/vis_shots_driver.gd") as GDScript).new()
+			vs.set("out_dir", a.trim_prefix("--vis-shots="))
+			add_child(vs)
 		elif a.begins_with("--run-check="):
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
@@ -172,7 +186,7 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	for c in get_children():
 		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
 				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot \
-				or c is Chest or c is Trap or c is FireTrail or c is KnightReward:
+				or c is Chest or c is Trap or c is FireTrail or c is KnightReward or c is Atmosphere:
 			if c is Enemy:
 				c.remove_from_group("enemies")
 			c.queue_free()
@@ -188,6 +202,8 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	var loc: Dictionary = Tune.table("locations").get(str(tier), {})
 	room = Room.new()
 	room.look = loc.get("look", {})
+	var vis := visuals_for(layout, room.look)
+	room.vis = vis
 	RenderingServer.set_default_clear_color(Color(String(room.look.get("sky", "#0c1418"))))
 	add_child(room)
 	room.build(layout)
@@ -235,13 +251,23 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	cam.limit_top = mini(-400, int(float(layout.get("top", 0.0)) - 40.0))
 	cam.position_smoothing_enabled = true
 	cam.position_smoothing_speed = 8.0
+	# Vertical dead zone (plan §2.7): margins are fractions of half the view height.
+	var camv: Dictionary = Tune.table("visuals").get("camera", {})
+	var half_h := 540.0 / Tune.f("camera_zoom")
+	cam.drag_vertical_enabled = true
+	cam.drag_top_margin = float(camv.get("drag_up", 80.0)) / half_h
+	cam.drag_bottom_margin = float(camv.get("drag_down", 40.0)) / half_h
+	_look = 0.0
 	# ADR-0004: the screen is 1920x1080 but the world stays in prototype units;
 	# zoom maps them, so the view shows 1280x720 units on 16:9 (more width on 21:9).
 	cam.zoom = Vector2.ONE * Tune.f("camera_zoom")
 	player.add_child(cam)
 	cam.offset = CAM_OFFSET
+	add_child(PostFx.make(vis.get("post", {})))
 	var layer := CanvasLayer.new()
+	layer.layer = PostFx.LAYER + 1
 	hud = Label.new()
+	hud.visible = debug_hud
 	hud.position = HUD_MARGIN
 	hud.add_theme_font_size_override("font_size", HUD_FONT_SIZE)
 	layer.add_child(hud)
@@ -257,7 +283,28 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	darkness = Darkness.new()
 	darkness.world = self
 	darkness.base = float(loc.get("darkness", -1.0))
+	darkness.tint = Color(String(vis.get("dark_tint", "#00000000")))
 	add_child(darkness)
+	atmosphere = Atmosphere.new()
+	atmosphere.world = self
+	atmosphere.vis = vis
+	atmosphere.dust = Color(String((vis.get("terrain", {}) as Dictionary).get("rim", "#8a7a60")))
+	add_child(atmosphere)
+
+## The visuals.json style of a room: "base" for the base yard, else the
+## location's look.props ("ruins" = swamp, "forest", "frost").
+static func visuals_for(layout: Dictionary, look: Dictionary) -> Dictionary:
+	var key := "base" if bool(layout.get("base", false)) else String(look.get("props", "ruins"))
+	var t := Tune.table("visuals")
+	return t.get(key, t.get("ruins", {}))
+
+## F3 shows or hides the debug text (visual-upgrade-plan §2.8).
+func _unhandled_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k and k.pressed and not k.echo and k.keycode == KEY_F3:
+		debug_hud = not debug_hud
+		if hud:
+			hud.visible = debug_hud
 
 ## Chunk-room props (room-generation §3.6, §3.10, §3.13): the knight on his
 ## own pack, chests, the breakable wall and the traps of its pocket.
@@ -368,7 +415,12 @@ func _physics_process(dt: float) -> void:
 	shake = maxf(0.0, shake - dt * Tune.f("shake_decay"))
 	if cam:
 		# Shake moves the offset, never the zoom (ADR-0004).
-		cam.offset = CAM_OFFSET + Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
+		# Look-ahead in the facing direction (plan §2.7), eased over look_time.
+		var camv: Dictionary = Tune.table("visuals").get("camera", {})
+		if player and is_instance_valid(player):
+			var want := float(player.face) * float(camv.get("look_ahead", 140.0))
+			_look += (want - _look) * minf(1.0, dt / maxf(float(camv.get("look_time", 0.4)), 0.01))
+		cam.offset = CAM_OFFSET + Vector2(_look, 0.0) + Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
 	for r: Dictionary in rings:
 		r.t += dt
 	var ring_time := Tune.f("ring_time")
