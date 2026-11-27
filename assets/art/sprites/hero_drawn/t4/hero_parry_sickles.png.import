@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dawxaort6c7s5"
-path="res://.godot/imported/hero_parry.png-8a8a367ff5f71f997c1d668201bcdb6a.ctex"
+uid="uid://coyku8x53lob4"
+path="res://.godot/imported/hero_parry_sickles.png-f65ef2d02086314a600b79da39fe9517.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/sprites/hero_drawn/t5/hero_parry.png"
-dest_files=["res://.godot/imported/hero_parry.png-8a8a367ff5f71f997c1d668201bcdb6a.ctex"]
+source_file="res://assets/art/sprites/hero_drawn/t4/hero_parry_sickles.png"
+dest_files=["res://.godot/imported/hero_parry_sickles.png-f65ef2d02086314a600b79da39fe9517.ctex"]
 
 [params]
 

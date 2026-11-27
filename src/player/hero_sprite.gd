@@ -85,6 +85,14 @@ static func load_meta(path: String) -> Dictionary:
 	return d if d is Dictionary else {}
 
 
+## Sheet of the parry pose for a strike body ("parry_blade" for the stick and
+## unknown bodies; plain "parry" if the sheets have no per-body poses).
+static func parry_anim(body: String, anims: Dictionary) -> String:
+	if anims.has("parry_" + body):
+		return "parry_" + body
+	return "parry_blade" if anims.has("parry_blade") else "parry"
+
+
 ## Frame index for progress k (0..1) of an n-frame move.
 static func frame_for_progress(k: float, n: int) -> int:
 	return clampi(int(k * float(n)), 0, maxi(n - 1, 0))
@@ -158,7 +166,10 @@ func _process(dt: float) -> void:
 	_hurt_t -= adt
 	_flash_t -= dt
 	var pick := HeroVisual.choose(HeroVisual.state_of(player), _hurt_t)
-	_show(String(pick.anim))
+	var anim_name := String(pick.anim)
+	if anim_name == "parry":
+		anim_name = parry_anim(player.weapon.body_id() if player.weapon else "", _meta.get("anims", {}))
+	_show(anim_name)
 	var a: Dictionary = _meta.anims[_cur]
 	var n := int(a.frames)
 	var k: float = pick.k

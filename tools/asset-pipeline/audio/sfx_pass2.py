@@ -367,6 +367,12 @@ def parry_clang(seed):
     return tail(mix(strike, ring, spark, thump(0.06, 400, 200, 0.01) * 0.4), r, 0.3, 0.07, 0.16, 1500, 9000)
 
 
+def parry_start():
+    """Short swish of the guard coming up (parry pressed)."""
+    r = rng_of(3311)
+    return mix(whoosh(0.13, r, 1500, 6500, 2500, 2.4), whoosh(0.1, r, 400, 1200, 500, 1.2, "lp") * 0.3)
+
+
 def parry_whiff():
     r = rng_of(3301)
     return mix(whoosh(0.22, r, 700, 4200, 900, 2.0), whoosh(0.22, r, 200, 600, 200, 1.0, "lp") * 0.4)
@@ -881,7 +887,7 @@ def sounds():
               "limb_head_pop": limb_head_pop,
               "limb_part_thud_1": lambda: limb_part_thud(3201), "limb_part_thud_2": lambda: limb_part_thud(3202),
               "parry_clang_1": lambda: parry_clang(3401), "parry_clang_2": lambda: parry_clang(3402),
-              "parry_whiff": parry_whiff,
+              "parry_whiff": parry_whiff, "parry_start": parry_start,
               "enemy_death_2": lambda: enemy_death_v(3501), "enemy_death_3": lambda: enemy_death_v(3502)})
     for surf, base in [("mud", 4001), ("dirt", 4011), ("snow", 4021), ("wood", 4031)]:
         for i in range(3):

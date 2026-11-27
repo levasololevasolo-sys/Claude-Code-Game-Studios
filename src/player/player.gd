@@ -869,6 +869,7 @@ func start_parry() -> bool:
 		return false
 	parry_t = Tune.f("parry_window")
 	parry_cd = Tune.f("parry_cooldown")
+	Audio.play_at(&"parry_start", position)
 	parry_started.emit()
 	return true
 
@@ -905,6 +906,11 @@ func _draw_parry() -> void:
 	if parry_t <= 0.0 and parry_fx <= 0.0:
 		return
 	var at := Vector2(face * 22.0, -H * 0.55)
+	if visual != null and visual.has_method("hand_point"):
+		# contact point on the weapon in the hand (the drawn hero's guard pose)
+		var a := _blade_angle()
+		var reach := minf(weapon.reach() * 0.72 * 0.55, 40.0) if weapon else 30.0
+		at = visual.call("hand_point") + Vector2(cos(a) * face, sin(a)) * reach
 	if parry_t > 0.0:
 		var k := parry_t / maxf(Tune.f("parry_window"), 0.01)
 		draw_arc(at, 26.0, -PI * 0.5 * face - 1.0, -PI * 0.5 * face + 1.0, 14, Color(0.85, 0.95, 1.0, 0.5 + 0.5 * k), 4.0)
@@ -913,7 +919,8 @@ func _draw_parry() -> void:
 		for i in 10:
 			var a := TAU * float(i) / 10.0
 			draw_line(at + Vector2(cos(a), sin(a)) * 8.0, at + Vector2(cos(a), sin(a)) * (14.0 + 30.0 * (1.0 - f)), Color(1.0, 0.9, 0.5, f), 2.5)
-		draw_circle(at, 10.0 * f, Color(1, 1, 1, f))
+		draw_circle(at, 34.0 * f, Color(1.0, 0.85, 0.45, 0.35 * f))
+		draw_circle(at, 16.0 * f, Color(1, 1, 1, f))
 
 # ---------------- drawing (placeholder art until the asset pass) ----------------
 const CLOAK := Color("#2f4a52")
@@ -970,11 +977,18 @@ func _draw_shield() -> void:
 		# Zhiva shield (§3.14): green ring around the hero.
 		draw_arc(Vector2(0, -H / 2.0), H * 0.75, 0.0, TAU, 40, Color("#9ff0b0", 0.4 + 0.5 * shield / maxf(Tune.f("shield_max"), 1.0)), 3.0)
 
+## Weapon angle in the parry poses per strike body: [guard, caught, whiffed].
+## Same angles as PARRY in tools/asset-pipeline/hero2d/poses.py (drawn hero).
+const PARRY_BLADE: Dictionary = {
+	"blade": [-0.3, -0.65, 0.5], "hammer": [-1.45, -0.35, 1.0], "spear": [-1.15, -1.4, 0.35],
+	"staff": [-1.05, -1.3, 0.4], "sickles": [-1.0, -1.3, 0.4],
+}
+
 func _blade_angle() -> float:
-	match parry_pose():
-		"parry": return -1.25
-		"parry_hit": return -1.6
-		"parry_open": return 0.5
+	var pp := parry_pose()
+	if pp != "":
+		var row: Array = PARRY_BLADE.get(weapon.body_id(), PARRY_BLADE.blade)
+		return float(row[["parry", "parry_hit", "parry_open"].find(pp)])
 	if atk_t <= 0.0:
 		return 2.2 if dash_t > 0.0 and rolling else 0.9
 	var k := clampf(1.0 - atk_t / atk_dur, 0.0, 1.0)

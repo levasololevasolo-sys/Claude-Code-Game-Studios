@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://g0itdfycdeh0"
-path="res://.godot/imported/hero_parry.png-ddd79c15250d73bd971200190710c505.ctex"
+uid="uid://dl3dfxprjidkg"
+path="res://.godot/imported/hero_parry_spear.png-b6a2d92d082b4d51cdbc46ef8b7a4ec5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/sprites/hero_drawn/t4/hero_parry.png"
-dest_files=["res://.godot/imported/hero_parry.png-ddd79c15250d73bd971200190710c505.ctex"]
+source_file="res://assets/art/sprites/hero_drawn/t3/hero_parry_spear.png"
+dest_files=["res://.godot/imported/hero_parry_spear.png-b6a2d92d082b4d51cdbc46ef8b7a4ec5.ctex"]
 
 [params]
 

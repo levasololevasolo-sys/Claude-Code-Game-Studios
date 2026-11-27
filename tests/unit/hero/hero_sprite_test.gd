@@ -45,7 +45,8 @@ func test_drawn_hero_has_every_animation_in_every_tier_with_hand_points() -> voi
 	var meta := HeroSprite.load_meta("res://assets/art/sprites/hero_drawn/hero_drawn_sheets.json")
 	var anims: Dictionary = meta.get("anims", {})
 	for a in ["idle", "run", "jump", "fall", "roll", "dash", "strike_1", "strike_2", "strike_3",
-			"strike_up", "strike_down", "hurt", "death", "flare", "parry"]:
+			"strike_up", "strike_down", "hurt", "death", "flare",
+			"parry_blade", "parry_hammer", "parry_spear", "parry_staff", "parry_sickles"]:
 		assert_bool(anims.has(a)).override_failure_message("no drawn sheet for %s" % a).is_true()
 		if not anims.has(a):
 			continue
@@ -71,3 +72,9 @@ func test_parry_pose_picks_parry_frames() -> void:
 	assert_int(HeroSprite.frame_for_progress(HeroVisual.choose(s).k, 5)).is_equal(4)
 	s.parry = ""
 	assert_str(String(HeroVisual.choose(s).anim)).is_equal("idle")
+
+func test_parry_sheet_follows_the_weapon_body() -> void:
+	var anims := { "parry_blade": {}, "parry_hammer": {} }
+	assert_str(HeroSprite.parry_anim("hammer", anims)).is_equal("parry_hammer")
+	assert_str(HeroSprite.parry_anim("", anims)).is_equal("parry_blade")
+	assert_str(HeroSprite.parry_anim("spear", {})).is_equal("parry")
