@@ -84,10 +84,12 @@ _cache = {}
 
 
 def toon(name, base, shadow_tint="#5B5F8A", rim="#FFE2B0", rim_k=0.45, emit=0.0,
-         fog=None, fog_k=0.0, soft=0.07, levels=(0.16, 0.42)):
+         fog=None, fog_k=0.0, soft=0.07, levels=(0.16, 0.42), paint=None):
     """Three-tone cel material. base/shadow_tint/rim are hex; emit adds base*emit glow;
-    fog_k blends toward the fog colour (background layers)."""
-    key = (name, base, fog_k)
+    fog_k blends toward the fog colour (background layers). paint: dict for a
+    procedural painted albedo (see paint_nodes); the cel ramp, cool shadow tint and
+    rim stay the same, only the base colour varies over the surface."""
+    key = (name, base, fog_k, repr(paint))
     if key in _cache:
         return _cache[key]
     m = bpy.data.materials.new(name)
@@ -116,8 +118,16 @@ def toon(name, base, shadow_tint="#5B5F8A", rim="#FFE2B0", rim_k=0.45, emit=0.0,
     sh = tuple(min(1.0, bc[i] * st[i] * 2.2) for i in range(3)) + (1,)
     mx = n.new("ShaderNodeMixRGB")
     l.new(ramp.outputs[0], mx.inputs[0])
-    mx.inputs[1].default_value = sh
-    mx.inputs[2].default_value = bc
+    if paint:
+        bsock = paint_nodes(nt, base, paint)
+        shm = n.new("ShaderNodeVectorMath"); shm.operation = "MULTIPLY"
+        l.new(bsock, shm.inputs[0])
+        shm.inputs[1].default_value = tuple(st[i] * 2.2 for i in range(3))
+        l.new(shm.outputs[0], mx.inputs[1])
+        l.new(bsock, mx.inputs[2])
+    else:
+        mx.inputs[1].default_value = sh
+        mx.inputs[2].default_value = bc
     col = mx.outputs[0]
     # rim: grazing angle on the side away from the key light (camera-space +x/+y)
     lw = n.new("ShaderNodeLayerWeight")
@@ -162,6 +172,120 @@ def toon(name, base, shadow_tint="#5B5F8A", rim="#FFE2B0", rim_k=0.45, emit=0.0,
     l.new(em.outputs[0], out.inputs[0])
     _cache[key] = m
     return m
+
+
+def _mix(nt, fac, a, b, blend="MIX"):
+    m = nt.nodes.new("ShaderNodeMixRGB"); m.blend_type = blend
+    for sock, v in ((m.inputs[0], fac), (m.inputs[1], a), (m.inputs[2], b)):
+        if isinstance(v, str):
+            sock.default_value = hexc(v)
+        elif isinstance(v, (int, float)):
+            sock.default_value = v
+        else:
+            nt.links.new(v, sock)
+    return m.outputs[0]
+
+
+def _math(nt, op, a, b=None, clamp=False):
+    m = nt.nodes.new("ShaderNodeMath"); m.operation = op; m.use_clamp = clamp
+    for sock, v in ((m.inputs[0], a), (m.inputs[1], b)):
+        if v is None:
+            continue
+        if isinstance(v, (int, float)):
+            sock.default_value = v
+        else:
+            nt.links.new(v, sock)
+    return m.outputs[0]
+
+
+def _remap(nt, v, a, b, c=0.0, d=1.0):
+    m = nt.nodes.new("ShaderNodeMapRange")
+    nt.links.new(v, m.inputs[0])
+    m.inputs[1].default_value, m.inputs[2].default_value = a, b
+    m.inputs[3].default_value, m.inputs[4].default_value = c, d
+    return m.outputs[0]
+
+
+def paint_nodes(nt, base, p):
+    """Procedural painted albedo on the mesh's 'rest' point attribute (undeformed
+    metres, so the pattern sticks to the skinned surface and does not swim).
+    p: kind (skin, cloth, wood, hair, wrap, rope, plain), c2 (blotch colour),
+    c3 (detail colour), amt, scale, dirt (hex, cloth: darker toward the ground)."""
+    n, l = nt.nodes, nt.links
+    at = n.new("ShaderNodeAttribute"); at.attribute_name = "rest"
+    kind = p.get("kind", "plain")
+    sc = p.get("scale", 12.0)
+    vm = n.new("ShaderNodeVectorMath"); vm.operation = "MULTIPLY"
+    l.new(at.outputs["Vector"], vm.inputs[0])
+    vm.inputs[1].default_value = (sc, sc, sc * (0.12 if kind == "hair" else 1.0))
+    vec = vm.outputs[0]
+    nz = n.new("ShaderNodeTexNoise"); nz.inputs["Detail"].default_value = 4.0
+    nz.inputs["Roughness"].default_value = 0.62
+    l.new(vec, nz.inputs["Vector"])
+    f = _remap(nt, nz.outputs["Fac"], 0.32, 0.68, 0.0, p.get("amt", 0.4))
+    col = _mix(nt, f, base, p.get("c2", base))
+    # flat 'brush patches': cellular value jitter, the hand-painted look
+    vo = n.new("ShaderNodeTexVoronoi"); vo.inputs["Scale"].default_value = 1.0
+    vm2 = n.new("ShaderNodeVectorMath"); vm2.operation = "SCALE"
+    l.new(vec, vm2.inputs[0]); vm2.inputs["Scale"].default_value = p.get("patch", 0.7)
+    l.new(vm2.outputs[0], vo.inputs["Vector"])
+    bw = n.new("ShaderNodeRGBToBW"); l.new(vo.outputs["Color"], bw.inputs[0])
+    jit = _remap(nt, bw.outputs[0], 0.0, 1.0, 1.0 - p.get("jit", 0.07), 1.0 + p.get("jit", 0.07))
+    col = _mul(nt, col, jit)
+    sep = n.new("ShaderNodeSeparateXYZ"); l.new(at.outputs["Vector"], sep.inputs[0])
+    if kind == "cloth":
+        for axis, s2 in (("X", 1.0), ("Z", 1.0)):
+            wv = n.new("ShaderNodeTexWave"); wv.bands_direction = axis
+            wv.inputs["Scale"].default_value = p.get("weave", 9.0) * s2
+            wv.inputs["Distortion"].default_value = 1.5
+            l.new(at.outputs["Vector"], wv.inputs["Vector"])
+            col = _mix(nt, _remap(nt, wv.outputs["Fac"], 0.6, 1.0, 0.0, 0.1), col, p.get("c3", "#6E6250"))
+        if p.get("dirt"):
+            dz = _remap(nt, sep.outputs["Z"], p.get("dirt_z", (0.25, 0.75))[0], p.get("dirt_z", (0.25, 0.75))[1], 0.55, 0.0)
+            col = _mix(nt, _math(nt, "MULTIPLY", dz, nz.outputs["Fac"]), col, p["dirt"])
+    elif kind == "wood":
+        wv = n.new("ShaderNodeTexWave"); wv.bands_direction = "Y"
+        wv.inputs["Scale"].default_value = p.get("grain", 3.0)
+        wv.inputs["Distortion"].default_value = 6.0; wv.inputs["Detail"].default_value = 3.0
+        gm = n.new("ShaderNodeVectorMath"); gm.operation = "MULTIPLY"
+        l.new(at.outputs["Vector"], gm.inputs[0]); gm.inputs[1].default_value = (1.5, 14.0, 14.0)
+        l.new(gm.outputs[0], wv.inputs["Vector"])
+        col = _mix(nt, _remap(nt, wv.outputs["Fac"], 0.4, 1.0, 0.0, 0.55), col, p.get("c3", "#4A3020"))
+    elif kind == "hair":
+        col = _mix(nt, _remap(nt, nz.outputs["Fac"], 0.55, 0.75, 0.0, 0.6), col, p.get("c3", "#E0A060"))
+    elif kind in ("wrap", "rope"):
+        aw = n.new("ShaderNodeAttribute"); aw.attribute_name = "wrapuv"
+        sw = n.new("ShaderNodeSeparateXYZ"); l.new(aw.outputs["Vector"], sw.inputs[0])
+        pitch = p.get("pitch", 0.035)
+        ph = _math(nt, "ADD", _math(nt, "DIVIDE", sw.outputs["Y"], pitch), _math(nt, "MULTIPLY", sw.outputs["X"], p.get("twist", 0.35)))
+        band = _math(nt, "COSINE", _math(nt, "MULTIPLY", ph, 6.2832))
+        col = _mix(nt, _remap(nt, band, 0.45, 0.95, 0.0, 0.6), col, p.get("c3", "#4E4234"))
+        if kind == "wrap":   # criss-cross binding cords above the ankle
+            for sgn in (1, -1):
+                q = _math(nt, "FRACT", _math(nt, "ADD", _math(nt, "DIVIDE", sw.outputs["Y"], 0.09), _math(nt, "MULTIPLY", sw.outputs["X"], 2.0 * sgn)))
+                dq = _math(nt, "ABSOLUTE", _math(nt, "SUBTRACT", q, 0.5))
+                cm = _math(nt, "MULTIPLY", _remap(nt, dq, 0.075, 0.05, 0.0, 1.0), sw.outputs["Z"])
+                col = _mix(nt, cm, col, p.get("cord", "#3A2A20"))
+    return col
+
+
+def _mul(nt, col, k):
+    m = nt.nodes.new("ShaderNodeVectorMath"); m.operation = "SCALE"
+    nt.links.new(col, m.inputs[0]); nt.links.new(k, m.inputs["Scale"])
+    return m.outputs[0]
+
+
+def set_point_attr(o, name, values, kind="FLOAT_VECTOR"):
+    """values: per-vertex tuples (FLOAT_VECTOR) or floats."""
+    me = o.data
+    a = me.attributes.get(name) or me.attributes.new(name, kind, "POINT")
+    flat = [c for v in values for c in v] if kind == "FLOAT_VECTOR" else list(values)
+    a.data.foreach_set("vector" if kind == "FLOAT_VECTOR" else "value", flat)
+
+
+def add_rest(o):
+    """Store the undeformed local vertex positions as the 'rest' attribute (paint_nodes)."""
+    set_point_attr(o, "rest", [tuple(v.co) for v in o.data.vertices])
 
 
 def glow(name, hexcol, strength=2.0):

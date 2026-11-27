@@ -101,6 +101,58 @@ What is still far from Dead Cells:
 - Smears are ghostly (additive-ish blend) rather than the crisp, opaque
   Dead Cells smear shapes.
 
+## v2 hero (branch `art-3d-v2`, 2026-11-27): real anatomy, skinned, painted
+
+Evidence: `art3d-v2-hero-sheet.png` (all 14 animations), `art3d-v2-hero-closeup.png`
+(idle frame 0 at 2x), `art3d-v2-compare.png` (v1 vs v2, same frames).
+
+| Piece | File |
+|---|---|
+| Fetch the CC0 MakeHuman files (sparse, ~6 MB, not committed) | `tools/asset-pipeline/blender/fetch_makehuman.sh` |
+| Base body: targets, stylisation, FK re-pose, weight folding (system Python + numpy) | `tools/asset-pipeline/blender/mh_base.py` |
+| Derived base (committed, 0.5 MB; the only input build_hero.py needs) | `tools/asset-pipeline/blender/data/hero_base.json.gz` |
+| Painted albedo nodes, `rest` attribute | `navi_common.paint_nodes`, `navi_common.add_rest` |
+| Spring bones (follow-through) | `navi_rig.Rig.secondary` |
+
+What changed:
+- **Body**: MakeHuman hm08 base mesh (CC0), young male with a lean muscular build,
+  head x1.07, hands x1.22, feet x1.1 for game read. Re-posed by FK with MakeHuman's
+  own skeleton and smooth weights: arms hanging, near hand closed into a fist
+  around the stick, far hand relaxed. One mesh, skinned to our 14-bone planar rig
+  (the 163 MakeHuman bones' weights folded onto it), so shoulders, elbows, knees
+  bend smoothly; no tubes.
+- **Face**: real nose, brow ridge, ears, eyelids; eyeballs with sclera/iris/pupil
+  and a highlight; heavy stern brows (shell); outline thinned on the face and
+  hands and removed around the eyes (per-vertex solidify width).
+- **Clothes and hair as shells grown from the body** (inherit its weights):
+  baggy linen trousers with folds and dirt toward the hem, foot wraps with spiral
+  bands and criss-cross cords, rope belt with a twisted pattern, scalp hair, a full
+  beard pointed and pushed forward at the chin, plus tapered strands for a shaggy
+  silhouette.
+- **Secondary motion**: hair, beard, belt end and amulet hang on spring bones
+  (damped point mass on a rigid bone, gravity blend; loops simulated three cycles
+  so the cycle closes).
+- **Painted look**: procedural albedo on an undeformed `rest` attribute (no
+  swimming): noise colour variation, voronoi brush-patch value jitter, cloth weave,
+  wood grain, hair streaks, wrap bands; under the same cel ramp, cool shadow
+  tint, warm rim and warm-black outline as v1.
+- Frame names, cell size (560x480), origin and sheet layout are unchanged:
+  `src/player/hero_sprite.gd` and `scenes/hero/hero_sprite.tscn` need no change.
+
+Regenerate: `sh tools/asset-pipeline/blender/fetch_makehuman.sh /tmp/mh` and
+`python3 tools/asset-pipeline/blender/mh_base.py /tmp/mh/makehuman/data tools/asset-pipeline/blender/data/hero_base.json.gz`
+(only when changing the body), then build_hero.py + pack_sheets.py as above.
+Render: ~8.5 s per frame (colour + normal) here, about 3x v1 (13.5k-vertex body,
+subdivided shells); a full hero rebuild ~15 min on this CPU, ~1 min with a GPU.
+
+Honest v2 assessment: anatomy, hands, face and clothing now read as a real
+character, and hanging parts follow through. Still short of Dead Cells: the
+painted look is procedural (no hand-painted highlights or authored texture
+maps), hair is a shell + strands rather than sculpted locks (reads a bit slicked
+back), legs keep MakeHuman's A-stance splay in 3/4 view, the body is generic
+MakeHuman (no sculpted stylisation of the silhouette), the run/attack keys are
+still the v1 script keys (no torso twist), and smears are still the v1 crescents.
+
 ## What the developer can add on their PC (all free)
 
 1. **Blender with GPU** (any recent NVIDIA/AMD): same scripts, 10-20x faster;
