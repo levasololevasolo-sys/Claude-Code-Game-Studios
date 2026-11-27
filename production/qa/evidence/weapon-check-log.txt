@@ -1,0 +1,98 @@
+stick (blade, Дрын): per swing [8.25, 8.25, 14.85], charge x1.00, reach 70
+OK   stick: every swing of the combo hit the dummy
+screenshot weapon-blade-swing.png
+blade (blade, Меч-кладенец): per swing [11.0, 11.0, 19.8], charge x1.00, reach 78
+OK   blade: every swing of the combo hit the dummy
+OK   blade combo is 11 / 11 / 19.8 (identical to the old port)
+ringsword (blade, Звонкий меч): per swing [10.45, 10.45, 18.81], charge x2.00, reach 78
+OK   ringsword: every swing of the combo hit the dummy
+ragesword (blade, Ярый меч): per swing [11.0, 11.44, 21.38], charge x1.00, reach 78
+OK   ragesword: every swing of the combo hit the dummy
+perunsword (blade, Меч Перуна): per swing [11.0, 11.0, 19.8], charge x1.00, reach 78
+OK   perunsword: every swing of the combo hit the dummy
+spear (spear, Рогатина): per swing [11.0, 18.7], charge x1.00, reach 128
+OK   spear: every swing of the combo hit the dummy
+berdysh (spear, Бердыш): per swing [11.0, 18.7], charge x1.00, reach 128
+OK   berdysh: every swing of the combo hit the dummy
+arrowspear (spear, Сулица-стрела): per swing [11.0, 18.7], charge x1.00, reach 128
+OK   arrowspear: every swing of the combo hit the dummy
+velesspear (spear, Копьё Велеса): per swing [11.0, 18.7], charge x1.00, reach 128
+OK   velesspear: every swing of the combo hit the dummy
+thunderpike (spear, Рогатина Громовника): per swing [12.1, 20.57], charge x1.00, reach 140
+OK   thunderpike: every swing of the combo hit the dummy
+sickles (sickles, Парные серпы): per swing [11.0, 11.0, 11.0, 11.0, 24.2], charge x0.65, reach 64
+OK   sickles: every swing of the combo hit the dummy
+frostscythe (sickles, Ледяная коса): per swing [11.0, 11.0, 11.0, 11.0, 24.2], charge x0.65, reach 64
+OK   frostscythe: every swing of the combo hit the dummy
+marascythe (sickles, Коса Мары): per swing [12.1, 12.1, 12.1, 12.1, 26.62], charge x0.65, reach 73
+OK   marascythe: every swing of the combo hit the dummy
+whirlsickles (sickles, Вихрь-серпы): per swing [11.0, 11.0, 11.0, 11.0, 24.2], charge x0.65, reach 64
+OK   whirlsickles: every swing of the combo hit the dummy
+screenshot weapon-hammer-swing.png
+hammer (hammer, Булава): per swing [11.0, 24.64], charge x1.80, reach 100
+OK   hammer: every swing of the combo hit the dummy
+flail (hammer, Кистень): per swing [9.9, 22.18], charge x1.80, reach 100
+OK   flail: every swing of the combo hit the dummy
+chekan (hammer, Чекан): per swing [11.0, 24.64], charge x1.80, reach 100
+OK   chekan: every swing of the combo hit the dummy
+jumphammer (hammer, Молот-прыгун): per swing [11.0, 24.64], charge x1.80, reach 100
+OK   jumphammer: every swing of the combo hit the dummy
+thornmace (hammer, Шипастая булава): per swing [11.0, 24.64], charge x1.80, reach 100
+OK   thornmace: every swing of the combo hit the dummy
+screenshot weapon-staff-swing.png
+staff (staff, Шест): per swing [9.35, 9.35, 9.35, 9.35], charge x1.00, reach 105
+OK   staff: every swing of the combo hit the dummy
+koromyslo (staff, Коромысло): per swing [8.8, 8.8, 8.8, 8.8], charge x1.00, reach 96
+OK   koromyslo: every swing of the combo hit the dummy
+batog (staff, Батог): per swing [9.9, 9.9, 9.9, 9.9], charge x1.00, reach 96
+OK   batog: every swing of the combo hit the dummy
+oslop (staff, Ослоп): per swing [11.0, 11.0, 11.0, 11.0], charge x1.00, reach 105
+OK   oslop: every swing of the combo hit the dummy
+OK   Бердыш below 25%: 27.50 = 2.5 × 11.00
+OK   Сулица-стрела 0.1 s after a dash: 19.80 = 1.8 × 11.00
+OK   Ледяная коса on a stunned dummy: 17.60 = 1.6 × 11.00
+OK   Ярый меч at full rage: 17.60 = 11 × 1.6
+OK   Меч Перуна finisher on a target with 1 charge -> discharge
+OK   Рогатина Громовника with Svarog + Perun: burn 3.00 s, shock 1
+Кистень hit 9.90
+OK   Батог up-strike launch vy -1024 vs Шест -640 (×1.60)
+OK   Батог hit on a launched foe: 18.56 = 11 × 0.9 × 1.5 × air_mult
+staff near the wall: wall slam damage []
+oslop near the wall: wall slam damage []
+OK   Копьё Велеса: cursed target died (true), neighbour cursed 2.80 s
+OK   Коса Мары: kill returned the dash (cd -0.02)
+bow: hits 1, damage 14.00, burn on dummy 1.50 s, cooldown 0.70 s
+OK   bow hit the dummy
+OK   bow with Удар Сварога burns 0.5 × burn_time (1.50)
+bomb: hits 1, damage 34.00, burn on dummy 1.50 s, cooldown 3.00 s
+OK   bomb hit the dummy
+beartrap: hits 1, damage 26.00, burn on dummy 1.50 s, cooldown 2.50 s
+OK   beartrap hit the dummy
+javelin: hits 1, damage 28.00, burn on dummy 1.50 s, cooldown 1.20 s
+OK   javelin hit the dummy
+sling: hits 1, damage 10.00, burn on dummy 1.50 s, cooldown 0.60 s
+OK   sling hit the dummy
+crossbow: hits 1, damage 30.00, burn on dummy 1.50 s, cooldown 1.40 s
+OK   crossbow hit the dummy
+axes: hits 4, damage 56.00, burn on dummy 1.50 s, cooldown 1.50 s
+OK   axes hit the dummy
+spikes: hits 5, damage 30.00, burn on dummy 1.50 s, cooldown 4.00 s
+OK   spikes hit the dummy
+totem: hits 4, damage 36.00, burn on dummy 1.50 s, cooldown 8.00 s
+OK   totem hit the dummy
+boltwand: hits 1, damage 20.00, burn on dummy 1.48 s, cooldown 1.60 s
+OK   boltwand hit the dummy
+windflute: hits 1, damage 8.00, burn on dummy 1.48 s, cooldown 2.50 s
+OK   windflute hit the dummy
+navbell: hits 1, damage 10.00, burn on dummy 1.48 s, cooldown 4.00 s
+OK   navbell hit the dummy
+OK   «Двойное» bow, empty Strike slot: 2 hits, no status
+OK   the hero stands by the drop
+screenshot weapon-compare-card.png
+OK   E took Громовое · Кистень ★★★
+OK   the old Меч-кладенец ★ lies on the same spot
+OK   taking again swaps back (AC 11)
+OK   sub swap: Навий колокол in hand, cooldown cleared
+screenshot weapon-hud.png
+12 rolls on a new save: sub:javelin:q1:, arm:frostscythe:q2:, arm:marascythe:q2:, sub:windflute:q2:, arm:ringsword:q2:, sub:sling:q3:s_dmg, sub:spikes:q2:, arm:jumphammer:q1:, arm:velesspear:q3:a_perun, sub:javelin:q2:, sub:spikes:q2:, sub:sling:q2:; pity { "e": 3, "l": 8 }
+DONE: 0 failed checks

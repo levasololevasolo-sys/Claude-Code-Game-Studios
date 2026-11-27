@@ -12,8 +12,10 @@ const KEYS := {
 	"dash": [KEY_SHIFT, KEY_K],
 	"flare": [KEY_L],
 	"interact": [KEY_E],
+	"sub": [KEY_U],
 }
 const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON_RIGHT_SHOULDER, "flare": JOY_BUTTON_Y, "interact": JOY_BUTTON_B,
+	"sub": JOY_BUTTON_LEFT_SHOULDER,
 	"move_left": JOY_BUTTON_DPAD_LEFT, "move_right": JOY_BUTTON_DPAD_RIGHT,
 	"move_up": JOY_BUTTON_DPAD_UP, "move_down": JOY_BUTTON_DPAD_DOWN }
 
@@ -36,6 +38,10 @@ static func register() -> void:
 	var rmb := InputEventMouseButton.new()
 	rmb.button_index = MOUSE_BUTTON_RIGHT
 	InputMap.action_add_event("flare", rmb)
+	# Secondary weapon (weapons-and-loot §3.4): U, middle mouse, gamepad LB (RB is dash).
+	var mmb := InputEventMouseButton.new()
+	mmb.button_index = MOUSE_BUTTON_MIDDLE
+	InputMap.action_add_event("sub", mmb)
 	for pair: Array in [["move_left", JOY_AXIS_LEFT_X, -1.0], ["move_right", JOY_AXIS_LEFT_X, 1.0],
 			["move_up", JOY_AXIS_LEFT_Y, -1.0], ["move_down", JOY_AXIS_LEFT_Y, 1.0]]:
 		var ax := InputEventJoypadMotion.new()

@@ -45,7 +45,7 @@ func step(dt: float) -> void:
 		life = 0.0
 		return
 	if p.atk_t > 0.0:
-		var reach: float = (Tune.get_value("blade") as Dictionary).get("reach", 0.0)
+		var reach: float = p.weapon.reach() if p.weapon else 0.0
 		if absf(position.y - (p.position.y - Tune.f("hero_aim_dy"))) < Tune.f("shot_swat_dy") \
 				and (position.x - p.position.x) * p.face > 0.0 and absf(position.x - p.position.x) < reach + Tune.f("shot_swat_extra"):
 			life = 0.0

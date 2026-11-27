@@ -11,6 +11,8 @@
 ## Runes (gods-and-runes): `--runes=svarog_s:2,perun_d,duo_storm` starts with
 ## those runes (id[:level]), `--rune-offer=<god>[:wide]` opens the rune offer
 ## screen at start, `--god-check=<dir>` runs the scripted per-god check.
+## Weapons (weapons-and-loot): `--weapon=<id>` / `--sub=<id>` pick the hero's
+## weapons in the legacy modes, `--weapon-check=<dir>` runs the weapon check.
 ## Run mode (default when none of the legacy check flags above is given): a
 ## RunDirector child plays the run of GDD room-generation-and-doors (rooms, doors,
 ## lair, haven, summary) on the Game autoload's RunState. `--run-check=<dir>`
@@ -49,9 +51,14 @@ var build: RunBuild
 var offer_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## The run flow (null in the legacy check modes).
 var director: RunDirector
+## Weapons in hand, kept across rooms (weapons-and-loot §3.9). arm null = the
+## Player default (Меч-кладенец ★, legacy checks); sub_arm null = empty slot.
+var arm: Weapon
+var sub_arm: Weapon
+var weapon_hud: WeaponHud
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room="]
+const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -62,6 +69,8 @@ const HUD_FONT_SIZE: int = 27
 const HUD_MARGIN: Vector2 = Vector2(24, 18)
 ## Top-left of the amulet charge ring, 1080p screen px.
 const HUD_RING_POS: Vector2 = Vector2(28, 900)
+## Top-left of the weapon panel (weapons-and-loot §6 HUD), 1080p screen px.
+const HUD_WEAPON_POS: Vector2 = Vector2(360, 900)
 
 func _ready() -> void:
 	# Hit-feel clocks tick before the hero and the enemies (Player sets -1).
@@ -78,6 +87,10 @@ func _ready() -> void:
 			amulet_id = a.trim_prefix("--amulet=")
 		elif a.begins_with("--runes="):
 			build = RunBuild.from_arg(a.trim_prefix("--runes="))
+		elif a.begins_with("--weapon="):
+			arm = Weapon.from_dict({ "id": a.trim_prefix("--weapon=") })
+		elif a.begins_with("--sub="):
+			sub_arm = Weapon.from_dict({ "id": a.trim_prefix("--sub="), "kind": Weapon.SUB })
 	if build == null:
 		build = RunBuild.make()
 	offer_rng.seed = seed_value * 7919 + 17
@@ -118,6 +131,10 @@ func _ready() -> void:
 			var fc: Node = (load("res://tests/integration/amulet/flare_check_driver.gd") as GDScript).new()
 			fc.set("out_dir", a.trim_prefix("--flare-check="))
 			add_child(fc)
+		elif a.begins_with("--weapon-check="):
+			var wc: Node = (load("res://tests/integration/loot/weapon_check_driver.gd") as GDScript).new()
+			wc.set("out_dir", a.trim_prefix("--weapon-check="))
+			add_child(wc)
 		elif a.begins_with("--run-check="):
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
@@ -129,7 +146,7 @@ func _ready() -> void:
 func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) -> void:
 	for c in get_children():
 		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
-				or c is Flare or c is Darkness or c is Door or c is RewardOrb:
+				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot:
 			if c is Enemy:
 				c.remove_from_group("enemies")
 			c.queue_free()
@@ -160,6 +177,14 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	player.world = self
 	player.amulet = Amulet.make(amulet_id, Tune.data)
 	player.build = build
+	player.weapon = arm
+	player.sub = sub_arm
+	player.roll_rng.seed = seed_value * 31 + tier * 7 + room_k
+	player.weapon_changed.connect(func(slot: String) -> void:
+		if slot == Weapon.SUB:
+			sub_arm = player.sub
+		else:
+			arm = player.weapon)
 	# The charge stays between rooms of one location (amulet-and-flare §3.1).
 	player.amulet.charge = minf(keep_charge, player.amulet.cap)
 	player.position = Vector2(160, Tune.f("ground_y"))
@@ -185,6 +210,10 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	amulet_hud.amulet = player.amulet
 	amulet_hud.position = HUD_RING_POS
 	layer.add_child(amulet_hud)
+	weapon_hud = WeaponHud.new()
+	weapon_hud.hero = player
+	weapon_hud.position = HUD_WEAPON_POS
+	layer.add_child(weapon_hud)
 	add_child(layer)
 	darkness = Darkness.new()
 	darkness.world = self
@@ -282,7 +311,7 @@ func _physics_process(dt: float) -> void:
 			total += 1
 			if not (e as Enemy).asleep:
 				awake += 1
-		hud.text = "Навь — проверка основы (Godot)    Комната %d, ширина %d px    Враги: %d (не спят %d)    HP %d  Щит %d\n%s\nA/D бег · Пробел прыжок · J удар (W вверх, S в воздухе вниз) · Shift перекат/рывок · S+Пробел спрыгнуть · L / ПКМ Вспышка" % [room_k, int(room.layout.w), total, awake, roundi(player.hp), roundi(player.shield), build.hud_text()]
+		hud.text = "Навь — проверка основы (Godot)    Комната %d, ширина %d px    Враги: %d (не спят %d)    HP %d  Щит %d\n%s\nA/D бег · Пробел прыжок · J удар (W вверх, S в воздухе вниз) · Shift перекат/рывок · L Вспышка · U доп. оружие · E взять" % [room_k, int(room.layout.w), total, awake, roundi(player.hp), roundi(player.shield), build.hud_text()]
 	queue_redraw()
 
 func _draw() -> void:

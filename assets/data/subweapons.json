@@ -1,0 +1,15 @@
+{
+  "_note": "Secondary weapons, weapons-and-loot §3.4 (12). cd s, dmg absolute. type = how SubWeapons fires it. No own elements: each hit puts the Strike-slot god's status at sub_god_k. Speeds, sizes, lifetimes of projectiles are PROVISIONAL (not in the GDD).",
+  "bow": { "name": "Охотничий лук", "rar": "c", "price": { "iron": 8 }, "cd": 0.7, "dmg": 14, "type": "shot", "speed": 1100, "r": 8, "life": 0.9, "tip": "быстрая стрела" },
+  "bomb": { "name": "Горшок с порохом", "rar": "c", "price": { "resin": 10 }, "cd": 3.0, "dmg": 34, "type": "bomb", "speed": 520, "up": 560, "gravity": 1600, "r": 10, "blast_r": 110, "life": 2.0, "tip": "взрыв 110 px" },
+  "beartrap": { "name": "Медвежий капкан", "rar": "c", "price": { "frost": 8 }, "cd": 2.5, "dmg": 26, "type": "trap", "hold": 1.5, "w": 44, "life": 12, "ahead": 50, "tip": "держит врага 1.5 с" },
+  "javelin": { "name": "Сулица", "rar": "c", "price": {}, "cd": 1.2, "dmg": 28, "type": "shot", "speed": 900, "r": 10, "life": 1.2, "pierce": true, "tip": "тяжёлое копьё сквозь всех на линии" },
+  "sling": { "name": "Праща", "rar": "c", "price": {}, "cd": 0.6, "dmg": 10, "type": "shot", "speed": 950, "r": 7, "life": 0.9, "stun": 0.4, "tip": "камень оглушает на 0.4 с" },
+  "crossbow": { "name": "Самострел", "rar": "r", "price": { "iron": 12, "frost": 6 }, "cd": 1.4, "dmg": 30, "type": "shot", "speed": 1300, "r": 8, "life": 0.9, "kb_k": 2.0, "tip": "болт отбрасывает в стену" },
+  "axes": { "name": "Метательные топорики", "rar": "r", "price": {}, "cd": 1.5, "dmg": 14, "type": "axes", "count": 2, "speed": 820, "r": 12, "out": 0.38, "life": 1.4, "spread": 40, "tip": "два топорика летят и возвращаются, бьют дважды" },
+  "spikes": { "name": "Колья", "rar": "r", "price": {}, "cd": 4.0, "dmg": 6, "type": "spikes", "len": 260, "life": 3.0, "tick": 0.5, "tip": "полоса кольев 260 px на 3 с ранит раз в 0.5 с" },
+  "totem": { "name": "Идол-стрелок", "rar": "e", "price": {}, "cd": 8.0, "dmg": 9, "type": "totem", "life": 6.0, "every": 0.6, "range": 520, "speed": 900, "tip": "идол 6 с стреляет в ближнего врага раз в 0.6 с" },
+  "boltwand": { "name": "Жезл-перескок", "rar": "e", "price": {}, "cd": 1.6, "dmg": 20, "type": "chain", "jumps": 3, "jump_r": 260, "tip": "молния прыгает по 3 врагам (до 260 px)" },
+  "windflute": { "name": "Свирель Стрибога", "rar": "l", "price": {}, "cd": 2.5, "dmg": 8, "type": "gust", "r": 300, "kb": 500, "tip": "ураган отбрасывает всех в 300 px в стены" },
+  "navbell": { "name": "Навий колокол", "rar": "l", "price": {}, "cd": 4.0, "dmg": 10, "type": "ring", "r": 220, "stun": 0.8, "tip": "звон 220 px оглушает всех на 0.8 с" }
+}

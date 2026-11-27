@@ -22,25 +22,6 @@
   "slam_r": 140,
   "launch_speed": 640,
   "air_mult": 1.25,
-  "blade": {
-    "times": [
-      0.24,
-      0.24,
-      0.32
-    ],
-    "mult": [
-      1.0,
-      1.0,
-      1.8
-    ],
-    "win": [
-      0.25,
-      0.7
-    ],
-    "lunge": 120,
-    "reach": 78,
-    "charge": 1.0
-  },
   "room_w_first": 2000,
   "room_w_base": 2800,
   "room_w_step": 450,
@@ -268,5 +249,61 @@
   "orb_gap": 150,
   "base_confirm_time": 3,
   "death_summary_delay": 1.2,
-  "enter_sleep_delay": 0.9
+  "enter_sleep_delay": 0.9,
+  "_note_loot": "Weapons and loot, weapons-and-loot §3.1, §3.5-3.10, §4, §7. Rows in weapons.json, subweapons.json, affixes.json, bodies in weapon_bodies.json. arms_sources: chance / quality bonus / counts toward arms_auto_cap (§3.8; owners room-generation and enemies GDDs).",
+  "rar_w": {
+    "c": 50,
+    "r": 32,
+    "e": 13,
+    "l": 5
+  },
+  "luck_shift": 9,
+  "luck_split_l": 4,
+  "main_share": 0.6,
+  "q_tier": 8,
+  "q_bonus": 15,
+  "q3_base": 15,
+  "q2_base": 55,
+  "q_mult2": 1.15,
+  "q_mult3": 1.3,
+  "affix_god_share": 0.6,
+  "sub_god_k": 0.5,
+  "pity_e_max": 15,
+  "pity_l_max": 25,
+  "tier_min_runonly": 2,
+  "arms_auto_cap": 7,
+  "arms_sources": {
+    "boss": {
+      "chance": 1.0,
+      "bonus": 1,
+      "auto": true
+    },
+    "door": {
+      "chance": 1.0,
+      "bonus": 1,
+      "auto": false
+    },
+    "knight": {
+      "chance": 1.0,
+      "bonus": 1,
+      "auto": false
+    },
+    "chest": {
+      "chance": 0.2,
+      "bonus": 0,
+      "auto": true
+    },
+    "cache": {
+      "chance": 0.5,
+      "bonus": 1,
+      "auto": true
+    },
+    "elite": {
+      "chance": 0.1,
+      "bonus": 0,
+      "auto": true
+    }
+  },
+  "drop_reach": 70,
+  "sub_buffer": 0.15
 }

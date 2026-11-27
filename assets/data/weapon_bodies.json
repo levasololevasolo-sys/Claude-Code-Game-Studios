@@ -1,0 +1,8 @@
+{
+  "_note": "Strike bodies (movement-and-combat §3.4, weapons-and-loot §3.2). times = swing seconds per combo step, mult = damage multiplier per step, win = hit window (share of the swing), lunge px/s, reach px, charge = amulet charge factor per hit (Wp.charge). box: side | line | high | arc (hit rectangle shape). fin_kb = finisher knockback multiplier (null -> tuning finisher_knockback_mult). blade numbers are the ones the Godot port shipped in tuning.json 'blade' (win 0.25-0.70, lunge 120; the combat GDD table says 0.25-0.60 / 140 - flagged). staff timings, window, lunge and reach are PROVISIONAL (the combat GDD has no staff row yet).",
+  "blade": { "name": "Меч", "times": [0.24, 0.24, 0.32], "mult": [1.0, 1.0, 1.8], "win": [0.25, 0.7], "lunge": 120, "reach": 78, "charge": 1.0, "box": "side" },
+  "spear": { "name": "Копьё", "times": [0.32, 0.42], "mult": [1.0, 1.7], "win": [0.3, 0.6], "lunge": 220, "reach": 128, "charge": 1.0, "box": "line" },
+  "sickles": { "name": "Серпы", "times": [0.15, 0.15, 0.15, 0.15, 0.3], "mult": [1.0, 1.0, 1.0, 1.0, 2.2], "win": [0.15, 0.65], "lunge": 90, "reach": 64, "charge": 0.65, "box": "side", "fin_both": true },
+  "hammer": { "name": "Молот", "times": [0.5, 0.62], "mult": [1.0, 1.4], "win": [0.46, 0.7], "lunge": 60, "reach": 100, "charge": 1.8, "box": "high", "pierce": true, "stun": 0.35, "kb_mult": 1.5, "quake": { "r": 200, "k": 0.6, "stun": 0.7 } },
+  "staff": { "name": "Шест", "times": [0.27, 0.27, 0.27, 0.38], "mult": [1.0, 1.0, 1.0, 1.0], "win": [0.2, 0.72], "lunge": 100, "reach": 96, "charge": 1.0, "box": "arc", "arc_deg": 200, "fin_kb": 2.2 }
+}

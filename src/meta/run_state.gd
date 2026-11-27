@@ -30,10 +30,15 @@ var kills: int = 0
 var bosses: int = 0
 var killed_by: String = ""
 var rng_states: Dictionary = {}
+## Weapons in hand (weapons-and-loot §3.9 p.6): Weapon.to_dict(), {} = empty.
+var arm: Dictionary = {}
+var sub: Dictionary = {}
+## Weapons dropped by "auto" sources this run (arms_auto_cap, §3.8).
+var arms_auto: int = 0
 
 const FIELDS: Array[String] = ["run_seed", "tier", "room_k", "stage", "hp", "max_hp", "charge", "amulet",
 	"build", "embers", "res", "since_god", "gap_need", "reward", "rooms_cleared", "kills", "bosses",
-	"killed_by", "rng_states"]
+	"killed_by", "rng_states", "arm", "sub", "arms_auto"]
 
 func to_dict() -> Dictionary:
 	var d := {}

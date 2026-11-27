@@ -269,6 +269,13 @@ func payload(slot: String, power: float, tune: Dictionary, finisher: bool = fals
 			_add_status(p, st, float(tune.get("wrath_power", 0.5)), tune)
 	return p
 
+## A payload of one status `st` at strength `amount` (weapons-and-loot §3.4
+## secondary weapons, §3.6 god affixes, Рогатина Громовника).
+static func status_payload(st: String, amount: float, tune: Dictionary) -> Dictionary:
+	var p := {}
+	_add_status(p, st, amount, tune)
+	return p
+
 ## Adds status `st` of strength `amount` to payload `p`: durations take the
 ## larger, stacks add (0.5 rounds up to 1 stack, §3.12).
 static func _add_status(p: Dictionary, st: String, amount: float, tune: Dictionary) -> void:

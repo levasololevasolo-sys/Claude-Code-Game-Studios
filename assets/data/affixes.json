@@ -1,0 +1,15 @@
+{
+  "_note": "Affixes, weapons-and-loot §3.6. slot arm|sub. god = god affix (rolled among the hero's gods with affix_god_share). chance = per weapon hit; status/amount as RunBuild._add_status (amount × burn_time / curse_time / root_time, or stacks). Craft effects: speed (swing speed mult), reach, charge, boss (dmg vs bosses and elites). Sub: cd mult, dmg mult, twice (second fire after delay).",
+  "a_svarog": { "slot": "arm", "name": "Тлеющее", "god": "svarog", "chance": 0.2, "status": "burn", "amount": 1.0 },
+  "a_perun": { "slot": "arm", "name": "Громовое", "god": "perun", "chance": 0.2, "status": "shock", "amount": 1 },
+  "a_stribog": { "slot": "arm", "name": "Ветряное", "god": "stribog", "chance": 0.2, "status": "cuts", "amount": 1 },
+  "a_veles": { "slot": "arm", "name": "Навье", "god": "veles", "chance": 0.15, "status": "curse", "amount": 1.0 },
+  "a_zhiva": { "slot": "arm", "name": "Корневое", "god": "zhiva", "chance": 0.1, "status": "root", "amount": 0.5 },
+  "a_speed": { "slot": "arm", "name": "Быстрое", "speed": 1.15 },
+  "a_reach": { "slot": "arm", "name": "Длинное", "reach": 1.2 },
+  "a_charge": { "slot": "arm", "name": "Звонкое", "charge": 1.3, "not_for": ["ringsword"] },
+  "a_boss": { "slot": "arm", "name": "Богатырское", "boss": 1.3 },
+  "s_cd": { "slot": "sub", "name": "Скорое", "cd": 0.7 },
+  "s_dmg": { "slot": "sub", "name": "Тяжёлое", "dmg": 1.4 },
+  "s_twice": { "slot": "sub", "name": "Двойное", "twice": 0.14 }
+}

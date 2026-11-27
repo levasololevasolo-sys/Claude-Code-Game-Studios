@@ -45,6 +45,10 @@ func begin() -> void:
 		run = saved
 		build = RunBuild.from_dict(run.build)
 		_bind_build()
+		world.arm = Weapon.from_dict(run.arm)
+		world.sub_arm = Weapon.from_dict(run.sub)
+		if world.arm == null:
+			_start_weapons()
 		_note("resume run seed %d at haven of tier %d" % [run.run_seed, run.tier])
 		enter_room()
 	else:
@@ -61,6 +65,7 @@ func new_run(run_seed: int = -1) -> void:
 	build = RunBuild.make()
 	run.amulet = world.amulet_id
 	_bind_build()
+	_start_weapons()
 	run.stage = "room"
 	run.room_k = 1
 	run.tier = 1
@@ -203,7 +208,9 @@ func _collect() -> void:
 			_say("Живой родник: +%d здоровья" % int(add))
 			_reward_done("heal")
 		"arms":
-			_say("Оружие — скоро (награда-заглушка)")
+			# §3.8: 1 item in the centre of the room after the clear, quality bonus 1.
+			var it := drop_from("door", Vector2(float(world.room.layout.w) / 2.0, Tune.f("ground_y")))
+			_say("Оружие: %s" % (it.title() + " " + it.stars() if it else "ничего"))
 			_reward_done("arms")
 
 func _give_loot() -> void:
@@ -246,6 +253,58 @@ func _show(scr: Control, layer: int = 20) -> void:
 
 func _save_build() -> void:
 	run.build = build.to_dict()
+	run.arm = world.arm.to_dict() if world.arm else {}
+	run.sub = world.sub_arm.to_dict() if world.sub_arm else {}
+
+## §3.9 p.6, AC 12, edge case 18: the run starts with the bought kinds at ★, no
+## affix; a kind missing from the data falls back to blade (if bought) or stick.
+func _start_weapons() -> void:
+	var m: MetaState = game.meta
+	var w := Weapon.from_dict({ "id": m.weapon })
+	if w == null:
+		w = Weapon.make("blade" if bool(m.weapons.get("blade", false)) else "stick")
+	world.arm = w
+	world.sub_arm = Weapon.from_dict({ "id": m.sub, "kind": Weapon.SUB }) if m.sub != "" else null
+	if run:
+		run.arms_auto = 0
+		_save_build()
+
+## Weapon drop hook (weapons-and-loot §3.8) for every source: "boss", "door",
+## "knight", "chest", "cache", "elite" (arms_sources: chance, quality bonus,
+## counts toward arms_auto_cap). Rolls with LootRoller on the "loot" stream
+## (ADR-0003) and lays a WeaponDrop at `at`. Returns the weapon or null.
+## `kind` / `rar` / `q` force the slot, rarity, quality (Yaga: "arm", "l", 2).
+func drop_from(source: String, at: Vector2, kind: String = "", rar: String = "", q: int = 0) -> Weapon:
+	var src: Dictionary = (Tune.get_value("arms_sources") as Dictionary).get(source, {})
+	var rng: RandomNumberGenerator = game.rng.stream("loot")
+	if src.is_empty() or rng.randf() >= float(src.get("chance", 1.0)):
+		return null
+	if bool(src.get("auto", false)):
+		if run.arms_auto >= int(Tune.f("arms_auto_cap")):
+			return null
+		run.arms_auto += 1
+	var floor_ids: Array = []
+	for c in world.get_children():
+		if c is WeaponDrop and (c as WeaponDrop).weapon:
+			floor_ids.append((c as WeaponDrop).weapon.id)
+	var m: MetaState = game.meta
+	var ctx := { "kind": kind, "rar": rar, "tier": run.tier, "bonus": int(src.get("bonus", 0)), "luck": false,
+		"gods": build.gods_taken(), "held_arm": world.arm.id if world.arm else "", "held_sub": world.sub_arm.id if world.sub_arm else "",
+		"floor": floor_ids, "owned_arms": m.weapons, "owned_subs": m.subs, "pity": m.pity }
+	if q > 0:
+		ctx["q"] = q
+	var d := LootRoller.roll(rng, ctx, { "weapons": Tune.table("weapons"), "subweapons": Tune.table("subweapons"),
+		"affixes": Tune.table("affixes") }, Tune.data)
+	if d.is_empty():
+		return null
+	var w := Weapon.from_dict(d)
+	var drop := WeaponDrop.new()
+	drop.weapon = w
+	drop.world = world
+	drop.position = at
+	world.add_child(drop)
+	_note("arms drop (%s): %s %s %s [%s], pity %s" % [source, w.kind, w.id, w.stars(), w.affix, m.pity])
+	return w
 
 ## A reward was given: pacing (F4.4), snapshot fields, then the doors.
 func _reward_done(type: String) -> void:
@@ -366,6 +425,9 @@ func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 		run.add_res("cores", int(Tune.f("lair_hearts")))
 		var id := String(_loc().get("boss", "boss"))
 		game.meta.bosses[id] = int(game.meta.bosses.get(id, 0)) + 1
+		# §3.8: bosses 1-4 drop a weapon; Koschei (tier 5) is the victory, no weapon.
+		if run.tier < 5:
+			drop_from("boss", e.position)
 		_note("boss %s killed: +%d embers" % [id, int(Tune.f("lair_embers"))])
 	else:
 		# Picked up at once for now: ground pickups (economy §3.2) come with the loot step.

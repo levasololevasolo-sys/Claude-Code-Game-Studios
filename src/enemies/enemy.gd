@@ -84,6 +84,9 @@ var eye_size: float = 0.0
 var status: StatusSet = StatusSet.new()
 ## Seconds until the next wall / enemy slam may count (movement-and-combat §3.8).
 var wall_cd: float = 0.0
+## Ослоп (weapons-and-loot §3.3): {mult, r} while the hero's knockback carries
+## this enemy; the next wall slam is ×mult and hits all within r. {} = none.
+var slam_boost: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -582,6 +585,8 @@ func _status_death(ctx: Dictionary) -> void:
 ## movement-and-combat §3.8 F10/F11: wall slam and enemy-into-enemy ("кегли").
 ## Both open Stribog cuts (gods-and-runes §3.9). Bosses and the dummy take no part.
 func _check_slams(at_wall: int) -> void:
+	if absf(kb) <= Tune.f("wall_slam_speed"):
+		slam_boost = {}
 	if boss or kind_id == "dummy" or wall_cd > 0.0 or absf(kb) <= Tune.f("wall_slam_speed"):
 		return
 	var spring := (status_ctx().duos as Dictionary).has("duo_spring") and status.rooted()
@@ -591,9 +596,18 @@ func _check_slams(at_wall: int) -> void:
 		if spring:
 			status.break_roots()
 		cut_burst(2.0 if spring else 1.0)
-		var h := Hit.make(Hit.Kind.WALL, Tune.f("wall_slam_dmg") * speed / Tune.f("wall_slam_speed"), position.x, 0.0)
+		var boost := slam_boost
+		slam_boost = {}
+		var h := Hit.make(Hit.Kind.WALL, Tune.f("wall_slam_dmg") * speed / Tune.f("wall_slam_speed") * float(boost.get("mult", 1.0)), position.x, 0.0)
 		h.stun = Tune.f("wall_slam_stun")
+		var wave_dmg := h.dmg
 		hurt(h)
+		if not boost.is_empty():
+			# The Ослоп wave hits without knockback: it never starts new slams (edge case 15).
+			for o: Enemy in _around(float(boost.get("r", 140))):
+				o.hurt(Hit.make(Hit.Kind.WALL, wave_dmg, position.x, 0.0))
+			if world:
+				world.add_ring(position, float(boost.get("r", 140)))
 		kb = -signf(at_wall) * speed * Tune.f("wall_bounce")
 		if world:
 			world.request_hitstop(Tune.f("wall_slam_hitstop"))

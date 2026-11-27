@@ -1,6 +1,13 @@
 ## The hero: run, variable jump, coyote time, jump buffer, ground roll / air dash,
 ## a three-swing blade combo, an up strike, and a down strike that pogos off foes
 ## and slams the ground. The origin sits at the feet. Ported from updatePlayer().
+## Weapons (GDD weapons-and-loot §3.2-3.6): the combo, hit window, reach, lunge
+## and charge come from the main Weapon's strike body (weapon_bodies.json) and
+## row (weapons.json); its `mech` adds one mechanic (_mech_mult, _mech_on_hit,
+## kill / hurt hooks). The secondary weapon fires on the `sub` action with its
+## own cooldown (SubWeapons); its hits carry the Strike-slot god's status at
+## sub_god_k (sub_hit). Without an injected weapon the hero holds Меч-кладенец ★
+## (legacy checks keep the blade numbers of the port).
 ## Wears an Amulet (GDD amulet-and-flare): landed hits charge it, a health hit in
 ## overcharge spills it, the `flare` action starts the 0.12 s breath (world slow,
 ## hero frozen and invulnerable) and then releases a Flare of the amulet's shape.
@@ -16,6 +23,10 @@ signal died(hit: Hit)
 ## Emitted when the breath ends, just before the new Flare enters the world (an
 ## instant shape strikes in its _ready, so listeners connect to `struck` here).
 signal flare_released(flare: Flare)
+## Emitted when a weapon slot changes ("arm" or "sub").
+signal weapon_changed(slot: String)
+## Emitted when a secondary-weapon hit lands; dmg is what the enemy took.
+signal sub_landed(enemy: Enemy, dmg: float)
 ## Emitted at the end of every physics tick, hitstop ticks included. Test drivers
 ## await it so the input they set is guaranteed to have been read.
 signal stepped
@@ -78,6 +89,26 @@ var _tap_jump: bool = false
 var _tap_strike: bool = false
 var _tap_dash: bool = false
 var _tap_flare: bool = false
+var _tap_sub: bool = false
+## Main weapon (weapons-and-loot §3.3). Injected by World; Меч-кладенец ★ if null.
+var weapon: Weapon
+## Secondary weapon (§3.4); null = empty slot (a new save has none).
+var sub: Weapon
+## Seconds until the secondary weapon can fire again; buffered press.
+var sub_cd: float = 0.0
+var sub_buf: float = 0.0
+## «Двойное»: seconds until the second fire (< 0 = none pending).
+var sub_twice_t: float = -1.0
+## Ярый меч: current damage bonus (0 .. cap).
+var rage: float = 0.0
+## Seconds since the last dash ended (Сулица-стрела); 0 while dashing.
+var since_dash: float = 99.0
+## Rolls of affix chances (seeded by World).
+var roll_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Chain lightning lines to draw: {a: Vector2, b: Vector2, t: float} (world).
+var bolts: Array[Dictionary] = []
+var _quaked: bool = false
+var _blasts: int = 0
 
 func _ready() -> void:
 	hp = Tune.f("player_hp")
@@ -93,6 +124,8 @@ func _ready() -> void:
 		amulet = Amulet.make("ring", Tune.data)
 	if build == null:
 		build = RunBuild.make()
+	if weapon == null:
+		weapon = Weapon.make("blade")
 	Events.enemy_killed.connect(_on_enemy_killed)
 	# Input before damage in one tick (amulet-and-flare §5): the hero's tick runs
 	# before the enemies', the World's (hitstop/slow clocks) before the hero's.
@@ -116,6 +149,8 @@ func _physics_process(dt: float) -> void:
 		_tap_dash = true
 	if _tapped(&"flare"):
 		_tap_flare = true
+	if _tapped(&"sub"):
+		_tap_sub = true
 	if world and world.hitstop > 0.0:
 		_end_tick()
 		return
@@ -139,6 +174,10 @@ func _step(dt: float) -> void:
 	_tap_strike = false
 	_tap_dash = false
 	_tap_flare = false
+	if _tap_sub:
+		sub_buf = Tune.f("sub_buffer")
+	_tap_sub = false
+	_blasts = 0
 	if flare_t > 0.0:
 		_breath(dt)
 		return
@@ -173,6 +212,7 @@ func _step(dt: float) -> void:
 			if int(dash_t / gi) != int((dash_t + dt) / gi):
 				ghosts.append({ "p": position, "t": Tune.f("ghost_life"), "face": face })
 		_dash_hits()
+		since_dash = 0.0
 		if dash_t <= 0.0:
 			velocity.x = dash_dir * Tune.f("run_speed")
 			_dash_end()
@@ -195,6 +235,8 @@ func _step(dt: float) -> void:
 				coyote_t = 0.0
 				jump_buf = 0.0
 	_update_attack(dt, on_floor)
+	_update_sub(dt)
+	since_dash += dt
 	combo_t -= dt; dash_cd -= dt; jump_buf -= dt; coyote_t -= dt; inv -= dt; atk_buf -= dt; drop_t -= dt
 	set_collision_mask_value(PLATFORM_LAYER, drop_t <= 0.0)
 	fall_v = velocity.y
@@ -212,6 +254,9 @@ func _step(dt: float) -> void:
 	for gh: Dictionary in ghosts:
 		gh.t -= dt
 	ghosts.assign(ghosts.filter(func(gh: Dictionary) -> bool: return gh.t > 0.0))
+	for bl: Dictionary in bolts:
+		bl.t -= dt
+	bolts.assign(bolts.filter(func(bl: Dictionary) -> bool: return bl.t > 0.0))
 	queue_redraw()
 
 func _on_platform() -> bool:
@@ -222,12 +267,13 @@ func _on_platform() -> bool:
 			return true
 	return position.y < Tune.f("ground_y") - 1.0
 
-func _blade() -> Dictionary:
-	return Tune.get_value("blade") as Dictionary
+## The strike body row of the main weapon (weapon_bodies.json).
+func _body() -> Dictionary:
+	return weapon.body()
 
 func _update_attack(dt: float, on_floor: bool) -> void:
-	var b := _blade()
-	var times: Array = b.times
+	var b := _body()
+	var times: Array = weapon.times()
 	if atk_buf > 0.0 and dash_t <= 0.0 and atk_t <= 0.0:
 		atk_dir = "up" if _held(&"move_up") else ("down" if _held(&"move_down") and not on_floor else "side")
 		combo = (combo % times.size()) + 1 if atk_dir == "side" and combo_t > 0.0 else 1
@@ -237,6 +283,7 @@ func _update_attack(dt: float, on_floor: bool) -> void:
 		combo_t = atk_t + Tune.f("combo_window")
 		hit_set.clear()
 		slammed = false
+		_quaked = false
 		atk_buf = 0.0
 		if atk_dir == "side":
 			velocity.x += face * float(b.lunge)
@@ -249,9 +296,24 @@ func _update_attack(dt: float, on_floor: bool) -> void:
 		if (k > win[0] and k < win[1]) or (atk_dir == "down" and k > win[0]):
 			_strike_hits()
 
-## The strike's hit rectangle in world space, for the current direction.
+## Reach of the main weapon in px with the «Широкий взмах» rune.
+func strike_reach() -> float:
+	return weapon.reach() * (build.value("arc", "reach", 1.0) if build else 1.0)
+
+## Every hit rectangle of the current swing: the front one (strike_rect) and,
+## for a both-sides swing (Коромысло, the sickles' whirl finisher), its mirror.
+func strike_rects() -> Array[Rect2]:
+	var r := strike_rect()
+	var out: Array[Rect2] = [r]
+	if atk_dir == "side" and (weapon.mech() == "both_sides" or (bool(_body().get("fin_both", false)) \
+			and DamageRules.is_finisher(combo, (_body().get("mult", [1]) as Array).size()))):
+		out.append(Rect2(2.0 * position.x - r.end.x, r.position.y, r.size.x, r.size.y))
+	return out
+
+## The strike's hit rectangle in world space, for the current direction and the
+## body's box (side, spear line, hammer high, staff 200° arc).
 func strike_rect() -> Rect2:
-	var reach := float(_blade().reach) * (build.value("arc", "reach", 1.0) if build else 1.0)
+	var reach := strike_reach()
 	var vr := reach * 0.9 + 20.0
 	match atk_dir:
 		"up":
@@ -259,41 +321,267 @@ func strike_rect() -> Rect2:
 		"down":
 			return Rect2(position.x - 40.0, position.y - 20.0, 80.0, vr + 20.0)
 	var x0 := position.x if face > 0 else position.x - reach - 12.0
+	match String(_body().get("box", "side")):
+		"line":
+			return Rect2(x0, position.y - 56.0, reach + 12.0, 46.0)
+		"high":
+			return Rect2(x0, position.y - H - 54.0, reach + 12.0, H + 60.0)
+		"arc":
+			# 200° arc: the front half plus 10° past the vertical behind the hero.
+			var back := reach * sin(deg_to_rad((float(_body().get("arc_deg", 200)) - 180.0) / 2.0))
+			var left := position.x - back if face > 0 else position.x - reach - 12.0
+			return Rect2(left, position.y - H - reach * 0.6, reach + 12.0 + back, H + reach * 0.6 + 6.0)
 	return Rect2(x0, position.y - H - 14.0, reach + 12.0, H + 20.0)
 
 func _strike_hits() -> void:
-	var b := _blade()
-	var r := strike_rect()
+	var b := _body()
+	var rects := strike_rects()
 	var mult: Array = b.mult
 	combo = clampi(combo, 1, mult.size())
 	var fin := DamageRules.is_finisher(combo, mult.size())
+	var fin_kb := float(b.fin_kb) if b.has("fin_kb") else Tune.f("finisher_knockback_mult")
+	if fin and atk_dir == "side" and not _quaked:
+		_quaked = true
+		_finisher_extras()
 	for e: Enemy in _enemies():
 		if e in hit_set or e.dead:
 			continue
-		if not r.intersects(e.hurt_rect()):
+		if not rects.any(func(r: Rect2) -> bool: return r.intersects(e.hurt_rect())):
 			continue
 		hit_set.append(e)
 		var hit := Hit.make(Hit.Kind.STRIKE,
-			DamageRules.strike_damage(Tune.f("strike_dmg"), mult, combo),
+			DamageRules.strike_damage(Tune.f("strike_dmg"), mult, combo) * weapon.dmg_mult() * _mech_mult(e),
 			position.x if atk_dir == "side" else e.position.x - face,
-			DamageRules.strike_knockback(Tune.f("knockback"), fin, Tune.f("finisher_knockback_mult")))
+			DamageRules.strike_knockback(Tune.f("knockback"), fin, fin_kb) * float(b.get("kb_mult", 1.0)))
 		hit.finisher = fin
 		hit.source = self
+		hit.pierce = bool(b.get("pierce", false))
+		hit.stun = float(b.get("stun", 0.0))
 		var blocked := DamageRules.shield_blocks(hit, e.hit_view())
 		_rune_strike(hit, fin)
+		_mech_on_hit(e, hit, fin)
 		var was_rooted := e.status.rooted()
 		var dealt := e.hurt(hit)
 		_rune_after_strike(blocked, was_rooted)
 		_gain_hit(Tune.f("charge_f_shield") if blocked else 1.0)
+		if weapon.mech() == "rage":
+			rage = minf(float(weapon.row().get("cap", 0.6)), rage + float(weapon.row().get("per_hit", 0.04)))
 		if atk_dir == "up":
-			e.launch(Tune.f("launch_speed"))
+			var lm := float(weapon.row().get("launch", 1.0)) if weapon.mech() == "juggle" else 1.0
+			e.launch(Tune.f("launch_speed") * lm)
+			if weapon.mech() == "juggle":
+				e.set_meta(&"juggled", true)
 		if atk_dir == "down":
-			velocity.y = -Tune.f("pogo_speed")
+			velocity.y = -Tune.f("pogo_speed") * (float(weapon.row().get("pogo", 1.0)) if weapon.mech() == "down_boost" else 1.0)
 			atk_t = 0.0
 		if world:
 			world.request_hitstop(Tune.f("hitstop"))
 			world.add_shake(Tune.f("shake_finisher") if fin else Tune.f("shake_hit"))
 		hit_landed.emit(e, dealt)
+
+# ---------------- weapon mechanics (weapons-and-loot §3.3, §3.6) ----------------
+
+## Damage multiplier of the weapon's mechanic and the «Богатырское» affix on `e`.
+func _mech_mult(e: Enemy) -> float:
+	var r := weapon.row()
+	var m := 1.0
+	match weapon.mech():
+		"rage":
+			m *= 1.0 + rage
+		"execute":
+			if e.hp < float(r.get("below", 0.25)) * e.max_hp:
+				m *= float(r.get("mult", 2.5))
+		"after_dash":
+			if since_dash <= float(r.get("window", 0.4)):
+				m *= float(r.get("mult", 1.8))
+		"vs_held":
+			if e.stun > 0.0 or e.status.rooted():
+				m *= float(r.get("mult", 1.6))
+		"down_boost":
+			if atk_dir == "down":
+				m *= float(r.get("mult", 2.0))
+		"juggle":
+			if e.has_meta(&"juggled") and DamageRules.is_airborne(e.position.y, Tune.f("ground_y"), Tune.f("air_target_margin")):
+				e.remove_meta(&"juggled")
+				m *= float(r.get("mult", 1.5))
+	if e.boss:
+		m *= float(weapon.affix_row().get("boss", 1.0))
+	return m
+
+## Statuses and marks the weapon adds to a strike `hit` on `e` before it lands.
+func _mech_on_hit(e: Enemy, hit: Hit, fin: bool) -> void:
+	var r := weapon.row()
+	match weapon.mech():
+		"perun_fin":
+			if fin and e.status.shock >= 1:
+				hit.discharge = true
+		"all_gods":
+			for g: String in build.gods_taken():
+				hit.add_payload(RunBuild.status_payload(_god_status(g), float(r.get("power", 0.4)), Tune.data))
+		"stun_cd":
+			var now := float(e.anim)
+			if now >= float(e.get_meta(&"flail_next", -1.0)):
+				e.set_meta(&"flail_next", now + float(r.get("cd", 1.5)))
+				hit.stun = maxf(hit.stun, float(r.get("stun", 0.25)))
+		"wall_boost":
+			e.slam_boost = { "mult": float(r.get("mult", 2.0)), "r": float(r.get("wave_r", 140)) }
+	var a := weapon.affix_row()
+	if a.has("god") and roll_rng.randf() < float(a.get("chance", 0.0)):
+		hit.add_payload(RunBuild.status_payload(String(a.get("status", "")), float(a.get("amount", 1.0)), Tune.data))
+
+## Once per finisher swing: hammer quake / Чекан wave (on the ground), Вихрь-серпы pull.
+func _finisher_extras() -> void:
+	var r := weapon.row()
+	if weapon.mech() == "pull":
+		var pr := float(r.get("pull_r", 220))
+		var stop := float(r.get("pull_stop", 40))
+		for e: Enemy in living_enemies():
+			var dx := position.x - e.position.x
+			if absf(dx) <= pr and not e.boss and absf(dx) > stop:
+				e.kb = signf(dx) * (absf(dx) - stop) * float(r.get("pull_k", 6.2))
+	var q: Dictionary = _body().get("quake", {})
+	if q.is_empty() or not is_on_floor():
+		return
+	var wave := weapon.mech() == "wave"
+	var qr := float(r.get("wave_r", 260)) if wave else float(q.get("r", 200))
+	if world:
+		world.add_ring(position, qr)
+		world.add_shake(Tune.f("shake_slam"))
+	var base := DamageRules.strike_damage(Tune.f("strike_dmg"), _body().mult, combo) * weapon.dmg_mult()
+	for e: Enemy in living_enemies():
+		if e.flies or absf(e.position.x - position.x) > qr or not e.on_ground():
+			continue
+		var hit := Hit.make(Hit.Kind.SLAM, base * float(q.get("k", 0.6)), position.x, Tune.f("knockback") * 0.5)
+		hit.source = self
+		hit.stun = float(q.get("stun", 0.7))
+		if wave:
+			# «и удар о землю» (gods-and-runes §3.5): the Strike rune rides the wave.
+			_rune_strike(hit, false)
+		e.hurt(hit)
+
+## The status id a god puts (gods.json wrath_status), "" for Rod / none.
+static func _god_status(god: String) -> String:
+	if god == "" or god == "rod":
+		return ""
+	return String((Tune.table("gods").get(god, {}) as Dictionary).get("wrath_status", ""))
+
+## Thorns of Шипастая булава (when hurt, shield included).
+func _thorns() -> void:
+	var r := weapon.row()
+	for e: Enemy in living_enemies():
+		if e.center().distance_to(position - Vector2(0, H / 2.0)) > float(r.get("r", 120)):
+			continue
+		var hit := Hit.make(Hit.Kind.STRIKE, Tune.f("strike_dmg") * float(r.get("k", 1.2)), position.x, Tune.f("knockback"))
+		hit.source = self
+		hit.add_payload(build.payload("strike", 1.0, Tune.data))
+		e.hurt(hit)
+	if world:
+		world.add_ring(position, float(r.get("r", 120)))
+
+## Копьё Велеса: a cursed enemy that dies blows up once (edge case 13, depth cap).
+func _curse_blast(e: Enemy) -> void:
+	var r := weapon.row()
+	if e.has_meta(&"blasted") or _blasts >= int(r.get("depth", 4)):
+		return
+	e.set_meta(&"blasted", true)
+	_blasts += 1
+	var br := float(r.get("blast_r", 140))
+	if world:
+		world.add_ring(e.position, br)
+	for o: Enemy in living_enemies():
+		if o == e or o.center().distance_to(e.center()) > br:
+			continue
+		var hit := Hit.make(Hit.Kind.STATUS, Tune.f("strike_dmg") * float(r.get("blast_k", 1.5)), e.position.x, 0.0)
+		hit.source = self
+		hit.nested = true
+		hit.curse = Tune.f("curse_time") * float(r.get("curse_k", 0.5))
+		o.hurt(hit)
+
+# ---------------- weapon slots (weapons-and-loot §3.9) ----------------
+
+## Puts `w` into its slot and returns what was there (null if empty). Main:
+## the combo resets; sub: the cooldown is cleared.
+func equip(w: Weapon) -> Weapon:
+	var old: Weapon
+	if w.kind == Weapon.SUB:
+		old = sub
+		sub = w
+		sub_cd = 0.0
+		sub_twice_t = -1.0
+	else:
+		old = weapon
+		weapon = w
+		combo = 0
+		combo_t = 0.0
+		atk_t = 0.0
+		rage = 0.0
+	weapon_changed.emit(w.kind)
+	queue_redraw()
+	return old
+
+func _update_sub(dt: float) -> void:
+	sub_cd -= dt
+	sub_buf -= dt
+	if sub == null:
+		return
+	if sub_twice_t >= 0.0:
+		sub_twice_t -= dt
+		if sub_twice_t < 0.0:
+			SubWeapons.fire(self, sub)
+	if sub_buf > 0.0 and sub_cd <= 0.0 and dash_t <= 0.0:
+		sub_buf = 0.0
+		fire_sub()
+
+## Fires the secondary weapon now (cooldown and «Двойное» included). False if
+## the slot is empty or cooling down.
+func fire_sub() -> bool:
+	if sub == null or sub_cd > 0.0:
+		return false
+	SubWeapons.fire(self, sub)
+	sub_cd = sub.cooldown()
+	var twice := float(sub.affix_row().get("twice", 0.0))
+	if twice > 0.0:
+		sub_twice_t = twice
+	return true
+
+## Status payload of a secondary-weapon hit: the Strike-slot god at sub_god_k
+## (§3.4); {} when the slot is empty or Rod (edge case 8).
+func sub_payload() -> Dictionary:
+	var st := _god_status(build.slot_god("strike"))
+	if st == "":
+		return {}
+	return RunBuild.status_payload(st, Tune.f("sub_god_k"), Tune.data)
+
+## One secondary-weapon hit on `e`. `with_status` = put the Strike god status
+## (spikes: once per placement). Its knockback counts as the hero's (Ослоп).
+func sub_hit(e: Enemy, dmg: float, from_x: float, kb: float, stun: float, with_status: bool = true) -> float:
+	if e == null or e.dead:
+		return 0.0
+	var hit := Hit.make(Hit.Kind.PROJECTILE, dmg, from_x, kb)
+	hit.stun = stun
+	hit.source = self
+	hit.mods = build.damage_mods(false)
+	if with_status:
+		hit.add_payload(sub_payload())
+	if kb > 0.0 and weapon.mech() == "wall_boost":
+		e.slam_boost = { "mult": float(weapon.row().get("mult", 2.0)), "r": float(weapon.row().get("wave_r", 140)) }
+	var d := e.hurt(hit)
+	sub_landed.emit(e, d)
+	return d
+
+## Living enemies of the room.
+func living_enemies() -> Array[Enemy]:
+	var out: Array[Enemy] = []
+	if not is_inside_tree():
+		return out
+	for e in _enemies():
+		if not e.dead:
+			out.append(e)
+	return out
+
+## A chain-lightning line from `a` to `b` (world), drawn for a moment.
+func add_bolt(a: Vector2, b: Vector2) -> void:
+	bolts.append({ "a": a, "b": b, "t": Tune.f("status_fx_time") })
 
 func _slam() -> void:
 	slammed = true
@@ -378,11 +666,23 @@ func _dash_end() -> void:
 func _gain_hit(f: float) -> void:
 	if flare_t > 0.0 or amulet == null:
 		return
-	amulet.add_hit(f * (build.value("kindling", "charge", 1.0) if build else 1.0), float(_blade().get("charge", 1.0)))
+	amulet.add_hit(f * (build.value("kindling", "charge", 1.0) if build else 1.0), weapon.charge())
 
-func _on_enemy_killed(_enemy: Node2D, _hit: RefCounted) -> void:
+func _on_enemy_killed(enemy: Node2D, hit: RefCounted) -> void:
 	if amulet and amulet.kill_charge() > 0.0 and flare_t <= 0.0:
 		amulet.add_flat(amulet.kill_charge())
+	if not is_inside_tree() or not enemy is Enemy:
+		return
+	var e := enemy as Enemy
+	match weapon.mech():
+		"mara":
+			if hit is Hit and (hit as Hit).source == self:
+				if dash_t > 0.0:
+					hp = minf(Tune.f("player_hp"), hp + float(weapon.row().get("heal", 3)))
+				dash_cd = 0.0
+		"curse_blast":
+			if e.status.cursed():
+				_curse_blast(e)
 
 ## The Flare key: below 100 a fizzle; at 100+ starts the breath. True if started.
 func _press_flare() -> bool:
@@ -438,10 +738,13 @@ func hurt(hit: Hit) -> float:
 		return 0.0
 	var split := DamageRules.split_shield(hit.dmg, shield)
 	shield -= split.x
+	if weapon and weapon.mech() == "thorns":
+		_thorns()
 	if split.y <= 0.0:
 		inv = Tune.f("hurt_iframes") * Tune.f("shield_iframes_mult")
 		return 0.0
 	hp -= split.y
+	rage = 0.0
 	if amulet:
 		amulet.on_health_damage()
 	inv = Tune.f("hurt_iframes")
@@ -512,13 +815,24 @@ func _blade_angle() -> float:
 	match atk_dir:
 		"up": return lerpf(0.4, -2.6, k)
 		"down": return lerpf(-0.6, 2.4, k)
+	match weapon.body_id():
+		"spear":
+			return lerpf(-0.15, 0.1, k)
+		"staff":
+			return lerpf(-2.6, 0.9, k) if combo % 2 == 1 else lerpf(1.0, -2.4, k)
+		"hammer":
+			return lerpf(-2.4, 1.2, k)
 	return lerpf(-2.0, 0.9, k) if combo % 2 == 1 else lerpf(1.2, -1.6, k)
 
 func _draw_blade() -> void:
 	var hand := Vector2(8.0 * face, -34.0)
 	var a := _blade_angle()
 	var dir := Vector2(cos(a) * face, sin(a))
-	var length := float(_blade().reach) * 0.72
+	var body := weapon.body_id()
+	var length := weapon.reach() * 0.72
+	if body == "spear" and atk_t > 0.0 and atk_dir == "side":
+		hand += Vector2(face * 22.0 * sin(clampf(1.0 - atk_t / atk_dur, 0.0, 1.0) * PI), 0)
+	var tip := weapon.colour().lerp(BLADE, 0.45)
 	if atk_t > 0.0:
 		var steps := 8
 		var k := clampf(1.0 - atk_t / atk_dur, 0.0, 1.0)
@@ -529,6 +843,33 @@ func _draw_blade() -> void:
 			var aa := _blade_angle()
 			atk_t = saved
 			var dd := Vector2(cos(aa) * face, sin(aa))
-			draw_line(hand + dd * 14.0, hand + dd * length, Color(1, 0.95, 0.8, 0.28 - i * 0.03), 10.0 - i)
-	draw_line(hand, hand + dir * 12.0, Color("#6b4a2b"), 4.0)
-	draw_line(hand + dir * 12.0, hand + dir * length, BLADE, 3.5)
+			draw_line(hand + dd * 14.0, hand + dd * length, Color(weapon.colour().lerp(Color(1, 0.95, 0.8), 0.5), 0.28 - i * 0.03), 10.0 - i)
+			if body == "staff" or weapon.mech() == "both_sides":
+				draw_line(hand - dd * 14.0, hand - dd * length * 0.5, Color(1, 0.95, 0.8, 0.2 - i * 0.02), 8.0 - i)
+	match body:
+		"spear":
+			draw_line(hand - dir * 18.0, hand + dir * (length - 14.0), Color("#6b4a2b"), 4.0)
+			draw_colored_polygon(PackedVector2Array([hand + dir * length, hand + dir * (length - 18.0) + dir.orthogonal() * 6.0,
+				hand + dir * (length - 18.0) - dir.orthogonal() * 6.0]), tip)
+		"staff":
+			draw_line(hand - dir * length * 0.5, hand + dir * length, Color("#8a6a3e"), 5.0)
+			draw_circle(hand + dir * length, 4.0, tip)
+			draw_circle(hand - dir * length * 0.5, 4.0, tip)
+		"hammer":
+			draw_line(hand, hand + dir * length, Color("#6b4a2b"), 4.0)
+			var hd := hand + dir * length
+			var o := dir.orthogonal() * 12.0
+			draw_colored_polygon(PackedVector2Array([hd - o - dir * 9.0, hd + o - dir * 9.0, hd + o + dir * 9.0, hd - o + dir * 9.0]), tip)
+		"sickles":
+			draw_line(hand, hand + dir * 10.0, Color("#6b4a2b"), 4.0)
+			var c := hand + dir * length * 0.55
+			draw_arc(c, length * 0.45, dir.angle() - 1.2, dir.angle() + 0.9, 10, tip, 3.0)
+			draw_arc(Vector2(-6.0 * face, -30.0) + dir * length * 0.3, length * 0.32, dir.angle() + 2.0, dir.angle() + 3.6, 8, tip.darkened(0.3), 2.5)
+		_:
+			draw_line(hand, hand + dir * 12.0, Color("#6b4a2b"), 4.0)
+			draw_line(hand + dir * 12.0, hand + dir * length, Color("#a07a4a") if weapon.id == "stick" else (BLADE if weapon.rarity() == "c" else tip), 3.5)
+	for bl: Dictionary in bolts:
+		var pa: Vector2 = bl.a - position
+		var pb: Vector2 = bl.b - position
+		var mid := (pa + pb) / 2.0 + Vector2(0, -14)
+		draw_polyline(PackedVector2Array([pa, mid, pb]), Color("#bfe6ff", clampf(bl.t * 4.0, 0.0, 1.0)), 3.0)
