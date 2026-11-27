@@ -145,13 +145,33 @@ Regenerate: `sh tools/asset-pipeline/blender/fetch_makehuman.sh /tmp/mh` and
 Render: ~8.5 s per frame (colour + normal) here, about 3x v1 (13.5k-vertex body,
 subdivided shells); a full hero rebuild ~15 min on this CPU, ~1 min with a GPU.
 
-Honest v2 assessment: anatomy, hands, face and clothing now read as a real
-character, and hanging parts follow through. Still short of Dead Cells: the
-painted look is procedural (no hand-painted highlights or authored texture
-maps), hair is a shell + strands rather than sculpted locks (reads a bit slicked
-back), legs keep MakeHuman's A-stance splay in 3/4 view, the body is generic
-MakeHuman (no sculpted stylisation of the silhouette), the run/attack keys are
-still the v1 script keys (no torso twist), and smears are still the v1 crescents.
+### v3 pass (same branch, same day): heroic build, shaggy hair, re-keyed motion
+
+- **Heroic stylisation** (`mh_base.HERO`, applied in MakeHuman space before the
+  re-pose): upper torso widened 1.3x and deepened 1.15x (ramped from the waist),
+  arms moved out with the shoulders, upper-arm girth 1.28x, forearms 1.25x, hands
+  1.3x, neck 1.4x, thighs 1.12x, legs 10 % shorter (everything above the hips
+  drops), head 1.05x, so the head reads relatively small: a fallen bogatyr.
+- **Leg splay fixed**: thighs and shins are rotated straight under the hips in
+  the frontal plane during the FK re-pose; idle/stance IK feet spread wider
+  (0.27 / -0.25 m) for a planted stance in profile.
+- **Hair and beard**: thicker scalp shell (up to ~6 cm on top), many short shaggy
+  strands all round (no long back locks), beard thicker and longer, pushed
+  forward at the chin.
+- **Motion**: idle re-keyed as breath in / weight forward -> breath out / settle
+  back with relaxed knees; run leans deeper with a stronger arm pump; strike 1/2
+  wind-ups go further and the hit pose is held one frame after the snap.
+- **Smears**: `navi_common.crisp_smear_mat` + `arc_mesh(lead=True)`: opaque warm
+  body, a brighter outer edge band, short tail cut hard, crescent thickest just
+  behind a pointed leading tip; no more ghostly falloff.
+
+Honest assessment after v3: anatomy, hands, face and clothing read as a real
+character with a bulky heroic silhouette, and hanging parts follow through.
+Still short of Dead Cells: the painted look is procedural (no hand-painted
+highlights or authored texture maps); hair is a shell + strands rather than
+sculpted locks; the stylisation is proportional scaling of a realistic base,
+not a sculpt; strike_3, strike_up/down, roll and death keep the v1 keys apart from
+the held follow-through; there is no 3D torso twist (the rig is planar).
 
 ## What the developer can add on their PC (all free)
 

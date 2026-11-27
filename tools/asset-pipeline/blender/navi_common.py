@@ -302,6 +302,28 @@ def glow(name, hexcol, strength=2.0):
     return m
 
 
+def crisp_smear_mat(name, hexcol, edge_hex, strength=1.4, tail=0.45):
+    """Dead Cells-style smear: opaque body, sharp outer leading edge, short tail
+    (alpha ramps 0->1 over u in [tail, tail+0.18], hard cut elsewhere); a thin
+    brighter band along the outer edge (v > 0.8)."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    m.blend_method = "BLEND"; m.shadow_method = "NONE"; m.show_transparent_back = True
+    nt = m.node_tree; n, l = nt.nodes, nt.links
+    n.clear()
+    out = n.new("ShaderNodeOutputMaterial")
+    uv = n.new("ShaderNodeUVMap")
+    sep = n.new("ShaderNodeSeparateXYZ"); l.new(uv.outputs[0], sep.inputs[0])
+    a = _remap(nt, sep.outputs["X"], tail, tail + 0.18)
+    col = _mix(nt, _remap(nt, sep.outputs["Y"], 0.72, 0.8), hexcol, edge_hex)
+    em = n.new("ShaderNodeEmission"); l.new(col, em.inputs[0]); em.inputs[1].default_value = strength
+    tr = n.new("ShaderNodeBsdfTransparent")
+    ms = n.new("ShaderNodeMixShader")
+    l.new(_math(nt, "MULTIPLY", a, 0.95), ms.inputs[0]); l.new(tr.outputs[0], ms.inputs[1]); l.new(em.outputs[0], ms.inputs[2])
+    l.new(ms.outputs[0], out.inputs[0])
+    return m
+
+
 def fade_mat(name, hexcol, strength=1.0, alpha=1.0, axis="u", power=1.5, invert=False):
     """Emission with alpha from the mesh UV. axis u: smear (u along the arc, soft
     across v). axis v: vertical band (alpha = v^power, or (1-v)^power if invert)."""
@@ -491,7 +513,7 @@ def add_outline(o, t):
     mod.use_quality_normals = True
 
 
-def arc_mesh(name, center, r_in, r_out, a0, a1, mat, seg=28, y=-0.45):
+def arc_mesh(name, center, r_in, r_out, a0, a1, mat, seg=28, y=-0.45, lead=False):
     """Smear crescent in the XZ plane, from angle a0 to a1 (deg, CCW seen from -Y).
     UV u: 0 at the tail .. 1 at the leading edge; v: 0 inner .. 1 outer."""
     bm = bmesh.new()
@@ -502,6 +524,8 @@ def arc_mesh(name, center, r_in, r_out, a0, a1, mat, seg=28, y=-0.45):
         t = i / seg
         a = math.radians(a0 + (a1 - a0) * t)
         w = max(0.12, math.sin(math.pi * (0.1 + 0.85 * t)) ** 0.7)
+        if lead:   # crescent: thin tail, thickest just behind the leading edge, pointed tip
+            w = max(0.04, (t ** 1.4) * (1.0 - max(0.0, (t - 0.88) / 0.12) ** 2 * 0.85))
         ri = r_out - (r_out - r_in) * w
         p_in = bm.verts.new((cx + math.cos(a) * ri, y, cz + math.sin(a) * ri))
         p_out = bm.verts.new((cx + math.cos(a) * r_out, y, cz + math.sin(a) * r_out))

@@ -21,8 +21,10 @@ import numpy as np
 TARGETS = [("macrodetails/caucasian-male-young.target", 1.0),
            ("macrodetails/universal-male-young-maxmuscle-minweight.target", 0.55),
            ("macrodetails/height/male-young-maxmuscle-averageweight-maxheight.target", 0.25)]
-STYLE = {"head": 1.07, "ha": 1.22, "ft": 1.1}
-HEIGHT_M = 1.74          # crown height after stylisation (hair adds ~6 cm)
+STYLE = {"head": 1.05, "ha": 1.3, "ft": 1.12}
+# heroic build (fallen bogatyr at 160 px): chest/shoulder width, limb and neck girth, leg length
+HERO = {"chest_w": 1.3, "chest_d": 1.15, "upper_arm": 1.28, "forearm": 1.25, "neck": 1.4, "thigh": 1.12, "leg_len": 0.9}
+HEIGHT_M = 1.72          # crown height after stylisation (hair adds ~6 cm)
 # MakeHuman bone -> rig bone; bones not listed inherit their parent's rig bone.
 MAP = {"root": "hips", "spine05": "hips", "pelvis.L": "hips", "pelvis.R": "hips",
        "spine04": "spine", "neck01": "spine", "neck02": "head",
@@ -77,6 +79,58 @@ def T(R, h):
     return M
 
 
+def _bone_w(wt, names, nv):
+    a = np.zeros(nv)
+    for b in names:
+        for vi, x in wt.get(b, []):
+            a[vi] += x
+    return np.clip(a, 0, 1)
+
+
+def _radial(V, w, h, t, s):
+    """Scale the girth around the bone axis h->t by s, weighted per vertex."""
+    d = (t - h) / np.linalg.norm(t - h)
+    p = V - h
+    along = (p @ d)[:, None] * d
+    return V + w[:, None] * (s - 1) * (p - along)
+
+
+def heroic(V, RW, sk, bones, wt, joint):
+    """Bulky, heroic proportions in MakeHuman space (X left, Y up, Z front)."""
+    nv = len(V)
+    V = V.copy()
+    J = lambda n: joint(n)
+    # shorter legs: compress the legs toward the ankles, drop everything above
+    hip_y = (J("upperleg01.L____head")[1] + J("upperleg01.R____head")[1]) / 2
+    ank_y = (J("foot.L____head")[1] + J("foot.R____head")[1]) / 2
+    k = HERO["leg_len"]
+    drop = (1 - k) * (hip_y - ank_y)
+    wl = np.clip(RW["thL"] + RW["thR"] + RW["shL"] + RW["shR"] + RW["ftL"] + RW["ftR"], 0, 1)
+    y = V[:, 1]
+    fl = np.where(y < ank_y, y - drop * 0 + 0 * y, ank_y + (y - ank_y) * k)
+    fl = np.where(y < ank_y, y, fl)
+    V[:, 1] = wl * fl + (1 - wl) * (y - drop)
+    # chest and shoulders: widen the upper torso, arms move out with it
+    waist = J("spine04____head")[1]; chest = J("neck01____head")[1]
+    ramp = np.clip((V[:, 1] - waist) / (chest - waist), 0, 1) ** 1.2
+    ws = RW["spine"] * ramp
+    V[:, 0] *= 1 + ws * (HERO["chest_w"] - 1)
+    zc = J("spine02____head")[2] - 0.2
+    V[:, 2] = zc + (V[:, 2] - zc) * (1 + ws * (HERO["chest_d"] - 1))
+    wa = {s: np.clip(RW["up" + s] + RW["fo" + s] + RW["ha" + s], 0, 1) for s in "LR"}
+    for s, sx in (("L", 1), ("R", -1)):
+        sh = J("upperarm01.%s____head" % s)
+        V[:, 0] += wa[s] * sx * abs(sh[0]) * (HERO["chest_w"] - 1) * 0.85
+    def jn(n):   # joint of the current (already reshaped) mesh
+        return V[sk["joints"][n]].mean(axis=0)
+    for s in "LR":
+        V = _radial(V, _bone_w(wt, ["upperarm01." + s, "upperarm02." + s, "shoulder01." + s], nv), jn("upperarm01.%s____head" % s), jn("lowerarm01.%s____head" % s), HERO["upper_arm"])
+        V = _radial(V, _bone_w(wt, ["lowerarm01." + s, "lowerarm02." + s], nv), jn("lowerarm01.%s____head" % s), jn("wrist.%s____head" % s), HERO["forearm"])
+        V = _radial(V, _bone_w(wt, ["upperleg01." + s, "upperleg02." + s], nv), jn("upperleg01.%s____head" % s), jn("lowerleg01.%s____head" % s), HERO["thigh"])
+    V = _radial(V, _bone_w(wt, ["neck01", "neck02", "neck03"], nv), jn("neck01____head"), jn("head____head"), HERO["neck"])
+    return V
+
+
 def main(data, out):
     V, VT, F = load_obj(os.path.join(data, "3dobjs/base.obj"))
     for t, w in TARGETS:
@@ -128,6 +182,7 @@ def main(data, out):
             w = RW[rb][:, None]
             V = V + w * (s - 1) * (V - c)
 
+    V = heroic(V, RW, sk, bones, wt, joint)
     H = {b: joint(bones[b]["head"]) for b in bones}
     Tl = {b: joint(bones[b]["tail"]) for b in bones}
     R = {b: np.eye(3) for b in bones}
@@ -137,6 +192,13 @@ def main(data, out):
         R["upperarm01." + s] = rot_between(el - sh, np.array([0.1 * sx, -1, 0.02]))
         Ru = R["upperarm01." + s]
         R["lowerarm01." + s] = rot_between(wr - el, Ru.T @ np.array([0.06 * sx, -1, 0.0]))
+    # legs straight under the hips (no A-stance splay), feet forward
+    for s in ("L", "R"):
+        hp, kn, an = H["upperleg01." + s], H["lowerleg01." + s], H["foot." + s]
+        d = an - hp
+        R["upperleg01." + s] = rot_between(kn - hp, np.array([0.0, d[1], d[2]]) * 0 + np.array([0.0, -(hp - kn)[1], (kn - hp)[2]]))
+        Ru = R["upperleg01." + s]
+        R["lowerleg01." + s] = rot_between(an - kn, Ru.T @ np.array([0.0, (an - kn)[1], (an - kn)[2]]))
     # fingers: palm normal signed toward the thumb base, curl toward it
     for s, curl, thumb in (("R", (78, 92, 60), (18, 30, 25)), ("L", (22, 30, 18), (8, 12, 10))):
         k2, k5, wr = H["finger2-1." + s], H["finger5-1." + s], H["wrist." + s]

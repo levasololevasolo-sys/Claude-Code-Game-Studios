@@ -380,7 +380,7 @@ def beard_disp(i, d):
     front = ss((v.x - (HEAD_CX + 0.03)) / 0.06) * math.exp(-(v.y / 0.055) ** 2)
     g = ss(d / 0.025)
     low = ss((NOSE_Z - 0.03 - v.z) / 0.04)
-    off = NB[i] * (0.004 + 0.02 * g * (0.5 + 0.5 * low)) + Vector((0.025, 0, -0.085)) * g * front * low
+    off = NB[i] * (0.006 + 0.032 * g * (0.5 + 0.5 * low)) + Vector((0.035, 0, -0.11)) * g * front * low
     off += NB[i] * 0.005 * g * hnoise(v, 28)
     return off
 
@@ -405,7 +405,7 @@ def hair_disp(i, d):
     v = VB[i]
     g = ss(d / 0.025)
     top = ss((v.z - EYE_Z - 0.02) / 0.08)
-    return NB[i] * (0.006 + (0.024 + 0.016 * top) * g + 0.008 * g * hnoise(v, 24)) + Vector((-0.012, 0, -0.004)) * g
+    return NB[i] * (0.008 + (0.036 + 0.022 * top) * g + 0.012 * g * hnoise(v, 20)) + Vector((-0.006, 0, 0.004)) * g
 
 
 hair, hvids, hverts, hdist = shell("hair", hair_mask, hair_disp, m_hair, subsurf=2,
@@ -458,21 +458,21 @@ hroots = []
 for k in range(0, len(hvids), 1):
     i = hvids[k]
     v = hverts[k]
-    if hdist[i] > 0.012 and rnd.random() < 0.05:
+    if hdist[i] > 0.008 and rnd.random() < 0.11:
         back = ss((HEAD_CX - v.x) / 0.08)
-        d = NB[i] * 0.55 + Vector((-0.55, 0, -0.5 - 0.6 * back))
-        hroots.append((v - NB[i] * 0.006, d, 0.05 + 0.07 * back + 0.03 * rnd.random(), 4.0))
+        d = NB[i] * 0.55 + Vector((-0.35 - 0.2 * rnd.random(), 0, -0.6 - 0.3 * back))
+        hroots.append((v - NB[i] * 0.01, d, 0.035 + 0.035 * back + 0.025 * rnd.random(), 3.0))
 # a few forelocks falling on the brow
 for y in (-0.03, 0.0, 0.035):
     p = Vector((HEAD_CX + 0.06, y, EYE_Z + 0.07))
     hroots.append((p, Vector((0.6, y * 3, -0.8)), 0.055, 3.0))
-strands("hair_strands", hroots, m_hair, "hair", lambda c: 0.6 * ss((EYE_Z + 0.03 - c.z) / 0.1), r0=0.022)
+strands("hair_strands", hroots, m_hair, "hair", lambda c: 0.6 * ss((EYE_Z + 0.03 - c.z) / 0.1), r0=0.026)
 broots = []
 for k, i in enumerate(bvids):
     v = bverts[k]
-    if v.z < CHIN_Z + 0.0 and rnd.random() < 0.2:
-        broots.append((v + Vector((0, 0, 0.012)), Vector((0.15, v.y * 2.0, -1.0)), 0.035 + 0.03 * rnd.random(), 2.0))
-strands("beard_strands", broots, m_hair, "beard", lambda c: ss((CHIN_Z + 0.01 - c.z) / 0.09), r0=0.018)
+    if v.z < CHIN_Z + 0.01 and rnd.random() < 0.3:
+        broots.append((v + Vector((0, 0, 0.012)), Vector((0.2, v.y * 3.0, -1.0)), 0.04 + 0.035 * rnd.random(), 2.0))
+strands("beard_strands", broots, m_hair, "beard", lambda c: ss((CHIN_Z + 0.01 - c.z) / 0.09), r0=0.024)
 
 
 # ---------------- props ----------------
@@ -515,7 +515,7 @@ for i, t in enumerate((0.3, 0.62, 0.86)):
 
 # smear crescents (pale gold, alpha grows toward the leading edge); armature space
 smears = {}
-m_smear = nc.fade_mat("smear", "#FFE9B8", strength=1.6, alpha=0.9, power=1.3)
+m_smear = nc.crisp_smear_mat("smear", "#FFE3A8", "#FFFBEA", strength=1.35)
 DZS = J["upperarm01.R"].z - 1.36
 for nm, c, ri, ro, a0, a1 in (
         ("s1", (0.12, 1.22), 0.55, 1.2, 150, -15),
@@ -526,19 +526,22 @@ for nm, c, ri, ro, a0, a1 in (
         ("s3b", (0.2, 1.05), 0.75, 1.35, 40, -75),
         ("su", (0.0, 1.3), 0.55, 1.15, -10, 160),
         ("sd", (0.1, 0.9), 0.3, 1.0, -60, -120)):
-    o = nc.arc_mesh("smear_" + nm, (c[0], c[1] + DZS), ri, ro, a0, a1, m_smear)
+    o = nc.arc_mesh("smear_" + nm, (c[0], c[1] + DZS), ri, ro, a0, a1, m_smear, lead=True)
     o.parent = rig.arm
     smears[nm] = o
 
 rig.arm.rotation_euler = (0, 0, math.radians(-YAW))
 
 # ---------------- poses ----------------
-FEET = {"ik:R": (0.24, 0.1), "ik:L": (-0.2, 0.1)}
+FEET = {"ik:R": (0.27, 0.1), "ik:L": (-0.25, 0.1)}
 IDLE_A = dict(FEET, rx=0.0, rz=-0.06, hips=0, spine=-7, head=5, upR=18, foR=62, haR=0, upL=-10, foL=30,
               **{"w:stick": -28, "w:ftR": -12, "w:ftL": -12})
 IDLE_B = dict(IDLE_A, rx=0.012, rz=-0.085, spine=-4, head=2, upR=22, foR=66, upL=-6, foL=34, **{"w:stick": -22})
 anims = {}
-anims["idle"] = dict(frames=16, fps=12, loop=True, keys=[(0, IDLE_A, "io"), (8, IDLE_B, "io"), (16, IDLE_A, "io")])
+IDLE_A["rz"] = -0.085   # relaxed knees
+IDLE_IN = dict(IDLE_A, rx=0.018, rz=-0.08, spine=-3, head=2, upR=21, foR=65, upL=-7, foL=33, **{"w:stick": -24})   # breath in, weight forward
+IDLE_OUT = dict(IDLE_A, rx=-0.014, rz=-0.1, spine=-9, head=7, upR=17, foR=60, upL=-11, foL=28, **{"w:stick": -30})  # out, settle back
+anims["idle"] = dict(frames=16, fps=12, loop=True, keys=[(0, IDLE_A, "io"), (5, IDLE_IN, "io"), (11, IDLE_OUT, "io"), (16, IDLE_A, "io")])
 
 
 def run_keys():
@@ -553,9 +556,9 @@ def run_keys():
         # Dead Cells run: deep lean, big counter-swing, the stick rides the near
         # arm (local angle, so it swings with it) held forward-diagonal.
         pose = {"ik:R": foot(p), "ik:L": foot(p + math.pi), "rx": 0.08,
-                "rz": -0.1 + 0.07 * abs(math.sin(p)), "hips": 4 * math.cos(p), "spine": -30 + 4 * math.cos(2 * p),
-                "head": 18, "upR": -5 + 48 * math.cos(p + math.pi), "foR": 72 + 12 * math.sin(p),
-                "upL": 58 * math.cos(p), "foL": 62 + 25 * math.cos(p), "w:stick": None, "stick": -8 - 10 * math.cos(p),
+                "rz": -0.1 + 0.07 * abs(math.sin(p)), "hips": 4 * math.cos(p), "spine": -38 + 5 * math.cos(2 * p),
+                "head": 18, "upR": -5 + 58 * math.cos(p + math.pi), "foR": 78 + 16 * math.sin(p),
+                "upL": 72 * math.cos(p), "foL": 70 + 30 * math.cos(p), "w:stick": None, "stick": -8 - 10 * math.cos(p),
                 "w:ftR": -15 + 25 * math.sin(p), "w:ftL": -15 + 25 * math.sin(p + math.pi)}
         keys.append((i, pose, "lin"))
     return keys
@@ -588,14 +591,16 @@ S1_W2 = dict(S1_W, rx=-0.06, spine=14, upR=165, foR=30, **{"w:stick": 170})
 S1_H = dict(STANCE, rx=0.08, rz=-0.1, spine=-22, head=10, upR=62, foR=8, upL=-35, foL=30, smear="s1", **{"w:stick": -8, "ik:L": (-0.38, 0.12)})
 S1_F = dict(S1_H, rx=0.1, spine=-26, upR=28, foR=4, smear="s1b", **{"w:stick": -42})
 S1_R = dict(IDLE_A, rx=0.06, spine=-14, upR=26, foR=45, smear=None, **{"w:stick": -35})
-anims["strike_1"] = dict(frames=6, fps=24, keys=[(0, S1_W, "io"), (1, S1_W2, "out"), (2, S1_H, "snap"), (3, S1_F, "out"),
+S1_W2 = dict(S1_W2, rx=-0.08, spine=18, upR=172, **{"w:stick": 182})
+anims["strike_1"] = dict(frames=6, fps=24, keys=[(0, S1_W, "io"), (1, S1_W2, "out"), (2, S1_H, "snap"), (3, S1_F, "hold"),
                                                  (4, S1_R, "io"), (6, dict(IDLE_A, smear=None), "io")])
 S2_W = dict(STANCE, rx=0.02, rz=-0.13, spine=-24, head=8, upR=-30, foR=70, upL=30, foL=50, smear=None, **{"w:stick": 215})
 S2_W2 = dict(S2_W, rz=-0.15, upR=-42, **{"w:stick": 232})
 S2_H = dict(STANCE, rx=0.1, rz=-0.04, spine=6, head=-6, upR=128, foR=22, upL=-30, foL=20, smear="s2", **{"w:stick": 72})
 S2_F = dict(S2_H, spine=9, upR=150, foR=18, smear="s2b", **{"w:stick": 100})
 S2_R = dict(IDLE_A, rx=0.06, spine=-4, upR=60, foR=60, smear=None, **{"w:stick": 30})
-anims["strike_2"] = dict(frames=6, fps=24, keys=[(0, S2_W, "io"), (1, S2_W2, "out"), (2, S2_H, "snap"), (3, S2_F, "out"),
+S2_W2 = dict(S2_W2, rz=-0.17, spine=-28, upR=-50, **{"w:stick": 240})
+anims["strike_2"] = dict(frames=6, fps=24, keys=[(0, S2_W, "io"), (1, S2_W2, "out"), (2, S2_H, "snap"), (3, S2_F, "hold"),
                                                  (4, S2_R, "io"), (6, dict(IDLE_A, smear=None), "io")])
 S3_W = dict(STANCE, rx=-0.05, rz=-0.02, spine=14, head=-10, upR=165, foR=25, upL=150, foL=30, smear=None,
             **{"w:stick": 130, "ik:R": (0.3, 0.16)})
