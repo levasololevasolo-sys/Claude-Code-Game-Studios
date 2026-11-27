@@ -4,42 +4,50 @@
 class_name Player
 extends CharacterBody2D
 
-signal hit_landed(enemy: Node2D, dmg: float)
+## Emitted when a strike connects with an enemy.
+signal hit_landed(enemy: StrawDummy, dmg: float)
+## Emitted at the end of every physics tick, hitstop ticks included. Test drivers
+## await it so the input they set is guaranteed to have been read.
+signal stepped
 
-const W := 28.0
-const H := 64.0
-const PLATFORM_LAYER := 2
+const W: float = 28.0
+const H: float = 64.0
+const PLATFORM_LAYER: int = 2
 
-var world: Node  ## Needs `hitstop: float`, `shake: float` and enemies in group "enemies".
-var hp := 100.0
-var face := 1
-var coyote_t := 0.0
-var jump_buf := 0.0
-var atk_buf := 0.0
-var drop_t := 0.0
-var dash_t := 0.0
-var dash_dur := 0.0
-var dash_cd := 0.0
-var dash_dir := 1
-var rolling := false
-var inv := 0.0
-var atk_t := 0.0
-var atk_dur := 0.0
-var atk_dir := "side"
-var combo := 0
-var combo_t := 0.0
-var slammed := false
-var hit_set: Array = []
-var run_ph := 0.0
-var land := 0.0
-var ghosts: Array = []
-var was_on_floor := false
-var fall_v := 0.0
-## Scripted input for automated runs: action name -> true. Empty means read the real Input.
-## Set `scripted` to true and fill `fake` with action -> bool to drive the hero from a test.
-var scripted := false
+## The Main scene: owns `hitstop`, `shake` and `add_ring()`. Null in isolated tests.
+var world: Main
+var hp: float = 100.0
+var face: int = 1
+var coyote_t: float = 0.0
+var jump_buf: float = 0.0
+var atk_buf: float = 0.0
+var drop_t: float = 0.0
+var dash_t: float = 0.0
+var dash_dur: float = 0.0
+var dash_cd: float = 0.0
+var dash_dir: int = 1
+var rolling: bool = false
+var inv: float = 0.0
+var atk_t: float = 0.0
+var atk_dur: float = 0.0
+var atk_dir: String = "side"
+var combo: int = 0
+var combo_t: float = 0.0
+var slammed: bool = false
+var hit_set: Array[StrawDummy] = []
+var run_ph: float = 0.0
+var land: float = 0.0
+var ghosts: Array[Dictionary] = []
+var was_on_floor: bool = false
+var fall_v: float = 0.0
+## Scripted input for automated runs. Set `scripted` to true and fill `fake` with
+## action -> bool to drive the hero instead of the real Input.
+var scripted: bool = false
 var fake: Dictionary = {}
 var _fake_prev: Dictionary = {}
+var _tap_jump: bool = false
+var _tap_strike: bool = false
+var _tap_dash: bool = false
 
 func _ready() -> void:
 	hp = Tune.f("player_hp")
@@ -50,26 +58,46 @@ func _ready() -> void:
 	shape.shape = rect
 	shape.position = Vector2(0, -H / 2.0)
 	add_child(shape)
-	floor_snap_length = 6.0
+	floor_snap_length = Tune.f("floor_snap")
 
-func _held(a: String) -> bool:
-	return fake.get(a, false) if scripted else Input.is_action_pressed(a)
+func _held(a: StringName) -> bool:
+	return bool(fake.get(a, false)) if scripted else Input.is_action_pressed(a)
 
-func _tapped(a: String) -> bool:
+func _tapped(a: StringName) -> bool:
 	if scripted:
-		return fake.get(a, false) and not _fake_prev.get(a, false)
+		return bool(fake.get(a, false)) and not bool(_fake_prev.get(a, false))
 	return Input.is_action_just_pressed(a)
 
 func _physics_process(dt: float) -> void:
+	# Read taps before the hitstop freeze: just_pressed lasts one tick and would be lost.
+	if _tapped(&"jump"):
+		_tap_jump = true
+	if _tapped(&"strike"):
+		_tap_strike = true
+	if _tapped(&"dash"):
+		_tap_dash = true
 	if world and world.hitstop > 0.0:
+		_end_tick()
 		return
-	var mx := (1 if _held("move_right") else 0) - (1 if _held("move_left") else 0)
-	if _tapped("jump"):
+	_step(dt)
+	_end_tick()
+
+func _end_tick() -> void:
+	_fake_prev = fake.duplicate()
+	stepped.emit()
+
+func _step(dt: float) -> void:
+	var mx: int = (1 if _held(&"move_right") else 0) - (1 if _held(&"move_left") else 0)
+	if _tap_jump:
 		jump_buf = Tune.f("jump_buffer")
-	if _tapped("strike"):
-		atk_buf = 0.2
+	if _tap_strike:
+		atk_buf = Tune.f("strike_buffer")
+	var want_dash: bool = _tap_dash
+	_tap_jump = false
+	_tap_strike = false
+	_tap_dash = false
 	var on_floor := is_on_floor()
-	if _tapped("dash") and dash_cd <= 0.0 and dash_t <= 0.0:
+	if want_dash and dash_cd <= 0.0 and dash_t <= 0.0:
 		rolling = on_floor
 		dash_dur = Tune.f("roll_time") if rolling else Tune.f("dash_time")
 		dash_t = dash_dur
@@ -81,28 +109,29 @@ func _physics_process(dt: float) -> void:
 	if dash_t > 0.0:
 		dash_t -= dt
 		if rolling:
-			velocity.x = dash_dir * Tune.f("dash_speed") * Tune.f("dash_time") / Tune.f("roll_time") * 1.1
+			velocity.x = dash_dir * Tune.f("dash_speed") * Tune.f("dash_time") / Tune.f("roll_time") * Tune.f("roll_speed_mult")
 			velocity.y = minf(velocity.y + Tune.f("gravity") * dt, Tune.f("max_fall"))
 		else:
 			velocity.x = dash_dir * Tune.f("dash_speed")
 			velocity.y = 0.0
-			if int(dash_t / 0.025) != int((dash_t + dt) / 0.025):
-				ghosts.append({ "p": position, "t": 0.28, "face": face })
+			var gi := Tune.f("ghost_interval")
+			if int(dash_t / gi) != int((dash_t + dt) / gi):
+				ghosts.append({ "p": position, "t": Tune.f("ghost_life"), "face": face })
 		if dash_t <= 0.0:
 			velocity.x = dash_dir * Tune.f("run_speed")
 	else:
-		var slow := 0.35 if atk_t > 0.0 else 1.0
+		var slow := Tune.f("attack_move_slow") if atk_t > 0.0 else 1.0
 		var target := mx * Tune.f("run_speed") * slow
-		velocity.x += (target - velocity.x) * minf(1.0, dt * (16.0 if on_floor else 9.0))
+		velocity.x += (target - velocity.x) * minf(1.0, dt * (Tune.f("accel_ground") if on_floor else Tune.f("accel_air")))
 		if mx != 0 and atk_t <= 0.0:
 			face = mx
 		var g := Tune.f("gravity")
-		if not _held("jump") and velocity.y < 0.0:
+		if not _held(&"jump") and velocity.y < 0.0:
 			g *= Tune.f("jump_cut_gravity")
 		velocity.y = minf(velocity.y + g * dt, Tune.f("max_fall"))
 		if jump_buf > 0.0:
-			if _held("move_down") and on_floor and _on_platform():
-				drop_t = 0.22
+			if _held(&"move_down") and on_floor and _on_platform():
+				drop_t = Tune.f("drop_time")
 				jump_buf = 0.0
 			elif on_floor or coyote_t > 0.0:
 				velocity.y = -Tune.f("jump_speed")
@@ -117,16 +146,15 @@ func _physics_process(dt: float) -> void:
 	if on_floor:
 		coyote_t = Tune.f("coyote")
 		if not was_on_floor:
-			land = clampf(fall_v / 1100.0, 0.2, 1.0)
-			if atk_t > 0.0 and atk_dir == "down" and not slammed and fall_v > 500.0:
+			land = clampf(fall_v / Tune.f("land_ref_speed"), 0.2, 1.0)
+			if atk_t > 0.0 and atk_dir == "down" and not slammed and fall_v > Tune.f("slam_min_fall"):
 				_slam()
 	was_on_floor = on_floor
 	run_ph += dt * (absf(velocity.x) / 26.0 if on_floor else 0.0)
 	land = maxf(0.0, land - dt * 5.0)
 	for gh: Dictionary in ghosts:
 		gh.t -= dt
-	ghosts = ghosts.filter(func(gh: Dictionary) -> bool: return gh.t > 0.0)
-	_fake_prev = fake.duplicate()
+	ghosts.assign(ghosts.filter(func(gh: Dictionary) -> bool: return gh.t > 0.0))
 	queue_redraw()
 
 func _on_platform() -> bool:
@@ -138,17 +166,17 @@ func _on_platform() -> bool:
 	return position.y < Tune.f("ground_y") - 1.0
 
 func _blade() -> Dictionary:
-	return Tune.get_value("blade")
+	return Tune.get_value("blade") as Dictionary
 
 func _update_attack(dt: float, on_floor: bool) -> void:
 	var b := _blade()
 	var times: Array = b.times
 	if atk_buf > 0.0 and dash_t <= 0.0 and atk_t <= 0.0:
-		atk_dir = "up" if _held("move_up") else ("down" if _held("move_down") and not on_floor else "side")
+		atk_dir = "up" if _held(&"move_up") else ("down" if _held(&"move_down") and not on_floor else "side")
 		combo = (combo % times.size()) + 1 if atk_dir == "side" and combo_t > 0.0 else 1
-		atk_t = float(times[combo - 1]) * (1.0 if atk_dir == "side" else 1.1)
+		atk_t = float(times[combo - 1]) * (1.0 if atk_dir == "side" else Tune.f("vertical_strike_time_mult"))
 		atk_dur = atk_t
-		combo_t = atk_t + 0.3
+		combo_t = atk_t + Tune.f("combo_window")
 		hit_set.clear()
 		slammed = false
 		atk_buf = 0.0
@@ -181,39 +209,46 @@ func _strike_hits() -> void:
 	var mult: Array = b.mult
 	combo = clampi(combo, 1, mult.size())
 	var fin := combo == mult.size()
-	for e: Node2D in get_tree().get_nodes_in_group("enemies"):
-		if e in hit_set or e.get("dead"):
+	for e: StrawDummy in _enemies():
+		if e in hit_set or e.dead:
 			continue
 		var er := Rect2(e.position.x - e.w / 2.0, e.position.y - e.h, e.w, e.h)
 		if not r.intersects(er):
 			continue
 		hit_set.append(e)
 		var dmg := Tune.f("strike_dmg") * float(mult[combo - 1])
-		if e.position.y < Tune.f("ground_y") - 8.0 and not e.get("flies"):
+		if e.position.y < Tune.f("ground_y") - Tune.f("air_target_margin") and not e.flies:
 			dmg *= Tune.f("air_mult")
-		var kb := Tune.f("knockback") * (1.8 if fin else 1.0)
+		var kb := Tune.f("knockback") * (Tune.f("finisher_knockback_mult") if fin else 1.0)
 		var from_x := position.x if atk_dir == "side" else e.position.x - face
 		e.hurt(dmg, from_x, kb)
-		if atk_dir == "up" and not e.get("flies"):
+		if atk_dir == "up" and not e.flies:
 			e.launch(Tune.f("launch_speed"))
 		if atk_dir == "down":
 			velocity.y = -Tune.f("pogo_speed")
 			atk_t = 0.0
 		if world:
 			world.hitstop = Tune.f("hitstop")
-			world.shake = maxf(world.shake, 4.0 if fin else 2.0)
+			world.shake = maxf(world.shake, Tune.f("shake_finisher") if fin else Tune.f("shake_hit"))
 		hit_landed.emit(e, dmg)
 
 func _slam() -> void:
 	slammed = true
 	if world:
-		world.shake = maxf(world.shake, 9.0)
+		world.shake = maxf(world.shake, Tune.f("shake_slam"))
 		world.add_ring(position, Tune.f("slam_r"))
-	for e: Node2D in get_tree().get_nodes_in_group("enemies"):
-		if e.get("dead"):
+	for e: StrawDummy in _enemies():
+		if e.dead:
 			continue
-		if absf(e.position.x - position.x) < Tune.f("slam_r") and absf(e.position.y - position.y) < 90.0:
-			e.hurt(Tune.f("slam_dmg"), position.x, 380.0)
+		if absf(e.position.x - position.x) < Tune.f("slam_r") and absf(e.position.y - position.y) < Tune.f("slam_reach_y"):
+			e.hurt(Tune.f("slam_dmg"), position.x, Tune.f("slam_knockback"))
+
+func _enemies() -> Array[StrawDummy]:
+	var out: Array[StrawDummy] = []
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if n is StrawDummy:
+			out.append(n)
+	return out
 
 # ---------------- drawing (placeholder art until the asset pass) ----------------
 const CLOAK := Color("#2f4a52")

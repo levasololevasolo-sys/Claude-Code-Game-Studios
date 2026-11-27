@@ -1,7 +1,9 @@
 ## Reads gameplay values from assets/data/tuning.json. Autoload name: Tune.
 extends Node
 
-const PATH := "res://assets/data/tuning.json"
+const PATH: String = "res://assets/data/tuning.json"
+
+## The parsed tuning file.
 var data: Dictionary = {}
 
 func _init() -> void:
@@ -17,7 +19,10 @@ func reload() -> void:
 
 ## Returns a number from the tuning file.
 func f(key: String) -> float:
-	return float(data.get(key, 0.0))
+	if not data.has(key):
+		push_error("Tune: missing key '%s' in %s" % [key, PATH])
+		return 0.0
+	return float(data[key])
 
 ## Returns any value (array, dictionary) from the tuning file.
 func get_value(key: String) -> Variant:

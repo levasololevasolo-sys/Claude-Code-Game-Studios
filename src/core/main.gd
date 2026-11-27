@@ -1,18 +1,22 @@
 ## Entry scene: generates one combat room, places the hero and straw dummies,
 ## runs the camera, hitstop and screen shake. Run with `-- --demo=<dir>` to play
 ## a scripted check that saves screenshots into <dir>.
+class_name Main
 extends Node2D
 
-var hitstop := 0.0
-var shake := 0.0
-var rings: Array = []
+## Seconds of freeze left after a hit; actors skip their update while above 0.
+var hitstop: float = 0.0
+## Current screen shake strength in px.
+var shake: float = 0.0
+## Active slam shock rings: {p: Vector2, r: float, t: float}.
+var rings: Array[Dictionary] = []
 var room: Room
 var player: Player
 var cam: Camera2D
 var hud: Label
-var room_k := 2
-var tier := 1
-var seed_value := 1
+var room_k: int = 2
+var tier: int = 1
+var seed_value: int = 1
 
 func _ready() -> void:
 	InputSetup.register()
@@ -23,7 +27,7 @@ func _ready() -> void:
 	start_room()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--demo="):
-			var d: Node = load("res://tests/integration/core/demo_driver.gd").new()
+			var d: Node = (load("res://tests/integration/core/demo_driver.gd") as GDScript).new()
 			d.set("out_dir", a.trim_prefix("--demo="))
 			add_child(d)
 
@@ -34,7 +38,7 @@ func start_room() -> void:
 			c.queue_free()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value * 1000 + tier * 100 + room_k
-	var layout := RoomGen.generate(rng, room_k, tier, Tune.data)
+	var layout: Dictionary = RoomGen.generate(rng, room_k, tier, Tune.data)
 	room = Room.new()
 	add_child(room)
 	room.build(layout)
@@ -70,17 +74,18 @@ func add_ring(at: Vector2, r: float) -> void:
 
 func _physics_process(dt: float) -> void:
 	hitstop = maxf(0.0, hitstop - dt)
-	shake = maxf(0.0, shake - dt * 30.0)
+	shake = maxf(0.0, shake - dt * Tune.f("shake_decay"))
 	if cam:
 		cam.offset = Vector2(randf_range(-shake, shake), -120 + randf_range(-shake, shake))
 	for r: Dictionary in rings:
 		r.t += dt
-	rings = rings.filter(func(r: Dictionary) -> bool: return r.t < 0.35)
+	var ring_time := Tune.f("ring_time")
+	rings.assign(rings.filter(func(r: Dictionary) -> bool: return r.t < ring_time))
 	if hud and player:
 		hud.text = "Навь — проверка основы (Godot)    Комната %d, ширина %d px\nA/D бег · Пробел прыжок · J удар (W вверх, S в воздухе вниз) · Shift перекат/рывок · S+Пробел спрыгнуть" % [room_k, int(room.layout.w)]
 	queue_redraw()
 
 func _draw() -> void:
 	for r: Dictionary in rings:
-		var k: float = r.t / 0.35
+		var k: float = r.t / Tune.f("ring_time")
 		draw_arc(r.p, r.r * k, PI, TAU, 32, Color(0.85, 0.75, 0.5, 1.0 - k), 6.0)

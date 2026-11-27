@@ -3,25 +3,32 @@
 ## `-- --demo=<dir>`; quits when done.
 extends Node
 
-var out_dir := "user://demo"
+var out_dir: String = "user://demo"
 var log_lines: PackedStringArray = []
+var _main: Main
 
 func _ready() -> void:
+	_main = get_parent() as Main
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_run.call_deferred()
 
+## Holds `keys` (action -> true) for n physics ticks. Each tick waits for the
+## player's `stepped` signal, which fires after the player has read `fake`, so
+## even a one-tick tap is always seen (SceneTree.physics_frame fires before
+## nodes' _physics_process and cannot be used for this). Keys are released after.
 func _frames(n: int, keys: Dictionary = {}) -> void:
-	var p: Player = get_parent().player
+	var p: Player = _main.player
 	p.scripted = true
 	for i in n:
 		p.fake = keys
-		await get_tree().physics_frame
+		await p.stepped
+	p.fake = {}
 
-func _shot(name: String) -> void:
+func _shot(shot_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	img.save_png(out_dir.path_join(name + ".png"))
-	log_lines.append("shot %s" % name)
+	img.save_png(out_dir.path_join(shot_name + ".png"))
+	log_lines.append("shot %s" % shot_name)
 
 func _note(s: String) -> void:
 	log_lines.append(s)
@@ -29,13 +36,13 @@ func _note(s: String) -> void:
 
 func _nearest_dummy(p: Player) -> StrawDummy:
 	var best: StrawDummy = null
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e: StrawDummy in get_tree().get_nodes_in_group("enemies"):
 		if best == null or absf(e.position.x - p.position.x) < absf(best.position.x - p.position.x):
 			best = e
 	return best
 
 func _run() -> void:
-	var main := get_parent()
+	var main: Main = _main
 	await _frames(20)
 	var p: Player = main.player
 	_note("start x=%.0f y=%.0f on_floor=%s room_w=%d dummies=%d plats=%d" % [p.position.x, p.position.y, p.is_on_floor(), main.room.layout.w, get_tree().get_nodes_in_group("enemies").size(), main.room.layout.plats.size()])
@@ -116,7 +123,7 @@ func _run() -> void:
 	await _frames(40)
 	_note("platform y=%.0f hero y=%.0f on_floor=%s" % [plat.y, p.position.y, p.is_on_floor()])
 	await _shot("08_platform")
-	await _frames(3, { "move_down": true, "jump": true })
+	await _frames(1, { "move_down": true, "jump": true })
 	_note("drop frame: drop_t=%.2f mask2=%s jump_buf=%.2f" % [p.drop_t, p.get_collision_mask_value(2), p.jump_buf])
 	await _frames(30, { "move_down": true })
 	_note("drop through: hero y=%.0f (ground %.0f)" % [p.position.y, Tune.f("ground_y")])
