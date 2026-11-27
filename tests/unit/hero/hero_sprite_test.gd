@@ -27,8 +27,10 @@ func test_crawler_charge_is_attack_and_standing_walk_is_idle() -> void:
 
 func test_hero_art_flag_picks_the_sprite_scene() -> void:
 	assert_str(Player.visual_scene_path(PackedStringArray(["--hero-art=sprite"]))).is_equal(Player.SPRITE_SCENE)
-	# Default: project setting navi/art/hero_art = "sprite"; rig-inspecting checks keep the rig.
-	assert_str(Player.visual_scene_path(PackedStringArray([]))).is_equal(Player.SPRITE_SCENE)
+	# Default: project setting navi/art/hero_art = "drawn"; rig-inspecting checks keep the rig.
+	assert_str(Player.visual_scene_path(PackedStringArray([]))).is_equal(Player.DRAWN_SCENE)
+	assert_str(Player.visual_scene_path(PackedStringArray(["--hero-art=drawn"]))).is_equal(Player.DRAWN_SCENE)
+	assert_str(Player.visual_scene_path(PackedStringArray(["--hero-shots=/tmp", "--hero-art=drawn"]))).is_equal(Player.DRAWN_SCENE)
 	assert_str(Player.visual_scene_path(PackedStringArray(["--base-check=/tmp"]))).is_equal(Player.VISUAL_SCENE)
 	assert_str(Player.visual_scene_path(PackedStringArray(["--hero-art=rig"]))).is_equal(Player.VISUAL_SCENE)
 
@@ -38,3 +40,18 @@ func test_every_chosen_animation_has_a_sheet() -> void:
 	for a in ["idle", "run", "jump", "fall", "roll", "dash", "strike_1", "strike_2", "strike_3",
 			"strike_up", "strike_down", "hurt", "death", "flare"]:
 		assert_bool(anims.has(a)).override_failure_message("no sheet for %s" % a).is_true()
+
+func test_drawn_hero_has_every_animation_in_every_tier_with_hand_points() -> void:
+	var meta := HeroSprite.load_meta("res://assets/art/sprites/hero_drawn/hero_drawn_sheets.json")
+	var anims: Dictionary = meta.get("anims", {})
+	for a in ["idle", "run", "jump", "fall", "roll", "dash", "strike_1", "strike_2", "strike_3",
+			"strike_up", "strike_down", "hurt", "death", "flare"]:
+		assert_bool(anims.has(a)).override_failure_message("no drawn sheet for %s" % a).is_true()
+		if not anims.has(a):
+			continue
+		assert_int((anims[a].hand as Array).size()).is_equal(int(anims[a].frames))
+		for t in range(1, 6):
+			var path := "res://assets/art/sprites/hero_drawn/t%d/hero_%s.png" % [t, a]
+			assert_bool(ResourceLoader.exists(path)).override_failure_message("missing %s" % path).is_true()
+	assert_int(int(anims.idle.frames)).is_greater_equal(8)
+	assert_int(int(anims.run.frames)).is_equal(8)

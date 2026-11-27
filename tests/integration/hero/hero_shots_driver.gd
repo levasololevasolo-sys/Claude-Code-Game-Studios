@@ -51,8 +51,8 @@ func _lineup_shot() -> void:
 	var out := Image.create(LINEUP_W * 5, CROP.y, false, Image.FORMAT_RGBA8)
 	for t in range(1, 6):
 		vis.call("set_all_tiers", t)
-		var anim := vis.get_node("AnimationPlayer") as AnimationPlayer
-		anim.seek(0.0, true)
+		if vis.has_node("AnimationPlayer"):
+			(vis.get_node("AnimationPlayer") as AnimationPlayer).seek(0.0, true)
 		await _frames(1)
 		var c: Image = await _crop(LINEUP_W)
 		c.convert(Image.FORMAT_RGBA8)

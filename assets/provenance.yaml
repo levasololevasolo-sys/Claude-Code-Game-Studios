@@ -59,3 +59,10 @@
   author: technical-artist agent (Claude), for the developer
   date: 2026-11-27
   ai_made: yes (geometry, rigs, poses and shaders authored as code by an AI agent; no image model)
+- path: assets/art/sprites/hero_drawn/t{1..5}/hero_*.png, assets/art/sprites/hero_drawn/hero_drawn_sheets.json
+  source: drawn procedurally by tools/asset-pipeline/hero2d/build_sheets.py (rig.py 2D skeletal/cutout pose system + poses.py; SDF ink-and-paint renderer sdf2d.py, numpy + PIL), from hero variant 1 «Медвежья шкура» (production/qa/evidence/hero-variant-01.png, generator hero.py/variants.py in the same folder)
+  licence: own work (project-owned original work; no third-party art)
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (shapes and poses authored as code by an AI agent; no image model, no network generation)
+  note: 5 armour tiers x 14 animations, cell 320x288, per-frame weapon hand and amulet points in the json. Rebuild is deterministic (fixed seeds).
