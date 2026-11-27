@@ -35,6 +35,8 @@ After play: систему рун героя, когда находит геро
 After play: оружия нужно что бы можно было покупать у торговца и если ты его купил, то можешь найти в забеге, так же больше половины оружия я бы сделал супер уникальными, добавил бы луки, бомбы какие то, ловушки, магические палочки и их можно только найти в самом забеге
 After play: нужно самое главное придумать систему когда в теории можно будет найти синергию, где твой герой был бы супер имба
 After play: крч суть в том, что бы каждый забег был уникален и не похож не на что другое, в конце каждой комнаты, добавить развилку по 2-3м дверям, где ты получал или какой то ресурс по завершению локации или какой то баф для героя
+After play: по итогу от анимаций и физики и тексторам, жду от тебя игру между хейдес и дед селс, добавить надо анимации бега, переката, разные анимации оружия, графику очень сильно подтянуть, визуальную часть тоже самое надо ну очень сильно апнуть
+Chosen: «Механики, потом Godot» (mechanics finished in the browser first, then the game moves to Godot 4 with real art)
 
 **Pitch:** A fallen bogatyr, held to life by the thread of the goddess Mokosh, cuts his way through Nav, the Slavic underworld that has flooded into the living world, taking back the gods' elemental powers from the monsters of the tales; every blow charges his god's amulet until it bursts in that god's wrath. *(you chose the world; details inferred)*
 
@@ -86,13 +88,14 @@ The first room is gentle; by its third room a mix of fliers and a shielded spitt
 - [x] After each boss a safe save room: heal, the run is saved, choose which location is next or return to base
 - [x] Animation: a jointed knight (legs, arms, cape, wings, antennae), weapon smears, squash and stretch, enemy wind-ups, hit squash, spawn and death dissolves
 - [x] Upgraded monsters: new attacks for old kinds, 2 new kinds (Bell Ringer, Lantern Jelly), elite variants, 2 new bosses
+- [ ] Run and roll animations, separate attack animations per weapon
 - [ ] Up and down strikes (pogo bounce on a down strike), heavier physics (knockback, enemy weight)
-- [ ] Runes instead of boons: each adds to the dash, strike or special; pairs of runes unlock synergy runes
-- [ ] The top goal: a synergy system where a run can, in theory, build an overpowered hero; every run unique
-- [ ] A fork of 2-3 doors after each room, each showing its reward (a resource, a rune, a weapon, a buff)
+- [x] Runes instead of boons: each adds to the dash, strike or special; pairs of runes unlock synergy runes
+- [x] The top goal: a synergy system where a run can, in theory, build an overpowered hero; every run unique
+- [x] A fork of 2-3 doors after each room, each showing its reward (a resource, a rune, a weapon, a buff)
 - [ ] Merchant: buys unlock weapons into the drop pool; more than half the weapons (bows, bombs, traps, wands) only drop in runs
 - [ ] Weapon loot: 35 main and 20 secondary weapons, rarity and quality, high quality may roll an extra effect; a secondary weapon slot
-- [ ] Buffs and debuffs (burn, frost, bleed, curse, haste, shield) shown on the HUD
+- [ ] Buffs and debuffs (enemy statuses done: burn, shock, wind, curse; hero shield done) (burn, frost, bleed, curse, haste, shield) shown on the HUD
 - [x] Re-theme to Nav: bogatyr hero, Spinner / Owl Witch / bear smith, Kikimora's Bog, Likho's Pinewood, Morena's Frost; enemies and bosses redrawn as Slavic creatures
 
 ## Your systems

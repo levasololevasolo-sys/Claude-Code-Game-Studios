@@ -246,25 +246,6 @@ const WEAPONS = {
 };
 const WEAPON_ORDER = ['blade', 'spear', 'sickles', 'hammer'];
 
-// ---- Boons: one of three after each room -----------------------------------------------------
-const BOONS = [
-  { id: 'edge', kind: 'strike', name: 'Заточенный край', desc: 'Удары наносят +35% урона' },
-  { id: 'arc', kind: 'strike', name: 'Широкий взмах', desc: 'Дальность удара +40%' },
-  { id: 'thirst', kind: 'strike', name: 'Жаждущий клинок', desc: 'Каждый попавший удар лечит 1 здоровья' },
-  { id: 'kindling', kind: 'lantern', name: 'Растопка', desc: 'Удары заряжают оберег на 50% быстрее' },
-  { id: 'linger', kind: 'lantern', name: 'Тлеющий остаток', desc: 'После Вспышки в обереге остаётся 35% заряда' },
-  { id: 'halo', kind: 'lantern', name: 'Слепящий ореол', desc: 'Враги в круге твоего света на 35% медленнее' },
-  { id: 'echo', kind: 'flare', name: 'Эхо Вспышки', desc: 'Через секунду Вспышка повторяется с половиной силы' },
-  { id: 'warm', kind: 'flare', name: 'Тёплый свет', desc: 'Вспышка лечит 15 здоровья' },
-  { id: 'pyre', kind: 'flare', name: 'Купальский костёр', desc: 'Вспышка поджигает землю под врагами на 4 секунды' },
-  { id: 'emberdash', kind: 'dash', name: 'Угольный рывок', desc: 'Рывок сквозь врагов ранит, поджигает и заряжает оберег' },
-  { id: 'swift', kind: 'dash', name: 'Лёгкая поступь', desc: 'Перезарядка рывка на 45% короче' },
-  { id: 'moth', kind: 'move', name: 'Прыжок Финиста', desc: 'Ещё один прыжок в воздухе; зажми прыжок, чтобы парить' },
-  { id: 'shell', kind: 'body', name: 'Кольчуга Святогора', desc: '+25 к максимальному здоровью и лечение на 25' },
-  { id: 'magnet', kind: 'body', name: 'Тяга добычи', desc: '+40% углей и ресурсов' },
-  { id: 'reaper', kind: 'strike', name: 'Жнец', desc: 'Удар по оглушённому врагу наносит двойной урон' },
-  { id: 'spark', kind: 'flare', name: 'Искры', desc: 'Каждое убийство выбивает искры, ранящие врагов рядом' },
-];
 const MEND = { id: 'mend', kind: 'body', name: 'Передышка', desc: 'Восстановить 40 здоровья', repeat: true };
 const has = id => state.boons.includes(id);
 
@@ -417,6 +398,8 @@ function enterRoom(kind, loc, k) {
     sfx.bell();
   } else {
     s.mode = 'intro'; s.modeT = 0.9;
+    s.room.reward = s.nextReward || { type: 'god', god: GOD_ORDER[Math.floor(rng() * GOD_ORDER.length)] };
+    s.nextReward = null;
     s.waves = genWaves(loc, tier(), k);
   }
   events.push({ t: s.t, type: 'room', kind, loc, k });
@@ -484,6 +467,8 @@ function hurtEnemy(e, dmg, srcX, o = {}) {
   if (e.dead || e.dying) return 0;
   let d = dmg, blocked = false;
   if (has('reaper') && e.stun > 0 && !o.burnTick) d *= 2;
+  if (e.curse > 0) d *= tune.curse_mult;
+  if (e.burn > 0 && has('svarog_p')) d *= 1.3;
   if (e.kind === 'sentry' && !o.flare && !o.burnTick && !o.breaker && e.stun <= 0 && Math.sign(srcX - e.x) === e.face) {
     d *= tune.sentry_block; blocked = true; sfx.clang();
     burst(e.x + e.face * 20, e.y - 40, 6, '#e8e0c0', 220, 0.25, 2);
@@ -505,6 +490,7 @@ function hurtEnemy(e, dmg, srcX, o = {}) {
 function killEnemy(e) {
   if (e.kind === 'bloat') { e.dying = true; e.st = 'swell'; e.t = 0.35; e.hp = 0; return; }
   e.dead = true; state.kills++;
+  statusDeath(e);
   sfx.kill();
   const d = EDEF[e.kind];
   burst(e.x, e.y - e.h / 2, d.boss ? 50 : 18, d.boss ? '#ffd27a' : '#e0566b', d.boss ? 500 : 340, 0.7, 3);
@@ -537,13 +523,13 @@ function dropLoot(x, y, type, n) {
     state.loot.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: 0, v: 1, type, spin: rng() * 6 });
   }
 }
-function explode(x, y, src) {
+function explode(x, y, src, friendly = false) {
   sfx.boom(); state.shake = Math.max(state.shake, 12);
   const R = tune.bloat_radius;
   burst(x, y, 28, '#d36bd0', 420, 0.6, 4); burst(x, y, 14, '#ffd27a', 300, 0.4, 3);
   state.flares.push({ x, y, t: 0, dur: 0.35, r: R, boom: true });
   const p = state.p;
-  if (Math.hypot(p.x - x, p.y - p.h / 2 - y) < R) hurtPlayer(tune.bloat_dmg, x);
+  if (!friendly && Math.hypot(p.x - x, p.y - p.h / 2 - y) < R) hurtPlayer(tune.bloat_dmg, x);
   for (const e of state.enemies) if (e !== src && !e.dead && Math.hypot(e.x - x, e.y - e.h / 2 - y) < R) {
     hurtEnemy(e, tune.bloat_dmg * 2, x, { kb: 500 });
   }
@@ -552,6 +538,7 @@ function hurtPlayer(d, srcX, mult = 1) {
   const p = state.p;
   if (state.world === 'hub' || p.inv > 0 || p.dashT > 0 || state.mode === 'dead' || state.won) return;
   d *= ashM('dmg') * (1 + (tier() - 1) * tune.tier_dmg) * mult;
+  if (p.shield > 0) { const a = Math.min(p.shield, d); p.shield -= a; d -= a; addNum(p.x, p.y - p.h - 30, a, '#9ff0b0'); if (d <= 0) { p.inv = tune.hurt_iframes * 0.5; sfx.clang(); return; } }
   p.hp -= d; p.inv = tune.hurt_iframes; p.hurtFlash = 0.3;
   p.vx = Math.sign(p.x - srcX || 1) * 380; p.vy = -330;
   state.shake = Math.max(state.shake, 9); state.hitstop = 0.07;
@@ -618,9 +605,16 @@ function flare(power = 1, free = false) {
       }
     }
   }
-  if (has('pyre')) { for (const e of hitList) if (!EDEF[e.kind].fly) state.fires.push({ x: e.x, w: 150, t: 4 }); state.fires.push({ x: cx, w: 180, t: 4 }); }
+  const fg = slotGod('flare');
+  if (fg && power >= 0.5) {
+    const near = state.enemies.filter(e => !e.dead && !e.dying && (fg === 'veles' || Math.hypot(e.x - cx, e.y - e.h / 2 - cy) < R * 1.3));
+    if (fg === 'svarog') for (const e of near) applyGod('svarog', e, 2);
+    else if (fg === 'perun') for (const e of near) discharge(e);
+    else if (fg === 'stribog') for (const e of near) { applyGod('stribog', e, 1.5); e.kb = Math.sign(e.x - cx || 1) * 900 / e.sc; }
+    else if (fg === 'veles') for (const e of near) applyGod('veles', e, 1.5);
+    else if (fg === 'zhiva') { heal(20); addShield(20); }
+  }
   state.shots = state.shots.filter(s => s.kind === 'wave' || Math.hypot(s.x - cx, s.y - cy) > R);
-  if (has('warm')) { p.hp = Math.min(p.maxHp, p.hp + 15); addNum(p.x, p.y - 90, 15, '#9ff0a0'); }
   if (!free && power >= 1) p.charge = has('linger') ? 35 : 0;
   if (has('echo') && power >= 1) state.echoT = 1.0;
   events.push({ t: state.t, type: 'flare', power, lan });
@@ -644,25 +638,32 @@ function updatePlayer(dt) {
     if (p.charge >= 100) flare(); else { sfx.fizzle(); state.lanternPulse = 0.4; }
   }
   if (tapped(K.dash) && p.dashCd <= 0 && p.dashT <= 0) {
-    p.dashT = tune.dash_time; p.dashCd = tune.dash_cooldown * (has('swift') ? 0.55 : 1);
+    p.dashT = tune.dash_time; p.dashCd = tune.dash_cooldown * (has('swift') ? 0.55 : 1) * (slotGod('dash') === 'stribog' ? 0.7 : 1) * (has('duo_spring') ? 0.6 : 1);
     p.dashDir = mx || p.face; p.face = p.dashDir; p.inv = Math.max(p.inv, tune.dash_time + 0.05);
     p.dashHit = new Set(); p.atkT = 0; sfx.dash(); events.push({ t: state.t, type: 'dash' });
     if (state.lantern === 'storm' && state.world === 'run') gainCharge(tune.storm_dash_charge / tune.charge_per_hit);
     burst(p.x, p.y - 20, 8, '#ffd99a', 160, 0.3, 2);
+    const dg = slotGod('dash');
+    if (dg === 'zhiva' && state.world === 'run') heal(3);
+    if (has('duo_spring') && state.world === 'run') addShield(3);
+    if (dg === 'veles') p.inv += 0.25;
+    if (dg === 'svarog') state.fires.push({ x: p.x + p.dashDir * 80, w: 200, t: 2.5 });
   }
   if (p.dashT > 0) {
     p.dashT -= dt; p.vx = p.dashDir * tune.dash_speed; p.vy = 0;
     if (Math.floor(p.dashT / 0.025) !== Math.floor((p.dashT + dt) / 0.025)) p.ghosts.push({ x: p.x, y: p.y, face: p.face, t: 0.28 });
-    if (has('emberdash')) for (const e of state.enemies) {
+    const dg = slotGod('dash');
+    if (dg && dg !== 'zhiva') for (const e of state.enemies) {
       if (!e.dead && !e.dying && !p.dashHit.has(e) && overlap(p, e)) {
-        p.dashHit.add(e); hurtEnemy(e, 14, p.x - p.dashDir * 30, { burn: 2.5, kb: 120 }); gainCharge(1);
-        burst(e.x, e.y - e.h / 2, 8, '#ffb347', 200, 0.4, 3);
+        p.dashHit.add(e); hurtEnemy(e, tune.rune_dash_dmg, p.x - p.dashDir * 30, { kb: dg === 'stribog' ? 400 : 120 });
+        applyGod(dg, e, dg === 'perun' ? 2 : 1); gainCharge(1);
+        burst(e.x, e.y - e.h / 2, 8, GODS[dg].color, 200, 0.4, 3);
       }
     }
     if (p.dashT <= 0) p.vx = p.dashDir * tune.run_speed;
   } else {
     const slow = p.atkT > 0 ? (state.weapon === 'hammer' ? 0.15 : 0.35) : 1;
-    const target = mx * tune.run_speed * slow;
+    const target = mx * tune.run_speed * slow * (has('stribog_p') ? 1.2 : 1);
     p.vx += (target - p.vx) * Math.min(1, dt * (p.onGround ? 16 : 9));
     if (mx && p.atkT <= 0) p.face = mx;
     let g = tune.gravity;
@@ -680,7 +681,7 @@ function updatePlayer(dt) {
   if (p.atkBuf > 0 && p.dashT <= 0 && p.atkT <= 0) {
     const n = Wp.times.length;
     p.combo = p.comboT > 0 ? (p.combo % n) + 1 : 1;
-    p.atkT = Wp.times[p.combo - 1] / tune.swing_speed; p.atkDur = p.atkT; p.comboT = p.atkT + 0.3;
+    p.atkT = Wp.times[p.combo - 1] / tune.swing_speed / (has('stribog_p') ? 1.15 : 1); p.atkDur = p.atkT; p.comboT = p.atkT + 0.3;
     p.hitSet = new Set(); p.quaked = false; p.atkBuf = 0; p.vx += p.face * Wp.lunge; p.trail = [];
     if (state.weapon === 'hammer') tone(160, 0.2, 'triangle', 0.1, 0.6); else sfx.swing();
   }
@@ -743,6 +744,8 @@ function strikeHits(k) {
       p.hitSet.add(e);
       const f = hurtEnemy(e, dmg, p.x, { kb: tune.knockback * (fin ? 1.8 : 1) * (wpn === 'hammer' ? 1.5 : 1), breaker: wpn === 'hammer', stun: wpn === 'hammer' ? 0.35 : 0 });
       gainCharge(f * Wp.charge);
+      const sg = slotGod('strike'); if (sg && f > 0) applyGod(sg, e);
+      if (sg === 'stribog') e.kb *= 1.4;
       if (has('thirst') && f >= 1) p.hp = Math.min(p.maxHp, p.hp + 1);
       state.hitstop = Math.max(state.hitstop, tune.hitstop * (fin ? 1.8 : 1) * (wpn === 'hammer' ? 1.8 : wpn === 'sickles' ? 0.6 : 1));
       if (f >= 1) { sfx.hit(); burst(e.x - p.face * e.w * 0.3, e.y - e.h / 2, 10, '#ffe2a0', 320, 0.3, 2); }
@@ -759,6 +762,231 @@ function strikeHits(k) {
   }
 }
 
+// ---- Gods, runes and the unions of gods ---------------------------------------------------------------
+// Every rune belongs to a god and fills a slot: the strike, the dash, the Flare, or a passive. A slot holds
+// one rune (a new one replaces the old). Each god puts its own status on enemies, and runes of two gods
+// unlock a union rune that makes their statuses feed each other: that is where a run can turn into a monster.
+const GODS = {
+  svarog: { name: 'Сварог', status: 'горение', color: '#ff8a3a', sign: 'brass' },
+  perun: { name: 'Перун', status: 'заряд', color: '#8fd3ff', sign: 'storm' },
+  stribog: { name: 'Стрибог', status: 'порезы', color: '#bff0d8', sign: 'wind' },
+  veles: { name: 'Велес', status: 'проклятие', color: '#c08aff', sign: 'witch' },
+  zhiva: { name: 'Жива', status: 'щит', color: '#9ff0b0', sign: 'moon' },
+  rod: { name: 'Род', status: '', color: '#e0c080', sign: 'rod' },
+};
+const GOD_ORDER = ['svarog', 'perun', 'stribog', 'veles', 'zhiva'];
+const SLOT_NAME = { strike: 'Удар', dash: 'Рывок', flare: 'Вспышка', passive: 'Свойство' };
+const SLOT_KIND = { strike: 'strike', dash: 'dash', flare: 'flare', passive: 'body' };
+const RUNES = [
+  { id: 'svarog_s', god: 'svarog', slot: 'strike', name: 'Удар Сварога', desc: 'Удары поджигают врагов' },
+  { id: 'svarog_d', god: 'svarog', slot: 'dash', name: 'Огненный след', desc: 'Рывок поджигает всех на пути и оставляет огонь на земле' },
+  { id: 'svarog_f', god: 'svarog', slot: 'flare', name: 'Горнило', desc: 'Вспышка поджигает всех вокруг вдвое дольше' },
+  { id: 'svarog_p', god: 'svarog', slot: 'passive', name: 'Жар', desc: 'Горящие враги получают +30% урона' },
+  { id: 'perun_s', god: 'perun', slot: 'strike', name: 'Удар Перуна', desc: 'Удары заряжают врагов; полный заряд бьёт молнией по соседям' },
+  { id: 'perun_d', god: 'perun', slot: 'dash', name: 'Громовой рывок', desc: 'Рывок даёт каждому на пути два заряда' },
+  { id: 'perun_f', god: 'perun', slot: 'flare', name: 'Гнев Перуна', desc: 'Вспышка сразу разряжает всех врагов вокруг' },
+  { id: 'perun_p', god: 'perun', slot: 'passive', name: 'Раскаты', desc: 'Разряд перескакивает ещё на двух врагов' },
+  { id: 'stribog_s', god: 'stribog', slot: 'strike', name: 'Удар Стрибога', desc: 'Удары режут ветром: враги кровоточат и отлетают дальше' },
+  { id: 'stribog_d', god: 'stribog', slot: 'dash', name: 'Вихрь', desc: 'Рывок режет всех на пути и перезаряжается на 30% быстрее' },
+  { id: 'stribog_f', god: 'stribog', slot: 'flare', name: 'Буйный ветер', desc: 'Вспышка отбрасывает и режет всех вокруг' },
+  { id: 'stribog_p', god: 'stribog', slot: 'passive', name: 'Попутный ветер', desc: 'Бег на 20% быстрее, удары на 15% быстрее' },
+  { id: 'veles_s', god: 'veles', slot: 'strike', name: 'Удар Велеса', desc: 'Удары проклинают: проклятые получают +30% урона' },
+  { id: 'veles_d', god: 'veles', slot: 'dash', name: 'Навья тропа', desc: 'Рывок проклинает всех на пути, неуязвимость дольше' },
+  { id: 'veles_f', god: 'veles', slot: 'flare', name: 'Тень Велеса', desc: 'Вспышка проклинает всех врагов в комнате' },
+  { id: 'veles_p', god: 'veles', slot: 'passive', name: 'Навья дань', desc: 'Проклятый враг, умирая, выпускает навий огонёк' },
+  { id: 'zhiva_s', god: 'zhiva', slot: 'strike', name: 'Удар Живы', desc: 'Каждый попавший удар даёт 2 щита' },
+  { id: 'zhiva_d', god: 'zhiva', slot: 'dash', name: 'Живой шаг', desc: 'Каждый рывок лечит 3 здоровья' },
+  { id: 'zhiva_f', god: 'zhiva', slot: 'flare', name: 'Живая вода', desc: 'Вспышка лечит 20 и даёт 20 щита' },
+  { id: 'zhiva_p', god: 'zhiva', slot: 'passive', name: 'Цветущая сила', desc: '+30 к здоровью и полное лечение' },
+  // Rod's runes: no god's status, plain strength
+  { id: 'edge', god: 'rod', slot: 'passive', name: 'Заточенный край', desc: 'Удары наносят +35% урона' },
+  { id: 'arc', god: 'rod', slot: 'passive', name: 'Широкий взмах', desc: 'Дальность удара +40%' },
+  { id: 'thirst', god: 'rod', slot: 'passive', name: 'Жаждущий клинок', desc: 'Каждый попавший удар лечит 1 здоровья' },
+  { id: 'kindling', god: 'rod', slot: 'passive', name: 'Растопка', desc: 'Удары заряжают оберег на 50% быстрее' },
+  { id: 'linger', god: 'rod', slot: 'passive', name: 'Тлеющий остаток', desc: 'После Вспышки в обереге остаётся 35% заряда' },
+  { id: 'echo', god: 'rod', slot: 'passive', name: 'Эхо Вспышки', desc: 'Через секунду Вспышка повторяется с половиной силы' },
+  { id: 'swift', god: 'rod', slot: 'passive', name: 'Лёгкая поступь', desc: 'Перезарядка рывка на 45% короче' },
+  { id: 'moth', god: 'rod', slot: 'passive', name: 'Прыжок Финиста', desc: 'Ещё один прыжок в воздухе; зажми прыжок, чтобы парить' },
+  { id: 'shell', god: 'rod', slot: 'passive', name: 'Кольчуга Святогора', desc: '+25 к максимальному здоровью и лечение на 25' },
+  { id: 'magnet', god: 'rod', slot: 'passive', name: 'Тяга добычи', desc: '+40% углей и ресурсов' },
+  { id: 'reaper', god: 'rod', slot: 'passive', name: 'Жнец', desc: 'Удар по оглушённому врагу наносит двойной урон' },
+];
+const DUOS = [
+  { id: 'duo_firestorm', gods: ['svarog', 'perun'], name: 'Огненная гроза', desc: 'Разряд поджигает; горящие враги раз в секунду получают заряд' },
+  { id: 'duo_firewind', gods: ['svarog', 'stribog'], name: 'Огненный вихрь', desc: 'Огонь перекидывается с горящих врагов на соседей' },
+  { id: 'duo_pyre', gods: ['svarog', 'veles'], name: 'Навий костёр', desc: 'Проклятый горящий враг взрывается при смерти' },
+  { id: 'duo_cleanse', gods: ['svarog', 'zhiva'], name: 'Очищающий огонь', desc: 'Смерть горящего врага лечит 3 и даёт 3 щита' },
+  { id: 'duo_storm', gods: ['perun', 'stribog'], name: 'Буря', desc: 'Разряд нужен всего на 2 заряда и бьёт ещё одного врага' },
+  { id: 'duo_black', gods: ['perun', 'veles'], name: 'Чёрная молния', desc: 'Разряд проклинает; по проклятым молния бьёт вдвое сильнее' },
+  { id: 'duo_lifebolt', gods: ['perun', 'zhiva'], name: 'Живая молния', desc: 'Каждый разряд даёт 4 щита' },
+  { id: 'duo_naviwind', gods: ['stribog', 'veles'], name: 'Навий ветер', desc: 'Порезы ещё и проклинают; навьи огоньки летят вдвое' },
+  { id: 'duo_spring', gods: ['stribog', 'zhiva'], name: 'Весенний ветер', desc: 'Рывок перезаряжается на 40% быстрее и даёт 3 щита' },
+  { id: 'duo_cycle', gods: ['veles', 'zhiva'], name: 'Круг жизни и смерти', desc: 'Смерть проклятого врага лечит 4' },
+];
+const LEGEND = { id: 'wrath', god: 'rod', slot: 'legend', name: 'Гнев богов', desc: 'Любое состояние бога с шансом 50% накладывает ещё и состояние другого бога' };
+const ALL_RUNES = [...RUNES, ...DUOS.map(d => ({ ...d, god: 'duo', slot: 'duo' })), LEGEND];
+const runeOf = id => ALL_RUNES.find(r => r.id === id) || MEND;
+const slotGod = slot => { for (const id of state.boons) { const r = runeOf(id); if (r.slot === slot) return r.god; } return null; };
+const godsTaken = () => new Set(state.boons.map(id => runeOf(id).god).filter(g => GODS[g] && g !== 'rod'));
+const slotGods = () => new Set(['strike', 'dash', 'flare'].map(slotGod).filter(g => g && g !== 'rod'));
+
+function addShield(v) {
+  const p = state.p; p.shield = Math.min(tune.shield_max, (p.shield || 0) + v);
+}
+function heal(v) { const p = state.p; p.hp = Math.min(p.maxHp, p.hp + v); addNum(p.x, p.y - 90, v, '#9ff0a0'); }
+// Put a god's status on an enemy. Wrath of the Gods may chain a second god's status on top.
+function applyGod(g, e, pw = 1, depth = 0) {
+  if (!e || e.dead || e.dying || !GODS[g]) return;
+  if (g === 'svarog') e.burn = Math.max(e.burn, tune.burn_time * pw);
+  else if (g === 'perun') { e.shock = (e.shock || 0) + pw; if (e.shock >= (has('duo_storm') ? 2 : tune.shock_stacks)) discharge(e); }
+  else if (g === 'stribog') { e.bleed = Math.max(e.bleed || 0, tune.bleed_time * pw); if (has('duo_naviwind')) e.curse = Math.max(e.curse || 0, tune.curse_time * 0.5); }
+  else if (g === 'veles') e.curse = Math.max(e.curse || 0, tune.curse_time * pw);
+  else if (g === 'zhiva') addShield(2 * pw);
+  if (has('wrath') && depth === 0 && rng() < 0.5) {
+    const others = GOD_ORDER.filter(x => x !== g && x !== 'zhiva');
+    applyGod(others[Math.floor(rng() * others.length)], e, 1, 1);
+  }
+}
+// Perun's discharge: the charged enemy is struck, and the lightning jumps on.
+function discharge(e) {
+  e.shock = 0;
+  const jumps = tune.shock_jumps + (has('perun_p') ? 2 : 0) + (has('duo_storm') ? 1 : 0);
+  const dm = t => tune.shock_dmg * (has('duo_black') && t.curse > 0 ? 2 : 1);
+  sfx.zap();
+  const hitOne = (t, from, k) => {
+    state.bolts.push({ pts: boltPts(from.x, from.y, t.x, t.y - t.h / 2), t: 0.3, c: '#bfe6ff' });
+    hurtEnemy(t, dm(t) * k, from.x, { kb: 80, status: true });
+    if (has('duo_firestorm')) t.burn = Math.max(t.burn, tune.burn_time);
+    if (has('duo_black')) t.curse = Math.max(t.curse || 0, tune.curse_time * 0.6);
+  };
+  hitOne(e, { x: e.x, y: e.y - e.h - 80 }, 1);
+  let from = { x: e.x, y: e.y - e.h / 2 }; const done = new Set([e]);
+  for (let j = 0; j < jumps; j++) {
+    let best = null, bd = 300;
+    for (const o of state.enemies) { if (o.dead || o.dying || done.has(o)) continue; const d = Math.hypot(o.x - from.x, o.y - o.h / 2 - from.y); if (d < bd) { bd = d; best = o; } }
+    if (!best) break;
+    done.add(best); hitOne(best, from, 0.7); from = { x: best.x, y: best.y - best.h / 2 };
+  }
+  if (has('duo_lifebolt')) addShield(4);
+  events.push({ t: state.t, type: 'discharge' });
+}
+// Statuses tick on the enemy each step (burn already ticks in updateEnemy).
+function tickStatus(e, dt) {
+  if (e.bleed > 0) {
+    e.bleed -= dt; e.bleedTick = (e.bleedTick || 0) + dt;
+    if (e.bleedTick >= 0.25) { e.bleedTick = 0; hurtEnemy(e, tune.bleed_dps * 0.25, e.x, { burnTick: true }); }
+  }
+  if (e.curse > 0) e.curse -= dt;
+  if (e.burn > 0) {
+    e.godT = (e.godT || 0) + dt;
+    if (e.godT >= 1) {
+      e.godT = 0;
+      if (has('duo_firestorm')) applyGod('perun', e, 1, 1);
+      if (has('duo_firewind')) for (const o of state.enemies) if (o !== e && !o.dead && !o.dying && Math.hypot(o.x - e.x, o.y - e.y) < 180) o.burn = Math.max(o.burn, tune.burn_time * 0.7);
+    }
+  }
+}
+// What dies carrying a status may do something more.
+function statusDeath(e) {
+  if (e.curse > 0) {
+    if (has('veles_p')) for (let i = 0; i < (has('duo_naviwind') ? 2 : 1); i++) state.wisps.push({ x: e.x, y: e.y - e.h / 2, vx: (rng() - 0.5) * 300, vy: -300, t: 4, dmg: tune.flare_dmg * tune.witch_dmg * 0.6, ph: i });
+    if (has('duo_cycle')) heal(4);
+    if (has('duo_pyre') && e.burn > 0) explode(e.x, e.y - e.h / 2, e, true);
+  }
+  if (e.burn > 0 && has('duo_cleanse')) { heal(3); addShield(3); }
+}
+// The room reward behind a door, and what it gives on clearing the room.
+const REWARD_RES = () => LOCS[state.room.loc].res;
+function rewardLabel(r) {
+  if (r.type === 'god') return `руна ${GODS[r.god].name === 'Жива' ? 'Живы' : GODS[r.god].name + 'а'}`;
+  if (r.type === 'rod') return 'руна Рода';
+  if (r.type === 'res') return RES[REWARD_RES()].name.toLowerCase();
+  if (r.type === 'heal') return 'живой родник';
+  return 'горсть углей';
+}
+function grantReward() {
+  const r = state.room.reward || { type: 'god', god: GOD_ORDER[0] }, p = state.p;
+  if (r.type === 'god' || r.type === 'rod') { openBoon(r.type === 'god' ? r.god : 'rod'); return; }
+  if (r.type === 'res') { dropLoot(p.x + 40, p.y - 60, REWARD_RES(), 6); dropLoot(p.x + 40, p.y - 60, 'ember', 8); }
+  else if (r.type === 'heal') heal(Math.round(p.maxHp * 0.35));
+  else dropLoot(p.x + 40, p.y - 60, 'ember', 30);
+  sfx.pick(); state.mode = 'open'; state.hint = `Награда: ${rewardLabel(r)}`; state.hintT = 2;
+}
+// After a cleared room: two or three doors, each showing what waits behind it.
+function makeDoors() {
+  const room = state.room, s = state;
+  if (room.kind !== 'combat') return;
+  const L = room.loc, k = room.k;
+  room.inter = room.inter.filter(it => it.door !== 'fork' && it.door !== 'lair');
+  if (k >= tune.rooms_per_loc) {
+    room.inter.push({ x: room.w - 90, door: 'lair', label: `Логово: ${EDEF[LOCS[L].boss].name}`, act: () => enterRoom('boss', L) });
+    return;
+  }
+  const n = rng() < tune.fork_three ? 3 : 2;
+  const gods = GOD_ORDER.slice(), opts = [];
+  for (let i = 0; i < n; i++) {
+    const roll = rng();
+    if (roll < 0.62 && gods.length) opts.push({ type: 'god', god: gods.splice(Math.floor(rng() * gods.length), 1)[0] });
+    else if (roll < 0.72 && !opts.some(o => o.type === 'rod')) opts.push({ type: 'rod' });
+    else if (roll < 0.84 && !opts.some(o => o.type === 'res')) opts.push({ type: 'res' });
+    else if (roll < 0.93 && !opts.some(o => o.type === 'heal')) opts.push({ type: 'heal' });
+    else if (!opts.some(o => o.type === 'embers')) opts.push({ type: 'embers' });
+    else opts.push({ type: 'god', god: gods.length ? gods.splice(Math.floor(rng() * gods.length), 1)[0] : 'svarog' });
+  }
+  opts.forEach((r, i) => room.inter.push({ x: room.w - 90 - i * 230, door: 'fork', reward: r, label: `Дверь: ${rewardLabel(r)}`,
+    act: () => { s.nextReward = r; enterRoom('combat', L, k + 1); } }));
+}
+
+function rewardColor(r) {
+  if (!r) return '#ffd99a';
+  if (r.type === 'god') return GODS[r.god].color;
+  if (r.type === 'rod') return GODS.rod.color;
+  if (r.type === 'res') return RES[REWARD_RES()].color;
+  if (r.type === 'heal') return '#ff8aa0';
+  return '#ffe18a';
+}
+// The sign floating over a door: what waits behind it.
+function drawReward(r, x, y, s) {
+  const bob = Math.sin(state.t * 2 + x) * 4;
+  ctx.save(); ctx.translate(x, y + bob);
+  const c = r.type === 'lair' ? '#ff6a5a' : rewardColor(r), [cr, cg, cb] = hexRgb(c);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 40 * s); g.addColorStop(0, `rgba(${cr},${cg},${cb},0.45)`); g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 40 * s, 0, Math.PI * 2); ctx.fill();
+  if (r.type === 'god' || r.type === 'rod') drawLanternIcon(0, 0, 0.9 * s, 1, 0, r.type === 'god' ? GODS[r.god].sign : 'rod');
+  else if (r.type === 'res') drawResIcon(REWARD_RES(), 0, 0, 2.4 * s);
+  else if (r.type === 'embers') { drawResIcon('ember', -8, 2, 2 * s); drawResIcon('ember', 8, -2, 2 * s); }
+  else if (r.type === 'heal') { ctx.scale(2.4 * s, 2.4 * s); ctx.fillStyle = '#ff6a8a'; ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 7); ctx.bezierCurveTo(-9, 0, -6, -8, 0, -3); ctx.bezierCurveTo(6, -8, 9, 0, 0, 7); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  else { // the lair: a skull of horns
+    ctx.scale(s, s); ctx.fillStyle = '#e8dcc8'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, 14, 13, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-12, -6); ctx.quadraticCurveTo(-26, -14, -22, -26); ctx.quadraticCurveTo(-16, -14, -6, -12); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(12, -6); ctx.quadraticCurveTo(26, -14, 22, -26); ctx.quadraticCurveTo(16, -14, 6, -12); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1a0a08'; ctx.beginPath(); ctx.arc(-5, 0, 3.5, 0, Math.PI * 2); ctx.arc(5, 0, 3.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+// Small marks over an enemy for each status it carries.
+function drawStatus(e) {
+  const marks = [];
+  if (e.burn > 0) marks.push(['svarog', 0]);
+  if (e.shock > 0) marks.push(['perun', e.shock]);
+  if (e.bleed > 0) marks.push(['stribog', 0]);
+  if (e.curse > 0) marks.push(['veles', 0]);
+  if (!marks.length) return;
+  const y = e.y - e.h - (EDEF[e.kind].boss ? 30 : 34);
+  marks.forEach(([g, n], i) => {
+    const x = e.x + (i - (marks.length - 1) / 2) * 16;
+    ctx.fillStyle = 'rgba(5,8,14,0.7)'; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = GODS[g].color; ctx.beginPath();
+    if (g === 'svarog') { ctx.moveTo(x, y + 5); ctx.quadraticCurveTo(x - 5, y, x, y - 6); ctx.quadraticCurveTo(x + 5, y, x, y + 5); }
+    else if (g === 'perun') { ctx.moveTo(x + 2, y - 6); ctx.lineTo(x - 3, y + 1); ctx.lineTo(x + 1, y + 1); ctx.lineTo(x - 2, y + 6); ctx.lineTo(x + 4, y - 1); ctx.lineTo(x, y - 1); ctx.closePath(); }
+    else if (g === 'stribog') { ctx.moveTo(x - 5, y + 4); ctx.lineTo(x + 5, y - 4); ctx.lineTo(x + 3, y - 1); ctx.lineTo(x - 5, y + 4); }
+    else { ctx.arc(x, y, 4, 0, Math.PI * 2); }
+    ctx.fill();
+    if (g === 'perun' && n > 0) for (let k = 0; k < Math.min(4, Math.floor(n)); k++) { ctx.fillStyle = '#e8f8ff'; ctx.fillRect(x - 6 + k * 4, y + 9, 3, 3); }
+  });
+}
+
 // ---- Enemies ----------------------------------------------------------------------------------------
 function updateEnemy(e, dt) {
   const p = state.p;
@@ -768,6 +996,8 @@ function updateEnemy(e, dt) {
     if (e.burnTick >= 0.25) { e.burnTick = 0; hurtEnemy(e, tune.burn_dps * 0.25, e.x, { burnTick: true }); }
     if (rng() < 0.3) state.parts.push({ x: e.x + (rng() - 0.5) * e.w, y: e.y - rng() * e.h, vx: 0, vy: -80, t: 0.4, life: 0.4, c: '#ff9a3d', size: 2, g: 0 });
   }
+  if (e.dead) return;
+  tickStatus(e, dt);
   if (e.dead) return;
   const d = EDEF[e.kind], fly = d.fly;
   let spd = ashM('speed');
@@ -1143,9 +1373,9 @@ function updatePlay(dt) {
     state.modeT -= dt;
     if (state.modeT <= 0) {
       if (room.kind === 'boss' && state.run.locI >= LOC_ORDER.length - 1) { endRun(true); return; }
-      sfx.door(); openBoon();
+      sfx.door(); makeDoors(); grantReward();
     }
-  } else if (state.mode === 'open' && (room.kind === 'combat' || room.kind === 'boss')) {
+  } else if (state.mode === 'open' && room.kind === 'boss') {
     if (p.x > room.w - 90) {
       const L = room.loc, k = room.k;
       if (room.kind === 'boss') enterRoom('haven', L);
@@ -1236,12 +1466,21 @@ function updatePlay(dt) {
   const target = clamp(p.x - W / 2 + p.face * 90, 0, room.w - W);
   state.cam = lerp(state.cam, target, Math.min(1, dt * 6));
 }
-function openBoon() {
-  const pool = BOONS.filter(b => !state.boons.includes(b.id));
+// A rune offer from one god (or Rod): three of its runes, maybe a union of gods, maybe the Wrath.
+function openBoon(god) {
+  const taken = new Set(state.boons);
+  let pool = RUNES.filter(r => r.god === god && !taken.has(r.id));
   const offer = [];
+  const mine = godsTaken();
+  if (god !== 'rod') {
+    const duos = DUOS.filter(d => !taken.has(d.id) && d.gods.includes(god) && d.gods.every(g => g === god || mine.has(g)));
+    if (duos.length && rng() < tune.duo_chance) offer.push({ ...duos[Math.floor(rng() * duos.length)], god: 'duo', slot: 'duo' });
+    if (!taken.has('wrath') && slotGods().size >= 3 && rng() < tune.legend_chance) offer.push(LEGEND);
+  }
   while (offer.length < 3 && pool.length) offer.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  if (offer.length < 3) { pool = RUNES.filter(r => r.god === 'rod' && !taken.has(r.id) && !offer.includes(r)); while (offer.length < 3 && pool.length) offer.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]); }
   while (offer.length < 3) offer.push(MEND);
-  state.offer = offer; state.sel = 1; state.mode = 'boon';
+  state.offer = offer.slice(0, 3); state.offerGod = god; state.sel = 1; state.mode = 'boon';
 }
 function updateBoon() {
   if (tapped(['KeyA', 'ArrowLeft'])) state.sel = (state.sel + 2) % 3;
@@ -1251,13 +1490,15 @@ function updateBoon() {
   if (tapped(['Digit2', 'Numpad2'])) pick = 1;
   if (tapped(['Digit3', 'Numpad3'])) pick = 2;
   if (tapped(K.ok) || tapped(['KeyJ', 'Space', 'KeyE'])) pick = state.sel;
-  if (tapped(['KeyR']) && state.rerolls > 0) { state.rerolls--; sfx.pick(); openBoon(); return; }
+  if (tapped(['KeyR']) && state.rerolls > 0) { state.rerolls--; sfx.pick(); openBoon(state.offerGod); return; }
   if (pick >= 0) {
-    const b = state.offer[pick];
-    if (b.id === 'mend') { const p = state.p; p.hp = Math.min(p.maxHp, p.hp + 40); }
+    const b = state.offer[pick], p = state.p;
+    if (b.id === 'mend') heal(40);
     else {
+      if (['strike', 'dash', 'flare'].includes(b.slot)) state.boons = state.boons.filter(id => runeOf(id).slot !== b.slot);
       state.boons.push(b.id);
-      if (b.id === 'shell') { state.p.maxHp += 25; state.p.hp = Math.min(state.p.maxHp, state.p.hp + 25); }
+      if (b.id === 'shell') { p.maxHp += 25; heal(25); }
+      if (b.id === 'zhiva_p') { p.maxHp += 30; p.hp = p.maxHp; }
     }
     sfx.pick(); state.mode = 'open'; state.hint = `Руна: ${b.name}`; state.hintT = 2;
     events.push({ t: state.t, type: 'boon', id: b.id });
@@ -1572,7 +1813,17 @@ function drawGround() {
     ctx.strokeStyle = 'rgba(120,200,190,0.25)'; ctx.lineWidth = 1.5;
     for (let x = px + 20; x < px + pw; x += 60) { ctx.beginPath(); ctx.moveTo(x, py + 22); ctx.lineTo(x, py + 30 + ((x * 7) % 14)); ctx.stroke(); }
   }
-  if (room.kind === 'combat' || room.kind === 'boss') { drawDoor(40, false, true); drawDoor(room.w - 50, state.mode === 'open', false); }
+  if (room.kind === 'boss') { drawDoor(40, false, true); drawDoor(room.w - 50, state.mode === 'open', false); }
+  if (room.kind === 'combat') {
+    drawDoor(40, false, true);
+    const doors = room.inter.filter(it => it.door === 'fork' || it.door === 'lair');
+    if (!doors.length) drawDoor(room.w - 90, false, false);
+    for (const it of doors) {
+      const col = it.door === 'lair' ? '#ff6a5a' : rewardColor(it.reward);
+      drawDoor(it.x, state.mode === 'open', false, col);
+      drawReward(it.door === 'lair' ? { type: 'lair' } : it.reward, it.x, GROUND - 200, 1);
+    }
+  }
   if (room.kind === 'haven') drawHaven();
   if (room.kind === 'hub') drawHubStations();
 }
@@ -2459,7 +2710,7 @@ function drawAmbient() {
 // ---- Drawing: HUD -----------------------------------------------------------------------------------
 // The god's amulet: a bronze ring, its stone filling with light as it charges, the god's sign on top.
 function drawLanternIcon(x, y, s, fill, glow, id = 'brass', locked = false) {
-  const L = LANTERNS[id] || LANTERNS.brass, [r, g, b] = hexRgb(L.light);
+  const L = LANTERNS[id] || (id === 'wind' ? { light: '#bff0d8', glass: ['#f0fff8', '#6ac8a0'] } : { light: '#e0c080', glass: ['#fff0c8', '#b08a40'] }), [r, g, b] = hexRgb(L.light);
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   if (glow > 0) { const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, 34); gg.addColorStop(0, `rgba(${r},${g},${b},${glow})`); gg.addColorStop(1, `rgba(${r},${g},${b},0)`); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill(); }
   ctx.strokeStyle = '#8a6a34'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-10, -26); ctx.lineTo(0, -18); ctx.lineTo(10, -26); ctx.stroke(); // cord
@@ -2483,6 +2734,10 @@ function drawLanternIcon(x, y, s, fill, glow, id = 'brass', locked = false) {
     ctx.beginPath(); ctx.arc(0, -2, 7, 0.2, Math.PI - 0.2); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-7, -1); ctx.quadraticCurveTo(-9, -8, -5, -10); ctx.moveTo(7, -1); ctx.quadraticCurveTo(9, -8, 5, -10); ctx.stroke();
     ctx.beginPath(); ctx.arc(0, 6, 2, 0, Math.PI * 2); ctx.fill();
+  } else if (id === 'wind') { // Stribog: three gusts
+    for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-8, -6 + i * 6); ctx.quadraticCurveTo(2, -10 + i * 6, 6, -5 + i * 6); ctx.quadraticCurveTo(8, -2 + i * 6, 4, -2 + i * 6); ctx.stroke(); }
+  } else if (id === 'rod') { // Rod: a carved rune mark
+    ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(0, 9); ctx.moveTo(0, -3); ctx.lineTo(-6, -9); ctx.moveTo(0, -3); ctx.lineTo(6, -9); ctx.moveTo(-5, 4); ctx.lineTo(5, 4); ctx.stroke();
   } else { // Svarog: a flame
     ctx.beginPath(); ctx.moveTo(0, 8); ctx.quadraticCurveTo(-8, 2, -3, -6); ctx.quadraticCurveTo(-2, -1, 0, -2); ctx.quadraticCurveTo(0, -8, 3, -10); ctx.quadraticCurveTo(9, 0, 0, 8); ctx.fill();
   }
@@ -2526,7 +2781,8 @@ function drawHUD() {
   panel(20, 18, 290, 30);
   const hg = ctx.createLinearGradient(26, 0, 304, 0); hg.addColorStop(0, '#8e2a22'); hg.addColorStop(1, '#b8452e');
   ctx.fillStyle = hg; rrect(26, 24, 278 * clamp(p.hp / p.maxHp, 0, 1), 18, 6); ctx.fill();
-  textShadow(`${Math.ceil(p.hp)} / ${p.maxHp}`, 165, 33, 16, '#fff3e0');
+  if (p.shield > 0) { ctx.fillStyle = 'rgba(159,240,176,0.75)'; rrect(26, 38, 278 * clamp(p.shield / tune.shield_max, 0, 1), 5, 2); ctx.fill(); }
+  textShadow(`${Math.ceil(p.hp)} / ${p.maxHp}${p.shield > 0 ? ` +${Math.ceil(p.shield)}` : ''}`, 165, 33, 16, '#fff3e0');
   if (p.dashCd > 0) { ctx.fillStyle = 'rgba(255,217,154,0.6)'; ctx.fillRect(26, 50, 120 * (1 - p.dashCd / (tune.dash_cooldown * (has('swift') ? 0.55 : 1))), 4); }
   // lantern charge, in the lantern's own colour
   const full = p.charge >= 100;
@@ -2566,10 +2822,11 @@ function drawHUD() {
   }
   // boons taken
   state.boons.forEach((id, i) => {
-    const b = BOONS.find(x => x.id === id) || MEND;
+    const b = runeOf(id);
     const x = 30 + (i % 14) * 40, y = (boss ? H - 100 : H - 34) - Math.floor(i / 14) * 40;
     panel(x - 16, y - 16, 32, 32);
-    drawBoonIcon(b.kind, x, y, 0.85);
+    ctx.strokeStyle = b.god === 'duo' ? '#ffd36a' : (GODS[b.god] || GODS.rod).color; ctx.lineWidth = 2; rrect(x - 16, y - 16, 32, 32, 7); ctx.stroke();
+    drawBoonIcon(b.kind || SLOT_KIND[b.slot] || 'body', x, y, 0.85);
   });
   // what to press here
   if (state.near && !state.menu && !state.dialog && state.mode === 'open') {
@@ -2584,6 +2841,9 @@ function drawHUD() {
     const c = state.cam;
     const tips = [[560, 300, 'A / D — бег · Пробел — прыжок · Shift — рывок'], [HUB_X.dummy, 300, 'J — удар по чучелу · L — Вспышка'], [HUB_X.gate, 260, 'E у Ворот — в Навь']];
     for (const [x, y, s] of tips) if (Math.abs(x - c - W / 2) < W) textShadow(s, x - c, y, 18, '#f3e6c8');
+  }
+  if (room.kind === 'combat' && state.mode === 'open') for (const it of room.inter) if (it.door === 'fork' || it.door === 'lair') {
+    textShadow(it.door === 'lair' ? 'Логово' : rewardLabel(it.reward), it.x - state.cam, GROUND - 250, 17, it.door === 'lair' ? '#ff9a8a' : rewardColor(it.reward));
   }
   if (room.kind === 'haven') for (const it of room.inter) if (it.door) {
     const nm = it.door === 'home' ? 'Домой, на заставу' : LOCS[it.door].name;
@@ -2604,25 +2864,33 @@ function drawHUD() {
 }
 function drawBoonCards() {
   ctx.fillStyle = 'rgba(3,5,12,0.72)'; ctx.fillRect(0, 0, W, H);
-  textShadow('Выбери руну', W / 2, 120, 36, '#ffe7b8');
-  text('← / → и Enter, или 1 / 2 / 3', W / 2, 160, 18, '#c8bfa8');
+  const og = GODS[state.offerGod] || GODS.rod;
+  textShadow(state.offerGod === 'rod' ? 'Руны Рода' : `Руны: ${og.name}`, W / 2, 110, 36, og.color);
+  text('← / → и Enter, или 1 / 2 / 3 · руна в занятом слоте заменит старую', W / 2, 150, 17, '#c8bfa8');
   state.offer.forEach((b, i) => {
-    const x = W / 2 - 390 + i * 270, y = 200, w = 240, h = 330, sel = i === state.sel;
+    const x = W / 2 - 390 + i * 270, y = 190, w = 240, h = 350, sel = i === state.sel;
     const yy = y + (sel ? -8 : 0);
-    const g = ctx.createLinearGradient(0, yy, 0, yy + h); g.addColorStop(0, sel ? '#3a2c1c' : '#1e1a1a'); g.addColorStop(1, '#100c10');
+    const duo = b.slot === 'duo', leg = b.slot === 'legend';
+    const col = duo || leg ? '#ffd36a' : (GODS[b.god] || GODS.rod).color, [cr, cg, cb] = hexRgb(col);
+    const g = ctx.createLinearGradient(0, yy, 0, yy + h); g.addColorStop(0, sel ? `rgba(${cr},${cg},${cb},0.28)` : '#1e1a1a'); g.addColorStop(1, '#100c10');
     ctx.fillStyle = g; rrect(x, yy, w, h, 14); ctx.fill();
-    ctx.strokeStyle = sel ? '#ffd07a' : '#6a5a40'; ctx.lineWidth = sel ? 3 : 2; ctx.stroke();
+    ctx.strokeStyle = sel ? col : `rgba(${cr},${cg},${cb},0.5)`; ctx.lineWidth = sel ? 3 : 2; ctx.stroke();
+    if (duo || leg) { ctx.strokeStyle = 'rgba(255,211,106,0.5)'; ctx.lineWidth = 1; rrect(x + 6, yy + 6, w - 12, h - 12, 10); ctx.stroke(); }
     const glow = ctx.createRadialGradient(x + w / 2, yy + 70, 0, x + w / 2, yy + 70, 60);
-    glow.addColorStop(0, 'rgba(255,200,110,0.35)'); glow.addColorStop(1, 'rgba(255,200,110,0)');
+    glow.addColorStop(0, `rgba(${cr},${cg},${cb},0.4)`); glow.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
     ctx.fillStyle = glow; ctx.fillRect(x, yy + 10, w, 120);
-    drawBoonIcon(b.kind, x + w / 2, yy + 70, 2);
-    textShadow(b.name, x + w / 2, yy + 145, 21, '#ffe7b8');
-    const kindName = { strike: 'Удар', lantern: 'Оберег', flare: 'Вспышка', dash: 'Рывок', move: 'Движение', body: 'Тело' }[b.kind];
-    text(kindName, x + w / 2, yy + 172, 15, '#c2a26a');
-    wrapText(b.desc, x + w / 2, yy + 208, w - 36, 17, '#e8e0d0', 24);
+    if (duo) { drawLanternIcon(x + w / 2 - 24, yy + 70, 1.1, 1, 0, GODS[b.gods[0]].sign); drawLanternIcon(x + w / 2 + 24, yy + 70, 1.1, 1, 0, GODS[b.gods[1]].sign); }
+    else if (b.id === 'mend') drawBoonIcon('body', x + w / 2, yy + 70, 2);
+    else drawLanternIcon(x + w / 2, yy + 70, 1.5, 1, 0, leg ? 'rod' : (GODS[b.god] || GODS.rod).sign);
+    textShadow(b.name, x + w / 2, yy + 140, 21, '#ffe7b8');
+    const sub = leg ? 'Легендарная руна' : duo ? `Союз: ${GODS[b.gods[0]].name} и ${GODS[b.gods[1]].name}` : b.slot ? `${SLOT_NAME[b.slot]} · ${(GODS[b.god] || GODS.rod).name}` : 'Тело';
+    text(sub, x + w / 2, yy + 168, 15, col);
+    wrapText(b.desc, x + w / 2, yy + 204, w - 36, 17, '#e8e0d0', 24);
+    const had = b.slot && ['strike', 'dash', 'flare'].includes(b.slot) ? state.boons.map(runeOf).find(r => r.slot === b.slot) : null;
+    if (had) text(`заменит: ${had.name}`, x + w / 2, yy + h - 46, 14, '#e0a08a');
     text(`${i + 1}`, x + w / 2, yy + h - 20, 18, '#8f8068');
   });
-  if (state.rerolls > 0) text(`R — перебросить (${state.rerolls})`, W / 2, 575, 18, '#c8bfa8');
+  if (state.rerolls > 0) text(`R — перебросить (${state.rerolls})`, W / 2, 590, 18, '#c8bfa8');
 }
 const MENU_TITLE = { shrine: 'Капище Рода', lantern: 'Ведунья Сова', weapon: 'Кузнец Потап', gate: 'Ворота в Навь' };
 function drawMenu() {
@@ -2692,7 +2960,7 @@ function drawPlayScene() {
   drawDarkness(ox, oy);
   // what glows reads through the dark: eyes, warnings, shots, loot, sparks, the Flare
   ctx.save(); ctx.translate(-state.cam + ox, oy);
-  for (const e of state.enemies) drawEnemy(e, true);
+  for (const e of state.enemies) { drawEnemy(e, true); if (!e.dead && !e.dying) drawStatus(e); }
   for (const h of state.haz) drawHazard(h);
   for (const s of state.spawns) drawSpawn(s);
   for (const s of state.shots) drawShot(s);

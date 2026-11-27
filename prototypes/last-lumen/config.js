@@ -101,6 +101,19 @@ window.CONFIG = {
   witch_dmg: { value: 0.9, min: 0.2, max: 4, step: 0.1 },         // x flare_dmg per wisp
   witch_kill_charge: { value: 12, min: 0, max: 50, step: 1 },     // % charge per kill with the Witch lantern
 
+  // ---- Gods' statuses and runes ----
+  shock_stacks: { value: 3, min: 1, max: 8, step: 1 },            // Perun charges before a discharge
+  shock_dmg: { value: 22, min: 1, max: 100, step: 1 },            // discharge damage to the charged enemy
+  shock_jumps: { value: 1, min: 0, max: 8, step: 1 },             // extra enemies a discharge jumps to
+  bleed_time: { value: 3, min: 0, max: 10, step: 0.5 },           // s of Stribog's cuts
+  bleed_dps: { value: 6, min: 0, max: 40, step: 1 },              // damage per second while cut
+  curse_time: { value: 6, min: 0, max: 15, step: 0.5 },           // s of Veles' curse
+  curse_mult: { value: 1.3, min: 1, max: 3, step: 0.05 },         // x damage a cursed enemy takes
+  shield_max: { value: 40, min: 0, max: 200, step: 5 },           // the most Zhiva's shield can hold
+  rune_dash_dmg: { value: 12, min: 0, max: 60, step: 1 },         // damage a dash rune deals passing through
+  duo_chance: { value: 0.5, min: 0, max: 1, step: 0.05 },         // chance a union rune joins the offer when allowed
+  legend_chance: { value: 0.35, min: 0, max: 1, step: 0.05 },     // chance the Wrath of the Gods joins the offer
+  fork_three: { value: 0.45, min: 0, max: 1, step: 0.05 },        // chance a fork has three doors, not two
   // ---- Run and rewards ----
   floor_heal: { value: 0.3, min: 0, max: 1, step: 0.05 },         // share of max health healed between floors
   embers_mult: { value: 1, min: 0.2, max: 5, step: 0.1 },
