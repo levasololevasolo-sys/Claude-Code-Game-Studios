@@ -58,8 +58,21 @@ def clods(cv, c, k, n=7, spread=1.2, col=None, size=0.09, up=1.6, seed=3):
 
 
 class ForestBody(Body):
-    """Body with the moonlight back rim, a noise dissolve and 'fx' layers."""
+    """Body with the moonlight back rim, a noise dissolve and 'fx' layers.
+    WOODEN kinds get a cut-wood stump (pale rings, amber sap) instead of flesh."""
     MOON_K = 0.65
+    WOODEN = False
+
+    def stump(self, at, n, r):
+        if not self.WOODEN:
+            return Body.stump(self, at, n, r)
+        cv = self.cv
+        ang = np.arctan2(n[1], n[0])
+        cv.paint(cv.ellipse(at, r * 0.4, r, rot=ang), hexc('CDA872'), R=0.05, line=0.7, cast=False, rim=False)
+        cv.ink(np.abs(cv.ellipse(at, r * 0.22, r * 0.55, rot=ang)) - 0.008, alpha=0.5)
+        cv.flat(cv.circle(np.asarray(at) + np.asarray(n) * r * 0.15, r * 0.12), hexc('5A3A1E'), alpha=0.8)
+        cv.flat(cv.ellipse(np.asarray(at) + rot(np.asarray(n, float), 1.4) * r * 0.6, r * 0.1, r * 0.22, rot=ang),
+                hexc('D9902E'), alpha=0.9)
 
     def moon_rim(self):
         cv = self.cv
@@ -113,6 +126,7 @@ class ForestBody(Body):
 # =====================================================================
 class Ringer(ForestBody):
     """Аука: tall thin forest voice, one long branch arm, hollow head with a rust eye."""
+    WOODEN = True
     BOUNDS = (-2.6, 3.4, -4.2, 0.4)
     BODY = hexc('5C7658')
     RAG = hexc('3E5640')
@@ -260,6 +274,7 @@ def ringer_anims():
 # =====================================================================
 class Rootling(ForestBody):
     """Лешачонок: a stump-child on root legs, twig horns, moss cap, green eyes."""
+    WOODEN = True
     BOUNDS = (-2.0, 2.1, -3.0, 0.5)
     BARK = hexc('7C6046')
     WOOD = hexc('B8925E')
@@ -268,7 +283,7 @@ class Rootling(ForestBody):
     DIRT = hexc('5E4A36')
     GLOW = hexc('C8F07A')
     BASE = dict(mode='body', bob=0.0, squash=0.0, gait=0.0, eye=1.0, jaw=0.0, lean=0.0, hands=0.0, mound=0.0,
-                crack=0.0, shake=0.0, spray=0.0, horns=0.0, stump_r=0.1, neck_r=0.5)
+                crack=0.0, shake=0.0, spray=0.0, horns=0.0, stump_r=0.1, neck_r=0.42)
 
     def setup(self):
         p = self.p
@@ -677,6 +692,7 @@ def sentry_anims():
 # =====================================================================
 class Suchkovik(ForestBody):
     """Сучковик: a living tree by the wall, broken joints, branch arms, one burning eye, a loaded branch-spear."""
+    WOODEN = True
     BOUNDS = (-2.9, 3.4, -5.0, 0.4)
     BARK = hexc('725C48')
     BARK_L = hexc('947A5A')
@@ -832,6 +848,7 @@ def spear_canvas(stuck):
 # =====================================================================
 class Lesavka(ForestBody):
     """Лесавка: a root granny, a huge mop of leaves, a long root nose, thin legs."""
+    WOODEN = True
     BOUNDS = (-1.9, 2.2, -3.0, 0.35)
     SKIN = hexc('927050')
     LEAF = hexc('5C8C3A')
