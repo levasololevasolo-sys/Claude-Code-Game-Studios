@@ -53,3 +53,9 @@
   author: technical-artist agent (Claude), for the developer
   date: 2026-11-27
   ai_made: yes (geometry, rig, poses and shaders authored as code by an AI agent; no image model)
+- path: assets/art/sprites/{bat,sentry,bloat}/*.png
+  source: rendered by tools/asset-pipeline/blender/build_swamp_enemies.py (navi_sculpt metaball bodies built by script), packed by pack_sheets.py
+  licence: project-owned (original work); no third-party models, textures or animations
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (geometry, rigs, poses and shaders authored as code by an AI agent; no image model)

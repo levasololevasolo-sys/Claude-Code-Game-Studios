@@ -1,0 +1,55 @@
+{
+ "cell": [
+  520,
+  420
+ ],
+ "origin": [
+  260,
+  330
+ ],
+ "height_px": 230,
+ "anims": {
+  "fly": {
+   "frames": 8,
+   "fps": 16,
+   "loop": true,
+   "cols": 8,
+   "rows": 1
+  },
+  "wind": {
+   "frames": 6,
+   "fps": 12,
+   "loop": false,
+   "cols": 6,
+   "rows": 1
+  },
+  "swoop": {
+   "frames": 4,
+   "fps": 16,
+   "loop": true,
+   "cols": 4,
+   "rows": 1
+  },
+  "spit": {
+   "frames": 6,
+   "fps": 12,
+   "loop": false,
+   "cols": 6,
+   "rows": 1
+  },
+  "hurt": {
+   "frames": 3,
+   "fps": 12,
+   "loop": false,
+   "cols": 3,
+   "rows": 1
+  },
+  "death": {
+   "frames": 8,
+   "fps": 12,
+   "loop": false,
+   "cols": 8,
+   "rows": 1
+  }
+ }
+}

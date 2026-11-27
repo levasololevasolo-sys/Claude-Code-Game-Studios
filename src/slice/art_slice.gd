@@ -83,11 +83,19 @@ func _process(_dt: float) -> void:
 	if _frames == STAGE_FRAME and OS.get_cmdline_user_args().has("--art-stage"):
 		_stage()
 	for e in get_tree().get_nodes_in_group("enemies"):
-		if e is Crawler and not e.has_node("ArtSkin"):
+		if e.has_node("ArtSkin"):
+			continue
+		if e is Crawler:
 			var cs := CrawlerSprite.new()
 			cs.name = "ArtSkin"
 			cs.enemy = e
 			e.add_child(cs)
+		elif e is Enemy and EnemySprite.has_kind((e as Enemy).kind_id):
+			var es := EnemySprite.new()
+			es.name = "ArtSkin"
+			es.enemy = e
+			es.kind = (e as Enemy).kind_id
+			e.add_child(es)
 
 
 ## Screenshot staging (`--art-stage`): the first crawler stands STAGE_DX in front

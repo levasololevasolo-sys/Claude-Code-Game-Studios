@@ -240,7 +240,7 @@ def _swap_materials(mat):
         _saved.clear()
 
 
-def render_anims(rig, anims, raw_dir, smears, outlined, prefix, springs=None):
+def render_anims(rig, anims, raw_dir, smears, outlined, prefix, springs=None, on_frame=None):
     """anims: {name: dict(keys=[...], frames=n, fps=f, loop=bool)}. Renders colour and
     normal passes of every frame to raw_dir/<anim>_<i>_c.png / _n.png; returns meta + timings."""
     os.makedirs(raw_dir, exist_ok=True)
@@ -261,6 +261,8 @@ def render_anims(rig, anims, raw_dir, smears, outlined, prefix, springs=None):
                     o.modifiers["outline"].show_render = not normal
             for i, p in enumerate(poses):
                 rig.apply(p, extra[i])
+                if on_frame:   # non-bone channels (shape keys, emission) per frame
+                    on_frame(p)
                 for sn, so in smears.items():
                     so.hide_render = normal or p.get("smear") != sn
                 sc.render.filepath = os.path.join(raw_dir, "%s_%02d_%s.png" % (name, i, pass_))

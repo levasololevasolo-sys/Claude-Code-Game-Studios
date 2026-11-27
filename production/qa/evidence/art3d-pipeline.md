@@ -207,3 +207,17 @@ frame names; `src/slice/crawler_sprite.gd` unchanged. 41 frames in 134 s.
 Evidence: `art3d-v2-crawler-compare.png`, `art3d-v2-crawler-sheet.png`.
 Weak points: the death keys are still v1 (it slumps, does not collapse flat);
 small warts get outline specks; the body is metaball-smooth, no wrinkles/creases.
+
+## Swamp enemies: bat, sentry, bloat (first pass, 2026-11-27)
+
+`tools/asset-pipeline/blender/build_swamp_enemies.py -- <bat|sentry|bloat> <raw>` (navi_sculpt
+bodies, painted materials, spring bones; bloat swells by a shape key driven per
+frame via `render_anims(on_frame=...)`). Godot: `src/slice/enemy_sprite.gd`
+(generic EnemySprite: kind -> state -> animation, wind-ups seeked by progress,
+rim copy above the Darkness, the bloat's blast flash stays its own _draw), attached by
+`art_slice.gd` to every enemy whose kind has sheets; tests
+`tests/unit/enemies/enemy_sprite_test.gd`. Lineup: `art3d-swamp-enemies.png`.
+Renders: bat 35 frames 81 s, sentry 41 frames 119 s, bloat 19 frames 53 s.
+Honest: below the crawler's quality. The bat reads small and simple. The sentry's
+limbs are thin and the crossbow is crude. The bloat reads as lumpy dough more than a
+drowned corpse. The bat's wings flap only in the screen plane: front view, no 3D wing twist.
