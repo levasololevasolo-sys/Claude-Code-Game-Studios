@@ -893,9 +893,13 @@ static func _fill(st: St, out: Dictionary, tier: int, t: Dictionary, opts: Dicti
 			match String(m.ch):
 				"E":
 					var size := 2 if tier == 1 and k == 1 else clampi(RoomGen.pack_base(k, tier) + rng.randi_range(0, 1), 2, 8)
+					# F5: the trail's packs share trail_budget_max; the pack that overflows
+					# is cut (not below 2), markers past the budget stay empty.
 					var used := int(trail_sum.get(tkey, 0))
 					if used + size > budget_max:
-						size = maxi(2, budget_max - used)
+						size = budget_max - used
+						if size < 2:
+							continue
 					trail_sum[tkey] = used + size
 					var elites: Array = []
 					if bool(opts.get("elites_ok", false)):
