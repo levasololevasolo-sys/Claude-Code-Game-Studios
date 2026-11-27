@@ -1,0 +1,21 @@
+OK   frost room: chunks ["frost_entry_02", "frost_arena_01", "frost_pass_04", "frost_arena_04", "frost_shaft_01", "frost_arena_02", "frost_exit_01"], kinds ["jelly", "wolf", "sentry", "crawler"]
+screenshot frost-room.png
+screenshot frost-enemies.png
+OK   frost enemies telegraph: ["run", "drift", "crouch", "chill_w", "bite", "hop", "recover"]
+OK   Морена sleeps, hp 1216, class morena_boss.gd
+OK   intro line: Здравствуй, Ждан. Ты опоздал на свою переправу.
+screenshot boss-morena-intro.png
+OK   frost breath: ["dive", "dive", "scythe", "scythe", "breath"]
+OK   ceiling spears: 3
+OK   summon at 65%: 2 minions (hp 774)
+OK   rage below 50%: phase 2, line «Морена в ярости»
+OK   ice double in phase 2: ["dive", "dive", "scythe", "scythe", "breath", "spears", "spears", "dive", "scythe", "spears", "breath", "dive", "scythe", "breath", "spears", "mirror"]
+screenshot boss-morena-phase2.png
+OK   dive into a pillar: breaks 1, stuck 3.00 s, ×1.5 damage
+OK   5 different attacks: ["dive", "dive", "scythe", "scythe", "breath", "spears", "spears", "dive", "scythe", "spears", "breath", "dive", "scythe", "breath", "spears", "mirror", "mirror", "spears", "mirror", "breath", "spears", "scythe", "spears", "dive"]
+OK   second summon at 30%: summons 2
+OK   Морена dies
+screenshot boss-morena-dead.png
+OK   death line: Тает... Значит, кто-то ещё помнит весну.
+OK   minions, hazards and pillars vanished: 0 enemies left
+DONE: 0 failed checks

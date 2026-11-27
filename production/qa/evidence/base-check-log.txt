@@ -1,5 +1,5 @@
-  rune taken: svarog_f (offer ["svarog_f", "svarog_s", "svarog_d"])
-  run ended (dead): Где: Топь Кикиморы, комната 1 | Комнат пройдено: 0   Убито врагов: 0   Хозяев: 0 |   Вспышка — Горнило (ур. 1) | Добыча забега: угли 0    | Банк углей: 0 → 0   (забегов всего: 1)
+  rune taken: svarog_d (offer ["svarog_d", "svarog_p", "svarog_s"])
+  run ended (dead): Где: Топь Кикиморы, комната 1 | Комнат пройдено: 0   Убито врагов: 0   Хозяев: 0 |   Рывок — Огненный след (ур. 1) | Добыча забега: угли 0    | Банк углей: 0 → 0   (забегов всего: 1)
 OK   summary after the run
   enter base: visit 1, lines ["dolya", "potap", "sova", "bayun", "chur", "ofenya"], save true
 OK   the base opens after the summary
@@ -24,9 +24,9 @@ OK   hero look: helmet 5, torso 5
 screenshot base-hero-armored.png
 OK   save v2 holds armor { "arms": 4.0, "cloak": 4.0, "head": 4.0, "legs": 4.0, "torso": 4.0 } and said lines
   gate: new run
-  new run seed 1887429905, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
-  enter room tier 1 room 1 (w 2560, packs 1), reward { "type": "loot", "god": "" }, hp 100
-  start offer: perun
+  new run seed 622973902, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  enter room tier 1 room 1 (w 2560, packs 1), reward { "type": "arms", "god": "" }, hp 100
+  start offer: svarog
 OK   the gate starts a new run
 OK   new run: armored hero (helmet 5), amulet beam
 DONE: 0 failed checks

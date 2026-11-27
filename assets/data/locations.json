@@ -1,5 +1,5 @@
 {
-  "_note": "Locations by tier, GDD room-generation-and-doors §3.1, enemies-and-elites §3.3, art-bible §4.1. lib = chunk library chunks_<lib>.json; roster/late = pack kinds; look = room colours (sky = clear colour, far/mid = parallax layers with their scroll factor par_far/par_mid, near = ground, plat, accent = eyes/glow, props = background props kind) and darkness = base darkness of the room (amulet-and-flare F5 'darkness'). Tiers 3-5 reuse the swamp until their content exists.",
+  "_note": "Locations by tier, GDD room-generation-and-doors §3.1, enemies-and-elites §3.3, art-bible §4.1. lib = chunk library chunks_<lib>.json; roster/late = pack kinds; look = room colours (sky = clear colour, far/mid = parallax layers with their scroll factor par_far/par_mid, near = ground, plat, accent = eyes/glow, props = background props kind) and darkness = base darkness of the room (amulet-and-flare F5 'darkness'). Tiers 4-5 reuse the swamp until their content exists.",
   "1": {
     "name": "Топь Кикиморы",
     "boss": "kikimora",
@@ -67,34 +67,34 @@
   "3": {
     "name": "Царство Морены",
     "boss": "morena",
-    "boss_name": "Морена (заглушка)",
+    "boss_name": "Морена",
     "res": "pearls",
     "res_name": "иней-камень",
-    "lib": "swamp",
+    "lib": "frost",
     "roster": [
+      "wolf",
       "crawler",
-      "sentry",
-      "bat"
+      "jelly"
     ],
     "late": [
-      "bloat"
+      "sentry"
     ],
-    "darkness": 0.78,
+    "darkness": 0.32,
     "look": {
-      "sky": "#0c1418",
-      "far": "#16232a",
-      "mid": "#16232a",
-      "near": "#1f2b2a",
-      "edge": "#4f6d5c",
-      "plat": "#3a4a45",
-      "plat_edge": "#7d9a7f",
-      "solid": "#24302c",
-      "accent": "#b6e36b",
-      "par_far": 0.0,
-      "par_mid": 0.0,
-      "props": "ruins"
+      "sky": "#c9d8e6",
+      "far": "#a8bccf",
+      "mid": "#7c93ad",
+      "near": "#2c3b52",
+      "edge": "#dde8f0",
+      "plat": "#dde8f0",
+      "plat_edge": "#ffffff",
+      "solid": "#5f7f9f",
+      "accent": "#8fd3f5",
+      "par_far": 0.8,
+      "par_mid": 0.5,
+      "props": "frost"
     },
-    "stub": true
+    "beaten": "повержена"
   },
   "4": {
     "name": "Калинов мост",

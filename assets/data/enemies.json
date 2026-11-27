@@ -45,6 +45,19 @@
     "rise_w": 0.6, "burst_up": 620, "burst_time": 0.3, "burst_r": 60, "burst_h": 120, "burst_dmg": 14, "recover": 0.9,
     "cd_min": 1.8, "cd_max": 3.0
   },
+  "wolf": {
+    "name": "Снежный волк", "role": "pack_runner", "w": 62, "h": 38, "hp": 32, "flies": false, "weight": 1.0, "embers": 3,
+    "contact": 8, "color": "#4a5a72", "mane": "#dde8f0", "eye": "#ff5a3a",
+    "speed": 170, "stop": 70, "range_x": 300, "range_y": 120, "crouch": 0.45, "bite_speed": 600, "bite_up": 240, "bite_time": 0.3,
+    "bite_mult": 1.6, "hop_speed": 320, "hop_up": 420, "hop_time": 0.45, "recover": 0.5, "cd_min": 1.4, "cd_max": 2.4
+  },
+  "jelly": {
+    "name": "Студёный дух", "role": "zone", "w": 46, "h": 54, "hp": 30, "flies": true, "weight": 0.7, "embers": 3,
+    "contact": 6, "color": "#2f4f7a", "core": "#a3206f", "eye": "#8fd3f5",
+    "drift": 70, "hover_dy": 230, "hover_dx": 60, "drift_resp": 2.0, "range_x": 700, "range_y": 520,
+    "chill_w": 0.9, "zone_w": 170, "zone_time": 3.0, "zone_tick": 0.5, "zone_dmg": 4, "zone_slow": 0.6, "zone_max": 2, "zone_dy": 10,
+    "cd_min": 2.6, "cd_max": 3.8
+  },
   "knight": {
     "name": "Навий витязь", "role": "knight", "w": 46, "h": 88, "hp": 230, "flies": false, "weight": 2.6, "embers": 14,
     "contact": 6, "color": "#2c2f3d", "eye": "#ffffff", "speed": 150, "stop": 110, "range_x": 320, "range_y": 170,

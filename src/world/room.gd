@@ -4,13 +4,13 @@ extends Node2D
 
 var layout: Dictionary = {}
 ## Location look (locations.json "look", art-bible §4.1): colours, parallax
-## factors par_far / par_mid, props "ruins" (swamp) or "forest". {} = swamp colours.
+## factors par_far / par_mid, props "ruins" (swamp), "forest" or "frost". {} = swamp colours.
 var look: Dictionary = {}
 var _time: float = 0.0
 
 func _process(dt: float) -> void:
 	_time += dt
-	if String(look.get("props", "ruins")) == "forest":
+	if String(look.get("props", "ruins")) in ["forest", "frost"]:
 		queue_redraw()
 
 func _c(key: String, def: String) -> Color:
@@ -58,8 +58,11 @@ func _draw() -> void:
 	var ground := Tune.f("ground_y")
 	var w: float = layout.w
 	var forest := String(look.get("props", "ruins")) == "forest"
+	var frost := String(look.get("props", "ruins")) == "frost"
 	if forest:
 		_draw_forest_back(ground, w)
+	elif frost:
+		_draw_frost_back(ground, w)
 	else:
 		# far ruins, a quiet backdrop band
 		var rng := RandomNumberGenerator.new()
@@ -79,15 +82,26 @@ func _draw() -> void:
 			while gx < r.end.x - 4.0:
 				draw_line(Vector2(gx, r.position.y + 6.0), Vector2(gx + 3.0, r.end.y), _c("plat", "#5a4a3a"), 2.0)
 				gx += 18.0
+		elif frost:
+			# ice: pale cracks and a snow cap
+			var gy := r.position.y + 14.0
+			while gy < r.end.y - 6.0:
+				draw_line(Vector2(r.position.x + 4.0, gy), Vector2(r.end.x - 4.0, gy + 10.0), Color(_c("accent", "#8fd3f5"), 0.35), 2.0)
+				gy += 46.0
+			draw_rect(Rect2(r.position.x - 2.0, r.position.y - 6.0, r.size.x + 4.0, 8.0), _c("plat", "#dde8f0"))
 		draw_line(r.position, Vector2(r.end.x, r.position.y), _c("edge", "#4f6d5c"), 3.0)
 	for p: Vector3 in layout.plats:
 		if forest:
 			_draw_branch(p)
+		elif frost:
+			_draw_ice_ledge(p)
 		else:
 			draw_rect(Rect2(p.x, p.y, p.z, 14), _c("plat", "#3a4a45"))
 			draw_line(Vector2(p.x, p.y), Vector2(p.x + p.z, p.y), _c("plat_edge", "#7d9a7f"), 3.0)
 	if forest:
 		_draw_forest_front(ground, w)
+	elif frost:
+		_draw_frost_front(ground, w)
 	if bool(layout.get("portal", true)):
 		draw_rect(Rect2(w - 30, ground - 160, 60, 160), Color("#3d2f4f"))
 		draw_rect(Rect2(w - 22, ground - 150, 44, 150), Color("#8a6dd1", 0.6))
@@ -182,3 +196,76 @@ static func _oval(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
 		var a := TAU * i / 16.0
 		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry))
 	return pts
+
+# ---------------- Царство Морены (living-world §3.3, art-bible §4.2) ----------------
+
+## Pale sky, a low white sun, two parallax rows: far ice spires, mid frozen
+## souls in a queue (each with a bundle, story-bible §2.3) and hanging icicles.
+func _draw_frost_back(ground: float, w: float) -> void:
+	var cx := _cam_x()
+	var top := float(layout.get("top", ground)) - 900.0
+	draw_rect(Rect2(-200, top, w + 400, ground - top), _c("sky", "#c9d8e6"))
+	draw_circle(Vector2(cx * 0.92 + 380.0, top + 560.0), 120.0, Color(1, 1, 1, 0.35))
+	draw_circle(Vector2(cx * 0.92 + 380.0, top + 560.0), 70.0, Color(1, 1, 1, 0.55))
+	for layer in 2:
+		var f := float(look.get("par_far" if layer == 0 else "par_mid", 0.0))
+		var gap := 170.0 if layer == 0 else 260.0
+		var col := _c("far" if layer == 0 else "mid", "#a8bccf")
+		var off := cx * f
+		var i0 := floori((cx - 1300.0 - off) / gap)
+		for i in range(i0, i0 + ceili(2600.0 / gap) + 2):
+			var x := i * gap + off + _h(i, 20 + layer) * gap * 0.5
+			if layer == 0:
+				var sh := 220.0 + _h(i, 22) * 360.0
+				var sw := 50.0 + _h(i, 23) * 70.0
+				draw_colored_polygon(PackedVector2Array([Vector2(x - sw, ground), Vector2(x - sw * 0.2, ground - sh), Vector2(x + sw * 0.3, ground - sh * 0.8), Vector2(x + sw, ground)]), col)
+			else:
+				# a snow drift and a frozen soul on it, hunched, bundle on a stick
+				draw_colored_polygon(_oval(Vector2(x, ground), 140.0, 40.0), col)
+				if _h(i, 24) < 0.6:
+					var sx := x + (_h(i, 25) - 0.5) * 80.0
+					var body := PackedVector2Array([Vector2(sx - 14, ground - 30), Vector2(sx - 10, ground - 92), Vector2(sx + 6, ground - 100), Vector2(sx + 14, ground - 30)])
+					draw_colored_polygon(body, Color(col.darkened(0.2), 0.9))
+					draw_circle(Vector2(sx + 2, ground - 108), 10.0, Color(col.darkened(0.2), 0.9))
+					draw_line(Vector2(sx + 10, ground - 80), Vector2(sx + 30, ground - 112), col.darkened(0.35), 3.0)
+					draw_circle(Vector2(sx + 32, ground - 106), 7.0, col.darkened(0.35))
+					draw_polyline(body, Color(_c("accent", "#8fd3f5"), 0.6), 1.5)
+	# icicles hanging from the top of the view
+	var it := top + 260.0
+	for i in range(floori((cx - 1000.0) / 70.0), floori((cx + 1000.0) / 70.0)):
+		var ix := i * 70.0 + _h(i, 26) * 30.0
+		var il := 30.0 + _h(i, 27) * 70.0
+		draw_colored_polygon(PackedVector2Array([Vector2(ix - 8, it), Vector2(ix, it + il), Vector2(ix + 8, it)]), Color(_c("accent", "#8fd3f5"), 0.55))
+
+## Slow snowfall, bullfinches on the ledges (red on white), the hero's breath mist.
+func _draw_frost_front(ground: float, _w: float) -> void:
+	var cx := _cam_x()
+	for i in 70:
+		var x := cx - 1000.0 + _h(i, 30) * 2000.0 + sin(_time * 0.5 + i) * 40.0
+		var y := ground - 1000.0 + fmod(_time * (18.0 + _h(i, 31) * 26.0) + _h(i, 32) * 1000.0, 1000.0)
+		draw_circle(Vector2(x, y), 1.5 + _h(i, 33) * 2.0, Color(1, 1, 1, 0.85))
+	var plats: Array = layout.get("plats", [])
+	for k in plats.size():
+		if _h(k, 34) < 0.35:
+			var p: Vector3 = plats[k]
+			var bx := p.x + 20.0 + _h(k, 35) * maxf(p.z - 40.0, 1.0)
+			var hop := absf(sin(_time * 2.0 + k)) * 3.0 if fmod(_time + k, 4.0) < 0.6 else 0.0
+			draw_circle(Vector2(bx, p.y - 7.0 - hop), 6.0, Color("#3a3f4a"))
+			draw_circle(Vector2(bx + 2.0, p.y - 5.0 - hop), 4.5, Color("#d8402a"))
+	var pl: Variant = get_parent().get("player") if get_parent() else null
+	if pl is Node2D:
+		var hp := (pl as Node2D).position
+		var fc := float((pl as Node2D).get("face")) if (pl as Node2D).get("face") != null else 1.0
+		for j in 3:
+			var ph := fmod(_time * 0.8 + j * 0.33, 1.0)
+			var mp := hp + Vector2(fc * (16.0 + ph * 40.0), -Player.H + 14.0 - ph * 18.0)
+			draw_circle(mp, 5.0 + ph * 12.0, Color(1, 1, 1, 0.45 * (1.0 - ph)))
+
+## A snow-capped ice ledge (one-way).
+func _draw_ice_ledge(p: Vector3) -> void:
+	draw_rect(Rect2(p.x, p.y, p.z, 14), Color(_c("accent", "#8fd3f5"), 0.75))
+	draw_rect(Rect2(p.x - 3.0, p.y - 5.0, p.z + 6.0, 8.0), _c("plat", "#dde8f0"))
+	var n := int(p.z / 26.0)
+	for i in n:
+		var ix := p.x + 10.0 + i * 26.0
+		draw_colored_polygon(PackedVector2Array([Vector2(ix - 4, p.y + 14), Vector2(ix, p.y + 24.0 + (i % 3) * 6.0), Vector2(ix + 4, p.y + 14)]), Color(_c("accent", "#8fd3f5"), 0.8))

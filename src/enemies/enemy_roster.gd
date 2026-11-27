@@ -13,6 +13,8 @@ const KINDS: Dictionary = {
 	"knight": preload("res://src/enemies/knight.gd"),
 	"ringer": preload("res://src/enemies/ringer.gd"),
 	"rootling": preload("res://src/enemies/rootling.gd"),
+	"wolf": preload("res://src/enemies/wolf.gd"),
+	"jelly": preload("res://src/enemies/cold_spirit.gd"),
 }
 
 ## New, not yet set up enemy of `kind` (null for an unknown kind).

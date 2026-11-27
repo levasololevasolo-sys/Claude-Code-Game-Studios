@@ -14,7 +14,8 @@ const BLOW: float = 34.0
 const BLOW_GAP: int = 30
 
 var out_dir: String = "user://boss_check"
-## Boss row id: `--boss=<id>` (kikimora default, likho = Лихо Одноглазое on tier 2).
+## Boss row id: `--boss=<id>` (kikimora default, likho = Лихо Одноглазое on tier 2,
+## morena = Морена on tier 3).
 var boss_id: String = "kikimora"
 var _w: World
 var _fails: int = 0
@@ -68,6 +69,9 @@ func _run() -> void:
 			boss_id = a.trim_prefix("--boss=")
 	if boss_id == "likho":
 		await _run_likho()
+		return
+	if boss_id == "morena":
+		await _run_morena()
 		return
 	var lw := Tune.f("lair_room_w")
 	var layout := { "w": lw, "plats": LairBoss.arena_plats(), "packs": [], "portal": false, "lair": true }
@@ -255,6 +259,126 @@ func _forest_rooms() -> void:
 	await _frames(1)
 	await _shot("forest-enemies.png")
 	_ok(seen.has("call") and (seen.has("under") or seen.has("rise_w")), "forest enemies telegraph: %s" % [seen.keys()])
+	for e in get_tree().get_nodes_in_group("enemies"):
+		(e as Enemy).remove_from_group("enemies")
+		e.queue_free()
+
+## Морена (enemies-and-elites §3.11): tier 3 (frost look), intro line with
+## Ждан's name, breath cone, ceiling spears, summons, rage below 50% and the
+## ice double, 4+ different attacks, a dive into a pillar (stuck longer, ×1.5
+## damage), death line and cleanup. Saves boss-morena-intro/-phase2/-dead.png.
+func _run_morena() -> void:
+	_w.tier = 3
+	await _frost_rooms()
+	var row := Tune.row("bosses", "morena")
+	var lw := Tune.f("lair_room_w")
+	var layout := { "w": lw, "plats": LairBoss.arena_plats("morena"), "packs": [], "portal": false, "lair": true }
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	_w.start_room(layout, rng)
+	await _frames(2)
+	var p := _w.player
+	p.scripted = true
+	p.hp = 500.0
+	_boss = LairBoss.make("morena")
+	_boss.title = String(Tune.row("locations", "3").get("boss_name", "Морена"))
+	_w.spawn_enemy(_boss, Vector2(lw * 0.6, Tune.f("ground_y")), 0, true, 4343)
+	await _frames(3)
+	var mb := _boss as MorenaBoss
+	_ok(mb != null and _boss.asleep and _boss.max_hp >= float(row.hp), "Морена sleeps, hp %d, class %s" % [_boss.max_hp, _boss.get_script().resource_path.get_file()])
+	p.position = Vector2(_boss.position.x - 420.0, Tune.f("ground_y"))
+	_w.cam.reset_smoothing()
+	var ok := await _fight(func() -> bool: return _boss.line_t > 0.0 and _boss.line != "", 120, 0.0)
+	_ok(ok and _boss.line == String(row.lines.intro_first) and _boss.line.contains("Ждан"), "intro line: %s" % _boss.line)
+	await _frames(20)
+	await _shot("boss-morena-intro.png")
+	ok = await _fight(func() -> bool: return _boss.st == "breath", 2400, 0.0)
+	_ok(ok, "frost breath: %s" % [_boss.attack_log])
+	ok = await _fight(func() -> bool: return _boss.hazards.any(func(hz: Dictionary) -> bool: return hz.kind == "spear"), 2400, 0.0)
+	_ok(ok, "ceiling spears: %d" % _boss.hazards.size())
+	ok = await _fight(func() -> bool: return _boss.minions.size() > 0, 1800)
+	_ok(ok, "summon at 65%%: %d minions (hp %d)" % [_boss.minions.size(), _boss.hp])
+	ok = await _fight(func() -> bool: return _boss.phase >= 2, 1800)
+	_ok(ok and _boss.st == "roar", "rage below 50%%: phase %d, line «%s»" % [_boss.phase, _boss.line])
+	p.position.x = _boss.position.x - 300.0
+	ok = await _fight(func() -> bool: return _boss.hazards.any(func(hz: Dictionary) -> bool: return hz.kind == "clone" and float(hz.t) > 0.5), 3000, 0.0)
+	_ok(ok, "ice double in phase 2: %s" % [_boss.attack_log])
+	_w.cam.reset_smoothing()
+	await _shot("boss-morena-phase2.png")
+	# The pillar fight (§3.11): a pillar under the dive breaks, she is stuck longer.
+	ok = await _fight(func() -> bool: return _boss.st == "dive", 3000, 0.0)
+	if ok and mb.pillar_near(mb.pillars, mb.dive_x, float(row.pillar_hit_r)) < 0:
+		if mb.pillars.size() >= int(row.pillar_max):
+			mb.pillars.pop_front()
+		mb.pillars.append(mb.dive_x)
+	ok = ok and await _fight(func() -> bool: return _boss.st == "stuck", 300, 0.0)
+	_ok(ok and mb.pillar_breaks >= 1 and absf(_boss.t - float(row.dive_stuck_pillar)) < 0.2 and mb.stuck_k > 1.0, "dive into a pillar: breaks %d, stuck %.2f s, ×%.1f damage" % [mb.pillar_breaks, _boss.t, mb.stuck_k])
+	ok = await _fight(func() -> bool: return _distinct(_boss.attack_log) >= 5, 3000, 0.0)
+	_ok(ok, "5 different attacks: %s" % [_boss.attack_log])
+	ok = await _fight(func() -> bool: return _boss.summons_done >= 2, 1800)
+	_ok(ok, "second summon at 30%%: summons %d" % _boss.summons_done)
+	ok = await _fight(func() -> bool: return _boss.dead, 3000, BLOW * 2.0)
+	_ok(ok, "Морена dies")
+	await _frames(30)
+	await _shot("boss-morena-dead.png")
+	_ok(_boss.line == String(row.lines.death_first) and _boss.line_t > 0.0, "death line: %s" % _boss.line)
+	var left := 0
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not (e as Enemy).dead:
+			left += 1
+	_ok(left == 0 and _boss.hazards.is_empty() and mb.pillars.is_empty(), "minions, hazards and pillars vanished: %d enemies left" % left)
+	_finish()
+
+## A frost chunk room of tier 3 (library chunks_frost.json) and its roster:
+## frost-room.png, then frost-enemies.png with a wolf crouching and a cold
+## spirit marking the floor.
+func _frost_rooms() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 78
+	var layout := RoomGen.generate(rng, 3, 3, Tune.data, true, { "loc": "frost" })
+	layout["portal"] = false
+	var ids := (layout.chunks as Array).all(func(c: Dictionary) -> bool: return String(c.id).begins_with("frost_"))
+	_w.start_room(layout, rng)
+	await _frames(3)
+	var p := _w.player
+	p.scripted = true
+	p.hp = 500.0
+	var kinds := {}
+	for e in get_tree().get_nodes_in_group("enemies"):
+		kinds[(e as Enemy).kind_id] = true
+	_ok(ids and not kinds.has("bat") and not kinds.has("ringer"), "frost room: chunks %s, kinds %s" % [(layout.chunks as Array).map(func(c: Dictionary) -> String: return c.id), kinds.keys()])
+	for c: Dictionary in layout.chunks:
+		if c.kind == "arena":
+			p.position = Vector2(float(c.x) + 300.0, Tune.f("ground_y"))
+			break
+	_w.cam.reset_smoothing()
+	await _frames(20)
+	await _shot("frost-room.png")
+	for e in get_tree().get_nodes_in_group("enemies"):
+		(e as Enemy).remove_from_group("enemies")
+		e.queue_free()
+	await _frames(1)
+	p.position = Vector2(900.0, Tune.f("ground_y"))
+	var wf := Wolf.new()
+	_w.spawn_enemy(wf, Vector2(1180.0, Tune.f("ground_y")), -1, false, 5)
+	var j := ColdSpirit.new()
+	_w.spawn_enemy(j, Vector2(700.0, Tune.f("ground_y") - 240.0), -1, false, 6)
+	await _frames(2)
+	wf.cd = 0.0
+	j.cd = 0.0
+	var seen := {}
+	for i in 240:
+		p.hp = 500.0
+		p.position.x = 900.0
+		seen[wf.st] = true
+		seen[j.st] = true
+		if wf.st == "crouch" and j.st == "chill_w" and j.t < 0.4:
+			break
+		await get_tree().physics_frame
+	_w.cam.reset_smoothing()
+	await _frames(1)
+	await _shot("frost-enemies.png")
+	_ok(seen.has("crouch") and seen.has("chill_w"), "frost enemies telegraph: %s" % [seen.keys()])
 	for e in get_tree().get_nodes_in_group("enemies"):
 		(e as Enemy).remove_from_group("enemies")
 		e.queue_free()
