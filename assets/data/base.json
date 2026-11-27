@@ -2,12 +2,14 @@
   "_note": "The base «Застава» (GDD economy-and-meta §3.4, §3.6; living-world §1.3). x: station position, world px; reach: how close the hero must stand for E. order: who picks a line first (one-event rule). amulets: Сова's prices (cost per resource id; empty = free). kapishe: Капище Рода rules, prices per level, all x up_cost_scale.",
   "width": 2700, "reach": 120, "up_cost_scale": 1.0,
   "order": ["dolya", "potap", "sova", "bayun", "chur", "ofenya"],
+  "npc_lit": 0.55,
   "stations": [
     { "id": "dolya", "name": "Пряха Доля", "kind": "talk", "x": 560, "body": "#EDE6F2", "trim": "#B3262E", "h": 150 },
     { "id": "bayun", "name": "Кот Баюн", "kind": "talk", "x": 770, "body": "#3A3440", "trim": "#FFC94A", "h": 95 },
     { "id": "chur", "name": "Капище Рода", "kind": "kapishe", "x": 980, "body": "#7A5232", "trim": "#C8902E", "h": 190 },
     { "id": "sova", "name": "Ведунья Сова", "kind": "amulet", "x": 1400, "body": "#6B5A7A", "trim": "#FFC94A", "h": 140 },
     { "id": "potap", "name": "Кузнец Потап", "kind": "armor", "x": 1850, "body": "#5B3A24", "trim": "#FF9A3C", "h": 175 },
+    { "id": "ofenya", "name": "Офеня", "kind": "talk", "x": 2230, "body": "#3E4A5A", "trim": "#B3262E", "h": 150, "needs": "boss" },
     { "id": "gate", "name": "Ворота", "kind": "gate", "x": 2500, "body": "#2A1A12", "trim": "#E9DFC9", "h": 230 }
   ],
   "amulets": {

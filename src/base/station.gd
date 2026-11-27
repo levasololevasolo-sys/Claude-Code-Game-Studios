@@ -3,6 +3,9 @@
 ## light around, the name above, an «E» badge when the hero is near, the gold
 ## spark when the NPC has a new line, living-world §1.3 step 6). The NPC turns
 ## to the hero and breathes (references-and-feel rule 18, first cut).
+## NPCs with hand-drawn art (NpcSprite, tools/asset-pipeline/npc2d) show it
+## instead of the shapes: idle, talk while their line is open, a reaction after;
+## the shapes stay as the fallback (`-- --npc-art=shapes`).
 class_name Station
 extends Node2D
 
@@ -17,6 +20,25 @@ var spark: bool = false
 ## -1 = faces left, 1 = right (towards the hero).
 var face: float = 1.0
 var _t: float = 0.0
+## The drawn NPC, null when it falls back to shapes.
+var sprite: NpcSprite
+
+func _ready() -> void:
+	if row.get("kind", "") != "gate" and NpcSprite.has_art(id()):
+		sprite = NpcSprite.new()
+		sprite.npc = id()
+		sprite.lit = float(Tune.table("base").get("npc_lit", 0.55))
+		add_child(sprite)
+
+## The NPC talks (dialogue box open) or stops talking and reacts.
+func set_talking(on: bool) -> void:
+	if sprite == null:
+		return
+	if on:
+		sprite.set_talking(true)
+	else:
+		sprite.set_talking(false)
+		sprite.react()
 
 ## Station id ("potap", "gate", ...).
 func id() -> String:
@@ -24,18 +46,24 @@ func id() -> String:
 
 func _process(dt: float) -> void:
 	_t += dt
+	if sprite:
+		sprite.face = face
 	queue_redraw()
 
 func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var h := float(row.get("h", 160))
+	if sprite:
+		h = NpcSprite.height_of(id()) - 40.0
 	var body := Color(String(row.get("body", "#5B3A24")))
 	var trim := Color(String(row.get("trim", "#C8902E")))
 	var warm := Color("#FF9A3C")
 	for k in 4:
 		draw_circle(Vector2(0, -h * 0.5), h * (1.6 - k * 0.3), Color(warm, 0.035 + k * 0.012))
 	var breathe := sin(_t * TAU / 2.4) * 2.0
-	match String(row.get("kind", "talk")):
+	match "drawn" if sprite else String(row.get("kind", "talk")):
+		"drawn":
+			pass
 		"gate":
 			for sx: float in [-70.0, 70.0]:
 				_box(Rect2(sx - 14, -h, 28, h), Color("#2A1A12"))

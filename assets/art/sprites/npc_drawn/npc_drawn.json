@@ -1,0 +1,258 @@
+{
+ "_note": "Hand-drawn Застава NPCs (tools/asset-pipeline/npc2d/build.py). cell/origin in sheet px (origin = the ground under the NPC); px_per_world sheet px per world px; height_world = top of the idle frame above the ground; flip = mirror to face the hero; anims idle/talk loops, react one-shot; portraits 512 px busts facing right.",
+ "px_per_world": 2.0,
+ "npcs": {
+  "dolya": {
+   "cell": [
+    220,
+    235
+   ],
+   "origin": [
+    110.4,
+    220.8
+   ],
+   "flip": true,
+   "anims": {
+    "idle": {
+     "sheet": "dolya/dolya_idle.png",
+     "frames": 16,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 2
+    },
+    "talk": {
+     "sheet": "dolya/dolya_talk.png",
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1
+    },
+    "react": {
+     "sheet": "dolya/dolya_react.png",
+     "frames": 10,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 2
+    }
+   },
+   "portraits": {
+    "calm": "dolya/dolya_portrait_calm.png",
+    "warm": "dolya/dolya_portrait_warm.png"
+   },
+   "height_world": 96.4
+  },
+  "potap": {
+   "cell": [
+    326,
+    350
+   ],
+   "origin": [
+    115.2,
+    336.0
+   ],
+   "flip": true,
+   "anims": {
+    "idle": {
+     "sheet": "potap/potap_idle.png",
+     "frames": 16,
+     "fps": 10,
+     "loop": true,
+     "cols": 8,
+     "rows": 2
+    },
+    "talk": {
+     "sheet": "potap/potap_talk.png",
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1
+    },
+    "react": {
+     "sheet": "potap/potap_react.png",
+     "frames": 12,
+     "fps": 12,
+     "loop": false,
+     "cols": 8,
+     "rows": 2
+    }
+   },
+   "portraits": {
+    "calm": "potap/potap_portrait_calm.png",
+    "warm": "potap/potap_portrait_warm.png"
+   },
+   "height_world": 154.5
+  },
+  "sova": {
+   "cell": [
+    230,
+    264
+   ],
+   "origin": [
+    96.0,
+    249.6
+   ],
+   "flip": true,
+   "anims": {
+    "idle": {
+     "sheet": "sova/sova_idle.png",
+     "frames": 16,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 2
+    },
+    "talk": {
+     "sheet": "sova/sova_talk.png",
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1
+    },
+    "react": {
+     "sheet": "sova/sova_react.png",
+     "frames": 10,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 2
+    }
+   },
+   "portraits": {
+    "calm": "sova/sova_portrait_calm.png",
+    "warm": "sova/sova_portrait_warm.png"
+   },
+   "height_world": 105.8
+  },
+  "bayun": {
+   "cell": [
+    211,
+    220
+   ],
+   "origin": [
+    110.4,
+    206.4
+   ],
+   "flip": true,
+   "anims": {
+    "idle": {
+     "sheet": "bayun/bayun_idle.png",
+     "frames": 16,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 2
+    },
+    "talk": {
+     "sheet": "bayun/bayun_talk.png",
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1
+    },
+    "react": {
+     "sheet": "bayun/bayun_react.png",
+     "frames": 10,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 2
+    }
+   },
+   "portraits": {
+    "calm": "bayun/bayun_portrait_calm.png",
+    "warm": "bayun/bayun_portrait_warm.png"
+   },
+   "height_world": 98.7
+  },
+  "chur": {
+   "cell": [
+    230,
+    400
+   ],
+   "origin": [
+    91.2,
+    384.0
+   ],
+   "flip": false,
+   "anims": {
+    "idle": {
+     "sheet": "chur/chur_idle.png",
+     "frames": 16,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 2
+    },
+    "talk": {
+     "sheet": "chur/chur_talk.png",
+     "frames": 8,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 1
+    },
+    "react": {
+     "sheet": "chur/chur_react.png",
+     "frames": 12,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 2
+    }
+   },
+   "portraits": {
+    "calm": "chur/chur_portrait_calm.png",
+    "warm": "chur/chur_portrait_warm.png"
+   },
+   "height_world": 192.0
+  },
+  "ofenya": {
+   "cell": [
+    201,
+    273
+   ],
+   "origin": [
+    96.0,
+    259.2
+   ],
+   "flip": true,
+   "anims": {
+    "idle": {
+     "sheet": "ofenya/ofenya_idle.png",
+     "frames": 16,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 2
+    },
+    "talk": {
+     "sheet": "ofenya/ofenya_talk.png",
+     "frames": 8,
+     "fps": 10,
+     "loop": true,
+     "cols": 8,
+     "rows": 1
+    },
+    "react": {
+     "sheet": "ofenya/ofenya_react.png",
+     "frames": 10,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 2
+    }
+   },
+   "portraits": {
+    "calm": "ofenya/ofenya_portrait_calm.png",
+    "warm": "ofenya/ofenya_portrait_warm.png"
+   },
+   "height_world": 117.6
+  }
+ }
+}
