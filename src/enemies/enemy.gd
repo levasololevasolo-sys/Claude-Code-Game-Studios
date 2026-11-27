@@ -119,7 +119,9 @@ func setup() -> void:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	_load_stats()
-	max_hp *= tier_mult(tier, Tune.f("tier_hp"))
+	# GDD difficulty F1/F2: hp and wind-ups of the level (identity at «Былина»).
+	stats = Difficulty.scale_windups(stats, Difficulty.current, Difficulty.table())
+	max_hp *= tier_mult(tier, Tune.f("tier_hp")) * Difficulty.f("enemy_hp")
 	if mark != "":
 		max_hp *= Tune.f("elite_hp")
 		w *= Tune.f("elite_size")
@@ -199,9 +201,10 @@ func _range(key: String) -> float:
 func _stat_range(lo: String, hi: String) -> float:
 	return rng.randf_range(stat(lo), stat(hi))
 
-## Damage multiplier to the hero from the tier (GDD F 4.2; ash and armour later).
+## Damage multiplier to the hero from the tier and the difficulty (GDD F 4.2,
+## difficulty F1; ash and armour later).
 func dmg_mult() -> float:
-	var m := tier_mult(tier, Tune.f("tier_dmg"))
+	var m := tier_mult(tier, Tune.f("tier_dmg")) * Difficulty.f("enemy_dmg")
 	return m * Tune.f("elite_dmg") if mark != "" else m
 
 ## Centre of the hit box.
@@ -217,7 +220,7 @@ func wake() -> void:
 	if not asleep:
 		return
 	asleep = false
-	t = _range("wake_t")
+	t = _range("wake_t") * Difficulty.f("windup")
 	alert = Tune.f("alert_time")
 	woke.emit(self)
 

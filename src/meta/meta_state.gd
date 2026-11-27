@@ -34,6 +34,9 @@ var lantern: String = "ring"
 ## death_streak, embers_spent (+_total), wins_no_needle, pending (base events for
 ## the next visit), god_seen / god_recent (god lines), history (last runs).
 var story: Dictionary = story_defaults()
+## Difficulty level id (GDD difficulty): "" on a new save until the player
+## picks it (reads as «Былина»); old saves migrate to "bylina".
+var difficulty: String = ""
 var extra: Dictionary = {}
 
 ## Defaults of every field (save keys as in economy-and-meta §3.10).
@@ -43,7 +46,7 @@ static func defaults() -> Dictionary:
 		"weapon": "stick", "sub": "", "weapons": { "stick": true }, "subs": {}, "pity": { "e": 0, "l": 0 },
 		"armor": { "head": 0, "torso": 0, "arms": 0, "legs": 0, "cloak": 0 }, "armor_pick": {},
 		"up": { "reroll": 0, "second": 0, "wide": 0 }, "lanterns": { "ring": true }, "lantern": "ring",
-		"story": story_defaults() }
+		"story": story_defaults(), "difficulty": "" }
 
 ## Empty dialogue memory (living-world §1.4).
 static func story_defaults() -> Dictionary:
@@ -59,7 +62,7 @@ func to_dict() -> Dictionary:
 		"bestRooms": best_rooms, "bosses": bosses.duplicate(), "weapon": weapon, "sub": sub,
 		"weapons": weapons.duplicate(), "subs": subs.duplicate(), "pity": pity.duplicate(),
 		"armor": armor.duplicate(), "armor_pick": armor_pick.duplicate(true), "up": up.duplicate(),
-		"lanterns": lanterns.duplicate(), "lantern": lantern, "story": story.duplicate(true) }, true)
+		"lanterns": lanterns.duplicate(), "lantern": lantern, "story": story.duplicate(true), "difficulty": difficulty }, true)
 	return d
 
 ## Merges `d` over defaults(): a missing field gets its default.
@@ -112,6 +115,7 @@ static func from_dict(d: Dictionary) -> MetaState:
 	for k: String in ["weapons_found", "needles", "death_streak", "embers_spent", "embers_spent_total", "wins_no_needle"]:
 		st[k] = int(st[k])
 	m.story = st
+	m.difficulty = String(d.get("difficulty", "")) if d.get("difficulty") is String else ""
 	for k: String in d:
 		if not base.has(k):
 			m.extra[k] = d[k]

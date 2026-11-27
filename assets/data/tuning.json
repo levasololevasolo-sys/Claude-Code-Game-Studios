@@ -237,6 +237,7 @@
   "clear_delay": 0.8,
   "res_drop": 0.35,
   "embers_mult": 1,
+  "flash_off_mult": 0.3,
   "surica_count": 3,
   "lair_gods": 3,
   "lair_hp": 900,

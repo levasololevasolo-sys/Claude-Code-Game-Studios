@@ -1,5 +1,5 @@
-  rune taken: svarog_p (offer ["svarog_p", "svarog_f", "svarog_s"])
-  run ended (dead): Где: Топь Кикиморы, комната 1 | Комнат пройдено: 0   Убито врагов: 0   Хозяев: 0 |   Свойство — Жар (ур. 1) | Добыча забега: угли 0    | Банк углей: 0 → 0   (забегов всего: 1)
+  rune taken: svarog_s (offer ["svarog_s", "svarog_p", "svarog_d"])
+  run ended (dead): Где: Топь Кикиморы, комната 1 | Сложность: Былина | Комнат пройдено: 0   Убито врагов: 0   Хозяев: 0 |   Удар — Удар Сварога (ур. 1) | Добыча забега: угли 0    | Банк углей: 0 → 0   (забегов всего: 1)
 OK   summary after the run
   enter base: visit 1, lines ["dolya", "potap", "sova", "bayun", "chur"], save true
 OK   the base opens after the summary
@@ -22,9 +22,9 @@ screenshot base-potap-shop.png
 OK   every slot at tier 4: { "head": 4, "torso": 4, "arms": 4, "legs": 4, "cloak": 4 }
 OK   hero look: helmet 5, torso 5
 screenshot base-hero-armored.png
-OK   save v3 holds armor { "arms": 4.0, "cloak": 4.0, "head": 4.0, "legs": 4.0, "torso": 4.0 } and said lines
+OK   save v4 holds armor { "arms": 4.0, "cloak": 4.0, "head": 4.0, "legs": 4.0, "torso": 4.0 } and said lines
   gate: new run
-  new run seed 1589595832, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  new run seed 1219684992, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
   enter room tier 1 room 1 (w 1920, packs 1), reward { "type": "loot", "god": "" }, hp 100
   start offer: zhiva
   god voice zhiva: Дыши. Это не просьба.

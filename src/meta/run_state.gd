@@ -42,10 +42,12 @@ var arms_auto: int = 0
 var story_ev: Array = []
 ## The needle of Кощей was found this run (stub until location 5).
 var needle: bool = false
+## Нить Мокоши tokens spent this run (GDD difficulty F5).
+var revives_used: int = 0
 
 const FIELDS: Array[String] = ["run_seed", "tier", "room_k", "stage", "hp", "max_hp", "charge", "amulet",
 	"build", "embers", "res", "since_god", "gap_need", "reward", "rooms_cleared", "kills", "bosses",
-	"killed_by", "killer_id", "rng_states", "arm", "sub", "arms_auto", "story_ev", "needle"]
+	"killed_by", "killer_id", "rng_states", "arm", "sub", "arms_auto", "story_ev", "needle", "revives_used"]
 
 func to_dict() -> Dictionary:
 	var d := {}

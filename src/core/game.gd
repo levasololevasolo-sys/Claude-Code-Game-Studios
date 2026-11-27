@@ -24,6 +24,7 @@ func _ready() -> void:
 			save_path = a.trim_prefix("--save=")
 	if not fresh:
 		load_save()
+	_sync_difficulty()
 
 ## Reads the save file into meta and run (missing/broken -> defaults).
 func load_save() -> void:
@@ -35,6 +36,17 @@ func load_save() -> void:
 		run = RunState.from_dict(d.run)
 		rng = RunRng.new(run.run_seed)
 		rng.load_states(run.rng_states)
+	_sync_difficulty()
+
+## Sets the difficulty (GDD difficulty §3.3): meta, the Difficulty helper and the
+## save. Takes effect at once; enemies already spawned keep their hp.
+func set_difficulty(id: String) -> void:
+	meta.difficulty = Difficulty.normalize(id, Difficulty.table())
+	_sync_difficulty()
+	write_save()
+
+func _sync_difficulty() -> void:
+	Difficulty.current = Difficulty.normalize(meta.difficulty, Difficulty.table())
 
 ## Writes meta and the run snapshot (with stream states). Points of writing:
 ## haven entry, end of run (ADR-0003); never mid-room.
@@ -60,7 +72,8 @@ func start_run(run_seed: int) -> RunState:
 ## the run snapshot, writes the save. Returns the summary data.
 func end_run(outcome: String) -> Dictionary:
 	var before := meta_before if not meta_before.is_empty() else meta.to_dict()
-	var summary := { "outcome": outcome, "run": run.to_dict() if run else {}, "bank_before": before }
+	var summary := { "outcome": outcome, "run": run.to_dict() if run else {}, "bank_before": before,
+		"difficulty": Difficulty.current }
 	if run:
 		meta.embers += run.embers
 		for k: String in run.res:

@@ -173,7 +173,7 @@ func test_v2_save_gains_story_fields_and_counts_the_prologue_seen() -> void:
 	var v2 := { "version": 2, "meta": { "runs": 3, "story": { "said": { "x": true }, "flags": {} } },
 		"run": { "tier": 2 } }
 	var d := SaveFile.migrate(v2)
-	assert_int(int(d.version)).is_equal(3)
+	assert_int(int(d.version)).is_equal(SaveFile.VERSION)
 	assert_bool(d.meta.story.said.has("x")).is_true()
 	assert_int(int(d.meta.story.death_streak)).is_equal(0)
 	assert_array(d.meta.story.history).is_empty()

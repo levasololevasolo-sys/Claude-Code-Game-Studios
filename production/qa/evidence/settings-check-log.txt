@@ -1,0 +1,26 @@
+closing start screen RuneOfferScreen
+OK   check runs at «Былина» (no choice screen under a check flag)
+OK   no difficulty choice under a check flag
+before Esc: phase fight, paused false, can_pause true, focus <Object#null>
+OK   Esc opens the pause menu and pauses
+screenshot pause-menu.png
+OK   «На заставу» asks first
+screenshot pause-quit-confirm.png
+OK   «Остаться» keeps the run
+OK   jump slot 1 is K
+OK   conflict swapped: dash got Space
+OK   InputMap: K is jump, not dash
+OK   InputMap: Space is dash, not jump
+OK   settings file holds jump = K
+screenshot settings-controls.png
+OK   difficulty is «Навь» in the helper and the meta
+OK   «Навь» numbers in force
+OK   save v4 holds difficulty nav
+screenshot settings-difficulty.png
+OK   closing the pause menu unpauses
+OK   choice screen preselects «Былина»
+screenshot difficulty-choice.png
+OK   choice screen: → then Enter takes «Навь»
+OK   quit ends the run and banks its 7 embers
+OK   reset gives jump back Space
+DONE: 0 failed checks

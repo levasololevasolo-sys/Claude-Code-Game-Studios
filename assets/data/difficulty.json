@@ -1,0 +1,26 @@
+{
+  "_note": "Difficulty levels (design/gdd/difficulty.md). Read only through src/core/difficulty.gd. Multipliers: enemy_dmg (damage to the hero), enemy_hp (enemy max hp at spawn), heal (every heal of the hero), embers (embers gained, on top of embers_mult and Пепел), windup (enemy wind-up and wake reaction time; < 1 = faster), revives (Нить Мокоши tokens per run). Былина = 1.0 everywhere = the game before difficulty existed.",
+  "default": "bylina",
+  "order": ["skazka", "bylina", "nav"],
+  "windup_keys": ["wind"],
+  "windup_suffix": "_wind",
+  "revive_hp_frac": 0.5,
+  "revive_iframes": 2.0,
+  "levels": {
+    "skazka": {
+      "name": "Сказка",
+      "desc": "Для тех, кто пришёл за историей. Враги слабее и медленнее замахиваются, лечение сильнее, один раз за забег Нить Мокоши поднимет павшего.",
+      "enemy_dmg": 0.6, "enemy_hp": 0.75, "heal": 1.5, "embers": 1.0, "windup": 1.2, "revives": 1
+    },
+    "bylina": {
+      "name": "Былина",
+      "desc": "Задуманный путь. Бой честный и строгий, как в старых сказаниях.",
+      "enemy_dmg": 1.0, "enemy_hp": 1.0, "heal": 1.0, "embers": 1.0, "windup": 1.0, "revives": 0
+    },
+    "nav": {
+      "name": "Навь",
+      "desc": "Для бывалых. Враги бьют больнее, живут дольше и замахиваются быстрее, лечение слабее. Углей больше.",
+      "enemy_dmg": 1.3, "enemy_hp": 1.25, "heal": 0.75, "embers": 1.2, "windup": 0.88, "revives": 0
+    }
+  }
+}

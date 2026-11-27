@@ -32,6 +32,7 @@ Tune="*res://src/core/tune.gd"
 Events="*res://src/core/events.gd"
 Game="*res://src/core/game.gd"
 Audio="*res://src/core/audio.gd"
+Settings="*res://src/core/settings.gd"
 
 [editor_plugins]
 

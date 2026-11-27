@@ -21,6 +21,10 @@
 ## RunDirector child plays the run of GDD room-generation-and-doors (rooms, doors,
 ## lair, haven, summary) on the Game autoload's RunState. `--run-check=<dir>`
 ## plays it scripted and saves screenshots.
+## Esc / pad Start opens the pause menu (PauseMenu: Продолжить, Настройки, На
+## заставу). A new save asks for the difficulty first (DifficultyChoiceScreen,
+## GDD difficulty §3.2), never under a check flag. `--settings-check=<dir>` runs
+## the scripted settings check (tests/integration/core).
 class_name World
 extends Node2D
 
@@ -135,10 +139,21 @@ func _ready() -> void:
 		director.world = self
 		director.game = get_node("/root/Game")
 		add_child(director)
-		if wants_prologue(OS.get_cmdline_user_args(), director.game.meta, director.game.run != null):
-			start_prologue()
+		var args := OS.get_cmdline_user_args()
+		var has_run: bool = director.game.run != null
+		var go := func() -> void:
+			if wants_prologue(args, director.game.meta, has_run):
+				start_prologue()
+			else:
+				director.begin.call_deferred()
+		if wants_difficulty_choice(args, director.game.meta, has_run):
+			var dc := DifficultyChoiceScreen.new()
+			dc.chosen.connect(func(id: String) -> void:
+				director.game.set_difficulty(id)
+				go.call())
+			show_screen.call_deferred(dc, 40)
 		else:
-			director.begin.call_deferred()
+			go.call()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--demo="):
 			var d: Node = (load("res://tests/integration/core/demo_driver.gd") as GDScript).new()
@@ -191,6 +206,10 @@ func _ready() -> void:
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
 			add_child(rc)
+		elif a.begins_with("--settings-check="):
+			var stc: Node = (load("res://tests/integration/core/settings_check_driver.gd") as GDScript).new()
+			stc.set("out_dir", a.trim_prefix("--settings-check="))
+			add_child(stc)
 
 ## `--base-view`: the base yard «Застава» alone (stations, no run, no save
 ## written), for art screenshots (production/qa/evidence/art3d-pipeline.md).
@@ -211,6 +230,15 @@ static func wants_prologue(args: PackedStringArray, meta: MetaState, has_run: bo
 		if a.contains("-check="):
 			return false
 	return not meta.story.flags.has("prologue_seen") and meta.runs == 0 and not has_run
+
+## True when the run mode asks for the difficulty first (GDD difficulty §3.2):
+## a new save (difficulty never picked, no finished run, no saved run) and no
+## check or demo flag. Checks keep «Былина».
+static func wants_difficulty_choice(args: PackedStringArray, meta: MetaState, has_run: bool) -> bool:
+	for a in args:
+		if a.contains("-check=") or a.begins_with("--demo="):
+			return false
+	return meta.difficulty == "" and meta.runs == 0 and not has_run
 
 ## Plays the Prologue, then writes the save and starts the run.
 func start_prologue() -> Prologue:
@@ -358,13 +386,39 @@ static func visuals_for(layout: Dictionary, look: Dictionary) -> Dictionary:
 	var t := Tune.table("visuals")
 	return t.get(key, t.get("ruins", {}))
 
-## F3 shows or hides the debug text (visual-upgrade-plan §2.8).
+## F3 shows or hides the debug text (visual-upgrade-plan §2.8); Esc / pad Start
+## opens the pause menu.
 func _unhandled_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
 	if k and k.pressed and not k.echo and k.keycode == KEY_F3:
 		debug_hud = not debug_hud
 		if hud:
 			hud.visible = debug_hud
+	if PauseMenu.is_open_event(event) and can_pause():
+		get_viewport().set_input_as_handled()
+		open_pause()
+
+## True when the pause menu may open: nothing else holds the paused tree, and
+## the run is not between screens (summary, death, scripted scenes).
+func can_pause() -> bool:
+	if get_tree().paused:
+		return false
+	for c in get_children():
+		if c is Prologue:
+			return false
+	if director and director.base and director.base.get("screen") != null:
+		return false
+	return director == null or director.phase in ["fight", "doors", "base", "reward", "clear"]
+
+## Opens the pause menu (above every game screen).
+func open_pause() -> PauseMenu:
+	var pm := PauseMenu.new()
+	pm.can_quit = director != null and director.phase != "base" and director.run != null
+	pm.quit_to_base.connect(func() -> void:
+		if director and director.run:
+			director.finish("quit"))
+	show_screen(pm, 50)
+	return pm
 
 ## Chunk-room props (room-generation §3.6, §3.10, §3.13): the knight on his
 ## own pack, chests, the breakable wall and the traps of its pocket.
@@ -446,7 +500,8 @@ func request_hitstop(t: float) -> void:
 
 ## Shakes the screen with strength `s` px; the stronger shake wins.
 func add_shake(s: float) -> void:
-	shake = maxf(shake, s)
+	if GameSettings.shake_on:
+		shake = maxf(shake, s)
 
 ## Slows the world to `scale` for `t` real seconds (Flare breath). The stronger
 ## (smaller) slow and the longer time win; never summed.
@@ -460,7 +515,8 @@ func time_mult() -> float:
 
 ## Flashes the screen (lightens the darkness, F5 `flash`); the stronger wins.
 func add_flash(v: float) -> void:
-	flash = clampf(maxf(flash, v), 0.0, 1.0)
+	var m := 1.0 if GameSettings.flash_on else Tune.f("flash_off_mult")
+	flash = clampf(maxf(flash, v * m), 0.0, 1.0)
 
 ## Adds a shock ring (down-strike slam) at a point.
 func add_ring(at: Vector2, r: float) -> void:

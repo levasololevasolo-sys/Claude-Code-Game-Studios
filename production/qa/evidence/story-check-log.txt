@@ -19,7 +19,7 @@ OK   beats played: ["meet", "meet", "ask", "pass", "fall", "fall", "after"]
 OK   prologue screenshots taken
 OK   the guard answers Потап with his hero line
 OK   prologue_seen flag set
-OK   save v3 holds prologue_seen
+OK   save v4 holds prologue_seen
 OK   the Навь start: the run begins with a rune offer
 OK   god line over the cards (svarog, first offer = its first line): «Куй, пока горячо.»
 screenshot story-god-line.png

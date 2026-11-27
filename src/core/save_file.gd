@@ -7,7 +7,8 @@ extends RefCounted
 ## 2: armor, armor_pick, up, lanterns, lantern, story in meta (base hub).
 ## 3: story wiring fields in meta.story (StoryRules: gods_seen, death_streak,
 ## history...) and story_ev / needle in the run snapshot.
-const VERSION: int = 3
+## 4: meta.difficulty (GDD difficulty); older saves read as «Былина».
+const VERSION: int = 4
 
 ## Writes `data` (version is added) to `path`. False on any failure.
 static func write(path: String, data: Dictionary) -> bool:
@@ -89,5 +90,12 @@ static func migrate(d: Dictionary) -> Dictionary:
 			if not r.has("needle"):
 				r["needle"] = false
 		v = 3
+	if v < 4:
+		# 3 -> 4: difficulty did not exist, the game was «Былина» (GDD difficulty §5).
+		var meta4: Dictionary = out.get("meta", {}) if out.get("meta") is Dictionary else {}
+		if not meta4.has("difficulty"):
+			meta4["difficulty"] = Difficulty.DEFAULT
+		out["meta"] = meta4
+		v = 4
 	out["version"] = v
 	return out

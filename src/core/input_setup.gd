@@ -19,8 +19,22 @@ const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON
 	"move_left": JOY_BUTTON_DPAD_LEFT, "move_right": JOY_BUTTON_DPAD_RIGHT,
 	"move_up": JOY_BUTTON_DPAD_UP, "move_down": JOY_BUTTON_DPAD_DOWN }
 
-## Adds every action that is not yet in the InputMap.
+## Mouse buttons of the defaults (keyboard + mouse slots of GameSettings):
+## strike LMB, Flare RMB, secondary weapon MMB (weapons-and-loot §3.4).
+const MOUSE := { "strike": MOUSE_BUTTON_LEFT, "flare": MOUSE_BUTTON_RIGHT, "sub": MOUSE_BUTTON_MIDDLE }
+## Left stick directions; never rebound (GameSettings keeps them).
+const AXES := { "move_left": [JOY_AXIS_LEFT_X, -1.0], "move_right": [JOY_AXIS_LEFT_X, 1.0],
+	"move_up": [JOY_AXIS_LEFT_Y, -1.0], "move_down": [JOY_AXIS_LEFT_Y, 1.0] }
+
+## True after the first register(); later calls do nothing, so the player's
+## rebinds (GameSettings.apply_input) are never overwritten by the defaults.
+static var registered: bool = false
+
+## Adds every action with its default events, once per process.
 static func register() -> void:
+	if registered:
+		return
+	registered = true
 	for action: String in KEYS:
 		if not InputMap.has_action(action):
 			InputMap.add_action(action, 0.3)
@@ -32,19 +46,12 @@ static func register() -> void:
 			var jb := InputEventJoypadButton.new()
 			jb.button_index = PADS[action]
 			InputMap.action_add_event(action, jb)
-	var mouse := InputEventMouseButton.new()
-	mouse.button_index = MOUSE_BUTTON_LEFT
-	InputMap.action_add_event("strike", mouse)
-	var rmb := InputEventMouseButton.new()
-	rmb.button_index = MOUSE_BUTTON_RIGHT
-	InputMap.action_add_event("flare", rmb)
-	# Secondary weapon (weapons-and-loot §3.4): U, middle mouse, gamepad LB (RB is dash).
-	var mmb := InputEventMouseButton.new()
-	mmb.button_index = MOUSE_BUTTON_MIDDLE
-	InputMap.action_add_event("sub", mmb)
-	for pair: Array in [["move_left", JOY_AXIS_LEFT_X, -1.0], ["move_right", JOY_AXIS_LEFT_X, 1.0],
-			["move_up", JOY_AXIS_LEFT_Y, -1.0], ["move_down", JOY_AXIS_LEFT_Y, 1.0]]:
-		var ax := InputEventJoypadMotion.new()
-		ax.axis = pair[1]
-		ax.axis_value = pair[2]
-		InputMap.action_add_event(pair[0], ax)
+		if MOUSE.has(action):
+			var mb := InputEventMouseButton.new()
+			mb.button_index = MOUSE[action]
+			InputMap.action_add_event(action, mb)
+		if AXES.has(action):
+			var ax := InputEventJoypadMotion.new()
+			ax.axis = AXES[action][0]
+			ax.axis_value = AXES[action][1]
+			InputMap.action_add_event(action, ax)

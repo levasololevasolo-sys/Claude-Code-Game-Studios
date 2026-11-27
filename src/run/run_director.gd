@@ -158,6 +158,9 @@ func enter_room() -> void:
 	world.start_room(layout, rng)
 	world.player.hp = run.hp
 	world.player.died.connect(_on_died)
+	# GDD difficulty F5: Нить Мокоши tokens left this run.
+	world.player.revives = maxi(0, Difficulty.revives_for(Difficulty.current, Difficulty.table()) - run.revives_used)
+	world.player.revived.connect(_on_revived)
 	if run.stage == "lair":
 		var boss := LairBoss.make(String(_loc().get("boss", LairBoss.FALLBACK_ID)))
 		boss.title = String(_loc().get("boss_name", "Хозяин"))
@@ -225,18 +228,18 @@ func open_chest(c: Chest) -> void:
 	var res_id := String(_loc().get("res", "gears"))
 	var at := c.position + Vector2(0, 0)
 	if c.rich:
-		var e := roundi(Tune.f("cache_embers") * Tune.f("embers_mult"))
+		var e := roundi(Tune.f("cache_embers") * Difficulty.embers_mult())
 		run.embers += e
 		run.add_res(res_id, int(Tune.f("cache_res")))
 		var healed := 0.0
 		if game.rng.stream("loot").randf() < Tune.f("cache_heal_chance") and world.player:
-			healed = minf(run.max_hp - world.player.hp, Tune.f("cache_heal"))
+			healed = minf(run.max_hp - world.player.hp, Difficulty.heal(Tune.f("cache_heal")))
 			world.player.hp += healed
 		var it := drop_from("cache", at)
 		_say("Тайник: +%d углей, +%d %s%s" % [e, int(Tune.f("cache_res")), _loc().get("res_name", ""), (", +%d здоровья" % int(healed)) if healed > 0.0 else ""])
 		_note("cache chest opened: +%d embers, heal %d, weapon %s" % [e, int(healed), it.id if it else "-"])
 	else:
-		var e := roundi(Tune.f("chest_embers") * Tune.f("embers_mult"))
+		var e := roundi(Tune.f("chest_embers") * Difficulty.embers_mult())
 		run.embers += e
 		run.add_res(res_id, int(Tune.f("chest_res")))
 		var it := drop_from("chest", at)
@@ -254,11 +257,11 @@ func knight_reward(i: int, at: Vector2) -> void:
 			var it := drop_from("knight", at)
 			_note("knight reward: weapon %s" % (it.id if it else "-"))
 		_:
-			var e := roundi(Tune.f("knight_chest_embers") * Tune.f("embers_mult"))
+			var e := roundi(Tune.f("knight_chest_embers") * Difficulty.embers_mult())
 			run.embers += e
 			run.add_res(String(_loc().get("res", "gears")), int(Tune.f("knight_chest_res")))
 			if world.player:
-				world.player.hp = minf(run.max_hp, world.player.hp + Tune.f("knight_chest_heal"))
+				world.player.hp = minf(run.max_hp, world.player.hp + Difficulty.heal(Tune.f("knight_chest_heal")))
 			_say("Богатый сундук: +%d углей" % e)
 			_note("knight reward: rich chest +%d embers" % e)
 
@@ -320,7 +323,7 @@ func _collect() -> void:
 			_reward_done("loot")
 		"heal":
 			var p := world.player
-			var add := roundf(run.max_hp * Tune.f("heal_frac"))
+			var add := roundf(Difficulty.heal(run.max_hp * Tune.f("heal_frac")))
 			p.hp = minf(run.max_hp, p.hp + add)
 			_say("Живой родник: +%d здоровья" % int(add))
 			_reward_done("heal")
@@ -331,7 +334,7 @@ func _collect() -> void:
 			_reward_done("arms")
 
 func _give_loot() -> void:
-	var e := roundi(Tune.f("loot_embers") * Tune.f("embers_mult"))
+	var e := roundi(Tune.f("loot_embers") * Difficulty.embers_mult())
 	var r := int(Tune.f("loot_res"))
 	run.embers += e
 	run.add_res(String(_loc().get("res", "gears")), r)
@@ -504,7 +507,7 @@ func enter_door(i: int) -> void:
 ## Haven (§3.16, economy-and-meta §3.7): heal haven_heal of max hp, save, doors.
 func _enter_haven() -> void:
 	var p := world.player
-	var add := roundf(run.max_hp * Tune.f("haven_heal"))
+	var add := roundf(Difficulty.heal(run.max_hp * Tune.f("haven_heal")))
 	p.hp = minf(run.max_hp, p.hp + add)
 	run.hp = p.hp
 	_save_build()
@@ -512,6 +515,12 @@ func _enter_haven() -> void:
 	_say("Привал: +%d здоровья, забег сохранён" % int(add))
 	_note("haven: healed +%d to %d, save written %s to %s" % [int(add), roundi(p.hp), ok, game.save_path])
 	_open_doors()
+
+## The hero spent a Нить Мокоши token (GDD difficulty §3.5).
+func _on_revived() -> void:
+	run.revives_used += 1
+	_say("Нить Мокоши удержала тебя на этом свете")
+	_note("revive: token spent (%d used)" % run.revives_used)
 
 func _on_died(hit: Hit) -> void:
 	var src: Node = hit.source if hit and is_instance_valid(hit.source) else null
@@ -597,7 +606,7 @@ func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 	var res_id := String(_loc().get("res", "gears"))
 	if e.boss:
 		run.bosses += 1
-		run.embers += roundi(Tune.f("lair_embers") * Tune.f("embers_mult"))
+		run.embers += roundi(Tune.f("lair_embers") * Difficulty.embers_mult())
 		run.add_res(res_id, int(Tune.f("lair_res")))
 		run.add_res("cores", int(Tune.f("lair_hearts")))
 		var id := String(_loc().get("boss", "boss"))
@@ -617,7 +626,7 @@ func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 		elif e.mark != "":
 			drop_from("elite", e.position)
 		# Picked up at once for now: ground pickups (economy §3.2) come with the loot step.
-		run.embers += maxi(1, roundi(float(e.stats.get("embers", 0)) * Tune.f("embers_mult")))
+		run.embers += maxi(1, roundi(float(e.stats.get("embers", 0)) * Difficulty.embers_mult()))
 		if game.rng.stream("loot").randf() < Tune.f("res_drop"):
 			run.add_res(res_id, 1)
 

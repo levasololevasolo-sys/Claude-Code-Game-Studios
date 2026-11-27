@@ -20,6 +20,8 @@ signal hit_landed(enemy: Enemy, dmg: float)
 signal hurt_taken(amount: float, hit: Hit)
 ## Emitted once when hp reaches 0.
 signal died(hit: Hit)
+## Emitted when a Нить Мокоши token kept the hero up (GDD difficulty §3.5).
+signal revived
 ## Emitted when the breath ends, just before the new Flare enters the world (an
 ## instant shape strikes in its _ready, so listeners connect to `struck` here).
 signal flare_released(flare: Flare)
@@ -42,6 +44,8 @@ var hp: float = 100.0
 ## Shield points (from Zhiva); absorbs damage before hp (GDD §3.11).
 var shield: float = 0.0
 var dead: bool = false
+## Нить Мокоши tokens left (GDD difficulty F5); set by RunDirector, 0 in checks.
+var revives: int = 0
 var face: int = 1
 var coyote_t: float = 0.0
 var jump_buf: float = 0.0
@@ -654,7 +658,7 @@ func _rune_after_strike(blocked: bool, was_rooted: bool) -> void:
 	if was_rooted:
 		add_shield(build.value("zhiva_p", "shield_on_rooted", 0.0))
 	if not blocked and build.has("thirst"):
-		hp = minf(Tune.f("player_hp"), hp + build.value("thirst", "heal", 0.0))
+		hp = minf(Tune.f("player_hp"), hp + Difficulty.heal(build.value("thirst", "heal", 0.0)))
 
 ## Shield (F5): sums up to shield_max, the rest is lost.
 func add_shield(v: float) -> void:
@@ -715,7 +719,7 @@ func _on_enemy_killed(enemy: Node2D, hit: RefCounted) -> void:
 		"mara":
 			if hit is Hit and (hit as Hit).source == self:
 				if dash_t > 0.0:
-					hp = minf(Tune.f("player_hp"), hp + float(weapon.row().get("heal", 3)))
+					hp = minf(Tune.f("player_hp"), hp + Difficulty.heal(float(weapon.row().get("heal", 3))))
 				dash_cd = 0.0
 		"curse_blast":
 			if e.status.cursed():
@@ -792,6 +796,14 @@ func hurt(hit: Hit) -> float:
 		world.request_hitstop(Tune.f("hitstop_hurt"))
 	hurt_taken.emit(split.y, hit)
 	Events.player_hurt.emit(split.y, hit)
+	if hp <= 0.0 and revives > 0:
+		# GDD difficulty §3.5: a Нить Мокоши token keeps the hero up instead of dying.
+		var dt := Difficulty.table()
+		revives -= 1
+		hp = Tune.f("player_hp") * float(dt.get("revive_hp_frac", 0.5))
+		inv = float(dt.get("revive_iframes", 2.0))
+		revived.emit()
+		return split.y
 	if hp <= 0.0:
 		hp = 0.0
 		dead = true

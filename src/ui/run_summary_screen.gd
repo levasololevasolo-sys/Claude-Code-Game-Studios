@@ -59,6 +59,7 @@ func lines() -> PackedStringArray:
 	var loc: Dictionary = Tune.table("locations").get(str(int(run.get("tier", 1))), {})
 	var where := "%s, %s" % [loc.get("name", "?"), "логово" if run.get("stage") == "lair" else ("привал" if run.get("stage") == "haven" else "комната %d" % int(run.get("room_k", 1)))]
 	out.append("Где: " + where)
+	out.append("Сложность: " + Difficulty.name_of(String(summary.get("difficulty", Difficulty.DEFAULT)), Difficulty.table()))
 	if String(run.get("killed_by", "")) != "":
 		out.append("Кто убил: " + String(run.killed_by))
 	out.append("Комнат пройдено: %d   Убито врагов: %d   Хозяев: %d" % [int(run.get("rooms_cleared", 0)), int(run.get("kills", 0)), int(run.get("bosses", 0))])
