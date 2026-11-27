@@ -18,6 +18,7 @@
 ## `--limb-check=<dir>` the limb zones check (arm cut, head pop; GDD limb-zones).
 ## `--parry-check=<dir>` the parry reflect / shield-bearer / thrower check (GDD parry §3.5).
 ## `--bestiary-check=<dir>` the Топь roster check, each kind vs the hero (GDD bestiary §3.2).
+## `--vfx-check=<dir>` the game-feel VFX check (design/art/vfx-spec.md).
 ## `--story-check=<dir>` plays the prologue with scripted input and a god line
 ## (tests/integration/story); a new save starts with the Prologue otherwise.
 ## `--hero-shots=<dir>` saves hero rig poses (with `--hero-tier=1..5`, HeroVisual).
@@ -79,7 +80,7 @@ var first_run: bool = false
 var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--parry-check=", "--vis-shots=", "--base-view", "--aim-check=", "--bestiary-check=", "--frost-check="]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--parry-check=", "--vis-shots=", "--base-view", "--aim-check=", "--bestiary-check=", "--frost-check=", "--vfx-check="]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -240,6 +241,10 @@ func _ready() -> void:
 			var ac: Node = (load("res://tests/integration/loot/aim_check_driver.gd") as GDScript).new()
 			ac.set("out_dir", a.trim_prefix("--aim-check="))
 			add_child(ac)
+		elif a.begins_with("--vfx-check="):
+			var vxc: Node = (load("res://tests/integration/vfx/vfx_check_driver.gd") as GDScript).new()
+			vxc.set("out_dir", a.trim_prefix("--vfx-check="))
+			add_child(vxc)
 		elif a.begins_with("--settings-check="):
 			var stc: Node = (load("res://tests/integration/core/settings_check_driver.gd") as GDScript).new()
 			stc.set("out_dir", a.trim_prefix("--settings-check="))

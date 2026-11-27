@@ -277,6 +277,7 @@
       "hero_glow": 0.1
     },
     "particles": [
+      { "kind": "firefly", "amount": 14, "life": 6.0, "col": "#b6e36b", "size": [0.05, 0.1], "vel": [6, 20], "gravity": [0, -4], "add": true },
       {
         "kind": "spore",
         "amount": 50,

@@ -1,0 +1,141 @@
+{
+  "_note": "Game-feel VFX (design/art/vfx-spec.md). Colours from art-bible §4; sizes px, speeds px/s, times s, spread/up in degrees. An emitter spec: shape (drop streak shard mist flash ring ember ripple), layer (norm = under the darkness, add = additive, self-lit), n, col [a, b] (random mix), col_end, speed, spread, up (bias towards up), life, size, size_end (multiplier), grav, drag (fraction of speed lost per s), splat (drop leaves a floor splat), bounce, len (streak length in s of travel / shard aspect), area (body / feet), dir_up (fly up, not along the hit), eye (at the eyes), always (emitted even at «выкл»).",
+  "default_material": "flesh",
+  "kind_material": { "dummy": "wood", "kikimora": "undead", "likho": "flesh", "morena": "ice", "boss": "undead" },
+  "levels": { "2": 1.0, "1": 0.4, "0": 0.0 },
+  "ambient_levels": { "2": 1.0, "1": 0.5, "0": 0.0 },
+  "cap_norm": 700,
+  "cap_add": 400,
+  "splat_cap": 48,
+  "splat_life": 2.2,
+  "hitstop_speed": 0.12,
+  "heavy_mult": 1.8,
+  "heavy_frac": 0.34,
+  "death_mult": 1.6,
+  "emerge_time": 0.42,
+  "emerge_in_other_checks": false,
+  "materials": {
+    "flesh": {
+      "hit": [
+        { "shape": "drop", "layer": "norm", "n": 12, "col": ["#7a1018", "#b0202a"], "speed": [180, 460], "spread": 32, "up": 18, "life": [0.9, 1.4], "size": [2.8, 5.6], "grav": 1100, "drag": 0.6, "splat": true },
+        { "shape": "mist", "layer": "norm", "n": 3, "col": ["#4a0a10", "#6e1016"], "speed": [30, 80], "spread": 40, "life": [0.3, 0.5], "size": [8, 14], "size_end": 2.2, "grav": 0, "drag": 2.5 },
+        { "shape": "flash", "layer": "add", "n": 1, "col": ["#ffd9b0", "#ffd9b0"], "speed": [0, 0], "life": [0.07, 0.07], "size": [22, 22], "size_end": 1.4, "always": true }
+      ],
+      "death": [
+        { "shape": "drop", "layer": "norm", "n": 22, "col": ["#7a1018", "#b0202a"], "speed": [140, 520], "spread": 70, "up": 40, "life": [1.0, 1.5], "size": [2.8, 6.4], "grav": 1100, "drag": 0.4, "splat": true }
+      ]
+    },
+    "undead": {
+      "hit": [
+        { "shape": "mist", "layer": "norm", "n": 6, "col": ["#3e2048", "#5e3068"], "speed": [50, 150], "spread": 35, "up": 10, "life": [0.45, 0.8], "size": [8, 14], "size_end": 2.6, "grav": -40, "drag": 2.2 },
+        { "shape": "drop", "layer": "add", "n": 8, "col": ["#d23a9a", "#8a2a7a"], "speed": [160, 380], "spread": 30, "up": 15, "life": [0.35, 0.6], "size": [1.8, 3.2], "grav": 700, "drag": 0.8 },
+        { "shape": "flash", "layer": "add", "n": 1, "col": ["#e9a0d8", "#e9a0d8"], "speed": [0, 0], "life": [0.07, 0.07], "size": [22, 22], "size_end": 1.4, "always": true }
+      ],
+      "death": [
+        { "shape": "mist", "layer": "norm", "n": 12, "col": ["#3e2048", "#5e3068"], "speed": [40, 160], "spread": 120, "up": 60, "life": [0.7, 1.2], "size": [10, 18], "size_end": 2.4, "grav": -60, "drag": 1.8 },
+        { "shape": "drop", "layer": "add", "n": 12, "col": ["#d23a9a", "#8a2a7a"], "speed": [120, 380], "spread": 80, "up": 40, "life": [0.4, 0.8], "size": [1.8, 3.4], "grav": 700, "drag": 0.6 }
+      ]
+    },
+    "bone": {
+      "hit": [
+        { "shape": "shard", "layer": "norm", "n": 9, "col": ["#cfc3a4", "#efe6cc"], "col_end": "#8a7f68", "speed": [200, 440], "spread": 40, "up": 25, "life": [0.5, 0.9], "size": [2.5, 4.5], "len": 1.6, "grav": 1200, "drag": 0.3, "bounce": 0.35 },
+        { "shape": "mist", "layer": "norm", "n": 2, "col": ["#9a9080", "#b0a690"], "speed": [30, 70], "spread": 50, "life": [0.3, 0.5], "size": [7, 11], "size_end": 2.0, "grav": 0, "drag": 2.5 },
+        { "shape": "flash", "layer": "add", "n": 1, "col": ["#fff1d0", "#fff1d0"], "speed": [0, 0], "life": [0.06, 0.06], "size": [20, 20], "size_end": 1.3, "always": true }
+      ],
+      "death": [
+        { "shape": "shard", "layer": "norm", "n": 18, "col": ["#cfc3a4", "#efe6cc"], "col_end": "#8a7f68", "speed": [160, 520], "spread": 90, "up": 45, "life": [0.7, 1.2], "size": [3.0, 6.0], "len": 1.6, "grav": 1200, "drag": 0.2, "bounce": 0.35 }
+      ]
+    },
+    "wood": {
+      "hit": [
+        { "shape": "shard", "layer": "norm", "n": 9, "col": ["#6a4a2e", "#a08560"], "col_end": "#4a3420", "speed": [180, 420], "spread": 38, "up": 22, "life": [0.5, 0.9], "size": [2.0, 3.5], "len": 3.0, "grav": 1000, "drag": 0.5, "bounce": 0.25 },
+        { "shape": "mist", "layer": "norm", "n": 2, "col": ["#5a4a36", "#7a6248"], "speed": [30, 70], "spread": 50, "life": [0.3, 0.5], "size": [7, 11], "size_end": 2.0, "grav": 0, "drag": 2.5 },
+        { "shape": "flash", "layer": "add", "n": 1, "col": ["#ffe2b0", "#ffe2b0"], "speed": [0, 0], "life": [0.06, 0.06], "size": [20, 20], "size_end": 1.3, "always": true }
+      ],
+      "death": [
+        { "shape": "shard", "layer": "norm", "n": 16, "col": ["#6a4a2e", "#a08560"], "col_end": "#4a3420", "speed": [150, 480], "spread": 90, "up": 45, "life": [0.7, 1.2], "size": [2.5, 4.5], "len": 3.0, "grav": 1000, "drag": 0.3, "bounce": 0.25 },
+        { "shape": "shard", "layer": "norm", "n": 6, "col": ["#3f5a2e", "#5d7a3a"], "speed": [60, 180], "spread": 120, "up": 70, "life": [1.0, 1.6], "size": [3.0, 5.0], "len": 1.4, "grav": 160, "drag": 1.5 }
+      ]
+    },
+    "ice": {
+      "hit": [
+        { "shape": "shard", "layer": "add", "n": 10, "col": ["#8fd3f5", "#dde8f0"], "col_end": "#4a7aa0", "speed": [220, 500], "spread": 36, "up": 20, "life": [0.4, 0.75], "size": [2.5, 4.5], "len": 2.2, "grav": 1100, "drag": 0.4, "bounce": 0.4 },
+        { "shape": "mist", "layer": "norm", "n": 3, "col": ["#c9d8e6", "#ffffff"], "speed": [30, 90], "spread": 45, "life": [0.35, 0.6], "size": [7, 12], "size_end": 2.2, "grav": -10, "drag": 2.2 },
+        { "shape": "flash", "layer": "add", "n": 1, "col": ["#e8f6ff", "#e8f6ff"], "speed": [0, 0], "life": [0.07, 0.07], "size": [22, 22], "size_end": 1.4, "always": true }
+      ],
+      "death": [
+        { "shape": "shard", "layer": "add", "n": 20, "col": ["#8fd3f5", "#dde8f0"], "col_end": "#4a7aa0", "speed": [160, 540], "spread": 100, "up": 45, "life": [0.6, 1.1], "size": [3.0, 6.0], "len": 2.2, "grav": 1100, "drag": 0.3, "bounce": 0.4 }
+      ]
+    },
+    "metal": {
+      "hit": [
+        { "shape": "streak", "layer": "add", "n": 14, "col": ["#fff3c4", "#ffc94a"], "col_end": "#c2502a", "speed": [420, 900], "spread": 55, "up": 15, "life": [0.12, 0.28], "size": [1.4, 2.4], "len": 0.035, "grav": 900, "drag": 2.0 },
+        { "shape": "flash", "layer": "add", "n": 1, "col": ["#fff6d8", "#fff6d8"], "speed": [0, 0], "life": [0.08, 0.08], "size": [34, 34], "size_end": 1.5, "always": true },
+        { "shape": "ember", "layer": "add", "n": 3, "col": ["#ffc94a", "#ff9a3c"], "speed": [60, 160], "spread": 60, "up": 50, "life": [0.3, 0.5], "size": [1.5, 2.2], "grav": 500, "drag": 1.0 }
+      ],
+      "death": [
+        { "shape": "streak", "layer": "add", "n": 26, "col": ["#fff3c4", "#ffc94a"], "col_end": "#c2502a", "speed": [380, 900], "spread": 140, "up": 30, "life": [0.15, 0.35], "size": [1.4, 2.4], "len": 0.035, "grav": 900, "drag": 2.0 },
+        { "shape": "shard", "layer": "norm", "n": 8, "col": ["#5a6470", "#8a94a0"], "speed": [140, 380], "spread": 90, "up": 45, "life": [0.7, 1.1], "size": [3.0, 5.0], "len": 1.5, "grav": 1200, "drag": 0.2, "bounce": 0.3 }
+      ]
+    }
+  },
+  "dissolve": [
+    { "shape": "mist", "layer": "norm", "n": 16, "col": ["#4a2a58", "#6a3f78"], "speed": [10, 40], "spread": 180, "life": [0.7, 1.3], "size": [8, 14], "size_end": 2.4, "grav": -90, "drag": 1.2, "area": "body", "body_col": 0.35 },
+    { "shape": "ember", "layer": "add", "n": 10, "col": ["#ffc94a", "#c8902e"], "speed": [10, 50], "spread": 180, "life": [0.8, 1.5], "size": [1.4, 2.4], "grav": -120, "drag": 0.8, "area": "body" },
+    { "shape": "ember", "layer": "add", "n": 6, "col": ["#d23a9a", "#a3206f"], "speed": [10, 40], "spread": 180, "life": [0.6, 1.1], "size": [1.4, 2.2], "grav": -100, "drag": 0.8, "area": "body" }
+  ],
+  "parry": [
+    { "shape": "streak", "layer": "add", "n": 30, "col": ["#fff6d8", "#ffc94a"], "col_end": "#c2502a", "speed": [500, 1100], "spread": 75, "up": 10, "life": [0.14, 0.32], "size": [1.6, 2.8], "len": 0.04, "grav": 700, "drag": 2.2, "always_n": 8 },
+    { "shape": "streak", "layer": "add", "n": 10, "col": ["#fff6d8", "#ffe08a"], "speed": [300, 700], "spread": 180, "life": [0.1, 0.22], "size": [1.4, 2.0], "len": 0.03, "grav": 400, "drag": 2.5 },
+    { "shape": "flash", "layer": "add", "n": 1, "col": ["#fffaf0", "#fffaf0"], "speed": [0, 0], "life": [0.1, 0.1], "size": [60, 60], "size_end": 1.6, "always": true },
+    { "shape": "ring", "layer": "add", "n": 1, "col": ["#ffe9b0", "#ffe9b0"], "speed": [0, 0], "life": [0.28, 0.28], "size": [10, 10], "size_end": 9.0, "always": true },
+    { "shape": "ring", "layer": "add", "n": 1, "col": ["#ffc94a", "#ffc94a"], "speed": [0, 0], "life": [0.4, 0.4], "size": [6, 6], "size_end": 6.0, "always": true }
+  ],
+  "hero_hurt": [
+    { "shape": "drop", "layer": "norm", "n": 9, "col": ["#b3262e", "#8a1a22"], "speed": [160, 380], "spread": 40, "up": 30, "life": [0.8, 1.2], "size": [2.0, 3.8], "grav": 1100, "drag": 0.6, "splat": true },
+    { "shape": "flash", "layer": "add", "n": 1, "col": ["#ff8070", "#ff8070"], "speed": [0, 0], "life": [0.09, 0.09], "size": [40, 40], "size_end": 1.5, "always": true }
+  ],
+  "hurt_vignette": { "col": "#b3262e", "time": 0.32, "alpha": 0.42, "width": 0.16 },
+  "wake": [
+    { "shape": "flash", "layer": "add", "n": 1, "col": ["#ffffff", "#ffffff"], "speed": [0, 0], "life": [0.35, 0.35], "size": [6, 6], "size_end": 3.2, "eye": true, "always": true },
+    { "shape": "streak", "layer": "add", "n": 3, "col": ["#ffffff", "#ffffff"], "speed": [80, 160], "spread": 50, "life": [0.2, 0.3], "size": [1.2, 1.6], "len": 0.05, "grav": 0, "drag": 3.0, "eye": true, "dir_up": true }
+  ],
+  "emerge": {
+    "ruins": [
+      { "shape": "drop", "layer": "norm", "n": 18, "col": ["#4d5f3a", "#6e7f4a"], "speed": [140, 360], "spread": 60, "life": [0.5, 0.9], "size": [2.5, 5.0], "grav": 1100, "drag": 0.4, "splat": true, "dir_up": true, "area": "feet" },
+      { "shape": "mist", "layer": "norm", "n": 10, "col": ["#6e8a72", "#9fb89f"], "speed": [30, 90], "spread": 70, "life": [0.6, 1.0], "size": [12, 20], "size_end": 2.2, "grav": -30, "drag": 1.6, "dir_up": true, "area": "feet" },
+      { "shape": "ember", "layer": "add", "n": 5, "col": ["#b6e36b", "#8fc24a"], "speed": [30, 80], "spread": 60, "life": [0.6, 1.0], "size": [1.4, 2.2], "grav": -60, "drag": 0.6, "dir_up": true, "area": "feet" }
+    ],
+    "forest": [
+      { "shape": "shard", "layer": "norm", "n": 14, "col": ["#4a3420", "#6a4a2e"], "speed": [160, 380], "spread": 50, "life": [0.5, 0.9], "size": [2.5, 4.0], "len": 3.0, "grav": 1000, "drag": 0.4, "bounce": 0.2, "dir_up": true, "area": "feet" },
+      { "shape": "shard", "layer": "norm", "n": 10, "col": ["#3f5a2e", "#a08560"], "speed": [60, 200], "spread": 80, "life": [1.0, 1.6], "size": [3.0, 5.0], "len": 1.4, "grav": 140, "drag": 1.4, "dir_up": true, "area": "feet" },
+      { "shape": "mist", "layer": "norm", "n": 5, "col": ["#3a3226", "#5a4a3a"], "speed": [30, 80], "spread": 70, "life": [0.5, 0.8], "size": [10, 16], "size_end": 2.0, "grav": -20, "drag": 1.8, "dir_up": true, "area": "feet" }
+    ],
+    "frost": [
+      { "shape": "mist", "layer": "norm", "n": 12, "col": ["#dde8f0", "#ffffff"], "speed": [40, 140], "spread": 70, "life": [0.6, 1.0], "size": [10, 18], "size_end": 2.4, "grav": -20, "drag": 1.6, "dir_up": true, "area": "feet" },
+      { "shape": "drop", "layer": "norm", "n": 14, "col": ["#ffffff", "#c9d8e6"], "speed": [120, 320], "spread": 55, "life": [0.5, 0.9], "size": [1.6, 3.0], "grav": 900, "drag": 0.5, "dir_up": true, "area": "feet" }
+    ],
+    "base": []
+  },
+  "steps": {
+    "ruins": { "shape": "drop", "layer": "norm", "n": 3, "col": ["#4d5f3a", "#6e8a72"], "speed": [60, 140], "spread": 50, "life": [0.25, 0.4], "size": [1.4, 2.4], "grav": 900, "drag": 0.5, "dir_up": true, "area": "feet" },
+    "forest": { "shape": "shard", "layer": "norm", "n": 2, "col": ["#5a4a3a", "#a08560"], "speed": [40, 110], "spread": 60, "life": [0.35, 0.6], "size": [1.8, 2.8], "len": 1.4, "grav": 500, "drag": 1.0, "dir_up": true, "area": "feet" },
+    "frost": { "shape": "mist", "layer": "norm", "n": 2, "col": ["#ffffff", "#dde8f0"], "speed": [20, 60], "spread": 60, "life": [0.35, 0.55], "size": [6, 10], "size_end": 1.8, "grav": -10, "drag": 2.0, "dir_up": true, "area": "feet" }
+  },
+  "world": {
+    "ruins": {
+      "grass": { "every": [16, 34], "h": [22, 52], "blades": [3, 6], "col": ["#33503f", "#5d7448"], "tip": "#9ab88a", "head": "#3a2a1c", "head_chance": 0.3, "front_chance": 0.22, "front_h": 0.6, "stiff": 55, "damp": 5, "push": 0.9, "slash": 7.0, "wind": 0.06 },
+      "lamps": { "every": 1100, "kind": "rotlight", "post": "#2a221c", "post_h": 46, "col": "#b6e36b", "core": "#effbd0", "glow": 70, "light": 110, "light_a": 0.75, "flicker": 0.18 },
+      "ripples": { "bog_r": 110, "col": "#9fc6a8", "every": 0.22, "life": 0.9, "size": 10, "size_end": 5.0 }
+    },
+    "forest": {
+      "grass": { "every": [18, 38], "h": [16, 34], "blades": [4, 7], "col": ["#2a4038", "#3f6048"], "tip": "#7d9a5a", "head": "", "head_chance": 0.0, "front_chance": 0.25, "front_h": 0.7, "stiff": 60, "damp": 5, "push": 0.9, "slash": 7.0, "wind": 0.05 },
+      "lamps": { "every": 1000, "kind": "candle", "post": "#3a2a1c", "post_h": 64, "col": "#ff9a3c", "core": "#ffe8b0", "glow": 90, "light": 130, "light_a": 0.85, "flicker": 0.28 }
+    },
+    "frost": {
+      "grass": { "every": [28, 60], "h": [14, 30], "blades": [2, 4], "col": ["#5a5448", "#7a7060"], "tip": "#dde8f0", "head": "", "head_chance": 0.0, "front_chance": 0.15, "front_h": 0.6, "stiff": 80, "damp": 6, "push": 0.7, "slash": 5.0, "wind": 0.04 },
+      "lamps": { "every": 1300, "kind": "torch", "post": "#2c3b52", "post_h": 70, "col": "#ff8a3d", "core": "#ffe8b0", "glow": 110, "light": 150, "light_a": 0.9, "flicker": 0.3 },
+      "gusts": { "every": [4.0, 8.0], "time": 1.4, "power": 0.55, "air_push": 160, "streaks": 26, "col": "#ffffff" }
+    }
+  }
+}

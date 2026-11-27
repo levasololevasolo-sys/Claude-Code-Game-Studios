@@ -1,0 +1,43 @@
+OK   hero hurt bled (73 -> 82 particles)
+OK   material flesh made 16 particles
+OK   material undead made 15 particles
+OK   material bone made 12 particles
+OK   material wood made 12 particles
+OK   material ice made 14 particles
+OK   material metal made 18 particles
+OK   material heavy made 28 particles
+OK   parry burst made 43 particles
+screenshot vfx-hits.png
+OK   blood left floor splats: 11
+crawler dmg 6.0 material flesh
+OK   crawler hit made particles
+knight dmg 6.0 material metal
+OK   knight hit made particles
+OK   knight rings as metal (metal)
+screenshot vfx-strip.png
+OK   emerge: the riser is still coming out of the ground (scale.y 0.41)
+screenshot vfx-spawn.png
+OK   emerge finished at full size
+perf level много: VFX own CPU 1.399 ms/frame (tick + draw calls)
+perf level много: frame 90.93 ms avg, process 96.86 ms avg, peak particles 104, fps monitor 12
+perf level выкл: VFX own CPU 0.744 ms/frame (tick + draw calls)
+perf level выкл: frame 84.99 ms avg, process 90.25 ms avg, peak particles 2, fps monitor 11
+perf level узел выключен: VFX own CPU 0.000 ms/frame (tick + draw calls)
+perf level VFX узел выключен: frame 75.98 ms avg, process 82.99 ms avg, peak particles 102, fps monitor 13
+perf: VFX cost ≈ 14.95 ms/frame (много − узел выключен, software GL under xvfb)
+OK   VFX own CPU 1.399 ms/frame ≤ 2 ms budget
+OK   swamp: grass tufts 108
+OK   swamp: lamps 1
+OK   swamp: ripples / glow particles live in the bog
+OK   swamp: 3 tufts bent by the hero / wind
+screenshot vfx-world-swamp.png
+OK   forest: grass tufts 194
+OK   forest: lamps 3
+OK   forest: 1 tufts bent by the hero / wind
+screenshot vfx-world-forest.png
+OK   frost: grass tufts 130
+OK   frost: lamps 2
+OK   frost: a wind gust is blowing (0.49)
+OK   frost: 53 tufts bent by the hero / wind
+screenshot vfx-world-frost.png
+done, 0 failures
