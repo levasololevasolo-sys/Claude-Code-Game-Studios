@@ -7,6 +7,11 @@ impacts and a layered low thump, so nothing is sampled and nothing is licensed:
 the output is generated in-house (CC0-equivalent, see assets/provenance.yaml).
 Each sound uses its own fixed seed, so a rebuild is byte-identical.
 
+Second pass (UI cues, limbs, parry, enemies, bosses, world, footsteps and
+ambient loops) lives in sfx_pass2.py and needs numpy. Ambient loops are written
+without fades, with a RIFF `smpl` loop chunk, and Audio loops them at runtime.
+`--reel PATH` also renders every second-pass sound, 0.4 s apart, into one wav.
+
 Output: mono, 44.1 kHz, 16-bit PCM, peak-normalised to -1 dBFS, 2 ms fade-in
 and 10 ms fade-out. Run from the repo root:
     python3 tools/asset-pipeline/audio/build_sfx.py
@@ -15,7 +20,12 @@ import array
 import math
 import os
 import random
+import struct
+import sys
 import wave
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sfx_pass2  # noqa: E402
 
 SR = 44100
 PEAK = 0.89  # -1 dBFS
@@ -329,11 +339,61 @@ SOUNDS = {
 }
 
 
+def _pcm(sig):
+    return array.array("h", (int(max(-1.0, min(1.0, x)) * 32767) for x in sig)).tobytes()
+
+
+def write_loop(name, sig):
+    """Ambient loop: peak-normalised, no fades, `smpl` chunk with a forward loop."""
+    sig = [float(x) for x in sig]
+    peak = max(abs(x) for x in sig) or 1.0
+    data = _pcm([x / peak * PEAK for x in sig])
+    frames = len(sig)
+    smpl = struct.pack("<9I", 0, 0, int(1e9 / SR), 60, 0, 0, 0, 1, 0) + struct.pack("<6I", 0, 0, 0, frames - 1, 0, 0)
+    fmt = struct.pack("<HHIIHH", 1, 1, SR, SR * 2, 2, 16)
+    body = b"WAVE" + b"fmt " + struct.pack("<I", len(fmt)) + fmt + b"data" + struct.pack("<I", len(data)) + data \
+        + b"smpl" + struct.pack("<I", len(smpl)) + smpl
+    path = os.path.join(OUT, name + ".wav")
+    with open(path, "wb") as f:
+        f.write(b"RIFF" + struct.pack("<I", len(body)) + body)
+    return path, frames / SR
+
+
+def reel(path, names):
+    """Concatenates the given (already written) files with 0.4 s gaps."""
+    gap = b"\x00\x00" * int(0.4 * SR)
+    out = b""
+    for n in names:
+        with wave.open(os.path.join(OUT, n + ".wav"), "rb") as w:
+            frames = w.readframes(w.getnframes())
+        if n.startswith("amb_"):
+            frames = frames[:SR * 2 * 6]  # 6 s of each loop is enough to judge it
+        out += frames + gap
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes(out)
+    return len(out) / 2 / SR
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in SOUNDS.items():
         path, dur = write(name, fn())
-        print("%-14s %5.2f s  %s" % (name, dur, path))
+        print("%-18s %5.2f s  %s" % (name, dur, path))
+    new = sfx_pass2.sounds()
+    for name, fn in new.items():
+        path, dur = write(name, [float(x) for x in fn()], )
+        print("%-18s %5.2f s  %s" % (name, dur, path))
+    for name, fn in sfx_pass2.AMBIENT.items():
+        path, dur = write_loop(name, fn())
+        print("%-18s %5.2f s  %s (loop)" % (name, dur, path))
+    if "--reel" in sys.argv:
+        dest = sys.argv[sys.argv.index("--reel") + 1]
+        order = list(new) + list(sfx_pass2.AMBIENT)
+        print("reel %.1f s -> %s" % (reel(dest, order), dest))
+        print("order: " + ", ".join(order))
 
 
 if __name__ == "__main__":
