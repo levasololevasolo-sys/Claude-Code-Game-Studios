@@ -1,4 +1,4 @@
-OK   frost room: chunks ["frost_entry_02", "frost_arena_01", "frost_pass_04", "frost_arena_04", "frost_shaft_01", "frost_arena_02", "frost_exit_01"], kinds ["jelly", "wolf", "sentry", "crawler"]
+OK   frost room: chunks ["frost_entry_02", "frost_arena_01", "frost_pass_04", "frost_arena_04", "frost_shaft_01", "frost_arena_02", "frost_exit_01"], kinds ["jelly", "wolf", "snezhnitsa", "karachun"]
 screenshot frost-room.png
 screenshot frost-enemies.png
 OK   frost enemies telegraph: ["run", "drift", "crouch", "chill_w", "bite", "hop", "recover"]

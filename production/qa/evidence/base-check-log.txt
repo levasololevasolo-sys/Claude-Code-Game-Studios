@@ -1,4 +1,4 @@
-  rune taken: svarog_s (offer ["svarog_s", "svarog_p", "svarog_d"])
+  rune taken: svarog_s (offer ["svarog_s", "svarog_d", "svarog_f"])
   run ended (dead): Где: Топь Кикиморы, комната 1 | Сложность: Былина | Комнат пройдено: 0   Убито врагов: 0   Хозяев: 0 |   Удар — Удар Сварога (ур. 1) | Добыча забега: угли 0    | Банк углей: 0 → 0   (забегов всего: 1)
 OK   summary after the run
   enter base: visit 1, lines ["dolya", "potap", "sova", "bayun", "chur"], save true
@@ -24,8 +24,8 @@ OK   hero look: helmet 5, torso 5
 screenshot base-hero-armored.png
 OK   save v4 holds armor { "arms": 4.0, "cloak": 4.0, "head": 4.0, "legs": 4.0, "torso": 4.0 } and said lines
   gate: new run
-  new run seed 1219684992, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
-  enter room tier 1 room 1 (w 1920, packs 1), reward { "type": "loot", "god": "" }, hp 100
+  new run seed 1876179589, finished runs 1, gods open ["svarog", "perun", "stribog", "veles", "zhiva"], door types ["god", "loot", "heal", "rod", "arms"]
+  enter level tier 1 seed 1174400091: 62 rooms, 3 forks (2,2,2 trails), 20 packs, 9 chests, attempts 8, reward 1 { "type": "loot", "god": "" }
   start offer: zhiva
   god voice zhiva: Дыши. Это не просьба.
 OK   the gate starts a new run

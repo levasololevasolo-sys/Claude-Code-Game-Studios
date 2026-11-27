@@ -1,4 +1,4 @@
-OK   forest room: chunks ["forest_entry_01", "forest_arena_03", "forest_shaft_04", "forest_arena_01", "forest_exit_01"], kinds ["rootling", "sentry", "bat", "ringer"]
+OK   forest room: chunks ["forest_entry_01", "forest_arena_03", "forest_shaft_04", "forest_arena_01", "forest_exit_01"], kinds ["sentry", "rootling", "bat", "ringer"]
 screenshot forest-room.png
 screenshot forest-enemies.png
 OK   forest enemies telegraph: ["walk", "call", "dig", "under", "gone", "appear", "swipe", "rise_w", "recover", "burst"]
