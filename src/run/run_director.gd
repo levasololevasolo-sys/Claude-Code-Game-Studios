@@ -45,6 +45,12 @@ const BASE_SCENE: String = "res://scenes/base/base.tscn"
 var scene: Node
 ## Called instead of finish("win") when the last built boss falls (checks hook it).
 var win_hook: Callable
+## Graph mode (GDD level-structure): the live level of this location, null in rooms mode.
+var flow: LevelFlow
+## The LevelGen level of the current location (graph mode), {} otherwise.
+var level: Dictionary = {}
+## Level seed forced by a check (--level2-check); -1 = seed_level from the run.
+static var level_seed_override: int = -1
 
 func _ready() -> void:
 	Events.enemy_killed.connect(_on_enemy_killed)
@@ -153,8 +159,12 @@ func enter_room() -> void:
 		"haven":
 			layout = { "w": Tune.f("haven_room_w"), "plats": [], "packs": [], "portal": false, "haven": true }
 		_:
+			if LevelMode.graph_for(String(_loc().get("lib", "swamp"))):
+				_enter_level(rng)
+				return
 			layout = RoomGen.generate(rng, run.room_k, run.tier, Tune.data, true, room_opts())
 			layout["portal"] = false
+	flow = null
 	world.start_room(layout, rng)
 	world.player.hp = run.hp
 	world.player.died.connect(_on_died)
@@ -171,6 +181,85 @@ func enter_room() -> void:
 	room_started.emit(run.stage, run.room_k)
 	if run.stage == "haven":
 		_enter_haven()
+
+## Graph mode (level-structure §3.1, §3.4): builds the whole location level by
+## seed_level = hash(seed_run, tier) and plays it: shrine 1 gives the pacing
+## reward, each fork's gates show DoorRules rewards, the chosen trail's shrine
+## gives it, the lair door at the bottom leads to the lair.
+func _enter_level(rng: RandomNumberGenerator) -> void:
+	var types: Array = _unl.get("types", [])
+	var opts := { "knight": knight_tier != run.tier, "secret_ok": "cache" in types,
+		"elites_ok": run.tier >= int(Tune.f("elite_from_tier")) and game.meta.bosses_beaten() > 0 }
+	var lib := LevelGen.library(String(_loc().get("lib", "swamp")))
+	var lseed := level_seed_override if level_seed_override >= 0 else LevelGen.level_seed(run.run_seed, run.tier)
+	level = LevelGen.build(lseed, run.tier, lib, LevelGen.tuning_for(Tune.data), opts)
+	if not (level.get("knight", {}) as Dictionary).is_empty():
+		knight_tier = run.tier
+	world.start_level(level, rng)
+	flow = LevelFlow.new()
+	world.add_child(flow)
+	flow.setup(world)
+	flow.shrine_reached.connect(_on_shrine)
+	flow.gate_entered.connect(_on_gate)
+	flow.fork_entered.connect(func(fi: int) -> void:
+		if not flow.gates_set(fi):
+			_set_fork(fi))
+	flow.lair_used.connect(_on_lair_door)
+	flow.set_shrine_info(0, run.reward)
+	world.player.hp = run.hp
+	world.player.died.connect(_on_died)
+	world.player.revives = maxi(0, Difficulty.revives_for(Difficulty.current, Difficulty.table()) - run.revives_used)
+	world.player.revived.connect(_on_revived)
+	phase = "level"
+	_note("enter level tier %d seed %d: %d rooms, %d forks (%s trails), %d packs, %d chests, attempts %d%s, reward 1 %s" % [run.tier,
+		int(level.seed), (level.rooms as Array).size(), (level.forks as Array).size(),
+		",".join(PackedStringArray((level.forks as Array).map(func(f: Dictionary) -> String: return str((f.trails as Array).size())))),
+		(level.packs as Array).size(), (level.chests as Array).size(), int(level.attempts), " FALLBACK" if bool(level.fallback) else "", run.reward])
+	room_started.emit("level", run.room_k)
+
+## Puts DoorRules rewards over the gates of fork `fi` (one per trail; §3.8-3.9 pacing).
+func _set_fork(fi: int) -> void:
+	var n: int = (flow.forks[fi].gates as Array).size()
+	var infos: Array[Dictionary] = DoorRules.make_fork(_doors_rng(), _ctx(), Tune.data)
+	while infos.size() < n:
+		infos.append(DoorRules.ordinary(_doors_rng(), infos, _unl.get("types", []), Tune.data))
+	infos.resize(n)
+	flow.set_gates(fi, infos)
+	_note("fork %d gates: %s" % [fi + 1, ", ".join(PackedStringArray(infos.map(func(d: Dictionary) -> String: return "%s %s" % [d.type, d.god])))])
+
+func _on_gate(fi: int, ti: int) -> void:
+	var info: Dictionary = flow.forks[fi].gates[ti].info
+	run.room_k = fi + 2
+	run.reward = { "type": info.get("type", "loot"), "god": info.get("god", "") }
+	var tr: Dictionary = level.forks[fi].trails[ti]
+	flow.set_shrine_info((level.shrines as Array).find(int(tr.shrine)), run.reward)
+	_note("gate %d of fork %d entered: %s, others closed by roots" % [ti + 1, fi + 1, run.reward])
+
+func _on_shrine(s: int) -> void:
+	if phase != "level":
+		return
+	flow.take_shrine(s)
+	run.rooms_cleared += 1
+	phase = "busy"
+	_note("shrine %d reached: reward %s" % [s + 1, run.reward])
+	_collect()
+
+func _on_lair_door() -> void:
+	if phase != "level":
+		return
+	run.hp = world.player.hp
+	run.stage = "lair"
+	run.reward = {}
+	_note("lair door entered")
+	enter_room()
+
+## After a shrine reward in graph mode: the next fork gets its gate signs.
+func _level_after_reward() -> void:
+	phase = "level"
+	var fi := run.room_k - 1
+	if fi < (level.forks as Array).size() and not flow.gates_set(fi):
+		_set_fork(fi)
+	doors_opened.emit(doors)
 
 func _physics_process(dt: float) -> void:
 	_toast_t -= dt
@@ -290,7 +379,8 @@ func _on_cleared() -> void:
 	_note("cleared %s %d -> reward %s at x %d (room w %d)" % [run.stage, run.room_k, info, int(orb.position.x), int(w)])
 
 func _collect() -> void:
-	orb.queue_free()
+	if orb:
+		orb.queue_free()
 	orb = null
 	phase = "busy"
 	if run.stage == "lair":
@@ -329,7 +419,7 @@ func _collect() -> void:
 			_reward_done("heal")
 		"arms":
 			# §3.8: 1 item in the centre of the room after the clear, quality bonus 1.
-			var it := drop_from("door", Vector2(float(world.room.layout.w) / 2.0, Tune.f("ground_y")))
+			var it := drop_from("door", world.player.position if flow else Vector2(float(world.room.layout.w) / 2.0, Tune.f("ground_y")))
 			_say("Оружие: %s" % (it.title() + " " + it.stars() if it else "ничего"))
 			_reward_done("arms")
 
@@ -433,6 +523,9 @@ func _reward_done(type: String) -> void:
 	DoorRules.apply_pacing(run, type, _doors_rng(), Tune.data)
 	_save_build()
 	run.hp = world.player.hp
+	if flow and run.stage == "room":
+		_level_after_reward()
+		return
 	_open_doors()
 
 func _open_doors() -> void:
@@ -620,7 +713,7 @@ func _on_enemy_killed(enemy: Node2D, _hit: RefCounted) -> void:
 			var kr := KnightReward.new()
 			kr.world = world
 			kr.director = self
-			kr.position = Vector2(clampf(e.position.x, 200.0, float(world.room.layout.w) - 200.0), Tune.f("ground_y"))
+			kr.position = Vector2(e.position.x, e.ground()) if flow else Vector2(clampf(e.position.x, 200.0, float(world.room.layout.w) - 200.0), Tune.f("ground_y"))
 			world.add_child(kr)
 			_note("knight killed at x %d: reward stones laid" % int(e.position.x))
 		elif e.mark != "":
@@ -645,7 +738,7 @@ func hud_text() -> String:
 	var res_txt: PackedStringArray = []
 	for k: String in run.res:
 		res_txt.append("%s %d" % [res_name(k), int(run.res[k])])
-	var where := "логово" if run.stage == "lair" else ("привал" if run.stage == "haven" else "комната %d/%d" % [run.room_k, int(Tune.f("rooms_per_loc"))])
+	var where := "логово" if run.stage == "lair" else ("уровень, награда %d/%d" % [run.room_k, int(Tune.f("rooms_per_loc"))]) if flow else ("привал" if run.stage == "haven" else "комната %d/%d" % [run.room_k, int(Tune.f("rooms_per_loc"))])
 	var t := "HP %d/%d    Угли %d    %s\n%s — %s    seed %d\n%s" % [roundi(p.hp), roundi(run.max_hp), run.embers,
 		"   ".join(res_txt), _loc().get("name", ""), where, run.run_seed, build.hud_text() if build else ""]
 	if _toast_t > 0.0:

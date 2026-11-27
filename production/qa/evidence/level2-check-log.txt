@@ -1,0 +1,123 @@
+OK   seed 7007 builds the same level twice
+OK   seed 9001 builds another main path (80 vs 57 rooms)
+OK   run starts with a rune offer
+  rune taken: zhiva_s (offer ["zhiva_s", "zhiva_f", "zhiva_d"])
+OK   the Swamp is one graph level (phase level)
+OK   3 forks: trails [3, 2, 2]
+OK   72 enemies sleep in the level on entry
+OK   every walker stands on its own floor (72 of 72)
+screenshot level2-room-1.png
+OK   the lair is not on the map at the start
+OK   stands in room 0 sw_entry_01 (entry) at (1300.0, 560.0)
+OK   room 0 -> 1 is a level edge
+OK   stands in room 1 sw_corr_02 (corr) at (2580.0, 680.0)
+OK   room 1 -> 2 is a level edge
+OK   stands in room 2 sw_hall_02 (hall) at (3860.0, 800.0)
+OK   room 2 -> 3 is a level edge
+  shrine 1 reached: reward { "type": "loot", "god": "" }
+  fork 1 gates: loot , heal , arms 
+OK   stands in room 3 sw_altar_01~m (altar) at (5140.0, 1000.0)
+OK   shrine 1 gives its reward { "type": "loot", "god": "" }
+OK   stands in room 4 sw_fork_02 (fork) at (6740.0, 1040.0)
+OK   fork 1 shows its gate signs: ["loot ", "heal ", "arms "]
+screenshot level2-room-3.png
+OK   fork 1: the lair is still off the map
+  gate 1 of fork 1 entered: { "type": "loot", "god": "" }, others closed by roots
+OK   fork 1: gate 1 taken, 2 other gate(s) closed by roots
+OK   the trail promises the gate's reward { "type": "loot", "god": "" }
+OK   stands in room 5 sw_hall_02 (hall) at (8340.0, 1520.0)
+OK   room 5 -> 6 is a level edge
+OK   stands in room 6 sw_bridge_01 (bridge) at (9940.0, 1760.0)
+OK   room 6 -> 7 is a level edge
+  shrine 2 reached: reward { "type": "loot", "god": "" }
+  fork 2 gates: god stribog, god svarog
+OK   stands in room 7 sw_altar_01~m (altar) at (11540.0, 1720.0)
+OK   shrine 2 gives its reward { "type": "loot", "god": "" }
+OK   stands in room 15 link (link) at (11300.0, 2120.0)
+OK   room 15 -> 16 is a level edge
+OK   stands in room 16 link (link) at (11300.0, 2480.0)
+OK   room 16 -> 17 is a level edge
+OK   stands in room 17 link (link) at (11300.0, 2840.0)
+OK   room 17 -> 18 is a level edge
+OK   stands in room 18 link (link) at (11220.0, 3200.0)
+OK   room 18 -> 19 is a level edge
+OK   stands in room 19 link (link) at (10580.0, 3200.0)
+OK   room 19 -> 20 is a level edge
+OK   stands in room 20 link (link) at (10020.0, 3200.0)
+OK   stands in room 14 sw_junction_01 (junction) at (9180.0, 3560.0)
+OK   room 14 -> 29 is a level edge
+OK   stands in room 29 sw_shaft_01~m (shaft) at (9180.0, 4160.0)
+screenshot level2-room-2.png
+OK   room 29 -> 30 is a level edge
+OK   stands in room 30 sw_arena_01~m (arena) at (9300.0, 5120.0)
+screenshot level2-minimap.png
+OK   stands in room 31 sw_fork_02~m (fork) at (11220.0, 5000.0)
+OK   fork 2 shows its gate signs: ["god stribog", "god svarog"]
+OK   fork 2: the lair is still off the map
+  gate 1 of fork 2 entered: { "type": "god", "god": "stribog" }, others closed by roots
+OK   fork 2: gate 1 taken, 1 other gate(s) closed by roots
+OK   the trail promises the gate's reward { "type": "god", "god": "stribog" }
+OK   stands in room 32 sw_hall_01~m (hall) at (12820.0, 5480.0)
+OK   room 32 -> 33 is a level edge
+OK   stands in room 33 sw_hall_01~m (hall) at (14100.0, 5480.0)
+OK   room 33 -> 34 is a level edge
+  shrine 5 reached: reward { "type": "god", "god": "stribog" }
+  god voice stribog: Не держись за землю.
+OK   stands in room 34 sw_altar_01~m (altar) at (15380.0, 5680.0)
+OK   shrine 5 gives its reward { "type": "god", "god": "stribog" }
+  rune taken: stribog_d (offer ["stribog_d", "stribog_s", "stribog_p"])
+  fork 3 gates: heal , loot 
+OK   stands in room 39 link (link) at (15060.0, 6080.0)
+OK   room 39 -> 40 is a level edge
+OK   stands in room 40 link (link) at (14500.0, 6080.0)
+OK   room 40 -> 41 is a level edge
+OK   stands in room 41 link (link) at (14420.0, 6440.0)
+OK   room 41 -> 42 is a level edge
+OK   stands in room 42 link (link) at (13780.0, 6440.0)
+OK   room 42 -> 43 is a level edge
+OK   stands in room 43 link (link) at (13140.0, 6440.0)
+OK   room 43 -> 44 is a level edge
+OK   stands in room 44 link (link) at (12580.0, 6440.0)
+OK   stands in room 38 sw_junction_01 (junction) at (11740.0, 6800.0)
+OK   room 38 -> 51 is a level edge
+OK   stands in room 51 sw_shaft_01~m (shaft) at (11740.0, 7400.0)
+OK   room 51 -> 52 is a level edge
+OK   stands in room 52 sw_arena_01 (arena) at (11860.0, 8360.0)
+OK   stands in room 53 sw_fork_02 (fork) at (13780.0, 8600.0)
+OK   fork 3 shows its gate signs: ["heal ", "loot "]
+OK   fork 3: the lair is still off the map
+  gate 1 of fork 3 entered: { "type": "heal", "god": "" }, others closed by roots
+OK   fork 3: gate 1 taken, 1 other gate(s) closed by roots
+OK   the trail promises the gate's reward { "type": "heal", "god": "" }
+OK   stands in room 54 sw_climb_01~m (climb) at (12540.0, 9080.0)
+OK   room 54 -> 55 is a level edge
+OK   stands in room 55 sw_bridge_01 (bridge) at (11220.0, 9320.0)
+OK   room 55 -> 56 is a level edge
+  shrine 7 reached: reward { "type": "heal", "god": "" }
+OK   stands in room 56 sw_altar_01 (altar) at (9620.0, 9280.0)
+OK   shrine 7 gives its reward { "type": "heal", "god": "" }
+OK   stands in room 61 link (link) at (10020.0, 9680.0)
+OK   room 61 -> 62 is a level edge
+OK   stands in room 62 link (link) at (9940.0, 10040.0)
+OK   room 62 -> 63 is a level edge
+OK   stands in room 63 link (link) at (10580.0, 10040.0)
+OK   room 63 -> 64 is a level edge
+OK   stands in room 64 link (link) at (11220.0, 10040.0)
+OK   room 64 -> 65 is a level edge
+OK   stands in room 65 link (link) at (11940.0, 10040.0)
+OK   room 65 -> 66 is a level edge
+OK   stands in room 66 link (link) at (11940.0, 10400.0)
+OK   stands in room 60 sw_junction_01 (junction) at (13020.0, 10760.0)
+OK   room 60 -> 73 is a level edge
+OK   stands in room 73 sw_shaft_01 (shaft) at (13220.0, 11360.0)
+OK   room 73 -> 74 is a level edge
+OK   stands in room 74 sw_arena_01~m (arena) at (13140.0, 12320.0)
+OK   room 74 -> 75 is a level edge
+OK   stands in room 75 sw_lairgate_01 (lairgate) at (14660.0, 12680.0)
+OK   the lair shows on the map once the lair gate room is seen
+OK   the full map pauses the game
+screenshot level2-overview.png
+  lair door entered
+  enter lair tier 1 room 4 (w 2200, packs 0), reward {  }, hp 100
+OK   the lair door leads to the boss scene (stage lair)
+DONE: 0 failed checks

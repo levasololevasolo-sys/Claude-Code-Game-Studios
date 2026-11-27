@@ -29,13 +29,13 @@ static func fire(hero: Player, w: Weapon) -> int:
 				_spawn(hero, w, "axe", at + Vector2(0, dy * 0.3), AimRules.axe_velocity(dir, float(row.get("speed", 820)), i, n, float(row.get("spread", 40))), float(row.get("r", 12)), float(row.get("life", 1.4)))
 			return n
 		"trap":
-			_spawn(hero, w, "trap", Vector2(hero.position.x + hero.face * float(row.get("ahead", 50)), Tune.f("ground_y")), Vector2.ZERO, float(row.get("w", 44)) / 2.0, float(row.get("life", 12)))
+			_spawn(hero, w, "trap", Vector2(hero.position.x + hero.face * float(row.get("ahead", 50)), World.floor_at(hero.world, hero.position)), Vector2.ZERO, float(row.get("w", 44)) / 2.0, float(row.get("life", 12)))
 			return 1
 		"spikes":
-			_spawn(hero, w, "spikes", Vector2(hero.position.x + hero.face * float(row.get("len", 260)) / 2.0, Tune.f("ground_y")), Vector2.ZERO, 0.0, float(row.get("life", 3.0)))
+			_spawn(hero, w, "spikes", Vector2(hero.position.x + hero.face * float(row.get("len", 260)) / 2.0, World.floor_at(hero.world, hero.position)), Vector2.ZERO, 0.0, float(row.get("life", 3.0)))
 			return 1
 		"totem":
-			_spawn(hero, w, "totem", Vector2(hero.position.x + hero.face * 40.0, Tune.f("ground_y")), Vector2.ZERO, 0.0, float(row.get("life", 6.0)))
+			_spawn(hero, w, "totem", Vector2(hero.position.x + hero.face * 40.0, World.floor_at(hero.world, hero.position)), Vector2.ZERO, 0.0, float(row.get("life", 6.0)))
 			return 1
 		"chain":
 			return _chain(hero, w, row)

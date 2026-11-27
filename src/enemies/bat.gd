@@ -57,7 +57,7 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				st = "hover"
 				cd = _stat_range("spit_cd_min", "spit_cd_max")
 		"swoop":
-			if t <= 0.0 or position.y > Tune.f("ground_y") - stat("swoop_floor"):
+			if t <= 0.0 or position.y > ground() - stat("swoop_floor"):
 				st = "hover"
 				cd = _stat_range("cd_min", "cd_max")
 

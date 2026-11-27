@@ -31,7 +31,7 @@ func contact_damage() -> float:
 func floor_walls() -> Array:
 	var out: Array = []
 	if world and world.room:
-		var g := Tune.f("ground_y")
+		var g := ground()
 		for r: Rect2 in world.room.layout.get("solids", []):
 			if r.end.y >= g - 2.0 and r.position.y < g - 10.0:
 				out.append(Vector2(r.position.x, r.end.x))
@@ -54,7 +54,7 @@ func slam() -> Array[IceWave]:
 		wv.linger = stat("wave_linger")
 		wv.world = world
 		wv.target = target
-		wv.position = Vector2(wv.x0, Tune.f("ground_y"))
+		wv.position = Vector2(wv.x0, ground())
 		if world:
 			world.add_child(wv)
 		out.append(wv)
@@ -118,7 +118,7 @@ func think(dt: float, hp_pos: Vector2) -> void:
 
 func _draw() -> void:
 	_draw_windup_glow()
-	var g := Tune.f("ground_y") - position.y
+	var g := ground() - position.y
 	if st == "slam_wind":
 		# Telegraph: the lanes the spikes will run along glow on the floor.
 		var k := clampf(1.0 - t / maxf(stat("slam_wind"), 0.01), 0.0, 1.0)
