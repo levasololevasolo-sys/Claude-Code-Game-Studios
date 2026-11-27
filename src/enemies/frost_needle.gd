@@ -18,8 +18,21 @@ func step(dt: float) -> void:
 		p.add_frost()
 		life = 0.0
 
+## Drawn needle sprite (DrawnEnemyVisual.fx "snezhnitsa"/"needle"), {} = code lines.
+var _sprite: Dictionary = {}
+var _sprite_checked: bool = false
+
 func _draw() -> void:
 	var d := vel.normalized() if vel != Vector2.ZERO else Vector2.RIGHT
+	if not _sprite_checked:
+		_sprite_checked = true
+		_sprite = DrawnEnemyVisual.fx("snezhnitsa", "needle")
+	if not _sprite.is_empty():
+		draw_circle(Vector2.ZERO, r * 2.5, Color(color, 0.2))
+		draw_set_transform(Vector2.ZERO, d.angle(), Vector2.ONE * float(_sprite.scale))
+		draw_texture(_sprite.tex, -(_sprite.origin as Vector2))
+		draw_set_transform(Vector2.ZERO)
+		return
 	draw_circle(Vector2.ZERO, r * 3.0, Color(color, 0.25))
 	draw_line(-d * 26.0, d * 10.0, Color("#2c3b52"), 7.0)
 	draw_line(-d * 24.0, d * 9.0, color, 4.0)

@@ -147,6 +147,20 @@ func _screen_tab() -> Control:
 		c.button_pressed = bool(settings.get(spec[0])) if settings else true
 		c.toggled.connect(func(on: bool) -> void: set_toggle(String(spec[0]), on))
 		v.add_child(c)
+	# «Частицы: много / мало / выкл» (vfx-spec §5); ambient air changes from the next room.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	var lab := Label.new()
+	lab.text = "Частицы"
+	row.add_child(lab)
+	var ob := OptionButton.new()
+	ob.name = "particles"
+	for lv: int in [VfxRules.LEVEL_HIGH, VfxRules.LEVEL_LOW, VfxRules.LEVEL_OFF]:
+		ob.add_item(VfxRules.LEVEL_NAMES[lv], lv)
+	ob.select(ob.get_item_index(int(settings.particles) if settings else VfxRules.LEVEL_HIGH))
+	ob.item_selected.connect(func(i: int) -> void: set_particles(ob.get_item_id(i)))
+	row.add_child(ob)
+	v.add_child(row)
 	return v
 
 func _difficulty_tab() -> Control:
@@ -239,6 +253,13 @@ func set_volume(bus: String, v: float) -> void:
 func set_toggle(key: String, on: bool) -> void:
 	if settings:
 		settings.set(key, on)
+		settings.apply()
+		settings.save()
+
+## Sets the «Частицы» level (0..2), applies and saves.
+func set_particles(lv: int) -> void:
+	if settings:
+		settings.particles = VfxRules.clamp_level(lv)
 		settings.apply()
 		settings.save()
 

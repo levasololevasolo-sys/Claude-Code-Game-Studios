@@ -66,6 +66,9 @@ func _process(_dt: float) -> void:
 	for ch in world.get_children():
 		if ch is EnemyShot:
 			spots.append_array((ch as EnemyShot).light_spots())
+	# Location lamps (src/vfx/vfx_lamps.gd), after enemies and shots so those keep their spots.
+	for n in get_tree().get_nodes_in_group(&"vfx_lights"):
+		spots.append_array(n.call("light_spots"))
 	if spots.size() > MAX_SPOTS:
 		spots.resize(MAX_SPOTS)
 	spot_count = spots.size()

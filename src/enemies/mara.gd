@@ -171,6 +171,9 @@ func _draw() -> void:
 		for i in 5:
 			var a := TAU * i / 5.0 + anim
 			draw_line(to + Vector2(0, -16), to + Vector2(0, -16) + Vector2(cos(a), sin(a)) * (10.0 + 20.0 * k), Color.WHITE, 2.0)
+	if art_skin:
+		_draw_overlay()
+		return
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	var veil := Color(String(stats.veil))

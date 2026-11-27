@@ -64,6 +64,8 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				cd = _stat_range("cd_min", "cd_max")
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	_draw_windup_glow()
 	var low := 10.0 if st == "crouch" else 0.0
 	var stretch := 14.0 if st == "bite" else 0.0
