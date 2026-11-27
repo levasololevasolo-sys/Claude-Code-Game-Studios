@@ -5,7 +5,9 @@ extends RefCounted
 
 ## Returns {w, plats: Array[Vector3(x, y, width)], packs: Array[Array[float x]]}.
 ## k is the room number in the location (1-based), tier the location number (1-based).
-static func generate(rng: RandomNumberGenerator, k: int, tier: int, t: Dictionary) -> Dictionary:
+## `safe_start` keeps the start zone free of packs (BUG-0004); false only for the
+## legacy single-room checks, whose logs were recorded on the old layout.
+static func generate(rng: RandomNumberGenerator, k: int, tier: int, t: Dictionary, safe_start: bool = true) -> Dictionary:
 	var first := tier == 1 and k == 1
 	var w: float = t.room_w_first if first else minf(t.room_w_max,
 		t.room_w_base + (k - 1) * t.room_w_step + (tier - 1) * t.room_w_tier)
@@ -21,12 +23,18 @@ static func generate(rng: RandomNumberGenerator, k: int, tier: int, t: Dictionar
 		x += pw + 150.0 + rng.randf() * 260.0
 	var packs: Array = []
 	var base := 2 if first else 3 + int((k - 1) * 0.5) + (tier - 1)
+	# Safe start zone (BUG-0004, room-generation §3.5): no pack member within
+	# aggro_range + start_safe_gap of the hero spawn, so every pack sleeps on entry.
+	var safe := -INF if not safe_start else float(t.get("hero_spawn_x", 160.0)) + float(t.get("aggro_range", 520.0)) + float(t.get("start_safe_gap", 200.0))
 	var px := 820.0
 	while px < w - 260.0:
 		var size := 2 if first else clampi(base + rng.randi_range(0, 1), 2, 8)
 		var list: Array = []
 		for i in size:
-			list.append(clampf(px + (rng.randf() - 0.5) * 380.0, 400.0, w - 200.0))
+			var ex := px + (rng.randf() - 0.5) * 380.0
+			if ex < safe:
+				ex = safe + (safe - ex)  # mirror past the edge: keeps the pack spread, no pile-up
+			list.append(clampf(ex, maxf(400.0, safe), w - 200.0))
 		packs.append(list)
 		if first and packs.size() >= 2:
 			break

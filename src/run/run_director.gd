@@ -90,6 +90,7 @@ func enter_room() -> void:
 	doors.clear()
 	world.tier = run.tier
 	world.room_k = run.room_k
+	world.first_run = game.meta.runs == 0
 	var rng: RandomNumberGenerator = game.rng.for_room(run.tier, run.room_k if run.stage == "room" else (10 if run.stage == "lair" else 11))
 	var layout: Dictionary
 	match run.stage:

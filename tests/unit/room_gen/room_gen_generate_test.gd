@@ -44,3 +44,32 @@ func test_platforms_and_enemies_stay_inside_room_over_50_seeds() -> void:
 				if x < 400 or x > r.w - 200:
 					inside = false
 	assert_bool(inside).is_true()
+
+# BUG-0004: safe start zone, no pack member within aggro_range + start_safe_gap of the hero spawn.
+func test_no_enemy_inside_safe_start_zone_over_many_rooms() -> void:
+	var t := _tuning()
+	var safe := float(t.hero_spawn_x) + float(t.aggro_range) + float(t.start_safe_gap)
+	var min_x := INF
+	for s in 40:
+		for k in range(1, 6):
+			for tier in range(1, 4):
+				for pack: Array in _gen(s, k, tier, t).packs:
+					for x: float in pack:
+						min_x = minf(min_x, x)
+	assert_float(min_x).is_greater_equal(safe)
+
+func test_first_room_keeps_two_packs_with_safe_zone() -> void:
+	var t := _tuning()
+	for s in 30:
+		assert_int(_gen(s, 1, 1, t).packs.size()).is_equal(2)
+
+func test_safe_start_off_keeps_legacy_layout_rng_stream() -> void:
+	var t := _tuning()
+	var a := RandomNumberGenerator.new()
+	a.seed = 9
+	var b := RandomNumberGenerator.new()
+	b.seed = 9
+	var on := RoomGen.generate(a, 2, 1, t)
+	var off := RoomGen.generate(b, 2, 1, t, false)
+	assert_int(a.state).is_equal(b.state)
+	assert_array(on.plats).is_equal(off.plats)

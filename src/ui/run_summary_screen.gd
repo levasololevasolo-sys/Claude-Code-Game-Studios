@@ -1,6 +1,7 @@
 ## Run summary (GDD economy-and-meta §3.8, first cut): outcome, where and by
 ## whom the hero fell, rooms cleared, the build, the run's loot and the bank
-## «было → стало». Enter / E / J starts a new run (emits `closed`). The
+## «было → стало». Enter / E / pad A / a click on the button starts a new run
+## (emits `closed`) after the ChoiceInput lockout; J / Space never close it (BUG-0003). The
 ## «На что хватает» line waits for the sink catalogues (base). 1920x1080 layout.
 class_name RunSummaryScreen
 extends Control
@@ -8,21 +9,41 @@ extends Control
 ## Emitted when the player leaves the screen.
 signal closed
 
+## The «новый забег» button, local px (mouse hit test and hover highlight).
+const BUTTON: Rect2 = Rect2(Vector2(710, 960), Vector2(500, 60))
 const OUTCOME: Dictionary = { "dead": "Пал", "home": "Вернулся с добычей", "win": "Победа", "quit": "Ушёл" }
 
 ## Game.end_run() result.
 var summary: Dictionary = {}
 ## Build of the finished run (for rune names).
 var build: RunBuild
+## Keyboard / gamepad / mouse reader with the confirm lockout (BUG-0002, BUG-0003).
+var input: ChoiceInput
+## Mouse is over the button.
+var hover: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	size = Vector2(1920, 1080)
+	input = ChoiceInput.make(Tune.f("screen_input_lock"))
 	get_tree().paused = true
 
+func _process(dt: float) -> void:
+	input.tick(dt)
+
 func _unhandled_input(ev: InputEvent) -> void:
-	var k := ev as InputEventKey
-	if k and k.pressed and not k.echo and k.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_E, KEY_J, KEY_SPACE]:
+	if input.read(ev, 1).act == ChoiceInput.Act.CONFIRM:
+		get_viewport().set_input_as_handled()
+		close()
+
+func _gui_input(ev: InputEvent) -> void:
+	if ev is InputEventMouseMotion:
+		var h := BUTTON.has_point((ev as InputEventMouseMotion).position)
+		if h != hover:
+			hover = h
+			queue_redraw()
+	if input.read(ev, 1, [BUTTON]).act == ChoiceInput.Act.PICK:
+		accept_event()
 		close()
 
 ## Closes the screen and unpauses.
@@ -67,4 +88,6 @@ func _draw() -> void:
 	for l in lines():
 		draw_string(font, Vector2(560, y), l, HORIZONTAL_ALIGNMENT_LEFT, 900, 30, Color("#f0ead8"))
 		y += 46.0
-	draw_string(font, Vector2(0, 1000), "Enter — новый забег", HORIZONTAL_ALIGNMENT_CENTER, size.x, 28, Color("#ffd27a"))
+	draw_rect(BUTTON, Color(1.0, 0.82, 0.48, 0.22 if hover else 0.08))
+	draw_rect(BUTTON, Color("#ffd27a") if hover else Color(1.0, 0.82, 0.48, 0.45), false, 4.0 if hover else 2.0)
+	draw_string(font, Vector2(0, 1000), "Enter / E / A — новый забег", HORIZONTAL_ALIGNMENT_CENTER, size.x, 28, Color("#ffd27a"))

@@ -56,6 +56,10 @@ var director: RunDirector
 var arm: Weapon
 var sub_arm: Weapon
 var weapon_hud: WeaponHud
+## True in the first run of a save (meta.runs == 0): the amulet charge caps at
+## c_cap_first_run (amulet-and-flare §3.10, AC 3). Set by RunDirector; false in
+## the legacy check modes (BUG-0001).
+var first_run: bool = false
 
 ## Flags that start the old single-room checks instead of a run.
 const LEGACY_FLAGS: Array[String] = ["--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check="]
@@ -155,7 +159,9 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 		rng = RandomNumberGenerator.new()
 		rng.seed = seed_value * 1000 + tier * 100 + room_k
 	if layout.is_empty():
-		layout = RoomGen.generate(rng, room_k, tier, Tune.data)
+		# Legacy check modes only (the run passes its layout): old layout without the
+		# BUG-0004 safe start zone, so their recorded logs (--demo) stay comparable.
+		layout = RoomGen.generate(rng, room_k, tier, Tune.data, false)
 	room = Room.new()
 	add_child(room)
 	room.build(layout)
@@ -175,7 +181,7 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 	var keep_charge := player.amulet.charge if player and is_instance_valid(player) and player.amulet else 0.0
 	player = Player.new()
 	player.world = self
-	player.amulet = Amulet.make(amulet_id, Tune.data)
+	player.amulet = Amulet.make(amulet_id, Tune.data, {}, 1, first_run)
 	player.build = build
 	player.weapon = arm
 	player.sub = sub_arm
@@ -187,7 +193,7 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 			arm = player.weapon)
 	# The charge stays between rooms of one location (amulet-and-flare §3.1).
 	player.amulet.charge = minf(keep_charge, player.amulet.cap)
-	player.position = Vector2(160, Tune.f("ground_y"))
+	player.position = Vector2(Tune.f("hero_spawn_x"), Tune.f("ground_y"))
 	add_child(player)
 	cam = Camera2D.new()
 	cam.limit_left = 0

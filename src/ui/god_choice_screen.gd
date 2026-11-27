@@ -1,6 +1,6 @@
 ## Lair reward (GDD room-generation §3.16, gods-and-runes §3.3): cards of up to
-## 3 different gods; the chosen god then opens its usual rune offer. Arrows /
-## 1-3 choose, Enter takes. Pauses the tree while open. 1920x1080 layout (ADR-0004).
+## 3 different gods; the chosen god then opens its usual rune offer. Arrows / d-pad /
+## stick / hover / 1-3 choose; Enter / E / pad A / click take (ChoiceInput). Pauses the tree while open. 1920x1080 layout (ADR-0004).
 ## Placeholder look until the UI theme exists.
 class_name GodChoiceScreen
 extends Control
@@ -19,31 +19,58 @@ var held: Array[String] = []
 ## Title line, e.g. the beaten boss.
 var title: String = "Хозяин повержен — выбери бога"
 var selected: int = 0
+## Keyboard / gamepad / mouse reader with the confirm lockout (BUG-0002, BUG-0003).
+var input: ChoiceInput
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	size = Vector2(1920, 1080)
+	input = ChoiceInput.make(Tune.f("screen_input_lock"))
 	get_tree().paused = true
 
+func _process(dt: float) -> void:
+	input.tick(dt)
+
 func _unhandled_input(ev: InputEvent) -> void:
-	var k := ev as InputEventKey
-	if k == null or not k.pressed or k.echo or gods.is_empty():
-		return
-	match k.keycode:
-		KEY_LEFT, KEY_A:
+	if _apply(input.read(ev, gods.size())):
+		get_viewport().set_input_as_handled()
+
+func _gui_input(ev: InputEvent) -> void:
+	if _apply(input.read(ev, gods.size(), card_rects())):
+		accept_event()
+
+## Applies a ChoiceInput intent; true if it was used.
+func _apply(r: Dictionary) -> bool:
+	if gods.is_empty():
+		return false
+	match r.act:
+		ChoiceInput.Act.PREV:
 			selected = posmod(selected - 1, gods.size())
-		KEY_RIGHT, KEY_D:
+		ChoiceInput.Act.NEXT:
 			selected = posmod(selected + 1, gods.size())
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_J:
+		ChoiceInput.Act.HOVER:
+			if r.i == selected:
+				return true
+			selected = r.i
+		ChoiceInput.Act.CONFIRM:
 			take(selected)
-			return
+			return true
+		ChoiceInput.Act.PICK:
+			take(r.i)
+			return true
 		_:
-			var n := k.keycode - KEY_1
-			if n >= 0 and n < gods.size():
-				take(n)
-				return
+			return false
 	queue_redraw()
-	get_viewport().set_input_as_handled()
+	return true
+
+## Unraised card rects in local px (drawing and mouse hit tests).
+func card_rects() -> Array:
+	var out: Array = []
+	var total := gods.size() * CARD.x + (gods.size() - 1) * GAP
+	var x0 := (size.x - total) / 2.0
+	for i in gods.size():
+		out.append(Rect2(Vector2(x0 + i * (CARD.x + GAP), TOP), CARD))
+	return out
 
 ## Chooses card `i` and closes.
 func take(i: int) -> void:
@@ -55,14 +82,13 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.02, 0.03, 0.04, 0.85))
 	draw_string(font, Vector2(0, 160), title, HORIZONTAL_ALIGNMENT_CENTER, size.x, 48, Color("#f0e2c0"))
-	draw_string(font, Vector2(0, 215), "Выбранный бог даст выбор своих рун · ← → или 1–%d · Enter" % gods.size(), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(0.7, 0.7, 0.65))
-	var total := gods.size() * CARD.x + (gods.size() - 1) * GAP
-	var x0 := (size.x - total) / 2.0
+	draw_string(font, Vector2(0, 215), "Выбранный бог даст выбор своих рун · ← → / крестовина или 1–%d · Enter / E / A / щелчок" % gods.size(), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(0.7, 0.7, 0.65))
+	var rects := card_rects()
 	for i in gods.size():
 		var g := gods[i]
 		var row: Dictionary = Tune.table("gods").get(g, {})
 		var col := Enemy.god_colour(g)
-		var r := Rect2(Vector2(x0 + i * (CARD.x + GAP), TOP - (16.0 if i == selected else 0.0)), CARD)
+		var r := Rect2((rects[i] as Rect2).position - Vector2(0, 16.0 if i == selected else 0.0), CARD)
 		draw_rect(r, Color(0.07, 0.09, 0.1, 0.96))
 		draw_rect(r, col if i == selected else Color(col, 0.55), false, 6.0 if i == selected else 3.0)
 		draw_string(font, r.position + Vector2(0, 46), "%d" % (i + 1), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 28, col)

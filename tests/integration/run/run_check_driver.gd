@@ -84,11 +84,8 @@ func _run() -> void:
 		for e: Enemy in get_tree().get_nodes_in_group("enemies"):
 			if e.asleep:
 				asleep += 1
-		if asleep == n:
-			_note("OK   all %d enemies sleep on entry" % n)
-		else:
-			# Known: the old flat RoomGen may put a pack member 400 px from the start (aggro 520).
-			_note("NOTE %d of %d enemies already awake 5 frames after entry (hero at x 160)" % [n - asleep, n])
+		# BUG-0004: RoomGen keeps a safe start zone, so every pack must sleep on entry.
+		_check(asleep == n, "all %d enemies sleep on entry (%d awake 5 frames after entry, hero at x %d)" % [n, n - asleep, int(Tune.f("hero_spawn_x"))])
 		p.inv = 5.0
 		for e: Enemy in get_tree().get_nodes_in_group("enemies"):
 			if not e.dead:

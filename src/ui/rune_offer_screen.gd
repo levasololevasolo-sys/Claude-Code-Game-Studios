@@ -1,6 +1,7 @@
 ## The rune offer screen (GDD gods-and-runes §3.3-3.4, §3.14): 3 cards (4 with
 ## «Широкий выбор»), each with the god's colour and sign, the slot label and
-## what it replaces ("Заменит: …"). Arrows / 1-4 choose, Enter takes. Pauses the
+## what it replaces ("Заменит: …"). Arrows / d-pad / stick / mouse hover / 1-4
+## choose; Enter / E / pad A / click take (ChoiceInput: lockout, never J/Space). Pauses the
 ## tree while open (architecture §4 «Пауза»). Laid out for 1920x1080 (ADR-0004).
 ## Placeholder look: procedural cards until the UI theme exists.
 class_name RuneOfferScreen
@@ -24,31 +25,58 @@ var god: String = ""
 ## "take" = take a new rune; "surica" = raise the level of a held rune (§3.10).
 var mode: String = "take"
 var selected: int = 0
+## Keyboard / gamepad / mouse reader with the confirm lockout (BUG-0002, BUG-0003).
+var input: ChoiceInput
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	size = Vector2(1920, 1080)
+	input = ChoiceInput.make(Tune.f("screen_input_lock"))
 	get_tree().paused = true
 
+func _process(dt: float) -> void:
+	input.tick(dt)
+
 func _unhandled_input(ev: InputEvent) -> void:
-	var k := ev as InputEventKey
-	if k == null or not k.pressed or k.echo:
-		return
-	match k.keycode:
-		KEY_LEFT, KEY_A:
+	if _apply(input.read(ev, ids.size())):
+		get_viewport().set_input_as_handled()
+
+func _gui_input(ev: InputEvent) -> void:
+	if _apply(input.read(ev, ids.size(), card_rects())):
+		accept_event()
+
+## Applies a ChoiceInput intent; true if it was used.
+func _apply(r: Dictionary) -> bool:
+	if ids.is_empty():
+		return false
+	match r.act:
+		ChoiceInput.Act.PREV:
 			selected = posmod(selected - 1, ids.size())
-		KEY_RIGHT, KEY_D:
+		ChoiceInput.Act.NEXT:
 			selected = posmod(selected + 1, ids.size())
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_J:
+		ChoiceInput.Act.HOVER:
+			if r.i == selected:
+				return true
+			selected = r.i
+		ChoiceInput.Act.CONFIRM:
 			take(selected)
-			return
+			return true
+		ChoiceInput.Act.PICK:
+			take(r.i)
+			return true
 		_:
-			var n := k.keycode - KEY_1
-			if n >= 0 and n < ids.size():
-				take(n)
-				return
+			return false
 	queue_redraw()
-	get_viewport().set_input_as_handled()
+	return true
+
+## Unraised card rects in local px (drawing and mouse hit tests).
+func card_rects() -> Array:
+	var out: Array = []
+	var total := ids.size() * CARD.x + (ids.size() - 1) * GAP
+	var x0 := (size.x - total) / 2.0
+	for i in ids.size():
+		out.append(Rect2(Vector2(x0 + i * (CARD.x + GAP), TOP), CARD))
+	return out
 
 ## Takes card `i`: the rune goes into the build, the screen closes.
 func take(i: int) -> void:
@@ -102,11 +130,11 @@ func _draw() -> void:
 	if mode == "surica":
 		title = "Сурица — подними уровень своей руны"
 	draw_string(font, Vector2(0, 150), title, HORIZONTAL_ALIGNMENT_CENTER, size.x, 48, Color("#f0e2c0"))
-	draw_string(font, Vector2(0, 200), "← → или 1–%d · Enter — взять" % ids.size(), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(0.7, 0.7, 0.65))
-	var total := ids.size() * CARD.x + (ids.size() - 1) * GAP
-	var x0 := (size.x - total) / 2.0
+	draw_string(font, Vector2(0, 200), "← → / крестовина или 1–%d · Enter / E / A / щелчок — взять" % ids.size(), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(0.7, 0.7, 0.65))
+	var rects := card_rects()
 	for i in ids.size():
-		_draw_card(font, Rect2(Vector2(x0 + i * (CARD.x + GAP), TOP - (16.0 if i == selected else 0.0)), CARD), ids[i], i)
+		var r: Rect2 = rects[i]
+		_draw_card(font, Rect2(r.position - Vector2(0, 16.0 if i == selected else 0.0), CARD), ids[i], i)
 
 func _draw_card(font: Font, r: Rect2, id: String, i: int) -> void:
 	var row := build.row(id)
