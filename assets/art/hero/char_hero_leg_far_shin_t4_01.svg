@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="100" viewBox="-28 -24 56 100">
+<defs><linearGradient id="g1" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#6D6555"/><stop offset="0.5" stop-color="#574F41"/><stop offset="1" stop-color="#39342A"/></linearGradient><clipPath id="c2"><path d="M-18 -12 C-20 10 -19 26 -17 44 L16 44 C18 26 19 6 17 -12 C6 -16 -8 -16 -18 -12 Z"/></clipPath><linearGradient id="g3" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#684A2E"/><stop offset="0.5" stop-color="#53351F"/><stop offset="1" stop-color="#362214"/></linearGradient><clipPath id="c4"><path d="M-21 -8 C-22 18 -20 46 -17 68 L16 68 C19 46 21 18 20 -10 C6 -14 -8 -14 -21 -8 Z"/></clipPath><linearGradient id="g5" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#755334"/><stop offset="0.5" stop-color="#5D3B22"/><stop offset="1" stop-color="#3D2616"/></linearGradient><linearGradient id="g6" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#838A91"/><stop offset="0.5" stop-color="#6E787F"/><stop offset="1" stop-color="#4C555C"/></linearGradient></defs>
+<g><path d="M-18 -12 C-20 10 -19 26 -17 44 L16 44 C18 26 19 6 17 -12 C6 -16 -8 -16 -18 -12 Z" fill="url(#g1)" stroke="#120D12" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M-22 -14 L-10 -14 C-12 10 -10 26 -8 46 L-22 46 Z" fill="#39342A" opacity="0.4" clip-path="url(#c2)"/>
+<path d="M-21 -8 C-22 18 -20 46 -17 68 L16 68 C19 46 21 18 20 -10 C6 -14 -8 -14 -21 -8 Z" fill="url(#g3)" stroke="#120D12" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M-24 -12 L-10 -12 L-8 70 L-24 70 Z" fill="#362214" opacity="0.45" clip-path="url(#c4)"/>
+<path d="M-22 -10 C-8 -15 8 -15 21 -12 L21 0 C8 -3 -8 -3 -22 2 Z" fill="url(#g5)" stroke="#120D12" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M-14 20 C-12 36 -12 50 -10 64" fill="none" stroke="#362214" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" clip-path="url(#c4)"/>
+<path d="M2 -4 C12 -6 18 0 18 8 L16 54 C10 57 5 57 2 54 Z" fill="url(#g6)" stroke="#120D12" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M9 2 C12 16 12 36 10 50" fill="none" stroke="#838A91" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+<path d="M-20 14 L3 12 M-18 44 L3 42" fill="none" stroke="#2D1C11" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+</g></svg>

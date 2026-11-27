@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="46" height="66" viewBox="-22 -42 46 66">
+<defs><linearGradient id="g1" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#D49C5A"/><stop offset="0.5" stop-color="#B07A3A"/><stop offset="1" stop-color="#74501F"/></linearGradient><linearGradient id="g2" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#C08A4A"/><stop offset="0.5" stop-color="#9A6A30"/><stop offset="1" stop-color="#6E4A20"/></linearGradient></defs>
+<g><path d="M-12 -38 Q-10 -12 -2 -6 M4 -38 Q7 -16 3 -6" fill="none" stroke="#3A2416" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<path d="M-12 -38 Q-10 -12 -2 -6 M4 -38 Q7 -16 3 -6" fill="none" stroke="#7A5232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<circle cx="0" cy="4" r="12" fill="url(#g1)" stroke="#120D12" stroke-width="5.5"/>
+<circle cx="0" cy="4" r="7" fill="url(#g2)" stroke="#120D12" stroke-width="2.5"/>
+<circle cx="0" cy="4" r="4" fill="none" stroke="#74501F" stroke-width="1.8"/>
+<ellipse cx="-3" cy="-1" rx="3" ry="2" fill="#FFF0C8" opacity="0.75"/>
+</g></svg>

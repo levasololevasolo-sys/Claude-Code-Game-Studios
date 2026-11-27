@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="-44 -136 90 90">
+<defs><linearGradient id="g1" x1="0.5" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="#F6EFE0"/><stop offset="0.5" stop-color="#E9DFC9"/><stop offset="1" stop-color="#B4A88E"/></linearGradient><clipPath id="c2"><path d="M-38 -68 C-12 -74 14 -74 34 -68 L34 -57 C14 -63 -12 -63 -38 -57 Z"/></clipPath></defs>
+<g><path d="M-36 -60 L-42 -48" fill="none" stroke="#120D12" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<path d="M-36 -60 L-42 -48" fill="none" stroke="#E9DFC9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<path d="M-35 -60 L-37 -47" fill="none" stroke="#120D12" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<path d="M-35 -60 L-37 -47" fill="none" stroke="#E9DFC9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<path d="M-38 -68 C-12 -74 14 -74 34 -68 L34 -57 C14 -63 -12 -63 -38 -57 Z" fill="url(#g1)" stroke="#120D12" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M-32 -65 l3 -3 l3 3 l-3 3 Z M-24 -65 l3 -3 l3 3 l-3 3 Z M-16 -65 l3 -3 l3 3 l-3 3 Z M-8 -65 l3 -3 l3 3 l-3 3 Z M0 -65 l3 -3 l3 3 l-3 3 Z M8 -65 l3 -3 l3 3 l-3 3 Z M16 -65 l3 -3 l3 3 l-3 3 Z M24 -65 l3 -3 l3 3 l-3 3 Z" fill="#B3262E" opacity="1.0" clip-path="url(#c2)"/>
+</g></svg>
