@@ -13,11 +13,22 @@
 8) полный 0 в програмировании, столько сколько достаточно
 9) работай максимально самостоятельно, потом будем вносить правки если получится не то что хотел
 
+After play: да, как база выглядит уже прикольно
+After play: нужно будет добавить разных фонарей которые бы имели разные способности, разные оружия
+After play: добавить анимаций, что бы игра не выглядела каку дудл джамп
+After play: монстров тоже апгрейднуть
+After play: так же добавить базу, разные ресурсы, разные локации и что бы после боса была сейв комната где был бы выбор в какую локацию идти, у каждой локации должен быть свой привязанный босс
+After play: нужно добавить будет еще кучу нпс, которые бы рассказывали сюжет, были бы полезные нпс на базе, по типу торговца, дробилки свето сфер, где можно было бы разбирать и собирать новые сферы
+After play: придумать логичный сюжет почему наш воин возраждается,
+After play: добавить артефакты который бы можно было находить или выбивать по мере прохождения, добавить секретные комнаты, отдельные мини локации с ловушками и сундуками
+After play: по мере прохождения игры дальше локации должны ловить какие то триггеры и видоизменяться
+After play: итоговый забег должен быть в районе  35-40 минут, в нем должно быть 6-8 локаций с уникальными боссами с своими механиками
+
 **Pitch:** A moth-winged lantern knight fights down through a drowned clockwork city whose last light is going out, and every enemy struck feeds the lantern until it erupts in a Flare that remakes the fight. *(inferred (strong))*
 
 **Genre:** action roguelite, side view (runs that end in death, permanent upgrades between runs)
 
-**Controls:** A/D or arrows to move, W / Space / Up to jump (double jump), Shift or K to dash, J or left click to strike, L or right click to Flare when the lantern is full, Esc to pause. *(guessed)*
+**Controls:** A/D or arrows to move, W / Space / Up to jump (double jump), Shift or K to dash, J or left click to strike, L or right click to Flare when the lantern is full, E or Enter to use (stations, doors), Esc to pause. *(guessed)*
 
 **Question:** Is a fast side-view run, where the lantern charge turns hits into a Flare and room boons change how the Flare works, fun enough to want "one more run"? *(guessed)*
 
@@ -31,19 +42,19 @@
 - View: 2D side view · Camera: follows the player smoothly inside each room (`follow2d`), 1280x720 base, scales to fit.
 
 ## First minute
-The title shows the knight with a dim lantern; Enter starts. Room one is safe: a short corridor with on-screen key hints for move, jump and dash; the lantern barely lights the way. Room two has two Rust Crawlers; striking them fills the lantern ring on the HUD, and at full the hint "L: Flare" pulses. The Flare lights the whole room, stuns both, and the last one falls with a hard hit, a pause, and the door opens with a chime. Three glowing boon cards appear: the player picks one, and the next room is already different.
+The title shows the knight with a dim lantern; Enter opens the base, a warm cave. Walking right past key hints for move, jump and dash, the player reaches a training dummy; striking it fills the lantern, and the Flare lights the cave. At the Gate, E starts the run in the Drowned Clockworks: two Rust Crawlers, the Flare stuns both, the door opens with a chime, and three glowing boon cards appear.
 
 ## Challenge
-Room two is gentle; by room four (about minute three) a mix of fliers and a shielded spitter forces dashing through shots. Floor 2 adds the exploding Bloat and denser rooms; the run ends with a Bell Warden boss. A death ends the run: boons are lost, collected Embers are kept and spent at the Shrine on small permanent upgrades (more health, a stronger Flare, a reroll). After a win, the next run can be started at Ash level 1+ (enemies tougher and faster) for more Embers.
+The first room is gentle; by its third room a mix of fliers and a shielded spitter forces dashing through shots. Each location ends in its boss; the second and third locations are harder (more and tougher enemies, elites), whichever order is chosen. A death ends the run: boons are lost, collected Embers are kept and spent at the Shrine on small permanent upgrades (more health, a stronger Flare, a reroll). After a win, the next run can be started at Ash level 1+ (enemies tougher and faster) for more Embers.
 
 ## Core loop
 - Enter a room; the doors lock; fight with strikes, dashes and the Flare.
 - Clear it: Embers fly to you, pick one of three boons that changes your strike, dash or Flare.
 - Rooms get harder across two floors and a boss; die or win.
-- At the Shrine spend Embers on permanent upgrades, then start a new run, harder after a win.
+- At the base spend Embers and resources on permanent upgrades, new lanterns and weapons, then start a new run, harder after a win.
 
 ## Goal & fail state
-- A run is won by beating the Bell Warden at the end of floor 2; a run is lost when health hits zero.
+- A run is won by beating the three location bosses (Drowned Clockmaker, Bell Warden, Jelly Queen) in the order chosen; a run is lost when health hits zero, and can be left from a save room to bank the loot.
 - A session feels complete when a run ends and Embers are spent at the Shrine.
 
 ## Features
@@ -55,31 +66,44 @@ Room two is gentle; by room four (about minute three) a mix of fliers and a shie
 - [x] Boon choice after each room (one of three, each saying what it does), about 12 boons
 - [x] Embers drop and fly to the player; Shrine between runs with permanent upgrades, saved
 - [x] Ash levels: after a win, a harder run can be chosen
+- [x] 4 lanterns, each with its own Flare and passive, made at the base from resources
+- [x] 4 weapons that play differently (blade, harpoon spear, twin sickles, bell hammer), made at the base
+- [x] A walkable base: Shrine, Lantern-maker, Armorer, a training dummy and the Gate; resources banked there
+- [x] 3 locations (Drowned Clockworks, Silent Belfry, Moon Reef), each with its own enemies, look, resource and boss
+- [x] After each boss a safe save room: heal, the run is saved, choose which location is next or return to base
+- [x] Animation: a jointed knight (legs, arms, cape, wings, antennae), weapon smears, squash and stretch, enemy wind-ups, hit squash, spawn and death dissolves
+- [x] Upgraded monsters: new attacks for old kinds, 2 new kinds (Bell Ringer, Lantern Jelly), elite variants, 2 new bosses
 
 ## Your systems
 - run system (runs that end in death) · in the slice
 - upgrades during a run (boons) · in the slice
 - permanent progression between runs · in the slice
 - rising difficulty on replay (Ash levels) · thin stand-in *(guessed)*
+- different lanterns with different abilities · in the slice
+- different weapons · in the slice
+- base · in the slice
+- different resources · in the slice
+- different locations, each with its own boss · in the slice
+- save room after each boss with the choice of location · in the slice
 - 3-5 days of content to finish · later *(guessed)*
 
 ## Keep
--
+- как база выглядит уже прикольно (the look of the first build) *(you said)*
 
 ## Avoid
 - pixel art ("без пикселей")
 - Dead Cells' and Hades' names, art, characters, UI and story
 
 ## Out of scope
-- A hub between runs with characters and a story: grow it
-- Many biomes and bosses (the full 3-5 days of content): grow it
+- A story told by the base's characters: grow it
+- More biomes and bosses beyond three (the full 3-5 days of content): grow it
 - A shop in the middle of a run: change it after play
 - Upgrades that multiply each other: add it as a feature
 - Co-op runs on one screen: change it after play
 - Gamepad support and Steam build: grow it
 
 ## Build order
-1. The slice: one run of about 8 rooms over two floors plus the Bell Warden, with movement, strikes, dash, the Lantern and Flare, 4 enemy kinds, boons after each room, Embers and the Shrine; win by beating the boss, lose at zero health.
+1. The slice: a run through 3 locations of 4 rooms and a boss each, a save room after each boss to pick the next location, the base between runs with lanterns, weapons and resources; win by beating all three bosses, lose at zero health.
 2. Tune feel and difficulty from play; add Ash levels depth.
 3. Grow it: more biomes, weapons, bosses, a hub with characters, then the engine build for Steam.
 

@@ -64,6 +64,43 @@ window.CONFIG = {
   warden_dmg: { value: 18, min: 1, max: 80, step: 1 },
   warden_rest: { value: 1.0, min: 0.2, max: 3, step: 0.1 },       // s between its attacks
 
+  // ---- Locations, tiers and elites ----
+  rooms_per_loc: { value: 4, min: 1, max: 8, step: 1 },          // combat rooms before each boss
+  tier_hp: { value: 0.45, min: 0, max: 2, step: 0.05 },           // +enemy health per location already beaten
+  tier_dmg: { value: 0.25, min: 0, max: 2, step: 0.05 },          // +enemy damage per location already beaten
+  haven_heal: { value: 0.4, min: 0, max: 1, step: 0.05 },         // share of max health healed in a save room
+  elite_chance: { value: 0.18, min: 0, max: 1, step: 0.01 },      // per wave, per tier above the first
+  elite_hp: { value: 1.9, min: 1, max: 5, step: 0.1 },            // x health of an elite
+  res_drop: { value: 0.35, min: 0, max: 1, step: 0.05 },          // chance an enemy drops its location's resource
+  ringer_hp: { value: 40, min: 5, max: 200, step: 1 },
+  ringer_dmg: { value: 16, min: 1, max: 60, step: 1 },
+  jelly_hp: { value: 30, min: 5, max: 200, step: 1 },
+  jelly_dmg: { value: 14, min: 1, max: 60, step: 1 },
+  jelly_radius: { value: 105, min: 40, max: 250, step: 5 },       // px of its zap
+  clockmaker_hp: { value: 680, min: 100, max: 3000, step: 10 },
+  queen_hp: { value: 640, min: 100, max: 3000, step: 10 },
+  boss_tier_hp: { value: 0.35, min: 0, max: 2, step: 0.05 },      // +boss health per location already beaten
+
+  // ---- Weapons (damage and swing time are multipliers on strike_dmg and the weapon's own timing) ----
+  blade_dmg: { value: 1, min: 0.2, max: 4, step: 0.05 },
+  spear_dmg: { value: 1.25, min: 0.2, max: 4, step: 0.05 },
+  spear_reach: { value: 150, min: 60, max: 300, step: 5 },
+  sickles_dmg: { value: 0.6, min: 0.1, max: 3, step: 0.05 },
+  hammer_dmg: { value: 2.5, min: 0.5, max: 6, step: 0.05 },
+  hammer_quake: { value: 190, min: 50, max: 400, step: 10 },      // px reach of the hammer's ground shock
+  swing_speed: { value: 1, min: 0.5, max: 2, step: 0.05 },        // x speed of every weapon's swing
+
+  // ---- Lanterns ----
+  storm_jumps: { value: 6, min: 1, max: 15, step: 1 },            // enemies the Storm Flare's lightning jumps to
+  storm_dmg: { value: 1.6, min: 0.5, max: 5, step: 0.1 },         // x flare_dmg per bolt
+  storm_dash_charge: { value: 8, min: 0, max: 40, step: 1 },      // % charge per dash with the Storm lantern
+  moon_slow: { value: 0.7, min: 0, max: 0.95, step: 0.05 },       // share enemies are slowed by the Moon Flare
+  moon_time: { value: 5, min: 1, max: 12, step: 0.5 },            // s
+  moon_heal: { value: 12, min: 0, max: 60, step: 1 },
+  witch_wisps: { value: 5, min: 1, max: 12, step: 1 },
+  witch_dmg: { value: 0.9, min: 0.2, max: 4, step: 0.1 },         // x flare_dmg per wisp
+  witch_kill_charge: { value: 12, min: 0, max: 50, step: 1 },     // % charge per kill with the Witch lantern
+
   // ---- Run and rewards ----
   floor_heal: { value: 0.3, min: 0, max: 1, step: 0.05 },         // share of max health healed between floors
   embers_mult: { value: 1, min: 0.2, max: 5, step: 0.1 },
