@@ -125,6 +125,11 @@ var death_severed: String = ""
 ## gone after tina_t s. 0 = none.
 var tina: float = 0.0
 var tina_t: float = 0.0
+## Haste from Лесавка's whistle (bestiary §3.3): moves x haste_mult, cooldowns
+## x haste_cd_mult, for haste_t s. 0 = none.
+var haste_t: float = 0.0
+var haste_mult: float = 1.0
+var haste_cd_mult: float = 1.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -372,6 +377,12 @@ func give_tina(amount: float, time: float) -> void:
 	tina = maxf(tina, amount)
 	tina_t = time
 
+## Hastes this enemy for `time` s (the timer restarts). Лесавка's whistle calls it.
+func give_haste(mult: float, cd_mult: float, time: float) -> void:
+	haste_mult = mult
+	haste_cd_mult = cd_mult
+	haste_t = time
+
 func _wake_my_pack() -> void:
 	if world and pack >= 0:
 		world.wake_pack(pack)
@@ -572,6 +583,9 @@ func _physics_process(dt: float) -> void:
 		tina_t -= dt
 		if tina_t <= 0.0:
 			tina = 0.0
+	if haste_t > 0.0:
+		cd -= ForestRules.haste_cd_extra(dt, haste_t, haste_cd_mult)
+		haste_t -= dt
 	_tick_status(dt)
 	if dead:
 		queue_redraw()
@@ -604,7 +618,7 @@ func _move(dt: float) -> void:
 	var ground := Tune.f("ground_y")
 	if not flies:
 		vel.y = minf(vel.y + Tune.f("gravity") * dt, Tune.f("max_fall"))
-	position += (vel + Vector2(kb, 0.0)) * dt
+	position += (vel * ForestRules.haste_speed(haste_t, haste_mult) + Vector2(kb, 0.0)) * dt
 	if flies:
 		position.y = clampf(position.y, Tune.f("flyer_ceiling") + h, ground - Tune.f("flyer_floor"))
 	elif position.y >= ground:
@@ -699,6 +713,12 @@ func _draw_overlay() -> void:
 		var r := Rect2(-w / 2.0 - 5.0, -h - 5.0, w + 10.0, h + 8.0)
 		draw_rect(r, Color(tc, 0.18), true)
 		draw_rect(r, Color(tc, 0.75 + 0.25 * sin(anim * 6.0)), false, 3.0)
+	if haste_t > 0.0:
+		# Haste: rust sparks at the feet (bestiary §3.3 Лесавка).
+		var hc := Color(String(Tune.get_value("haste_colour")))
+		for i in 5:
+			var ph := fmod(anim * 2.5 + i * 0.2, 1.0)
+			draw_circle(Vector2((i - 2) * w * 0.22 + sin(anim * 7.0 + i) * 3.0, -ph * 18.0), 2.5 * (1.0 - ph) + 1.0, Color(hc, 1.0 - ph))
 	if alert > 0.0:
 		draw_string(font, Vector2(-6, -h - 26), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, alert_colour)
 	if show_state:

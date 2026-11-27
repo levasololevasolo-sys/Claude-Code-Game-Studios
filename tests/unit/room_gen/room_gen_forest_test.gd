@@ -39,6 +39,7 @@ func test_room_gen_picks_the_library_by_location() -> void:
 func test_forest_roster_per_gdd_3_3() -> void:
 	var locs: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/locations.json"))
 	var ros := EnemyRoster.for_tier(2, locs, _t())
-	assert_array(ros.roster).contains_exactly(["ringer", "sentry", "rootling"])
-	assert_array(ros.late).contains_exactly(["bat"])
+	# bestiary §3.3: six kinds, opened by room (intro), no late list.
+	assert_array(ros.roster).contains_exactly(["ringer", "rootling", "sentry", "bat", "suchkovik", "lesavka"])
+	assert_array(ros.late).is_empty()
 	assert_array(EnemyRoster.for_tier(1, locs, _t()).roster).contains_exactly(["balvan", "crawler", "shishiga", "thrower", "bloat", "bognitsa", "vodyanitsa"])

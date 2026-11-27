@@ -41,6 +41,29 @@
       "bash"
     ]
   },
+  "suchkovik": {
+    "head": [
+      -0.3,
+      0.3,
+      0.8,
+      1.0
+    ],
+    "attack_states": [
+      "wind"
+    ]
+  },
+  "lesavka": {
+    "head": [
+      -0.45,
+      0.45,
+      0.45,
+      1.0
+    ],
+    "attack_states": [
+      "bite_wind",
+      "bite"
+    ]
+  },
   "thrower": {
     "arm": [
       0.0,

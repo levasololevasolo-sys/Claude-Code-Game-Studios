@@ -9,7 +9,7 @@
     "leap_side_max": 520, "leap_time": 1.2, "leap_min_air": 0.2, "leap_recover": 0.6
   },
   "bat": {
-    "name": "Нетопырь", "role": "air_harrier", "w": 50, "h": 30, "hp": 20, "flies": true, "weight": 0.6, "embers": 2,
+    "name": "Нетопырь", "role": "air_harrier", "pack_role": "flyer", "w": 50, "h": 30, "hp": 20, "flies": true, "weight": 0.6, "embers": 2,
     "contact": 10, "color": "#3b2f4a", "eye": "#ff6bd0",
     "hover_dx": 180, "hover_dy": 220, "hover_bob": 20, "hover_bob_freq": 2, "hover_gain": 2.2, "hover_resp": 3,
     "hover_max_x": 220, "hover_max_y": 200, "wind": 0.55, "wind_damp": 0.9, "wind_rise": 40, "aim_dy": 24,
@@ -18,10 +18,10 @@
     "spit_r": 8, "spit_life": 3, "spit_cd_min": 1.8, "spit_cd_max": 3.0
   },
   "sentry": {
-    "name": "Упырь-щитник", "role": "shield_bearer", "w": 40, "h": 76, "hp": 50, "flies": false, "weight": 1.8, "embers": 4,
+    "name": "Упырь-щитник", "role": "shield_bearer", "pack_role": "bruiser", "w": 40, "h": 76, "hp": 50, "flies": false, "weight": 1.8, "embers": 4,
     "contact": 8, "front_shield": true, "shield_block": 0.0, "color": "#5a6470", "eye": "#9fffb0", "shield": "#8d7a55", "shield_rim": "#c9b88a",
-    "turn": 0.7, "walk_speed": 65, "stop": 80,
-    "bash_range": 115, "bash_wind": 0.6, "bash_dmg": 16, "bash_push": 420, "bash_cd": 2.0, "bash_hit_x": 120, "bash_hit_y": 80,
+    "turn": 0.7, "walk_speed": 70, "stop": 80,
+    "bash_range": 100, "bash_wind": 0.6, "bash_dmg": 14, "bash_push": 420, "bash_cd": 2.0, "bash_hit_x": 120, "bash_hit_y": 80,
     "bash_recover": 0.5, "recover_damp": 0.85
   },
   "thrower": {
@@ -40,14 +40,14 @@
     "death_fuse": 0.35, "radius": 125, "dmg": 22, "enemy_mult": 2, "enemy_kb": 500, "blast_time": 0.35, "blast_shake": 12
   },
   "ringer": {
-    "name": "Аука", "role": "flanker", "w": 36, "h": 70, "hp": 40, "flies": false, "weight": 1.2, "embers": 4,
+    "name": "Аука", "role": "flanker", "pack_role": "ambusher", "w": 36, "h": 70, "hp": 40, "flies": false, "weight": 1.2, "embers": 4,
     "contact": 6, "color": "#3f5240", "eye": "#ffb35c", "arm": "#2e3b2e",
     "speed": 85, "stop": 150, "range_x": 560, "range_y": 160, "call": 0.7, "gone": 0.35, "behind_dx": 130,
     "appear": 0.45, "swipe_time": 0.2, "swipe_step": 180, "swipe_x": 90, "swipe_dmg": 13, "recover": 0.8,
     "cd_min": 2.0, "cd_max": 3.2
   },
   "rootling": {
-    "name": "Лешачонок", "role": "burrower", "w": 40, "h": 42, "hp": 30, "flies": false, "weight": 0.9, "embers": 3,
+    "name": "Лешачонок", "role": "burrower", "pack_role": "ambusher", "w": 40, "h": 42, "hp": 30, "flies": false, "weight": 0.9, "embers": 3,
     "contact": 8, "color": "#5b4632", "eye": "#c8f07a", "dirt": "#4a3b2c", "twig": "#7a6248",
     "speed": 80, "range_x": 640, "range_y": 200, "dig": 0.5, "under_max": 2.2, "under_speed": 300, "under_stop": 12,
     "rise_w": 0.6, "burst_up": 620, "burst_time": 0.3, "burst_r": 60, "burst_h": 120, "burst_dmg": 14, "recover": 0.9,
@@ -99,5 +99,20 @@
     "speed": 85, "keep_dx": 400, "song": 0.8, "song_r": 260, "ward_frac": 0.25, "ward_time": 6, "song_cd": 5,
     "song_break_cd": 2.0, "push_range": 160, "push_wind": 0.5, "push_time": 0.2, "push_dmg": 6, "push_hit_x": 110,
     "push_hit_y": 90, "push_knock": 380, "push_cd": 1.5
+  },
+  "suchkovik": {
+    "name": "Сучковик", "role": "spear_platform", "pack_role": "ranged", "w": 34, "h": 78, "hp": 39, "flies": false,
+    "weight": 1.6, "embers": 4, "contact": 0, "color": "#5e4a3a", "bark": "#8a7254", "eye": "#ff8a3d", "spear": "#b08a5a",
+    "line": "#c2502a", "fire_range": 900, "range_y": 70, "wind": 0.8, "spear_speed": 700, "spear_dmg": 15, "spear_r": 9,
+    "spear_life": 3.0, "muzzle_x": 18, "muzzle_y": 44, "plat_w": 80, "plat_time": 4.0, "spear_max": 2,
+    "deflect_stun": 1.0, "recover": 0.6, "cd_min": 1.8, "cd_max": 2.8
+  },
+  "lesavka": {
+    "name": "Лесавка", "role": "haste_aura", "pack_role": "support", "w": 30, "h": 40, "hp": 18, "flies": false,
+    "weight": 0.6, "embers": 3, "contact": 0, "color": "#7a5e40", "leaves": "#4f7a34", "leaves_hi": "#9cbf4a",
+    "eye": "#ff8a3d", "spark": "#ff8a3d", "speed": 150, "keep_dx": 350, "whistle": 0.7, "aura_r": 300,
+    "haste_mult": 1.3, "haste_cd_mult": 0.77, "haste_time": 5.0, "whistle_cd": 6.0, "corner_px": 40,
+    "bite_range": 120, "bite_wind": 0.5, "bite_time": 0.2, "bite_dmg": 7.2, "bite_hit_x": 40, "bite_hit_y": 60,
+    "bite_cd": 1.2
   }
 }
