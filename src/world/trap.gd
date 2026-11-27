@@ -16,9 +16,18 @@ var _hit: bool = false
 
 func _ready() -> void:
 	t = Tune.f("trap_idle") - offset
+	if kind == "thorns":
+		phase = "active"
+		t = 0.0
 
 ## Advances the cycle by dt; returns the phase (pure; tests drive it).
 func step(dt: float) -> String:
+	if kind == "thorns":
+		# Level thorns `^` (level-structure §3.2): always out, hurt again every thorn_cd.
+		t -= dt
+		if t <= 0.0 and _hit:
+			_hit = false
+		return phase
 	t -= dt
 	if t <= 0.0:
 		match phase:
@@ -42,10 +51,22 @@ func _physics_process(dt: float) -> void:
 		if p.position.x > position.x - Player.W / 2.0 and p.position.x < position.x + width + Player.W / 2.0 \
 				and p.position.y > position.y - reach and p.position.y <= position.y + 4.0:
 			_hit = true
+			if kind == "thorns":
+				t = float((Tune.data.get("level", {}) as Dictionary).get("thorn_cd", 0.6))
+				p.hurt(Hit.make(Hit.Kind.CONTACT, float((Tune.data.get("level", {}) as Dictionary).get("thorn_dmg", 10)), position.x + width / 2.0, 0.0))
+				return
 			p.hurt(Hit.make(Hit.Kind.CONTACT, Tune.f("trap_dmg") if kind == "spikes" else Tune.f("log_dmg"), position.x + width / 2.0, 0.0))
 	queue_redraw()
 
 func _draw() -> void:
+	if kind == "thorns":
+		var n := int(width / 14.0)
+		for i in n:
+			var x := i * 14.0 + 1.0
+			var hgt := 22.0 + Room._h(i, int(position.x)) * 14.0
+			draw_colored_polygon(PackedVector2Array([Vector2(x, 0), Vector2(x + 6, -hgt), Vector2(x + 13, 0)]), Color("#3b2a22"))
+			draw_line(Vector2(x + 6, -hgt), Vector2(x + 6, -hgt * 0.5), Color("#c9b38a", 0.7), 1.5)
+		return
 	var warn := Color(1.0, 0.85, 0.3, 0.5 + 0.4 * sin(t * 30.0))
 	if kind == "spikes":
 		var up := 34.0 if phase == "active" else (8.0 if phase == "warn" else 3.0)

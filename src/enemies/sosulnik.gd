@@ -47,8 +47,8 @@ func _move(dt: float) -> void:
 		return
 	if st == "fall":
 		position.y += stat("fall_speed") * dt
-		if position.y >= Tune.f("ground_y"):
-			position.y = Tune.f("ground_y")
+		if position.y >= ground():
+			position.y = ground()
 			land()
 		return
 	super._move(dt)
@@ -143,14 +143,14 @@ func _draw() -> void:
 		return
 	if st == "shake":
 		# Shadow on the floor under it grows during the shake.
-		var gy := Tune.f("ground_y") - position.y
+		var gy := ground() - position.y
 		var r := FrostRules.shadow_r(t, stat("shake"), stat("shadow_r0"), stat("shadow_r1"))
 		draw_set_transform(Vector2(0, gy), 0.0, Vector2(1.0, 0.25))
 		draw_circle(Vector2.ZERO, r, Color(0.05, 0.08, 0.15, 0.55))
 		draw_circle(Vector2.ZERO, r * 0.6, Color(0.05, 0.08, 0.15, 0.5))
 		draw_set_transform(Vector2.ZERO)
 	elif hanging:
-		var gy2 := Tune.f("ground_y") - position.y
+		var gy2 := ground() - position.y
 		draw_set_transform(Vector2(0, gy2), 0.0, Vector2(1.0, 0.25))
 		draw_circle(Vector2.ZERO, stat("shadow_r0"), Color(0.05, 0.08, 0.15, 0.3))
 		draw_set_transform(Vector2.ZERO)

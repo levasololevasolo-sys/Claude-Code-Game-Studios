@@ -81,7 +81,7 @@ func _behave(dt: float) -> void:
 
 func _dead_tick(dt: float) -> void:
 	pillars.clear()
-	position.y = move_toward(position.y, Tune.f("ground_y") - Tune.f("flyer_floor"), Tune.f("max_fall") * dt)
+	position.y = move_toward(position.y, ground() - Tune.f("flyer_floor"), Tune.f("max_fall") * dt)
 	super(dt)
 
 ## Stuck after a dive into a pillar: she takes ×dive_pillar_mult.
@@ -109,7 +109,7 @@ func mouth() -> Vector2:
 
 ## Height of the floor she floats over, y.
 func hover_y() -> float:
-	return Tune.f("ground_y") - stat("hover_h") + sin(anim * 1.4) * stat("hover_bob")
+	return ground() - stat("hover_h") + sin(anim * 1.4) * stat("hover_bob")
 
 # ---------------- behaviour ----------------
 
@@ -118,7 +118,7 @@ func think(dt: float, hp_pos: Vector2) -> void:
 	t -= dt
 	line_t -= dt
 	breath_cd -= dt
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	var dx := hp_pos.x - position.x
 	var hc := hp_pos - Vector2(0, Player.H / 2.0)
 	if st == "idle" or st.ends_with("_w") and st != "dive_w":
@@ -288,7 +288,7 @@ func light_spots() -> Array[Vector4]:
 		out.append(Vector4(c.x, c.y, Tune.f("windup_glow_r"), Tune.f("windup_glow_a")))
 	var r := stat("hazard_glow_r")
 	var a := stat("hazard_glow_a")
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	for hz: Dictionary in hazards:
 		out.append(Vector4(float(hz.x), ground - 30.0, r, a))
 	for x in pillars:
@@ -355,7 +355,7 @@ func _draw_figure(cv: CanvasItem, c: Color, alpha: float, state: String, tm: flo
 
 ## Hazards, pillars, cones and shadows, world space, above the room.
 func _draw_fx() -> void:
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	var ice := Color(String(stats.crown))
 	var threat := Color(String(stats.rage_eye)) if phase >= 2 else Color(String(stats.eye))
 	for x in pillars:

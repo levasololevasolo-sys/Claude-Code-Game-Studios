@@ -348,7 +348,7 @@ func _summon(i: int) -> void:
 			continue
 		var side := -1.0 if j % 2 == 0 else 1.0
 		var x := clampf(position.x + side * stat("summon_dx") * float(1 + (j >> 1)), 80.0, room_w - 80.0 if room_w > 0.0 else INF)
-		var y := Tune.f("ground_y")
+		var y := ground()
 		if bool(Tune.row("enemies", String(kinds[j])).get("flies", false)):
 			y = stat("summon_fly_y")
 		minions.append(e)
@@ -372,7 +372,7 @@ func _water_on_hero(dt: float) -> void:
 	if p == null or p.dead or water <= 1.0:
 		_water_tick = 0.0
 		return
-	if p.position.y < Tune.f("ground_y") - water:
+	if p.position.y < ground() - water:
 		_water_tick = 0.0
 		return
 	var nx := p.position.x - p.velocity.x * dt * (1.0 - stat("water_slow"))
@@ -388,7 +388,7 @@ func _water_on_hero(dt: float) -> void:
 		p.velocity = keep
 
 func _tick_hazards(dt: float, hp_pos: Vector2) -> void:
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	var hc := hp_pos - Vector2(0, Player.H / 2.0)
 	var dmg := stat("dmg")
 	for hz: Dictionary in hazards:
@@ -448,7 +448,7 @@ func light_spots() -> Array[Vector4]:
 	var out := super()
 	var r := stat("hazard_glow_r")
 	var a := stat("hazard_glow_a")
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	for hz: Dictionary in hazards:
 		match String(hz.kind):
 			"clod":
@@ -498,7 +498,7 @@ func _draw() -> void:
 
 ## Hazards and water, world space, above the room and the hero.
 func _draw_fx() -> void:
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	var room_x := room_w if room_w > 0.0 else 4000.0
 	if water > 0.5:
 		var top := ground - water

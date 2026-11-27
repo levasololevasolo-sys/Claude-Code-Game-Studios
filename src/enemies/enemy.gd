@@ -62,6 +62,15 @@ var target: Player
 var tier: int = 1
 ## Room width for the wall clamp; 0 = no walls (tests).
 var room_w: float = 0.0
+## Level mode (GDD level-structure §3.9): the height of this enemy's own floor
+## (NAN = the room's ground_y), the floor span it walks inside ([x0, x1], zero =
+## none: the room walls clamp) and whether each end of it is a wall (slams count)
+## or a drop it must not walk off. Set by World.spawn_enemy from the LevelRoom.
+var floor_y: float = NAN
+var span: Vector2 = Vector2.ZERO
+var span_wall: Vector2i = Vector2i(1, 1)
+## Flyers in level mode keep inside their room's frame (edge case 6); empty = the flyer band.
+var fly_box: Rect2 = Rect2()
 ## Sleeping enemies do nothing until their pack wakes (room-generation §3.5).
 var asleep: bool = false
 ## Pack index in the room; -1 = no pack (wakes alone).
@@ -239,9 +248,13 @@ func dmg_mult() -> float:
 func center() -> Vector2:
 	return position - Vector2(0, h / 2.0)
 
+## Height of this enemy's floor: its own floor in a level, else ground_y.
+func ground() -> float:
+	return Tune.f("ground_y") if is_nan(floor_y) else floor_y
+
 ## True when standing on the floor.
 func on_ground() -> bool:
-	return position.y >= Tune.f("ground_y") - 0.5
+	return position.y >= ground() - 0.5
 
 ## Wakes this enemy: short first decision timer and the "!" sign.
 func wake() -> void:
@@ -302,7 +315,7 @@ func hurt_rect() -> Rect2:
 func hit_view() -> Dictionary:
 	return {
 		"x": position.x, "face": face, "flies": flies, "boss": boss,
-		"airborne": DamageRules.is_airborne(position.y, Tune.f("ground_y"), Tune.f("air_target_margin")),
+		"airborne": DamageRules.is_airborne(position.y, ground(), Tune.f("air_target_margin")),
 		"shield": front_shield, "stunned": stun > 0.0, "weight": weight, "kb_scale": kb_scale,
 		"burning": status.burning(), "cursed": status.cursed(), "rooted": status.rooted(),
 		"clean": not status.has_god_status(),
@@ -622,17 +635,27 @@ func _physics_process(dt: float) -> void:
 
 ## Gravity, movement, floor, flyer band and walls; knockback decay.
 func _move(dt: float) -> void:
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	if not flies:
 		vel.y = minf(vel.y + Tune.f("gravity") * dt, Tune.f("max_fall"))
 	position += (vel * ForestRules.haste_speed(haste_t, haste_mult) + Vector2(kb, 0.0)) * dt
-	if flies:
+	if flies and fly_box.has_area():
+		position = position.clamp(fly_box.position + Vector2(w / 2.0, h), fly_box.end - Vector2(w / 2.0, 0.0))
+	elif flies:
 		position.y = clampf(position.y, Tune.f("flyer_ceiling") + h, ground - Tune.f("flyer_floor"))
 	elif position.y >= ground:
 		position.y = ground
 		vel.y = 0.0
 	var at_wall := 0
-	if room_w > 0.0:
+	if span.y > span.x and not flies:
+		# Level mode: never walk off the own floor span; only a real wall end slams.
+		var hw := w / 2.0
+		if position.x <= span.x + hw:
+			at_wall = -1 if span_wall.x == 1 else 0
+		elif position.x >= span.y - hw:
+			at_wall = 1 if span_wall.y == 1 else 0
+		position.x = clampf(position.x, span.x + hw, maxf(span.x + hw, span.y - hw))
+	elif room_w > 0.0:
 		var m := w / 2.0 + Tune.f("wall_margin")
 		if position.x <= m:
 			at_wall = -1
@@ -1033,7 +1056,7 @@ func _mark_tick(dt: float) -> bool:
 				var f := FireTrail.new()
 				f.world = world
 				f.dmg_mult = dmg_mult() / Tune.f("elite_dmg")
-				f.position = Vector2(position.x, Tune.f("ground_y"))
+				f.position = Vector2(position.x, ground())
 				world.add_child(f)
 		"blink":
 			if blink_fade > 0.0:
@@ -1073,10 +1096,10 @@ func _call_kin() -> void:
 	for i in mini(int(Tune.f("call_count")), int(Tune.f("call_max")) - called):
 		var kind := String(roster[rng.randi_range(0, roster.size() - 1)])
 		var e := EnemyRoster.make(kind)
-		var y := Tune.f("ground_y")
+		var y := ground()
 		if bool(Tune.row("enemies", kind).get("flies", false)):
 			var fy: Array = Tune.get_value("flyer_spawn_y")
-			y = float(fy[0])
+			y = ground() - (Tune.f("ground_y") - float(fy[0]))
 		world.spawn_enemy(e, Vector2(clampf(position.x + (i * 2 - 1) * 90.0, 60.0, maxf(60.0, room_w - 60.0)), y), pack, false, rng.randi())
 		called += 1
 

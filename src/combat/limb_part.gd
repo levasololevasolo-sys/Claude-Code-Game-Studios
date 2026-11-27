@@ -45,7 +45,7 @@ func _ready() -> void:
 func step(dt: float) -> void:
 	_t += dt
 	var g := Tune.f("gravity")
-	var floor_y := Tune.f("ground_y")
+	var floor_y := World.floor_at(world, position)
 	vel.y += g * dt
 	position += vel * dt
 	ang += spin * dt

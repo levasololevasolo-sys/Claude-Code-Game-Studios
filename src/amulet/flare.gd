@@ -238,7 +238,7 @@ func _surface() -> Vector3:
 	var feet := hero.position
 	if hero.is_on_floor():
 		feet.y -= 1.0
-	return AmuletRules.surface_under(feet.x, feet.y, plats, Tune.f("ground_y"), _room_w())
+	return AmuletRules.surface_under(feet.x, feet.y, plats, World.floor_at(world, feet), _room_w())
 
 func _enemies() -> Array[Enemy]:
 	var out: Array[Enemy] = []

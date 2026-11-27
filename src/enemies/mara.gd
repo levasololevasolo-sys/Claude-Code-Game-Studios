@@ -55,7 +55,7 @@ func on_ally_died(e: Enemy, _hit: Hit) -> void:
 	var dist := e.position.distance_to(position)
 	if FrostRules.can_raise(dist, stat("raise_r"), e.ice_copy, e.boss, e.kind_id, live_copies() + corpses.size() + (1 if not raising.is_empty() else 0),
 			int(stat("raise_max")), bool(e.stats.get("reassemble", false))):
-		corpses.append({ "kind": e.kind_id, "pos": Vector2(e.position.x, Tune.f("ground_y")) if not e.flies else e.position, "max_hp": e.max_hp })
+		corpses.append({ "kind": e.kind_id, "pos": Vector2(e.position.x, e.ground()) if not e.flies else e.position, "max_hp": e.max_hp })
 
 ## Raises `c` as an ice copy now; returns it (also kept in `copies`).
 func raise_copy(c: Dictionary) -> Enemy:

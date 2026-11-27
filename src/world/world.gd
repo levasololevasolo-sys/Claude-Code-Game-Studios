@@ -24,7 +24,9 @@
 ## Run mode (default when none of the legacy check flags above is given): a
 ## RunDirector child plays the run of GDD room-generation-and-doors (rooms, doors,
 ## lair, haven, summary) on the Game autoload's RunState. `--run-check=<dir>`
-## plays it scripted and saves screenshots.
+## plays it scripted and saves screenshots. The Swamp is one graph level
+## (GDD level-structure, LevelMode, `--levels=rooms` for the old chain);
+## `--level2-check=<dir>` walks it scripted.
 ## Esc / pad Start opens the pause menu (PauseMenu: Продолжить, Настройки, На
 ## заставу). A new save asks for the difficulty first (DifficultyChoiceScreen,
 ## GDD difficulty §3.2), never under a check flag. `--settings-check=<dir>` runs
@@ -98,6 +100,10 @@ static var debug_hud: bool = false
 var _look: float = 0.0
 ## Air of the room (particles, dust, hero glow).
 var atmosphere: Atmosphere
+## The whole-location level in graph mode (GDD level-structure), null in a single room.
+var level_room: LevelRoom
+## Extra vertical camera offset while falling fast (level-structure §3.5), world px.
+var _fall_look: float = 0.0
 
 func _ready() -> void:
 	# Hit-feel clocks tick before the hero and the enemies (Player sets -1).
@@ -226,6 +232,10 @@ func _ready() -> void:
 			var rc: Node = (load("res://tests/integration/run/run_check_driver.gd") as GDScript).new()
 			rc.set("out_dir", a.trim_prefix("--run-check="))
 			add_child(rc)
+		elif a.begins_with("--level2-check="):
+			var l2: Node = (load("res://tests/integration/run/level2_check_driver.gd") as GDScript).new()
+			l2.set("out_dir", a.trim_prefix("--level2-check="))
+			add_child(l2)
 		elif a.begins_with("--aim-check="):
 			var ac: Node = (load("res://tests/integration/loot/aim_check_driver.gd") as GDScript).new()
 			ac.set("out_dir", a.trim_prefix("--aim-check="))
@@ -279,13 +289,7 @@ func start_prologue() -> Prologue:
 ## passes its own `layout` and the room stream `p_rng` (RunRng.for_room, already
 ## used by the generator); without them the old seed formula is used.
 func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) -> void:
-	for c in get_children():
-		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
-				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot \
-				or c is Chest or c is Trap or c is FireTrail or c is KnightReward or c is Atmosphere:
-			if c is Enemy:
-				c.remove_from_group("enemies")
-			c.queue_free()
+	_clear_room()
 	var rng := p_rng
 	if rng == null:
 		rng = RandomNumberGenerator.new()
@@ -348,6 +352,12 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 		for ci in mini(ceils.size(), int(Tune.f("ceiling_max"))):
 			spawn_enemy(EnemyRoster.make(ceil_kind), ceils[ci], (layout.packs as Array).size() + 70 + ci, true, rng.randi())
 	_spawn_props(layout, rng)
+	_add_hero(loc, vis, Vector2(Tune.f("hero_spawn_x"), Tune.f("ground_y")),
+		Rect2i(0, mini(-400, int(float(layout.get("top", 0.0)) - 40.0)), int(layout.w), int(Tune.f("ground_y") + 220) - mini(-400, int(float(layout.get("top", 0.0)) - 40.0))))
+
+## The hero (keeps the amulet charge), the camera with its limits `lim`, the HUD,
+## darkness and the room air. Shared by start_room() and start_level().
+func _add_hero(loc: Dictionary, vis: Dictionary, at: Vector2, lim: Rect2i) -> void:
 	var keep_charge := player.amulet.charge if player and is_instance_valid(player) and player.amulet else 0.0
 	player = Player.new()
 	player.world = self
@@ -363,15 +373,15 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 			arm = player.weapon)
 	# The charge stays between rooms of one location (amulet-and-flare §3.1).
 	player.amulet.charge = minf(keep_charge, player.amulet.cap)
-	player.position = Vector2(Tune.f("hero_spawn_x"), Tune.f("ground_y"))
+	player.position = at
 	add_child(player)
 	if not hero_armor.is_empty():
 		ShopRules.dress(player.visual, hero_armor, Tune.table("armor"))
 	cam = Camera2D.new()
-	cam.limit_left = 0
-	cam.limit_right = int(layout.w)
-	cam.limit_bottom = int(Tune.f("ground_y") + 220)
-	cam.limit_top = mini(-400, int(float(layout.get("top", 0.0)) - 40.0))
+	cam.limit_left = lim.position.x
+	cam.limit_right = lim.end.x
+	cam.limit_bottom = lim.end.y
+	cam.limit_top = lim.position.y
 	cam.position_smoothing_enabled = true
 	cam.position_smoothing_speed = 8.0
 	# Vertical dead zone (plan §2.7): margins are fractions of half the view height.
@@ -420,6 +430,18 @@ func start_room(layout: Dictionary = {}, p_rng: RandomNumberGenerator = null) ->
 		cm.color = Color(String(vis.ambient))
 		atmosphere.add_child(cm)
 
+## Frees everything of the current room (room, hero, enemies, props, HUD layers).
+func _clear_room() -> void:
+	for c in get_children():
+		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
+				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot \
+				or c is Chest or c is Trap or c is FireTrail or c is KnightReward or c is Atmosphere or c is ArtSlice \
+				or c is LevelFlow:
+			if c is Enemy:
+				c.remove_from_group("enemies")
+			c.queue_free()
+	level_room = null
+
 ## The visuals.json style of a room: "base" for the base yard, else the
 ## location's look.props ("ruins" = swamp, "forest", "frost").
 static func visuals_for(layout: Dictionary, look: Dictionary) -> Dictionary:
@@ -449,12 +471,22 @@ func can_pause() -> bool:
 			return false
 	if director and director.base and director.base.get("screen") != null:
 		return false
-	return director == null or director.phase in ["fight", "doors", "base", "reward", "clear"]
+	return director == null or director.phase in ["fight", "doors", "base", "reward", "clear", "level"]
+
+## The LevelFlow of a graph-mode level, null otherwise.
+func level_flow() -> LevelFlow:
+	for c in get_children():
+		if c is LevelFlow and not c.is_queued_for_deletion():
+			return c
+	return null
 
 ## Opens the pause menu (above every game screen).
 func open_pause() -> PauseMenu:
 	var pm := PauseMenu.new()
 	pm.can_quit = director != null and director.phase != "base" and director.run != null
+	var fl := level_flow()
+	if fl:
+		pm.on_map = func() -> void: fl.open_full_map.call_deferred()
 	pm.quit_to_base.connect(func() -> void:
 		if director and director.run:
 			director.finish("quit"))
@@ -492,6 +524,136 @@ func _spawn_props(layout: Dictionary, rng: RandomNumberGenerator) -> void:
 		add_child(trap)
 		n += 1
 
+## Height of the floor under `p`: the level's floor in graph mode, else ground_y.
+## Static so shots, parts and the Flare can ask without a level (tests: w null).
+static func floor_at(w: World, p: Vector2) -> float:
+	if w and w.level_room:
+		return w.level_room.floor_below(p)
+	return Tune.f("ground_y")
+
+## True when a shot at `p` hits the ground (single room: below ground_y + `below`)
+## or a solid cell of the level.
+static func shot_blocked(w: World, p: Vector2, below: float) -> bool:
+	if w and w.level_room:
+		return w.level_room.solid(w.level_room.cell_of(p)) or p.y > w.level_room.rows * w.level_room.cell
+	return p.y > Tune.f("ground_y") + below
+
+## Builds the whole level of a location (graph mode, GDD level-structure §3.9):
+## the LevelRoom, its packs on E markers (EnemyRoster rules, room number k from
+## the level section), flyers on F, Болотница on B, the knight on K, chests,
+## breakable walls, thorns; the hero on P; the camera on both axes inside the level.
+func start_level(level: Dictionary, rng: RandomNumberGenerator) -> void:
+	_clear_room()
+	var loc: Dictionary = Tune.table("locations").get(str(tier), {})
+	var lr := LevelRoom.new()
+	lr.look = loc.get("look", {})
+	var vis := visuals_for({}, lr.look)
+	lr.vis = vis
+	RenderingServer.set_default_clear_color(Color(String(lr.look.get("sky", "#0c1418"))))
+	room = lr
+	level_room = lr
+	add_child(lr)
+	lr.build_level(level)
+	var art := ArtSlice.new()
+	art.room = lr
+	add_child(art)
+	var table := Tune.table("enemies")
+	var ros := EnemyRoster.for_tier(tier, Tune.table("locations"), Tune.data)
+	var intro: Dictionary = ros.intro
+	var lv: Dictionary = Tune.data.get("level", {})
+	var gap := float(lv.get("member_gap", 70.0))
+	var room_pack := {}
+	var bogs_by_room := {}
+	for m: Dictionary in level.marks:
+		if String(m.ch) == "B":
+			if not bogs_by_room.has(int(m.room)):
+				bogs_by_room[int(m.room)] = []
+			(bogs_by_room[int(m.room)] as Array).append(m.c)
+	for i in (level.packs as Array).size():
+		var pk: Dictionary = level.packs[i]
+		var k := int(pk.k)
+		var at := lr.cell_floor(pk.c)
+		var sp := lr.span_at(at)
+		var n := int(pk.size)
+		var kinds: Array[String] = EnemyRoster.pack_kinds_intro(rng, n, i, k, tier, intro, table, Tune.data, bogs_by_room.has(int(pk.room))) \
+			if not intro.is_empty() else EnemyRoster.pack_kinds(rng, n, i, k, tier, ros.roster, ros.late, table, Tune.data)
+		room_pack[int(pk.room)] = i
+		for j in kinds.size():
+			var e := EnemyRoster.make(kinds[j])
+			if j in (pk.elites as Array):
+				e.mark = EliteMarks.pick(rng, kinds[j], Tune.data)
+			var x := clampf(at.x + (j - (kinds.size() - 1) / 2.0) * gap, float(sp.x0) + 30.0, float(sp.x1) - 30.0)
+			var y := at.y
+			if bool(table[kinds[j]].get("flies", false)):
+				y = at.y - rng.randf_range(140.0, 220.0)
+			spawn_enemy(e, Vector2(x, y), i, true, rng.randi())
+	var npk := (level.packs as Array).size()
+	# Flyers on F (only kinds already open at the room's k), Болотница on B.
+	var fly_kinds: Array[String] = []
+	for id: String in intro:
+		if bool((table.get(id, {}) as Dictionary).get("flies", false)):
+			fly_kinds.append(id)
+	var bog_kind := EnemyRoster.spot_kind(intro, table, "bog")
+	var rooms: Array = level.rooms
+	var extra := 0
+	for m: Dictionary in level.marks:
+		var ri := int(m.room)
+		var rr: Dictionary = rooms[ri]
+		if String(rr.kind) in ["entry", "fork", "altar", "junction", "lairgate", "nook", "secret"]:
+			continue
+		var k := 1 if int(rr.sec) == 0 else int(rr.sec) + 1
+		var pid := int(room_pack.get(ri, npk + 100 + ri))
+		match String(m.ch):
+			"F":
+				var open: Array[String] = []
+				for id in fly_kinds:
+					if int(intro[id]) <= k:
+						open.append(id)
+				if not open.is_empty() and rng.randf() < float(lv.get("flyer_chance", 0.6)):
+					spawn_enemy(EnemyRoster.make(open[rng.randi_range(0, open.size() - 1)]), lr.cell_floor(m.c) - Vector2(0, 20), pid, true, rng.randi())
+			"B":
+				if bog_kind != "" and int(intro[bog_kind]) <= k and extra < 60 and rng.randf() < float(lv.get("bog_chance", 0.5)):
+					var b := EnemyRoster.make(bog_kind)
+					b.set("in_bog", true)
+					spawn_enemy(b, Vector2((m.c.x + 0.5) * lr.cell, m.c.y * lr.cell), pid, true, rng.randi())
+					extra += 1
+	var kn: Dictionary = level.get("knight", {})
+	if not kn.is_empty():
+		spawn_enemy(Knight.new(), lr.cell_floor(kn.c), npk + 50, true, rng.randi())
+	for c: Dictionary in level.chests:
+		var ch := Chest.new()
+		ch.world = self
+		ch.rich = bool(c.rich)
+		ch.position = lr.cell_floor(c.c)
+		add_child(ch)
+	for wl: Dictionary in level.walls:
+		var bw := BreakableWall.new()
+		var c0: Vector2i = wl.c0
+		var c1: Vector2i = wl.c1
+		bw.w = lr.cell
+		bw.h = (c1.y - c0.y + 1) * lr.cell
+		bw.world = self
+		bw.position = Vector2((c0.x + 0.5) * lr.cell, (c1.y + 1) * lr.cell)
+		bw.rng = RandomNumberGenerator.new()
+		add_child(bw)
+	var nt := 0
+	for r: Rect2 in lr.merged_rects("^"):
+		var trap := Trap.new()
+		trap.world = self
+		trap.kind = "thorns"
+		trap.width = r.size.x
+		trap.offset = nt * 0.7
+		trap.position = Vector2(r.position.x, r.end.y)
+		add_child(trap)
+		nt += 1
+	var start := lr.cell_floor(Vector2i(2, 2))
+	for m: Dictionary in level.marks:
+		if String(m.ch) == "P":
+			start = lr.cell_floor(m.c)
+	_add_hero(loc, vis, start, Rect2i(0, 0, int(lr.cols * lr.cell), int(lr.rows * lr.cell)))
+	# Darkness grows with depth (level-structure §3.8 item 4) — LevelFlow updates it per band.
+	cam.reset_smoothing()
+
 ## Opens the rune offer of `god` (§3.4). `wide` = «Широкий выбор» (4 cards).
 ## `opts` go to RuneOffer.build_offer (duos_open, legend_open).
 func open_rune_offer(god: String, wide: bool = false, opts: Dictionary = {}) -> RuneOfferScreen:
@@ -527,6 +689,8 @@ func spawn_enemy(e: Enemy, at: Vector2, pack_id: int, sleeping: bool, rng_seed: 
 	e.rng = RandomNumberGenerator.new()
 	e.rng.seed = rng_seed
 	e.position = at
+	if level_room:
+		level_room.fit_enemy(e)
 	add_child(e)
 	return e
 
@@ -577,7 +741,11 @@ func _physics_process(dt: float) -> void:
 		if player and is_instance_valid(player):
 			var want := float(player.face) * float(camv.get("look_ahead", 140.0))
 			_look += (want - _look) * minf(1.0, dt / maxf(float(camv.get("look_time", 0.4)), 0.01))
-		cam.offset = CAM_OFFSET + Vector2(_look, 0.0) + Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
+		if level_room and player and is_instance_valid(player):
+			var lv: Dictionary = Tune.data.get("level", {})
+			var want_y := float(lv.get("cam_fall_lead", 120.0)) if player.velocity.y > float(lv.get("cam_fall_speed", 600.0)) else 0.0
+			_fall_look += (want_y - _fall_look) * minf(1.0, dt / 0.25)
+		cam.offset = CAM_OFFSET + Vector2(_look, _fall_look) + Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
 	for r: Dictionary in rings:
 		r.t += dt
 	var ring_time := Tune.f("ring_time")

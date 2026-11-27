@@ -41,7 +41,7 @@ func step(dt: float) -> void:
 	vel.y += grav * dt
 	position += vel * dt
 	var room_w: float = world.room.layout.w if world and world.room else INF
-	if position.x < 0.0 or position.x > room_w or position.y > Tune.f("ground_y") + Tune.f("shot_floor") or position.y < Tune.f("shot_top"):
+	if position.x < 0.0 or position.x > room_w or World.shot_blocked(world, position, Tune.f("shot_floor")) or position.y < Tune.f("shot_top"):
 		life = 0.0
 	if life <= 0.0:
 		return

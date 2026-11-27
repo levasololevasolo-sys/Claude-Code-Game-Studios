@@ -83,7 +83,7 @@ func think(dt: float, hp_pos: Vector2, standing: bool = false) -> void:
 				st = "dive"
 				t = stat("dive_time")
 				_drop_hummock()
-				position.y = Tune.f("ground_y")
+				position.y = ground()
 		"dive":
 			vel.x = 0.0
 			if t <= 0.0:

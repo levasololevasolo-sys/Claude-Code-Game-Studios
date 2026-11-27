@@ -66,7 +66,7 @@ func _behave(dt: float) -> void:
 func _dead_tick(dt: float) -> void:
 	dark_state = ""
 	# Killed mid-leap: the body falls to the floor instead of hanging in the air.
-	position.y = move_toward(position.y, Tune.f("ground_y"), Tune.f("max_fall") * dt)
+	position.y = move_toward(position.y, ground(), Tune.f("max_fall") * dt)
 	super(dt)
 
 ## The leap and the lunge hit harder on touch.
@@ -215,7 +215,7 @@ func _tick_dark(dt: float) -> void:
 				dark_t = maxf(stat("dark_every") - stat("dark_time") - stat("dark_blink"), 0.0)
 
 func _tick_hazards(dt: float, hp_pos: Vector2) -> void:
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	var dmg := stat("dmg")
 	for hz: Dictionary in hazards:
 		match String(hz.kind):
@@ -253,7 +253,7 @@ func light_spots() -> Array[Vector4]:
 		out.append(Vector4(c.x, c.y, Tune.f("windup_glow_r"), Tune.f("windup_glow_a")))
 	var r := stat("hazard_glow_r")
 	var a := stat("hazard_glow_a")
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	for hz: Dictionary in hazards:
 		match String(hz.kind):
 			"wave":
@@ -334,7 +334,7 @@ static func _ellipse(c: Vector2, rx: float, ry: float) -> PackedVector2Array:
 	return pts
 
 func _draw_fx() -> void:
-	var ground := Tune.f("ground_y")
+	var ground := ground()
 	var eye := Color(String(stats.rage_eye)) if phase >= 2 else Color(String(stats.eye))
 	if st == "gaze_w" or st == "gaze":
 		var o := eye_pos()

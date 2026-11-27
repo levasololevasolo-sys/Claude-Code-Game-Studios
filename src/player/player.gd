@@ -310,6 +310,10 @@ func _step(dt: float) -> void:
 		if aiming and sub != null and AimRules.aimable(sub.row()):
 			slow *= Tune.f("aim_move_mult")
 		slow *= SwampRules.cling_slow_mult(cling_n, Tune.f("cling_slow"), int(Tune.f("cling_max")))
+		# Bog water `~` of a level (level-structure §3.2): slower, lower jump.
+		var bog := world != null and world.room is LevelRoom and (world.room as LevelRoom).in_bog(position)
+		if bog:
+			slow *= float((Tune.data.get("level", {}) as Dictionary).get("bog_speed_mult", 0.6))
 		var target := mx * Tune.f("run_speed") * slow * build.value("stribog_p", "run", 1.0)
 		velocity.x += (target - velocity.x) * minf(1.0, dt * (Tune.f("accel_ground") if on_floor else Tune.f("accel_air")))
 		if mx != 0 and atk_t <= 0.0:
@@ -324,6 +328,9 @@ func _step(dt: float) -> void:
 				jump_buf = 0.0
 			elif on_floor or coyote_t > 0.0:
 				velocity.y = -Tune.f("jump_speed")
+				if bog:
+					var lv: Dictionary = Tune.data.get("level", {})
+					velocity.y = -minf(Tune.f("jump_speed"), sqrt(2.0 * Tune.f("gravity") * float(lv.get("bog_jump_cells", 2)) * Tune.f("cell") + 1.0))
 				coyote_t = 0.0
 				jump_buf = 0.0
 				Events.hero_acted.emit(&"jump", 1.0)
@@ -360,6 +367,8 @@ func _on_platform() -> bool:
 		var col := c.get_collider()
 		if col is CollisionObject2D and (col as CollisionObject2D).get_collision_layer_value(PLATFORM_LAYER):
 			return true
+	if world and world.room is LevelRoom:
+		return (world.room as LevelRoom).oneway_under(position)
 	return position.y < Tune.f("ground_y") - 1.0
 
 ## The strike body row of the main weapon (weapon_bodies.json).
@@ -504,7 +513,7 @@ func _mech_mult(e: Enemy) -> float:
 			if atk_dir == "down":
 				m *= float(r.get("mult", 2.0))
 		"juggle":
-			if e.has_meta(&"juggled") and DamageRules.is_airborne(e.position.y, Tune.f("ground_y"), Tune.f("air_target_margin")):
+			if e.has_meta(&"juggled") and DamageRules.is_airborne(e.position.y, e.ground(), Tune.f("air_target_margin")):
 				e.remove_meta(&"juggled")
 				m *= float(r.get("mult", 1.5))
 	if e.boss:
