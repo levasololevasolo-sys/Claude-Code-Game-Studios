@@ -35,6 +35,7 @@
       "Bash(bash .claude/scripts/web-detect.sh *)",
       "Bash(bash .claude/scripts/write-guard.sh *)",
       "Bash(bash .claude/hooks/yaml-helper.sh resolve_config *)",
+      "Bash(bash \"/home/user/claude-code-game-studios/.claude/skills/*/../../hooks/yaml-helper.sh\" resolve_config *)",
       "Bash(bash .claude/hooks/yaml-helper.sh get_yaml_key *)",
       "Bash(bash .claude/hooks/yaml-helper.sh get_effective_yaml_key *)",
       "Bash(bash .claude/hooks/yaml-helper.sh resolve_setting *)",
