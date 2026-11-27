@@ -28,6 +28,8 @@ var _glow: Sprite2D
 var _was_floor: bool = true
 var _fall_vy: float = 0.0
 var _step_t: float = 0.0
+## Game-feel VFX of the room (src/vfx/vfx.gd), made here so it lives and dies with the room.
+var vfx: Vfx
 
 static var _dot: Texture2D
 
@@ -61,11 +63,20 @@ func _ready() -> void:
 	_glow.material = add
 	_glow.modulate = Color(1.0, 0.79, 0.42, float((vis.get("post", {}) as Dictionary).get("hero_glow", 0.13)))
 	add_child(_glow)
+	if world:
+		vfx = Vfx.new()
+		vfx.world = world
+		var lay: Dictionary = world.room.layout if world.room else {}
+		vfx.style = "base" if bool(lay.get("base", false)) else (String(world.room.look.get("props", "ruins")) if world.room else "ruins")
+		add_child(vfx)
 
 func _ambient(spec: Dictionary) -> CPUParticles2D:
 	var e := CPUParticles2D.new()
 	var kind := String(spec.get("kind", "dust"))
-	e.amount = int(spec.get("amount", 10))
+	# «Частицы» setting (vfx.json ambient_levels): fewer or no ambient particles.
+	var lv := VfxRules.level_mult(GameSettings.particles_level, Tune.table("vfx"), "ambient_levels")
+	e.amount = maxi(1, roundi(int(spec.get("amount", 10)) * lv))
+	e.emitting = lv > 0.0
 	e.lifetime = float(spec.get("life", 5.0))
 	e.preprocess = e.lifetime
 	e.local_coords = false
@@ -83,6 +94,7 @@ func _ambient(spec: Dictionary) -> CPUParticles2D:
 	e.initial_velocity_max = float(v[1])
 	var g: Array = spec.get("gravity", [0, 0])
 	e.gravity = Vector2(float(g[0]), float(g[1]))
+	e.set_meta("gx", float(g[0]))
 	var s: Array = spec.get("size", [0.05, 0.1])
 	e.scale_amount_min = float(s[0])
 	e.scale_amount_max = float(s[1])
@@ -146,6 +158,11 @@ func _process(dt: float) -> void:
 			_step_t = STEP_TIME
 			_puff(p.global_position, 3, 0.5)
 	_was_floor = on
+
+## Wind push on the ambient particles (frost gusts, Vfx): extra x gravity, px/s².
+func push_air(x: float) -> void:
+	for e in _air:
+		e.gravity.x = float(e.get_meta("gx", 0.0)) + x
 
 ## One-shot dust burst at `at` (feet), `n` particles, size factor `k`.
 func _puff(at: Vector2, n: int, k: float) -> void:

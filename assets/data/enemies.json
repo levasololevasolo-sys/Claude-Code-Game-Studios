@@ -1,7 +1,7 @@
 {
-  "_note": "Ordinary enemy kinds by id (ADR-0001, GDD enemies-and-elites §3.2 table, §3.4 behaviour; sizes from prototype EDEF, numbers from prototypes/last-lumen/config.js). Distances px, times s, speeds px/s, damage before tier multipliers. contact = touch damage to the hero (0 = none). *_damp = fraction of speed kept per 1/60 s. color/eye = placeholder body and glowing-eye colours.",
+  "_note": "Ordinary enemy kinds by id; material = hit/death VFX material (vfx.json materials, default flesh) (ADR-0001, GDD enemies-and-elites §3.2 table, §3.4 behaviour; sizes from prototype EDEF, numbers from prototypes/last-lumen/config.js). Distances px, times s, speeds px/s, damage before tier multipliers. contact = touch damage to the hero (0 = none). *_damp = fraction of speed kept per 1/60 s. color/eye = placeholder body and glowing-eye colours.",
   "crawler": {
-    "name": "Трясинник", "pack_role": "bruiser", "role": "ram", "w": 58, "h": 32, "hp": 34, "flies": false, "weight": 1, "embers": 3,
+    "material": "flesh", "name": "Трясинник", "pack_role": "bruiser", "role": "ram", "w": 58, "h": 32, "hp": 34, "flies": false, "weight": 1, "embers": 3,
     "contact": 12, "charge_contact_mult": 1.5, "color": "#4d5e43", "eye": "#ffd36a",
     "speed": 95, "range_x": 420, "range_y": 140, "wind": 0.5, "charge": 640, "charge_time": 0.6, "wall_stop": 40,
     "recover": 0.7, "recover_damp": 0.85, "cd_min": 1.2, "cd_max": 2.4,
@@ -9,7 +9,7 @@
     "leap_side_max": 520, "leap_time": 1.2, "leap_min_air": 0.2, "leap_recover": 0.6
   },
   "bat": {
-    "name": "Нетопырь", "role": "air_harrier", "w": 50, "h": 30, "hp": 20, "flies": true, "weight": 0.6, "embers": 2,
+    "material": "flesh", "name": "Нетопырь", "role": "air_harrier", "w": 50, "h": 30, "hp": 20, "flies": true, "weight": 0.6, "embers": 2,
     "contact": 10, "color": "#3b2f4a", "eye": "#ff6bd0",
     "hover_dx": 180, "hover_dy": 220, "hover_bob": 20, "hover_bob_freq": 2, "hover_gain": 2.2, "hover_resp": 3,
     "hover_max_x": 220, "hover_max_y": 200, "wind": 0.55, "wind_damp": 0.9, "wind_rise": 40, "aim_dy": 24,
@@ -18,14 +18,14 @@
     "spit_r": 8, "spit_life": 3, "spit_cd_min": 1.8, "spit_cd_max": 3.0
   },
   "sentry": {
-    "name": "Упырь-щитник", "role": "shield_bearer", "w": 40, "h": 76, "hp": 50, "flies": false, "weight": 1.8, "embers": 4,
+    "material": "undead", "name": "Упырь-щитник", "role": "shield_bearer", "w": 40, "h": 76, "hp": 50, "flies": false, "weight": 1.8, "embers": 4,
     "contact": 8, "front_shield": true, "shield_block": 0.0, "color": "#5a6470", "eye": "#9fffb0", "shield": "#8d7a55", "shield_rim": "#c9b88a",
     "turn": 0.7, "walk_speed": 65, "stop": 80,
     "bash_range": 115, "bash_wind": 0.6, "bash_dmg": 16, "bash_push": 420, "bash_cd": 2.0, "bash_hit_x": 120, "bash_hit_y": 80,
     "bash_recover": 0.5, "recover_damp": 0.85
   },
   "thrower": {
-    "name": "Упырь-метатель", "pack_role": "ranged", "role": "thrower", "w": 36, "h": 70, "hp": 34, "flies": false, "weight": 1.1, "embers": 4,
+    "material": "undead", "name": "Упырь-метатель", "pack_role": "ranged", "role": "thrower", "w": 36, "h": 70, "hp": 34, "flies": false, "weight": 1.1, "embers": 4,
     "contact": 6, "color": "#6a5a4e", "eye": "#ffb070", "pouch": "#4a3a2c",
     "keep_min": 300, "keep_max": 520, "walk_speed": 75, "back_speed": 70, "flee_range": 220, "flee_speed": 140, "corner_px": 110,
     "fire_range": 950, "aim": 0.8, "fire": 2.6, "fire_jitter": 0.15,
@@ -34,52 +34,52 @@
     "shove_range": 95, "shove_wind": 0.4, "shove_dmg": 8, "shove_push": 300, "shove_cd": 1.6, "shove_hit_x": 100, "shove_hit_y": 80
   },
   "bloat": {
-    "name": "Утопленник", "pack_role": "flyer", "role": "living_bomb", "w": 56, "h": 56, "hp": 26, "flies": true, "weight": 0.8, "embers": 3,
+    "material": "undead", "name": "Утопленник", "pack_role": "flyer", "role": "living_bomb", "w": 56, "h": 56, "hp": 26, "flies": true, "weight": 0.8, "embers": 3,
     "contact": 0, "color": "#6f8a7a", "eye": "#d36bd0",
     "speed": 75, "bob": 30, "bob_freq": 3, "target_dy": 40, "trigger": 120, "fuse": 0.85, "swell_damp": 0.9,
     "death_fuse": 0.35, "radius": 125, "dmg": 22, "enemy_mult": 2, "enemy_kb": 500, "blast_time": 0.35, "blast_shake": 12
   },
   "ringer": {
-    "name": "Аука", "role": "flanker", "w": 36, "h": 70, "hp": 40, "flies": false, "weight": 1.2, "embers": 4,
+    "material": "wood", "name": "Аука", "role": "flanker", "w": 36, "h": 70, "hp": 40, "flies": false, "weight": 1.2, "embers": 4,
     "contact": 6, "color": "#3f5240", "eye": "#ffb35c", "arm": "#2e3b2e",
     "speed": 85, "stop": 150, "range_x": 560, "range_y": 160, "call": 0.7, "gone": 0.35, "behind_dx": 130,
     "appear": 0.45, "swipe_time": 0.2, "swipe_step": 180, "swipe_x": 90, "swipe_dmg": 13, "recover": 0.8,
     "cd_min": 2.0, "cd_max": 3.2
   },
   "rootling": {
-    "name": "Лешачонок", "role": "burrower", "w": 40, "h": 42, "hp": 30, "flies": false, "weight": 0.9, "embers": 3,
+    "material": "wood", "name": "Лешачонок", "role": "burrower", "w": 40, "h": 42, "hp": 30, "flies": false, "weight": 0.9, "embers": 3,
     "contact": 8, "color": "#5b4632", "eye": "#c8f07a", "dirt": "#4a3b2c", "twig": "#7a6248",
     "speed": 80, "range_x": 640, "range_y": 200, "dig": 0.5, "under_max": 2.2, "under_speed": 300, "under_stop": 12,
     "rise_w": 0.6, "burst_up": 620, "burst_time": 0.3, "burst_r": 60, "burst_h": 120, "burst_dmg": 14, "recover": 0.9,
     "cd_min": 1.8, "cd_max": 3.0
   },
   "wolf": {
-    "name": "Снежный волк", "role": "pack_runner", "w": 62, "h": 38, "hp": 32, "flies": false, "weight": 1.0, "embers": 3,
+    "material": "flesh", "name": "Снежный волк", "role": "pack_runner", "w": 62, "h": 38, "hp": 32, "flies": false, "weight": 1.0, "embers": 3,
     "contact": 8, "color": "#4a5a72", "mane": "#dde8f0", "eye": "#ff5a3a",
     "speed": 170, "stop": 70, "range_x": 300, "range_y": 120, "crouch": 0.45, "bite_speed": 600, "bite_up": 240, "bite_time": 0.3,
     "bite_mult": 1.6, "hop_speed": 320, "hop_up": 420, "hop_time": 0.45, "recover": 0.5, "cd_min": 1.4, "cd_max": 2.4
   },
   "jelly": {
-    "name": "Студёный дух", "role": "zone", "w": 46, "h": 54, "hp": 30, "flies": true, "weight": 0.7, "embers": 3,
+    "material": "ice", "name": "Студёный дух", "role": "zone", "w": 46, "h": 54, "hp": 30, "flies": true, "weight": 0.7, "embers": 3,
     "contact": 6, "color": "#2f4f7a", "core": "#a3206f", "eye": "#8fd3f5",
     "drift": 70, "hover_dy": 230, "hover_dx": 60, "drift_resp": 2.0, "range_x": 700, "range_y": 520,
     "chill_w": 0.9, "zone_w": 170, "zone_time": 3.0, "zone_tick": 0.5, "zone_dmg": 4, "zone_slow": 0.6, "zone_max": 2, "zone_dy": 10,
     "cd_min": 2.6, "cd_max": 3.8
   },
   "knight": {
-    "name": "Навий витязь", "role": "knight", "w": 46, "h": 88, "hp": 230, "flies": false, "weight": 2.6, "embers": 14,
+    "material": "metal", "name": "Навий витязь", "role": "knight", "w": 46, "h": 88, "hp": 230, "flies": false, "weight": 2.6, "embers": 14,
     "contact": 6, "color": "#2c2f3d", "eye": "#ffffff", "speed": 150, "stop": 110, "range_x": 320, "range_y": 170,
     "wind": 0.55, "lunge": 800, "lunge_time": 0.34, "guard": 0.9, "cd": 1.2, "dmg": 20, "lunge_hit_x": 60,
     "rage_at": 0.5, "rage_wind": 0.36, "rage_lunge": 1000, "rage_guard": 0.5, "rage_cd": 0.7, "rage_walk": 1.3
   },
   "balvan": {
-    "name": "Болванчик", "role": "plain_swing", "pack_role": "fodder", "w": 40, "h": 72, "hp": 24, "flies": false,
+    "material": "wood", "name": "Болванчик", "role": "plain_swing", "pack_role": "fodder", "w": 40, "h": 72, "hp": 24, "flies": false,
     "weight": 1.2, "embers": 2, "contact": 0, "color": "#8a6a4a", "eye": "#c2502a", "club": "#5b3a24", "straw": "#c9a85a",
     "speed": 90, "swing_range": 85, "range_y": 90, "wind": 0.7, "swing_time": 0.25, "reach": 70, "swing_dmg": 9.6,
     "swing_step": 60, "recover": 0.6, "cd_min": 0.8, "cd_max": 1.6
   },
   "shishiga": {
-    "name": "Шишига", "role": "cling", "pack_role": "fodder", "pack_min": 2, "w": 30, "h": 32, "hp": 12, "flies": false,
+    "material": "flesh", "name": "Шишига", "role": "cling", "pack_role": "fodder", "pack_min": 2, "w": 30, "h": 32, "hp": 12, "flies": false,
     "weight": 0.5, "embers": 1, "contact": 0, "color": "#4d5f3a", "eye": "#d23a9a", "sedge": "#7d9a7f",
     "speed": 120, "hop": 6, "leap_range": 320, "range_y": 120, "crouch": 0.6, "leap_speed": 420, "leap_up": 480,
     "leap_time": 1.2, "leap_min_air": 0.15, "leap_dmg": 3, "cling_dmg": 3, "cling_tick": 0.5, "cling_time": 3.0,
@@ -87,14 +87,14 @@
     "cd_min": 1.0, "cd_max": 2.0
   },
   "bognitsa": {
-    "name": "Болотница", "role": "false_floor", "pack_role": "ambusher", "spot": "bog", "w": 64, "h": 58, "hp": 36,
+    "material": "undead", "name": "Болотница", "role": "false_floor", "pack_role": "ambusher", "spot": "bog", "w": 64, "h": 58, "hp": 36,
     "flies": false, "weight": 1.4, "embers": 4, "contact": 0, "color": "#3e5a4a", "hair": "#24392f", "eye": "#d23a9a",
     "moss": "#4d5f3a", "sedge": "#7d9a7f", "hummock_w": 120, "hummock_h": 26, "stand_time": 0.4, "shake": 0.5,
     "dive_time": 0.7, "rise": 0.5, "rise_dx": 120, "speed": 80, "reach": 100, "range_y": 90, "wind": 0.6,
     "swipe_time": 0.25, "swipe_dmg": 13.2, "recover": 0.6, "cd_min": 0.9, "cd_max": 1.7
   },
   "vodyanitsa": {
-    "name": "Водяница", "role": "ward_song", "pack_role": "support", "w": 34, "h": 84, "hp": 27, "flies": false,
+    "material": "undead", "name": "Водяница", "role": "ward_song", "pack_role": "support", "w": 34, "h": 84, "hp": 27, "flies": false,
     "weight": 0.9, "embers": 4, "contact": 0, "color": "#7d9a7f", "hair": "#24392f", "eye": "#d23a9a", "ring": "#b6e36b",
     "speed": 85, "keep_dx": 400, "song": 0.8, "song_r": 260, "ward_frac": 0.25, "ward_time": 6, "song_cd": 5,
     "song_break_cd": 2.0, "push_range": 160, "push_wind": 0.5, "push_time": 0.2, "push_dmg": 6, "push_hit_x": 110,

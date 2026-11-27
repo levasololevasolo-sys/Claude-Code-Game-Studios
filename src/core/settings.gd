@@ -33,6 +33,8 @@ const BUS_LABELS: Dictionary = { "Master": "Общая громкость", "SFX
 static var shake_on: bool = true
 ## Full screen flashes on (World.add_flash reads it); off = flash × flash_off_mult.
 static var flash_on: bool = true
+## «Частицы» level: 2 много, 1 мало, 0 выкл (VfxRules; Vfx and Atmosphere read it).
+static var particles_level: int = 2
 
 var path: String = DEFAULT_PATH
 var bindings: Dictionary = {}
@@ -40,6 +42,7 @@ var bindings: Dictionary = {}
 var volumes: Dictionary = {}
 var shake: bool = true
 var flash: bool = true
+var particles: int = 2
 
 func _init() -> void:
 	reset_all()
@@ -82,6 +85,7 @@ func reset_all() -> void:
 		volumes[b] = 1.0
 	shake = true
 	flash = true
+	particles = 2
 
 ## Key bindings back to the defaults (the «Сбросить» button).
 func reset_controls() -> void:
@@ -223,6 +227,7 @@ func to_config() -> ConfigFile:
 		cfg.set_value("audio", b, float(volumes.get(b, 1.0)))
 	cfg.set_value("screen", "shake", shake)
 	cfg.set_value("screen", "flash", flash)
+	cfg.set_value("screen", "particles", particles)
 	return cfg
 
 ## Reads a ConfigFile over the defaults: missing or malformed values keep the
@@ -246,6 +251,7 @@ func from_config(cfg: ConfigFile) -> void:
 		volumes[b] = clampf(float(cfg.get_value("audio", b, 1.0)), 0.0, 1.0)
 	shake = bool(cfg.get_value("screen", "shake", true))
 	flash = bool(cfg.get_value("screen", "flash", true))
+	particles = VfxRules.clamp_level(int(cfg.get_value("screen", "particles", 2)))
 
 ## Loads `p`; a missing or broken file leaves the defaults. True when read.
 func load_file(p: String) -> bool:
@@ -275,6 +281,7 @@ func apply() -> void:
 	apply_audio()
 	shake_on = shake
 	flash_on = flash
+	particles_level = particles
 	changed.emit()
 
 ## Replaces the key, mouse, pad-button and trigger events of every action; stick motions stay.
