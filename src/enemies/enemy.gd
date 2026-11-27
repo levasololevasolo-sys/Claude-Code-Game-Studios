@@ -16,6 +16,9 @@ signal damaged(enemy: Enemy, amount: float, hit: Hit)
 signal died(enemy: Enemy, hit: Hit)
 ## Emitted when the enemy wakes up (its pack was woken).
 signal woke(enemy: Enemy)
+## Emitted once per part when a limb is cut (GDD limb-zones §3.4): "arm" or "head".
+## The visual hook: the art pass swaps the placeholder LimbPart / LimbMark here.
+signal limb_severed(enemy: Enemy, limb: String)
 
 ## Key of the kind in the enemy table.
 var kind_id: String = ""
@@ -107,6 +110,12 @@ var called: int = 0
 var called_half: bool = false
 var called_wake: bool = false
 var mark_blast_t: float = 0.0
+## Limb zones (GDD limb-zones): the attacking arm / the head is cut off.
+var arm_off: bool = false
+var head_off: bool = false
+## Cut parts spawned while not in a world (tests read and free them).
+var orphan_parts: Array[LimbPart] = []
+var _limb_mark: LimbMark
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -233,6 +242,9 @@ func hero() -> Player:
 ## Position of the hero's feet; own position when there is no hero.
 func hero_pos() -> Vector2:
 	var p := hero()
+	if p and head_off:
+		# Headless (limb-zones §3.3, F5): it swings at where it guesses the hero is.
+		return LimbRules.headless_aim(p.position, anim, Tune.f("limb_headless_err"), Tune.f("limb_headless_freq"))
 	return p.position if p else position
 
 ## Hits the hero through Player.hurt (ADR-0002). `dmg` is before tier multipliers.
@@ -285,6 +297,10 @@ func hurt(hit: Hit) -> float:
 	var view := hit_view()
 	var ctx := status_ctx()
 	var dmg := DamageRules.final(hit, view, Tune.data)
+	# Limb zones (limb-zones §3.2-3.3, F2): the cutting hit is re-checked here, so a
+	# part is never cut twice; a plain hit keeps its damage.
+	var limb := hit.limb if hit.kind == Hit.Kind.STRIKE and limbs_on() and LimbRules.can_cut(hit.limb, limb_row(), arm_off, head_off) else ""
+	dmg *= LimbRules.bonus_mult(limb, Tune.data)
 	if mark == "ward":
 		var wa := EliteMarks.ward_absorb(ward, dmg, hit.kind == Hit.Kind.SLAM or hit.kind == Hit.Kind.WALL, Tune.f("shield_break_mult"))
 		ward -= wa.x
@@ -302,6 +318,8 @@ func hurt(hit: Hit) -> float:
 	if hit.stun > 0.0:
 		stun = maxf(stun, hit.stun * (Tune.f("boss_stun_mult") if boss else 1.0))
 	damaged.emit(self, dmg, hit)
+	if limb != "":
+		_cut(limb, hit)
 	if hit.has_status() or hit.boss_burst_min > 0:
 		_apply_statuses(hit, ctx)
 	_after_hurt(hit)
@@ -326,6 +344,99 @@ func _wake_my_pack() -> void:
 		world.wake_pack(pack)
 	else:
 		wake()
+
+# ---------------- limb zones (GDD limb-zones) ----------------
+
+## The kind's row of limb_zones.json ({} = no zones).
+func limb_row() -> Dictionary:
+	return Tune.table("limb_zones").get(kind_id, {})
+
+## True when this enemy has limb zones now (never bosses; elites by the knob).
+func limbs_on() -> bool:
+	return LimbRules.eligible(limb_row(), boss, mark != "", prop, Tune.data)
+
+## The live zones in world space ({"arm": Rect2, "head": Rect2}).
+func limb_zones() -> Dictionary:
+	if not limbs_on():
+		return {}
+	return LimbRules.zones(limb_row(), position, w, h, face, arm_off, head_off)
+
+## Which part a hero strike rect cuts: "arm", "head" or "" (limb-zones F1, §3.2-3.3).
+func limb_at(strike: Rect2, dir: String, hero_x: float, hero_airborne: bool) -> String:
+	if not limbs_on() or dead:
+		return ""
+	return LimbRules.pick(strike, hurt_rect(), limb_row(), position, w, h, face, dir, hero_x, hero_airborne, st, arm_off, head_off, Tune.data)
+
+## Cuts `limb` (already checked by hurt()): sets the flag, changes the attack,
+## throws the part, shows the word, hit-stop and shake, emits limb_severed.
+func _cut(limb: String, hit: Hit) -> void:
+	var row := limb_row()
+	var away := 1 if position.x >= hit.from_x else -1
+	if limb == LimbRules.ARM:
+		arm_off = true
+		stats = LimbRules.one_arm_stats(stats, row.get("one_arm", {}))
+		if bool(row.get("drops_shield", false)):
+			front_shield = false
+		# The attack is cancelled: a stagger, then a fresh decision (§3.2).
+		st = "idle"
+		t = 0.0
+		vel.x = 0.0
+		stun = maxf(stun, Tune.f("limb_arm_stagger"))
+		cd = maxf(cd, Tune.f("limb_arm_recover"))
+	else:
+		head_off = true
+		eye_pts.clear()
+	_spawn_part(limb, row, away)
+	status.add_fx("burst", Tune.f("status_fx_time") * 1.5)
+	if _limb_mark == null:
+		_limb_mark = LimbMark.new()
+		_limb_mark.name = "LimbMark"
+		_limb_mark.enemy = self
+		add_child(_limb_mark)
+	_limb_mark.say("Без руки!" if limb == LimbRules.ARM else "Голова с плеч!", Tune.f("limb_word_time"))
+	if world:
+		world.request_hitstop(Tune.f("limb_hitstop"))
+		world.add_shake(Tune.f("limb_shake"))
+	limb_severed.emit(self, limb)
+
+## The flying piece (placeholder shape in the kind's colours, LimbPart).
+func _spawn_part(limb: String, row: Dictionary, away: int) -> LimbPart:
+	var part := LimbPart.new()
+	part.limb = limb
+	part.source = self
+	part.world = world
+	part.life = Tune.f("limb_part_life")
+	var body := Color(String(stats.get("color", "#666666")))
+	part.eye = Color(String(stats.get("eye", "#ffffff")))
+	if limb == LimbRules.ARM:
+		var key := String(row.get("arm_colour", ""))
+		part.colour = Color(String(stats[key])) if stats.has(key) else (Color(key) if key.begins_with("#") else body.darkened(0.2))
+		var ln := float(row.get("arm_len", 30.0))
+		part.poly = PackedVector2Array([Vector2(0, -3), Vector2(ln, -4), Vector2(ln + 4, 0), Vector2(ln, 4), Vector2(0, 3)])
+		var rt: Array = row.get("arm_root", [0.3, 0.6])
+		part.position = position + Vector2(float(rt[0]) * w * face, -float(rt[1]) * h)
+		part.vel = LimbRules.part_velocity(away, Tune.f("limb_arm_speed"), Tune.f("limb_arm_up"))
+		part.spin = 9.0 * away
+	else:
+		var hs: Array = row.head
+		var rr := Tune.f("limb_head_r")
+		part.r = rr
+		part.colour = body.lightened(0.05)
+		var pts := PackedVector2Array()
+		for i in 10:
+			var a := TAU * float(i) / 10.0
+			pts.append(Vector2(cos(a) * rr, sin(a) * rr * 0.9 - rr * 0.6))
+		part.poly = pts
+		part.position = position + Vector2((float(hs[0]) + float(hs[1])) * 0.5 * w * face, -float(hs[3]) * h + rr)
+		part.vel = LimbRules.part_velocity(away, Tune.f("limb_head_speed"), Tune.f("limb_head_up"))
+		part.spin = 7.0 * away
+		part.dmg = Tune.f("limb_head_dmg") * dmg_mult()
+		part.kb = Tune.f("limb_part_kb")
+	if world:
+		world.add_child(part)
+	else:
+		orphan_parts.append(part)
+	return part
 
 # ---------------- tick ----------------
 
@@ -441,6 +552,9 @@ func light_spots() -> Array[Vector4]:
 ## x scale of the current draw transform (kinds that mirror with face pass it),
 ## so the recorded eye points for light_spots() are in plain local space.
 func _draw_eyes(a: Vector2, b: Vector2, size: float, flip: float = 1.0) -> void:
+	if head_off:
+		eye_pts.clear()
+		return
 	eye_pts.assign([Vector2(a.x * flip, a.y), Vector2(b.x * flip, b.y)])
 	eye_size = size
 	var c := Color(String(stats.get("eye", "#ffffff")))

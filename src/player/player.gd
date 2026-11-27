@@ -396,6 +396,11 @@ func _strike_hits() -> void:
 		hit.source = self
 		hit.pierce = bool(b.get("pierce", false))
 		hit.stun = float(b.get("stun", 0.0))
+		# Limb zones (limb-zones F1): which part the blade meets on this enemy.
+		for r in rects:
+			if r.intersects(e.hurt_rect()):
+				hit.limb = e.limb_at(r, atk_dir, position.x, not is_on_floor())
+				break
 		var blocked := DamageRules.shield_blocks(hit, e.hit_view())
 		_rune_strike(hit, fin)
 		_mech_on_hit(e, hit, fin)

@@ -182,6 +182,8 @@ func _on_node_added(n: Node) -> void:
 	elif n.has_signal("damaged") and n.has_signal("woke"):
 		n.connect("damaged", _on_enemy_damaged)
 		n.connect("woke", _on_enemy_woke)
+		if n.has_signal("limb_severed"):
+			n.connect("limb_severed", func(e: Node, _limb: String) -> void: play_at(&"hit_heavy", (e as Node2D).global_position, -1, 0.75))
 		# `boss` may be set after the node enters the tree: track every enemy, filter when polling.
 		if _bosses.size() > 64:
 			_bosses = _bosses.filter(func(w: WeakRef) -> bool: return w.get_ref() != null)

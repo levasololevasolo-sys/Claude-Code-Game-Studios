@@ -100,13 +100,15 @@ func _draw() -> void:
 	draw_set_transform(Vector2(shake, sink), 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	# a stump-child: round root body, twig horns, root legs
-	var body := PackedVector2Array([Vector2(-w * 0.5, 0), Vector2(-w * 0.5, -h * 0.6), Vector2(-w * 0.2, -h), Vector2(w * 0.25, -h),
-		Vector2(w * 0.5, -h * 0.6), Vector2(w * 0.5, 0)])
+	var top := 0.58 if head_off else 1.0
+	var body := PackedVector2Array([Vector2(-w * 0.5, 0), Vector2(-w * 0.5, -h * minf(0.6, top)), Vector2(-w * 0.2, -h * top), Vector2(w * 0.25, -h * top),
+		Vector2(w * 0.5, -h * minf(0.6, top)), Vector2(w * 0.5, 0)])
 	draw_colored_polygon(body, c)
 	var twig := Color(String(stats.get("twig", "#7a6248")))
-	draw_line(Vector2(-w * 0.15, -h), Vector2(-w * 0.35, -h - 14), twig, 3.0)
-	draw_line(Vector2(w * 0.15, -h), Vector2(w * 0.3, -h - 16), twig, 3.0)
-	draw_line(Vector2(w * 0.3, -h - 16), Vector2(w * 0.45, -h - 20), twig, 2.0)
+	if not head_off:
+		draw_line(Vector2(-w * 0.15, -h), Vector2(-w * 0.35, -h - 14), twig, 3.0)
+		draw_line(Vector2(w * 0.15, -h), Vector2(w * 0.3, -h - 16), twig, 3.0)
+		draw_line(Vector2(w * 0.3, -h - 16), Vector2(w * 0.45, -h - 20), twig, 2.0)
 	for i in 3:
 		var lx := -w * 0.35 + i * w * 0.35
 		draw_line(Vector2(lx, -2), Vector2(lx - 5 + sin(anim * 10 + i) * 3, 0), twig, 3.0)

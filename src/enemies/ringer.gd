@@ -119,18 +119,22 @@ func _draw() -> void:
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	c.a = fade
 	# a thin, stooped forest voice: long body, hood of moss, long arms
-	var body := PackedVector2Array([Vector2(-w * 0.4, 0), Vector2(-w * 0.45, -h * 0.55), Vector2(-w * 0.2 + lean * 0.5, -h),
-		Vector2(w * 0.3 + lean, -h * 0.92), Vector2(w * 0.45 + lean * 0.5, -h * 0.5), Vector2(w * 0.35, 0)])
+	# Headless (limb-zones §3.4): the hood is gone, the shoulders end at the neck.
+	var top := 0.74 if head_off else 1.0
+	var body := PackedVector2Array([Vector2(-w * 0.4, 0), Vector2(-w * 0.45, -h * 0.55), Vector2(-w * 0.2 + lean * 0.5, -h * top),
+		Vector2(w * 0.3 + lean, -h * minf(0.92, top)), Vector2(w * 0.45 + lean * 0.5, -h * 0.5), Vector2(w * 0.35, 0)])
 	draw_colored_polygon(body, c)
 	var arm := Color(String(stats.get("arm", "#3a4a3a")), fade)
 	var reach := Vector2(w * 0.9 + 18.0, -h * 0.45) if st == "swipe" else Vector2(w * 0.5, -h * 0.15 + sin(anim * 2.0) * 4.0)
-	draw_line(Vector2(w * 0.2 + lean, -h * 0.75), reach, arm, 4.0)
-	for f in 3:
-		draw_line(reach, reach + Vector2(8.0, -6.0 + f * 6.0), arm, 2.0)
-	if st == "call":
+	if not arm_off:
+		draw_line(Vector2(w * 0.2 + lean, -h * 0.75), reach, arm, 4.0)
+		for f in 3:
+			draw_line(reach, reach + Vector2(8.0, -6.0 + f * 6.0), arm, 2.0)
+	if st == "call" and not head_off:
 		# the «ау!» mouth: a glowing O
 		draw_circle(Vector2(w * 0.3 + lean, -h * 0.7), 5.0 + 2.0 * sin(anim * 20.0), Color(eye, 0.9))
 	if st == "swipe":
+		# One-armed: the swipe is a short shoulder shove (shorter arc, one_arm stats).
 		draw_arc(Vector2(w * 0.4, -h * 0.5), stat("swipe_x") * 0.6, -1.2, 1.0, 12, Color(eye, 0.7), 3.0)
 	_draw_windup_outline(body)
 	_draw_eyes(Vector2(w * 0.05 + lean, -h * 0.84), Vector2(w * 0.22 + lean, -h * 0.82), 2.5, face)

@@ -1,0 +1,15 @@
+OK   arm cut during the wind-up: cuts ["arm"]
+OK   bonus damage of the cut: [16.5] (plain 11.0 x 1.50)
+OK   attack cancelled: state idle, stun 0.45
+OK   one-armed swipe reach 54.0 (was 90.0)
+OK   arm piece flies: 1
+screenshot limb-arm.png
+OK   second arm cut refused: cuts 1, damage 5.0
+OK   head off from the down-air strike: cuts ["head"]
+OK   head bonus damage: [22.0] (plain 11.0 x 2.00)
+OK   it lives on headless: hp 18.0 / 40.0
+OK   no head zone any more
+screenshot limb-head.png
+OK   the flying head hurts another enemy: [18.0]
+OK   still alive after the head flew
+DONE: 0 failed checks

@@ -83,13 +83,18 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
 	draw_rect(Rect2(-w / 2, -h * 0.78, w, h * 0.78), c)
-	draw_rect(Rect2(-w / 2 + 4, -h, w - 8, h * 0.26), c.darkened(0.2))
-	draw_rect(Rect2(-w / 2 - 2, -h * 1.02, w + 4, 6), Color("#7a1f24"))
-	draw_line(Vector2(-4, -h), Vector2(-4, -h - 22), Color("#b0202a"), 6.0)
+	if not head_off:
+		draw_rect(Rect2(-w / 2 + 4, -h, w - 8, h * 0.26), c.darkened(0.2))
+		draw_rect(Rect2(-w / 2 - 2, -h * 1.02, w + 4, 6), Color("#7a1f24"))
+		draw_line(Vector2(-4, -h), Vector2(-4, -h - 22), Color("#b0202a"), 6.0)
 	var shield_x := w / 2 + (2.0 if st == "guard" else -6.0)
 	draw_rect(Rect2(shield_x, -h * 0.75, 10, h * 0.5), Color("#8c8f9e") if st == "guard" else Color("#4a4d5a"))
-	var spear := 40.0 + (40.0 if st == "lunge" else 0.0)
-	draw_line(Vector2(w / 2 - 4, -h * 0.55), Vector2(w / 2 + spear, -h * 0.55), Color("#c9c3b0"), 4.0)
+	if not arm_off:
+		var spear := 40.0 + (40.0 if st == "lunge" else 0.0)
+		draw_line(Vector2(w / 2 - 4, -h * 0.55), Vector2(w / 2 + spear, -h * 0.55), Color("#c9c3b0"), 4.0)
+	elif st == "lunge":
+		# One-armed: a shoulder ram with the shield forward (limb-zones §3.2).
+		draw_rect(Rect2(w / 2 + 2, -h * 0.75, 12, h * 0.5), Color("#8c8f9e"))
 	_draw_windup_outline(PackedVector2Array([Vector2(-w / 2, 0), Vector2(-w / 2, -h), Vector2(w / 2, -h), Vector2(w / 2, 0)]))
 	var eye := 4.0 if st == "wind" else 2.5
 	_draw_eyes(Vector2(4, -h * 0.88), Vector2(14, -h * 0.88), eye, face)

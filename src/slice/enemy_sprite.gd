@@ -32,6 +32,19 @@ var _cur: String = ""
 var _frame_f: float = 0.0
 var _hurt_t: float = 0.0
 var _last_flash: float = 0.0
+## Placeholder cut of severed parts on the sheet (GDD limb-zones §3.4): a shader
+## that drops the pixels of the cut head / arm area. The art pass replaces it
+## with real cut-out sheets. null until the first cut.
+var _cut_mat: ShaderMaterial
+var _cut_key: String = ""
+const CUT_SHADER: String = """shader_type canvas_item;
+uniform vec4 cut_a = vec4(0.0);
+uniform vec4 cut_b = vec4(0.0);
+varying vec2 local_px;
+void vertex() { local_px = VERTEX; }
+bool inside(vec4 r, vec2 p) { return r.z > r.x && p.x >= r.x && p.x <= r.z && p.y >= r.y && p.y <= r.w; }
+void fragment() { if (inside(cut_a, local_px) || inside(cut_b, local_px)) { discard; } }
+"""
 
 
 ## True when a rendered sheet set exists for this enemy kind.
@@ -177,6 +190,38 @@ func _process(dt: float) -> void:
 		_sprite.frame = fi % n if bool(a.loop) else mini(fi, n - 1)
 	scale.x = float(enemy.face)
 	modulate = Color(2.5, 2.5, 2.5) if enemy.flash > 0.0 else Color.WHITE
+	_update_cut()
 	if _rim:
 		_rim.frame = _sprite.frame
 		_rim_mat.set_shader_parameter("fade", 0.0 if enemy.dead else 1.0)
+
+
+
+## Sheet-space rect (x0, y0, x1, y1) of a cut part, from the limb_zones.json
+## spec: the head cuts everything above its lower edge, the arm everything
+## forward of its root inside its height. Pure: tested without a sprite.
+static func cut_rect(limb: String, spec: Array, w: float, h: float, sprite_scale: float) -> Vector4:
+	var big := 100000.0
+	var k := 1.0 / maxf(sprite_scale, 0.0001)
+	if limb == "head":
+		return Vector4(-big, -big, big, -float(spec[2]) * h * k)
+	return Vector4(float(spec[0]) * w * k, -float(spec[3]) * h * k, big, -float(spec[2]) * h * k)
+
+
+func _update_cut() -> void:
+	var key := "%s%s" % [enemy.arm_off, enemy.head_off]
+	if key == _cut_key or not (enemy.arm_off or enemy.head_off):
+		return
+	_cut_key = key
+	var row := enemy.limb_row()
+	if _cut_mat == null:
+		var sh := Shader.new()
+		sh.code = CUT_SHADER
+		_cut_mat = ShaderMaterial.new()
+		_cut_mat.shader = sh
+		_sprite.material = _cut_mat
+	var sc := _sprite.scale.x
+	if enemy.head_off and row.has("head"):
+		_cut_mat.set_shader_parameter("cut_a", cut_rect("head", row.head, enemy.w, enemy.h, sc))
+	if enemy.arm_off and row.has("arm"):
+		_cut_mat.set_shader_parameter("cut_b", cut_rect("arm", row.arm, enemy.w, enemy.h, sc))

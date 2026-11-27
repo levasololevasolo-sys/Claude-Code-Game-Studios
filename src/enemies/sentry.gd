@@ -80,12 +80,14 @@ func _draw() -> void:
 		_draw_glow(muzzle() - position, 26.0, Color(String(stats.eye)), 1.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(face, 1))
 	var c := Color.WHITE if flash > 0.0 else Color(String(stats.color))
-	var body := PackedVector2Array([Vector2(-w / 2, 0), Vector2(-w / 2 + 2, -h * 0.8), Vector2(-6, -h), Vector2(8, -h), Vector2(w / 2 - 4, -h * 0.8), Vector2(w / 2 - 6, 0)])
+	var top := 0.82 if head_off else 1.0
+	var body := PackedVector2Array([Vector2(-w / 2, 0), Vector2(-w / 2 + 2, -h * 0.8), Vector2(-6, -h * top), Vector2(8, -h * top), Vector2(w / 2 - 4, -h * 0.8), Vector2(w / 2 - 6, 0)])
 	draw_colored_polygon(body, c)
 	var lean := -6.0 if st == "bash" else 0.0
 	var shield := PackedVector2Array([Vector2(w / 2 - 4 - lean, -h * 0.85), Vector2(w / 2 + 10 - lean, -h * 0.8), Vector2(w / 2 + 10 - lean, -h * 0.15), Vector2(w / 2 - 4 - lean, -h * 0.1)])
-	draw_colored_polygon(shield, Color("#8d7a55") if not (stun > 0.0) else Color("#5a4d36"))
-	draw_polyline(shield + PackedVector2Array([shield[0]]), Color("#c9b88a"), 2.0)
+	if not arm_off:
+		draw_colored_polygon(shield, Color("#8d7a55") if not (stun > 0.0) else Color("#5a4d36"))
+		draw_polyline(shield + PackedVector2Array([shield[0]]), Color("#c9b88a"), 2.0)
 	_draw_windup_outline(body)
 	_draw_eyes(Vector2(0, -h * 0.85), Vector2(8, -h * 0.85), 2.5, face)
 	_draw_overlay()

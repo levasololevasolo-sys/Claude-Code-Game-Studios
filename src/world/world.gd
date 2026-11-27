@@ -13,7 +13,8 @@
 ## screen at start, `--god-check=<dir>` runs the scripted per-god check.
 ## Weapons (weapons-and-loot): `--weapon=<id>` / `--sub=<id>` pick the hero's
 ## weapons in the legacy modes, `--weapon-check=<dir>` runs the weapon check,
-## `--boss-check=<dir>` the scripted lair boss fight (Кикимора, enemies-and-elites §3.9).
+## `--boss-check=<dir>` the scripted lair boss fight (Кикимора, enemies-and-elites §3.9),
+## `--limb-check=<dir>` the limb zones check (arm cut, head pop; GDD limb-zones).
 ## `--story-check=<dir>` plays the prologue with scripted input and a god line
 ## (tests/integration/story); a new save starts with the Prologue otherwise.
 ## `--hero-shots=<dir>` saves hero rig poses (with `--hero-tier=1..5`, HeroVisual).
@@ -73,7 +74,7 @@ var first_run: bool = false
 var hero_armor: Dictionary = {}
 
 ## Flags that start the old single-room checks instead of a run.
-const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--vis-shots=", "--base-view"]
+const LEGACY_FLAGS: Array[String] = ["--level-check=", "--demo=", "--enemy-check=", "--flare-check=", "--god-check=", "--rune-offer=", "--room=", "--weapon-check=", "--hero-shots=", "--boss-check=", "--limb-check=", "--vis-shots=", "--base-view"]
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -182,6 +183,10 @@ func _ready() -> void:
 			var bc: Node = (load("res://tests/integration/enemies/boss_check_driver.gd") as GDScript).new()
 			bc.set("out_dir", a.trim_prefix("--boss-check="))
 			add_child(bc)
+		elif a.begins_with("--limb-check="):
+			var lmc: Node = (load("res://tests/integration/enemies/limb_check_driver.gd") as GDScript).new()
+			lmc.set("out_dir", a.trim_prefix("--limb-check="))
+			add_child(lmc)
 		elif a.begins_with("--hero-shots="):
 			var hs: Node = (load("res://tests/integration/hero/hero_shots_driver.gd") as GDScript).new()
 			hs.set("out_dir", a.trim_prefix("--hero-shots="))

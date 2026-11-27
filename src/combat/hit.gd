@@ -39,6 +39,9 @@ var boss_burst_min: int = 0
 var nested: bool = false
 ## Hero build modifiers (runes, buffs): "reaper", "heat"... Keys fixed by ADR-0007.
 var mods: Dictionary = {}
+## Limb the hero's strike lands on (GDD limb-zones): "arm", "head" or "" (plain
+## hit). Set by Player._strike_hits via Enemy.limb_at(); Enemy.hurt() re-checks it.
+var limb: String = ""
 ## Who struck (may be null).
 var source: Node = null
 
