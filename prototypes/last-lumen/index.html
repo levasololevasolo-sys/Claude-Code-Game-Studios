@@ -6,7 +6,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Last Lumen</title>
+<title>Навь</title>
 <style>
   html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
   body { font-variant-numeric: tabular-nums; }
@@ -18,10 +18,10 @@
 <script src="config.js"></script>
 <script>
 'use strict';
-// Last Lumen: a side-view action roguelite. A moth-winged lantern knight sets out from a warm
-// cave base into three drowned locations, each guarded by its own boss. Hits charge the lantern
-// (which is also the light you see by); a full lantern is spent on a Flare whose form depends on
-// the lantern carried. Boons after each room reshape the run; Embers and resources carry over.
+// Nav: a side-view action roguelite on Slavic myth. A fallen bogatyr, held to life by the thread of
+// the goddess Mokosh, sets out from a wooden outpost into three lands of Nav, each ruled by a monster
+// from the tales. Hits charge his god's amulet (which is also the light he sees by); a full amulet
+// bursts into that god's wrath. Boons after each room reshape the run; Embers and resources carry over.
 
 // ---- Built to be checked ----------------------------------------------------------------
 const params = new URLSearchParams(location.search);
@@ -30,13 +30,13 @@ const STEP = 1 / 60;            // simulation step in seconds; motion is per sec
 const W = 1280, H = 720;        // logical size
 const PIXEL = false;            // smooth modern 2D: no pixel look
 const FONT = "'Trebuchet MS', 'Segoe UI', Arial, sans-serif";
-const TITLE = 'Last Lumen';
+const TITLE = 'Навь';
 const CONTROLS = [
   'A / D или ← / → — бег',
   'Пробел / W / ↑ — прыжок (в воздухе ещё раз)',
   'Shift / K — рывок (неуязвим во время рывка)',
   'J / левая кнопка мыши — удар (серия)',
-  'L / правая кнопка мыши — Вспышка, когда фонарь полон',
+  'L / правая кнопка мыши — Вспышка, когда оберег полон',
   'E / Enter — использовать (жители, двери, врата)',
   'Esc / P — пауза · M — звук',
 ];
@@ -201,10 +201,10 @@ function writeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)
 let save = loadSave();
 
 const RES = {
-  gears: { name: 'Шестерни', one: 'шестерён', color: '#e0bd70' },
-  bronze: { name: 'Бронза', one: 'бронзы', color: '#d0874a' },
-  pearls: { name: 'Жемчуг', one: 'жемчуга', color: '#d8e8ff' },
-  cores: { name: 'Сердца стражей', one: 'сердце', color: '#ff7a9a' },
+  gears: { name: 'Болотное железо', one: 'болотного железа', color: '#c9a070' },
+  bronze: { name: 'Живица', one: 'живицы', color: '#e0b040' },
+  pearls: { name: 'Иней-камень', one: 'иней-камня', color: '#d8f0ff' },
+  cores: { name: 'Сердца чудищ', one: 'сердце', color: '#ff7a9a' },
 };
 const costText = c => Object.entries(c).map(([k, v]) => `${v} ${k === 'embers' ? 'углей' : RES[k].one}`).join(' + ');
 const canPay = c => Object.entries(c).every(([k, v]) => (k === 'embers' ? save.embers : save.res[k]) >= v);
@@ -212,36 +212,36 @@ function pay(c) { for (const [k, v] of Object.entries(c)) { if (k === 'embers') 
 
 const UPGRADES = [
   { id: 'vigor', name: 'Крепость', desc: () => `+${tune.up_vigor_hp} к максимальному здоровью`, max: 5, cost: [20, 35, 55, 80, 110] },
-  { id: 'wick', name: 'Длинный фитиль', desc: () => 'Забег начинается с +25% заряда фонаря', max: 3, cost: [30, 60, 100] },
-  { id: 'bright', name: 'Яркое пламя', desc: () => 'Вспышка наносит +15% урона', max: 3, cost: [40, 70, 110] },
+  { id: 'wick', name: 'Древний заговор', desc: () => 'Забег начинается с +25% заряда оберега', max: 3, cost: [30, 60, 100] },
+  { id: 'bright', name: 'Благословение Рода', desc: () => 'Вспышка наносит +15% урона', max: 3, cost: [40, 70, 110] },
   { id: 'sense', name: 'Чутьё углей', desc: () => 'Враги роняют +15% углей', max: 3, cost: [25, 50, 90] },
-  { id: 'reroll', name: 'Второй взгляд', desc: () => 'Один раз за забег перебросить дары (R)', max: 1, cost: [60] },
-  { id: 'second', name: 'Последний огонёк', desc: () => 'Раз за забег воскреснуть с 35% здоровья', max: 1, cost: [150] },
+  { id: 'reroll', name: 'Второй взгляд', desc: () => 'Один раз за забег перебросить руны (R)', max: 1, cost: [60] },
+  { id: 'second', name: 'Крепкая нить', desc: () => 'Раз за забег воскреснуть с 35% здоровья', max: 1, cost: [150] },
 ];
 const upCost = (u) => Math.round(u.cost[save.up[u.id]] * tune.up_cost_scale);
 
 // ---- Lanterns: each changes what the Flare does, and one passive ---------------------------------
 const LANTERNS = {
-  brass: { name: 'Медный фонарь', flare: 'Вспышка оглушает и поджигает всех вокруг',
+  brass: { name: 'Оберег Сварога', flare: 'Огонь Сварога оглушает и поджигает всех вокруг',
     passive: 'Горение от Вспышки длится дольше', light: '#ffb347', glass: ['#fff4c8', '#ff9a2a'], cost: null },
-  storm: { name: 'Грозовой фонарь', flare: 'Молния прыгает между врагами и бьёт каждого очень сильно',
-    passive: 'Каждый рывок заряжает фонарь', light: '#8fd3ff', glass: ['#eaf8ff', '#3fa8ff'], cost: { gears: 14, cores: 1 } },
-  moon: { name: 'Лунный фонарь', flare: 'Время для врагов почти замирает, а ты лечишься',
-    passive: 'Твой свет на 25% шире', light: '#d6dcff', glass: ['#ffffff', '#9aa8ff'], cost: { pearls: 14, cores: 1 } },
-  witch: { name: 'Ведьмин фонарь', flare: 'Выпускает огоньки, которые сами находят врагов',
-    passive: 'Каждое убийство заряжает фонарь', light: '#c77dff', glass: ['#f6e0ff', '#a24dff'], cost: { bronze: 14, cores: 1 } },
+  storm: { name: 'Оберег Перуна', flare: 'Молния Перуна прыгает между врагами и бьёт каждого очень сильно',
+    passive: 'Каждый рывок заряжает оберег', light: '#8fd3ff', glass: ['#eaf8ff', '#3fa8ff'], cost: { gears: 14, cores: 1 } },
+  moon: { name: 'Оберег Живы', flare: 'Жива останавливает время для врагов, а тебя лечит',
+    passive: 'Твой свет на 25% шире', light: '#9ff0b0', glass: ['#f0fff0', '#3fc070'], cost: { pearls: 14, cores: 1 } },
+  witch: { name: 'Оберег Велеса', flare: 'Выпускает навьи огоньки, которые сами находят врагов',
+    passive: 'Каждое убийство заряжает оберег', light: '#c77dff', glass: ['#f6e0ff', '#a24dff'], cost: { bronze: 14, cores: 1 } },
 };
 const LANTERN_ORDER = ['brass', 'storm', 'moon', 'witch'];
 
 // ---- Weapons: each its own combo, reach and feel -------------------------------------------------
 const WEAPONS = {
-  blade: { name: 'Клинок', desc: 'Серия из трёх взмахов, третий самый сильный', times: [0.24, 0.24, 0.32],
+  blade: { name: 'Меч-кладенец', desc: 'Серия из трёх взмахов, третий самый сильный', times: [0.24, 0.24, 0.32],
     mult: [1, 1, 1.8], charge: 1, lunge: 140, win: [0.25, 0.6], dmgKey: 'blade_dmg', cost: null },
-  spear: { name: 'Копьё-гарпун', desc: 'Длинный выпад на два удара, пробивает всех на линии', times: [0.32, 0.42],
+  spear: { name: 'Рогатина', desc: 'Длинный выпад на два удара, пробивает всех на линии', times: [0.32, 0.42],
     mult: [1, 1.7], charge: 1, lunge: 220, win: [0.3, 0.6], dmgKey: 'spear_dmg', cost: { gears: 10 } },
   sickles: { name: 'Парные серпы', desc: 'Очень быстрая серия из пяти ударов, последний — вихрь', times: [0.15, 0.15, 0.15, 0.15, 0.3],
     mult: [1, 1, 1, 1, 2.2], charge: 0.65, lunge: 90, win: [0.15, 0.65], dmgKey: 'sickles_dmg', cost: { pearls: 10 } },
-  hammer: { name: 'Молот-колокол', desc: 'Медленный и тяжёлый: разбивает щиты, второй удар трясёт землю', times: [0.5, 0.62],
+  hammer: { name: 'Булава', desc: 'Медленная и тяжёлая: разбивает щиты, второй удар трясёт землю', times: [0.5, 0.62],
     mult: [1, 1.4], charge: 1.8, lunge: 60, win: [0.46, 0.7], dmgKey: 'hammer_dmg', cost: { bronze: 10, cores: 1 } },
 };
 const WEAPON_ORDER = ['blade', 'spear', 'sickles', 'hammer'];
@@ -251,16 +251,16 @@ const BOONS = [
   { id: 'edge', kind: 'strike', name: 'Заточенный край', desc: 'Удары наносят +35% урона' },
   { id: 'arc', kind: 'strike', name: 'Широкий взмах', desc: 'Дальность удара +40%' },
   { id: 'thirst', kind: 'strike', name: 'Жаждущий клинок', desc: 'Каждый попавший удар лечит 1 здоровья' },
-  { id: 'kindling', kind: 'lantern', name: 'Растопка', desc: 'Удары заряжают фонарь на 50% быстрее' },
-  { id: 'linger', kind: 'lantern', name: 'Тлеющий остаток', desc: 'После Вспышки в фонаре остаётся 35% заряда' },
+  { id: 'kindling', kind: 'lantern', name: 'Растопка', desc: 'Удары заряжают оберег на 50% быстрее' },
+  { id: 'linger', kind: 'lantern', name: 'Тлеющий остаток', desc: 'После Вспышки в обереге остаётся 35% заряда' },
   { id: 'halo', kind: 'lantern', name: 'Слепящий ореол', desc: 'Враги в круге твоего света на 35% медленнее' },
   { id: 'echo', kind: 'flare', name: 'Эхо Вспышки', desc: 'Через секунду Вспышка повторяется с половиной силы' },
   { id: 'warm', kind: 'flare', name: 'Тёплый свет', desc: 'Вспышка лечит 15 здоровья' },
-  { id: 'pyre', kind: 'flare', name: 'Погребальный костёр', desc: 'Вспышка поджигает землю под врагами на 4 секунды' },
-  { id: 'emberdash', kind: 'dash', name: 'Угольный рывок', desc: 'Рывок сквозь врагов ранит, поджигает и заряжает фонарь' },
-  { id: 'swift', kind: 'dash', name: 'Лёгкие крылья', desc: 'Перезарядка рывка на 45% короче' },
-  { id: 'moth', kind: 'move', name: 'Третье крыло', desc: 'Ещё один прыжок в воздухе; зажми прыжок, чтобы парить' },
-  { id: 'shell', kind: 'body', name: 'Медный панцирь', desc: '+25 к максимальному здоровью и лечение на 25' },
+  { id: 'pyre', kind: 'flare', name: 'Купальский костёр', desc: 'Вспышка поджигает землю под врагами на 4 секунды' },
+  { id: 'emberdash', kind: 'dash', name: 'Угольный рывок', desc: 'Рывок сквозь врагов ранит, поджигает и заряжает оберег' },
+  { id: 'swift', kind: 'dash', name: 'Лёгкая поступь', desc: 'Перезарядка рывка на 45% короче' },
+  { id: 'moth', kind: 'move', name: 'Прыжок Финиста', desc: 'Ещё один прыжок в воздухе; зажми прыжок, чтобы парить' },
+  { id: 'shell', kind: 'body', name: 'Кольчуга Святогора', desc: '+25 к максимальному здоровью и лечение на 25' },
   { id: 'magnet', kind: 'body', name: 'Тяга добычи', desc: '+40% углей и ресурсов' },
   { id: 'reaper', kind: 'strike', name: 'Жнец', desc: 'Удар по оглушённому врагу наносит двойной урон' },
   { id: 'spark', kind: 'flare', name: 'Искры', desc: 'Каждое убийство выбивает искры, ранящие врагов рядом' },
@@ -271,18 +271,18 @@ const has = id => state.boons.includes(id);
 // ---- Locations: each its own look, enemies, resource and boss ---------------------------------------
 const GROUND = 640;
 const LOCS = {
-  clock: { name: 'Затопленные Часы', boss: 'clockmaker', res: 'gears', roster: ['crawler', 'bat', 'sentry'], late: ['bloat'],
-    blurb: 'Ржавые механизмы под водой. Страж: Часовщик-Утопленник', sigil: '#e0bd70',
-    pal: { skyTop: '#0b2230', skyBot: '#06121c', far: '#123446', mid: '#0d2633', wall: '#14303c',
-      ground: '#1c2f36', groundTop: '#4f8f8a', plat: '#2b3f44', platTop: '#c9a45a', water: '#1d5560', front: '#03080b', mote: 'rgba(170,230,220,0.35)' } },
-  belfry: { name: 'Безмолвная Колокольня', boss: 'warden', res: 'bronze', roster: ['ringer', 'sentry', 'bat'], late: ['bloat'],
-    blurb: 'Высокие залы с мёртвыми колоколами. Страж: Колокольный Страж', sigil: '#d0874a',
-    pal: { skyTop: '#1a1434', skyBot: '#0a0818', far: '#2a2050', mid: '#1c1638', wall: '#231c3e',
-      ground: '#231e33', groundTop: '#8a6fb5', plat: '#332b48', platTop: '#d0a55a', water: '#3a2a66', front: '#06040c', mote: 'rgba(220,200,255,0.3)' } },
-  reef: { name: 'Лунный Риф', boss: 'queen', res: 'pearls', roster: ['jelly', 'crawler', 'bat'], late: ['bloat'],
-    blurb: 'Светящиеся кораллы под луной. Страж: Королева Медуз', sigil: '#9fe3ff',
-    pal: { skyTop: '#06263a', skyBot: '#02101c', far: '#0b3b4f', mid: '#0a3040', wall: '#0b2c3a',
-      ground: '#16303a', groundTop: '#4fc0c8', plat: '#1f3f4a', platTop: '#9fe3e0', water: '#155a70', front: '#020a10', mote: 'rgba(160,240,255,0.45)' } },
+  clock: { name: 'Топь Кикиморы', boss: 'clockmaker', res: 'gears', roster: ['crawler', 'bat', 'sentry'], late: ['bloat'],
+    blurb: 'Гнилая трясина и мёртвые ивы. Хозяйка: Кикимора Болотная', sigil: '#8fd06a',
+    pal: { skyTop: '#17231b', skyBot: '#070b08', far: '#1f2e23', mid: '#16231a', wall: '#1b281e',
+      ground: '#1f2a1e', groundTop: '#6b8a4a', plat: '#2e3a28', platTop: '#a8925a', water: '#2a4a2a', front: '#040804', mote: 'rgba(190,240,140,0.45)' } },
+  belfry: { name: 'Тёмный бор', boss: 'warden', res: 'bronze', roster: ['ringer', 'sentry', 'bat'], late: ['bloat'],
+    blurb: 'Вековые сосны, где аукают духи. Хозяин: Лихо Одноглазое', sigil: '#e0b040',
+    pal: { skyTop: '#141b30', skyBot: '#06080f', far: '#1a2339', mid: '#121a2b', wall: '#172036',
+      ground: '#1b1f29', groundTop: '#5a6a8a', plat: '#2c3244', platTop: '#b08a5a', water: '#20263c', front: '#03040a', mote: 'rgba(200,210,255,0.3)' } },
+  reef: { name: 'Царство Морены', boss: 'queen', res: 'pearls', roster: ['jelly', 'crawler', 'bat'], late: ['bloat'],
+    blurb: 'Вечная стужа и ледяные терема. Владычица: Морена', sigil: '#bfe6ff',
+    pal: { skyTop: '#1a2a42', skyBot: '#08101c', far: '#2a4058', mid: '#20344a', wall: '#22364c',
+      ground: '#2a3a4c', groundTop: '#cfe8ff', plat: '#34485c', platTop: '#e8f4ff', water: '#3a5a78', front: '#050a12', mote: 'rgba(240,250,255,0.7)' } },
 };
 const LOC_ORDER = ['clock', 'belfry', 'reef'];
 const HUB_PAL = { skyTop: '#2a1a12', skyBot: '#100a08', far: '#3a2618', mid: '#2a1c14', wall: '#33231a',
@@ -392,24 +392,24 @@ function enterRoom(kind, loc, k) {
     s.mode = 'open'; s.world = 'hub';
     s.enemies.push(makeEnemy('dummy', HUB_X.dummy, GROUND));
     s.room.inter = [
-      { x: 290, label: 'Тлен, смотритель Очага: поговорить', act: () => talk('Тлен', keeperLines()) },
-      { x: HUB_X.shrine, label: 'Святилище: постоянные улучшения', act: () => openMenu('shrine') },
-      { x: HUB_X.lantern, label: 'Фонарщица Ива: фонари', act: () => openMenu('lantern') },
-      { x: HUB_X.armory, label: 'Кузнец Панцирь: оружие', act: () => openMenu('weapon') },
-      { x: HUB_X.gate, label: 'Врата: в путь', act: () => openMenu('gate') },
+      { x: 290, label: 'Пряха Доля: поговорить', act: () => talk('Пряха Доля', keeperLines()) },
+      { x: HUB_X.shrine, label: 'Капище Рода: постоянные улучшения', act: () => openMenu('shrine') },
+      { x: HUB_X.lantern, label: 'Ведунья Сова: обереги', act: () => openMenu('lantern') },
+      { x: HUB_X.armory, label: 'Кузнец Потап: оружие', act: () => openMenu('weapon') },
+      { x: HUB_X.gate, label: 'Ворота: в Навь', act: () => openMenu('gate') },
     ];
   } else if (kind === 'haven') {
     s.mode = 'open';
     const heal = Math.round(p.maxHp * tune.haven_heal);
     p.hp = Math.min(p.maxHp, p.hp + heal);
-    s.hint = `Убежище: +${heal} здоровья, забег сохранён`; s.hintT = 3.5;
+    s.hint = `Привал: +${heal} здоровья, забег сохранён`; s.hintT = 3.5;
     const left = LOC_ORDER.filter(id => !s.run.route.includes(id));
     const xs = left.length === 2 ? [820, 1180] : [1050];
     left.forEach((id, i) => s.room.inter.push({ x: xs[i], door: id, label: `Путь: ${LOCS[id].name}`, act: () => {
       s.run.route.push(id); s.run.locI++; save.run = null; writeSave(); enterRoom('combat', id, 1);
     } }));
     s.room.inter.push({ x: 120, door: 'home', label: 'Вернуться на базу с добычей', act: () => endRun(false, true) });
-    s.room.inter.push({ x: 470, label: 'Фонарь-маяк: забег сохранён', act: () => { snapshotRun(); sfx.pick(); s.hint = 'Сохранено'; s.hintT = 1.5; } });
+    s.room.inter.push({ x: 470, label: 'Охранный огонь: забег сохранён', act: () => { snapshotRun(); sfx.pick(); s.hint = 'Сохранено'; s.hintT = 1.5; } });
     snapshotRun();
   } else if (kind === 'boss') {
     s.mode = 'intro'; s.modeT = 1.6;
@@ -447,16 +447,16 @@ function spawnWave(list) {
   }
 }
 const EDEF = {
-  crawler: { w: 58, h: 32, hp: 'crawler_hp', embers: 3, name: 'Ржавый Ползун' },
-  bat: { w: 50, h: 30, hp: 'bat_hp', embers: 2, fly: true, name: 'Огарковая Мышь' },
-  sentry: { w: 40, h: 76, hp: 'sentry_hp', embers: 4, name: 'Щитоносец-Пика' },
-  bloat: { w: 56, h: 56, hp: 'bloat_hp', embers: 3, fly: true, name: 'Утопленный Пузырь' },
-  ringer: { w: 38, h: 72, hp: 'ringer_hp', embers: 4, name: 'Звонарь' },
-  jelly: { w: 50, h: 58, hp: 'jelly_hp', embers: 3, fly: true, name: 'Медуза-светлячок' },
-  dummy: { w: 44, h: 86, hp: 'player_hp', embers: 0, name: 'Манекен' },
-  clockmaker: { w: 120, h: 200, hp: 'clockmaker_hp', embers: 40, boss: true, name: 'Часовщик-Утопленник', sub: 'страж Затопленных Часов' },
-  warden: { w: 160, h: 190, hp: 'warden_hp', embers: 40, boss: true, name: 'Колокольный Страж', sub: 'страж Безмолвной Колокольни' },
-  queen: { w: 170, h: 150, hp: 'queen_hp', embers: 40, boss: true, fly: true, name: 'Королева Медуз', sub: 'стражница Лунного Рифа' },
+  crawler: { w: 58, h: 32, hp: 'crawler_hp', embers: 3, name: 'Трясинник' },
+  bat: { w: 50, h: 30, hp: 'bat_hp', embers: 2, fly: true, name: 'Нетопырь' },
+  sentry: { w: 40, h: 76, hp: 'sentry_hp', embers: 4, name: 'Упырь-щитник' },
+  bloat: { w: 56, h: 56, hp: 'bloat_hp', embers: 3, fly: true, name: 'Утопленник' },
+  ringer: { w: 38, h: 72, hp: 'ringer_hp', embers: 4, name: 'Аука' },
+  jelly: { w: 50, h: 58, hp: 'jelly_hp', embers: 3, fly: true, name: 'Студёный дух' },
+  dummy: { w: 44, h: 86, hp: 'player_hp', embers: 0, name: 'Чучело' },
+  clockmaker: { w: 120, h: 200, hp: 'clockmaker_hp', embers: 40, boss: true, name: 'Кикимора Болотная', sub: 'хозяйка Топи' },
+  warden: { w: 160, h: 190, hp: 'warden_hp', embers: 40, boss: true, name: 'Лихо Одноглазое', sub: 'хозяин Тёмного бора' },
+  queen: { w: 170, h: 150, hp: 'queen_hp', embers: 40, boss: true, fly: true, name: 'Морена', sub: 'владычица Стужи' },
 };
 function makeEnemy(kind, x, y, elite = false) {
   const d = EDEF[kind];
@@ -1221,7 +1221,7 @@ function updatePlay(dt) {
     if (d < 26 && m.t > 0.3) {
       m.got = true;
       if (m.type === 'ember') { state.runEmbers += m.v; sfx.ember(); }
-      else { state.runRes[m.type] += m.v; sfx.gear(); if (m.type === 'cores') { state.hint = 'Сердце стража добыто'; state.hintT = 2; } }
+      else { state.runRes[m.type] += m.v; sfx.gear(); if (m.type === 'cores') { state.hint = 'Сердце чудища добыто'; state.hintT = 2; } }
     }
   }
   state.loot = state.loot.filter(m => !m.got);
@@ -1259,7 +1259,7 @@ function updateBoon() {
       state.boons.push(b.id);
       if (b.id === 'shell') { state.p.maxHp += 25; state.p.hp = Math.min(state.p.maxHp, state.p.hp + 25); }
     }
-    sfx.pick(); state.mode = 'open'; state.hint = `Дар: ${b.name}`; state.hintT = 2;
+    sfx.pick(); state.mode = 'open'; state.hint = `Руна: ${b.name}`; state.hintT = 2;
     events.push({ t: state.t, type: 'boon', id: b.id });
   }
 }
@@ -1275,48 +1275,49 @@ function endRun(won, home = false) {
   save.run = null;
   writeSave();
   const got = RES_KEYS.filter(k => state.runRes[k]).map(k => `${RES[k].name.toLowerCase()} ${state.runRes[k]}`).join(', ');
-  state.gained = (won ? `Все три стража повержены! +${total} углей` : home ? `Ты вернулся на базу. +${total} углей` : `Унесено углей: ${total}`) + (got ? ` · ${got}` : '');
+  state.gained = (won ? `Все три чудища повержены! +${total} углей` : home ? `Ты вернулся на заставу. +${total} углей` : `Унесено углей: ${total}`) + (got ? ` · ${got}` : '');
   state.hintT = 0; state.banner = null;
   events.push({ t: state.t, type: won ? 'win' : home ? 'home' : 'lose' });
   scene = won || home ? 'results' : 'over';
 }
 
-// ---- Story: why the knight comes back ------------------------------------------------------------
-// The city drowned when its Keepers stole its lights. One flame was left: the Hearth, the Last Lumen.
-// The knight is a moth born from that flame: while the Hearth burns, every death returns the moth to it.
+// ---- Story: why the bogatyr comes back -------------------------------------------------------------
+// Koschei broke the Kalinov Bridge and Nav, the land of the dead, poured into the living world.
+// The gods' powers were torn apart by Nav's monsters. The bogatyr fell on the bridge, but the Spinner
+// of the goddess Mokosh still holds his thread: while it is whole, death only returns him to her wheel.
 const STORY_INTRO = [
-  'Город утонул в ту ночь, когда Стражи забрали его огни.',
-  'Остался один Очаг — Последний Люмен.',
-  'Ты — мотылёк, рождённый из его пламени.',
-  'Пока Очаг горит, ты всегда возвращаешься к свету.',
+  'Кощей разрушил Калинов мост, и Навь, царство мёртвых, хлынула в мир живых.',
+  'Силу старых богов растащили чудища Нави.',
+  'Ты — богатырь, павший на мосту. Но Пряха Мокоши держит твою нить.',
+  'Пока нить цела, смерть лишь возвращает тебя к её прялке.',
 ];
 function keeperLines() {
   const b = Object.keys(save.bosses).length;
   if (save.runs === 0) return [
-    'Снова пламя дало тебе крылья. Здравствуй, мотылёк.',
-    'Я Тлен, смотритель Очага. Сколько раз ты уже возвращался? Ты не помнишь, а я помню каждый.',
-    'Стражи украли огни города и унесли их в свои залы. Каждый держит украденный свет в своём сердце.',
-    'Принеси их сердца сюда, и Очаг разгорится. А если упадёшь — пламя соберёт тебя снова.',
-    'Ударь манекен у ворот, наполни фонарь и почувствуй Вспышку. Потом — в Врата.',
+    'Очнулся, богатырь? Не бойся. Ты на заставе, у моей прялки.',
+    'Я Доля, пряха Мокоши. Твою нить я вытянула из Нави. Ты не помнишь, сколько раз, а я помню каждый.',
+    'Чудища Нави разорвали силу богов и держат её в своих сердцах. Кикимора, Лихо, сама Морена…',
+    'Принеси их сердца, и мост можно будет сковать заново. А если падёшь, я снова вытяну твою нить.',
+    'Ударь чучело во дворе, наполни оберег и почувствуй силу бога. Потом — к Воротам.',
   ];
   if (b === 0) return [
-    'Ты вернулся. Пепел ещё тёплый — значит, ты дрался.',
-    'Угли, что ты приносишь, кормят Очаг. Неси их в Святилище.',
-    'Часовщик внизу, в Затопленных Часах. Он считает время, которого у города больше нет.',
+    'Вернулся. Нить чуть истрепалась, но держит.',
+    'Угли, что ты приносишь, неси на Капище Рода. Род за них даст крепости.',
+    'Кикимора сидит в своей Топи. Она прядёт тину, как я пряду нити, только её нити тянут на дно.',
   ];
   if (b === 1) return [
-    'Сердце стража… Чувствуешь? Очаг стал теплее.',
-    'Ива умеет вплетать такой свет в новые фонари. Загляни к ней.',
-    'После каждого стража ищи Убежище — там можно перевести дух и выбрать путь.',
+    'Сердце чудища… Чувствуешь? Сила бога в нём ещё бьётся.',
+    'Сова умеет вплетать такую силу в обереги. Загляни к ней.',
+    'После каждого чудища ищи привал у охранного огня: там можно перевести дух и выбрать путь.',
   ];
   return [
-    'Огни возвращаются. Город ещё спит под водой, но уже видит сны.',
-    `Ты принёс ${b} из трёх сердец. Пепел помнит каждую твою смерть — и каждую победу.`,
-    'Говорят, за последним стражем есть и другие залы. Но сначала — три сердца.',
+    'Сила возвращается к богам. Навь ещё держит мир, но уже слабеет.',
+    `Ты принёс ${b} из трёх сердец. Моя прялка помнит каждую твою смерть и каждую победу.`,
+    'Говорят, за Мореной, у самого моста, ждёт Кощей. Но сначала — три сердца.',
   ];
 }
-const IVA_LINES = ['Фонарь — это не лампа, мотылёк. Это характер.', 'Принеси шестерни, жемчуг или бронзу и сердце стража — и я сплету новый свет.'];
-const SMITH_LINES = ['Клинок хорош, но мир велик. Копьё, серпы, молот…', 'Ресурсы с локаций — мне. Оружие — тебе. Честная сделка.'];
+const IVA_LINES = ['Оберег — не безделица, богатырь. В нём сила бога, а у каждого бога свой нрав.', 'Принеси болотного железа, живицы или иней-камня и сердце чудища, и я сплету тебе новый оберег.'];
+const SMITH_LINES = ['Кладенец хорош, но Навь велика. Рогатина, серпы, булава…', 'Добычу из Нави — мне. Оружие — тебе. Честный уговор, по-медвежьи.'];
 
 function openMenu(kind) { state.menu = { kind, sel: 0, msg: '', msgT: 0 }; if (kind === 'gate') state.menu.sel = 0; }
 function talk(name, lines) { state.dialog = { name, lines, i: 0 }; }
@@ -1344,13 +1345,13 @@ function menuRows(kind) {
           writeSave(); sfx.pick(); return `${d.name}: теперь с тобой`;
         } };
     });
-    rows.push({ name: 'Поговорить', desc: L ? 'Фонарщица Ива' : 'Кузнец Панцирь', right: '', ok: true, act: () => { state.menu = null; talk(L ? 'Ива' : 'Панцирь', L ? IVA_LINES : SMITH_LINES); return null; } });
+    rows.push({ name: 'Поговорить', desc: L ? 'Ведунья Сова' : 'Кузнец Потап', right: '', ok: true, act: () => { state.menu = null; talk(L ? 'Сова' : 'Потап', L ? IVA_LINES : SMITH_LINES); return null; } });
     return rows;
   }
   if (kind === 'gate') {
-    const rows = [{ name: 'Новый забег', desc: 'Сначала Затопленные Часы, дальше путь выбираешь сам. 3 локации, 3 стража', right: '', ok: true,
+    const rows = [{ name: 'Новый забег', desc: 'Сначала Топь Кикиморы, дальше путь выбираешь сам. 3 локации, 3 хозяина', right: '', ok: true,
       act: () => { state.menu = null; startRun(false); return null; } }];
-    if (save.run) rows.push({ name: 'Продолжить забег', desc: `Из Убежища: ${save.run.route.map(r => LOCS[r].name).join(' → ')}`, right: '', ok: true,
+    if (save.run) rows.push({ name: 'Продолжить забег', desc: `С привала: ${save.run.route.map(r => LOCS[r].name).join(' → ')}`, right: '', ok: true,
       act: () => { state.menu = null; startRun(true); return null; } });
     if (save.maxAsh > 0) rows.push({ name: `Уровень Пепла: ${save.ash} из ${save.maxAsh}`, desc: '← / → — враги сильнее, награда больше', right: '', ok: true, act: () => null });
     return rows;
@@ -1386,7 +1387,7 @@ function makeDeco(loc, s, rw, kind) {
   for (let x = 200 + r() * 300; x < rw * 1.3 + W; x += 500 + r() * 500) d.front.push({ x, w: 40 + r() * 50, k: r() });
   for (let x = 0; x < rw; x += 30 + r() * 60) d.weeds.push({ x, h: 10 + r() * 26, ph: r() * 6 });
   if (loc === 'hub') for (let x = 120; x < rw; x += 260) d.lights.push({ x: x + r() * 80, y: 120 + r() * 80 });
-  if (loc === 'reef') for (let x = 80; x < rw; x += 170 + r() * 200) d.lights.push({ x, y: GROUND - 20 - r() * 40, c: r() < 0.5 ? '#7ff0ff' : '#ff9ad8' });
+  if (loc === 'reef') for (let x = 80; x < rw; x += 170 + r() * 200) d.lights.push({ x, y: GROUND - 20 - r() * 20, c: r() < 0.5 ? '#bff4ff' : '#9fd8ff' });
   return d;
 }
 function drawGear(x, y, rad, teeth, ang, col) {
@@ -1401,74 +1402,88 @@ function drawGear(x, y, rad, teeth, ang, col) {
   ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
 }
+function drawPine(x, base, h, w, col) { // a layered fir silhouette
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, base - h);
+  for (let i = 1; i <= 5; i++) { const y = base - h + h * i / 5.4, ww = w * (0.25 + i * 0.16); ctx.lineTo(x + ww, y); ctx.lineTo(x + ww * 0.45, y - h * 0.04); }
+  ctx.lineTo(x + w * 0.08, base); ctx.lineTo(x - w * 0.08, base);
+  for (let i = 5; i >= 1; i--) { const y = base - h + h * i / 5.4, ww = w * (0.25 + i * 0.16); ctx.lineTo(x - ww * 0.45, y - h * 0.04); ctx.lineTo(x - ww, y); }
+  ctx.closePath(); ctx.fill();
+}
+function drawDeadTree(x, base, h, k, col) { // a crooked bare willow of the bog
+  ctx.save(); ctx.translate(x, base); ctx.strokeStyle = col; ctx.lineCap = 'round';
+  const br = (len, ang, w, n) => { if (n <= 0 || len < 6) return; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(0, 0);
+    const ex = Math.cos(ang) * len, ey = Math.sin(ang) * len; ctx.quadraticCurveTo(ex * 0.5 + 8, ey * 0.5, ex, ey); ctx.stroke();
+    ctx.save(); ctx.translate(ex, ey); br(len * 0.68, ang - 0.55 - k * 0.2, w * 0.62, n - 1); br(len * 0.62, ang + 0.5, w * 0.6, n - 1); ctx.restore(); };
+  br(h * 0.42, -Math.PI / 2 + (k - 0.5) * 0.3, 14, 5); ctx.restore();
+}
+function drawIceSpire(x, base, h, w, col) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - w / 2, base); ctx.lineTo(x - w * 0.3, base - h * 0.55); ctx.lineTo(x - w * 0.05, base - h);
+  ctx.lineTo(x + w * 0.12, base - h * 0.7); ctx.lineTo(x + w * 0.3, base - h * 0.78); ctx.lineTo(x + w / 2, base); ctx.closePath(); ctx.fill();
+}
 function drawBackground() {
   const d = state.deco, loc = d.loc, pal = palOf(loc), cam = state.cam, t = state.t;
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, pal.skyTop); g.addColorStop(1, pal.skyBot);
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  if (loc === 'reef') { // moonlight shafts from the surface
+  if (loc === 'reef') { // the cold northern lights over Morena's land
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 5; i++) {
-      const x = ((i * 330 - cam * 0.1) % (W + 300) + W + 300) % (W + 300) - 150, sw = Math.sin(t * 0.3 + i) * 30;
-      const rg = ctx.createLinearGradient(0, 0, 0, H); rg.addColorStop(0, 'rgba(160,220,255,0.10)'); rg.addColorStop(1, 'rgba(160,220,255,0)');
-      ctx.fillStyle = rg; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 80, 0); ctx.lineTo(x + 200 + sw, H); ctx.lineTo(x + 60 + sw, H); ctx.fill();
+    for (let i = 0; i < 3; i++) {
+      ctx.strokeStyle = i === 1 ? 'rgba(150,255,210,0.07)' : 'rgba(140,200,255,0.06)'; ctx.lineWidth = 60 - i * 12;
+      ctx.beginPath();
+      for (let x = -40; x <= W + 40; x += 40) ctx.lineTo(x, 110 + i * 50 + Math.sin(x * 0.006 + t * 0.25 + i * 2 - cam * 0.0005) * 40);
+      ctx.stroke();
     }
     ctx.restore();
   }
+  if (loc === 'belfry') { // a pale moon between the pines
+    const mg = ctx.createRadialGradient(980 - cam * 0.03, 150, 10, 980 - cam * 0.03, 150, 160);
+    mg.addColorStop(0, 'rgba(220,225,255,0.5)'); mg.addColorStop(0.25, 'rgba(200,210,255,0.15)'); mg.addColorStop(1, 'rgba(200,210,255,0)');
+    ctx.fillStyle = mg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#d8dcf0'; ctx.beginPath(); ctx.arc(980 - cam * 0.03, 150, 34, 0, Math.PI * 2); ctx.fill();
+  }
   // far layer
-  ctx.fillStyle = pal.far;
   for (const f of d.far) {
-    const x = f.x - cam * 0.15, top = GROUND - f.h;
-    if (loc === 'reef') { // coral fans
-      ctx.save(); ctx.translate(x + f.w / 2, GROUND); ctx.strokeStyle = pal.far; ctx.lineCap = 'round';
-      const br = (len, ang, w, n) => { if (n <= 0 || len < 8) return; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(ang) * len, Math.sin(ang) * len); ctx.stroke(); ctx.save(); ctx.translate(Math.cos(ang) * len, Math.sin(ang) * len); br(len * 0.72, ang - 0.45, w * 0.7, n - 1); br(len * 0.72, ang + 0.4, w * 0.7, n - 1); ctx.restore(); };
-      br(f.h * 0.32, -Math.PI / 2 + (f.k - 0.5) * 0.4, 12, 5); ctx.restore();
+    const x = f.x - cam * 0.15;
+    if (x < -260 || x > W + 260) continue;
+    if (loc === 'hub') { ctx.fillStyle = pal.far; ctx.beginPath(); ctx.moveTo(x - 40, 0); ctx.quadraticCurveTo(x + f.w / 2, f.h * 0.5, x + f.w + 40, 0); ctx.fill(); continue; }
+    if (loc === 'clock') { drawDeadTree(x + f.w / 2, GROUND, f.h * 1.2, f.k, pal.far); continue; }
+    if (loc === 'belfry') {
+      drawPine(x + f.w / 2, GROUND, f.h * 1.5, f.w * 0.8, pal.far);
+      if (f.a && f.b) { // eyes in the dark between the trees
+        const bl = Math.sin(t * 0.7 + f.k * 20) > 0.92 ? 0.1 : 1;
+        ctx.fillStyle = `rgba(255,210,120,${0.5 * bl})`; ctx.beginPath(); ctx.ellipse(x + f.w / 2 - 6, GROUND - 160, 2.5, 2.5 * bl, 0, 0, Math.PI * 2); ctx.ellipse(x + f.w / 2 + 6, GROUND - 160, 2.5, 2.5 * bl, 0, 0, Math.PI * 2); ctx.fill();
+      }
       continue;
     }
-    if (loc === 'hub') { ctx.beginPath(); ctx.moveTo(x - 40, 0); ctx.quadraticCurveTo(x + f.w / 2, f.h * 0.5, x + f.w + 40, 0); ctx.fill(); continue; }
-    ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x, top);
-    if (f.b) ctx.lineTo(x + f.w / 2, top - f.w * (loc === 'belfry' ? 1.6 : 0.9));
-    ctx.lineTo(x + f.w, top); ctx.lineTo(x + f.w, GROUND); ctx.fill();
-    if (f.a) {
-      ctx.save(); ctx.globalAlpha = 0.35;
-      if (loc === 'belfry') { // lit gothic window
-        ctx.fillStyle = '#b48cff'; ctx.beginPath(); const wx = x + f.w / 2, wy = top + 50;
-        ctx.moveTo(wx - 10, wy + 40); ctx.lineTo(wx - 10, wy); ctx.quadraticCurveTo(wx, wy - 18, wx + 10, wy); ctx.lineTo(wx + 10, wy + 40); ctx.fill();
-      } else {
-        ctx.strokeStyle = '#7fb6b0'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(x + f.w / 2, top + 40, f.w * 0.28, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x + f.w / 2, top + 40); ctx.lineTo(x + f.w / 2, top + 40 - f.w * 0.2);
-        ctx.moveTo(x + f.w / 2, top + 40); ctx.lineTo(x + f.w / 2 + f.w * 0.15, top + 46); ctx.stroke();
-      }
-      ctx.restore();
-    }
+    drawIceSpire(x + f.w / 2, GROUND, f.h * 1.1, f.w * 0.8, pal.far);
   }
-  // water line
+  // water, bog or frozen mist at the floor
   if (loc !== 'hub') {
     const wg = ctx.createLinearGradient(0, 420, 0, GROUND);
     wg.addColorStop(0, 'rgba(0,0,0,0)'); wg.addColorStop(1, pal.water);
     ctx.fillStyle = wg; ctx.fillRect(0, 420, W, GROUND - 420);
-    ctx.strokeStyle = 'rgba(160,230,220,0.08)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = loc === 'clock' ? 'rgba(170,230,140,0.07)' : 'rgba(200,220,255,0.06)'; ctx.lineWidth = 2;
     for (let i = 0; i < 6; i++) {
       const y = 470 + i * 26; ctx.beginPath();
-      for (let x = 0; x <= W; x += 40) ctx.lineTo(x, y + Math.sin(x * 0.02 + t * 1.2 + i) * 3);
+      for (let x = 0; x <= W; x += 40) ctx.lineTo(x, y + Math.sin(x * 0.02 + t * (loc === 'clock' ? 0.6 : 1.2) + i) * 3);
       ctx.stroke();
     }
   }
   // mid layer
   for (const m of d.mid) {
     const x = m.x - cam * 0.45;
-    if (loc === 'clock') drawGear(x, m.y, m.rad, m.n, t * m.sp, pal.mid);
-    else if (loc === 'belfry') { // a dead bell swinging on its beam
-      const sw = Math.sin(t * 0.6 + m.k * 6) * 0.08;
-      ctx.save(); ctx.translate(x, 0); ctx.fillStyle = pal.mid; ctx.fillRect(-2, 0, 4, m.y - m.rad);
-      ctx.translate(0, m.y - m.rad); ctx.rotate(sw);
-      ctx.beginPath(); ctx.moveTo(-m.rad * 0.4, 0); ctx.quadraticCurveTo(-m.rad * 0.5, m.rad * 0.8, -m.rad * 0.8, m.rad * 1.3);
-      ctx.lineTo(m.rad * 0.8, m.rad * 1.3); ctx.quadraticCurveTo(m.rad * 0.5, m.rad * 0.8, m.rad * 0.4, 0); ctx.closePath(); ctx.fill(); ctx.restore();
-    } else if (loc === 'reef') { // kelp
-      ctx.strokeStyle = pal.mid; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, GROUND);
-      for (let y = 0; y < m.y + 100; y += 30) ctx.lineTo(x + Math.sin(t * 0.8 + y * 0.02 + m.k * 6) * 18, GROUND - y);
-      ctx.stroke();
+    if (x < -300 || x > W + 300) continue;
+    if (loc === 'clock') { // a willow trunk with hanging strands
+      ctx.fillStyle = pal.mid; ctx.beginPath(); ctx.moveTo(x - 18, GROUND); ctx.quadraticCurveTo(x - 6, GROUND - 200, x - 30 + m.k * 20, 0); ctx.lineTo(x + 30, 0); ctx.quadraticCurveTo(x + 14, GROUND - 200, x + 22, GROUND); ctx.fill();
+      ctx.strokeStyle = pal.mid; ctx.lineWidth = 3;
+      for (let i = 0; i < 7; i++) { const sx = x - 90 + i * 30, len = 120 + ((i * 37 + m.n * 13) % 90); ctx.beginPath(); ctx.moveTo(sx, 0); ctx.quadraticCurveTo(sx + Math.sin(t * 0.7 + i) * 10, len * 0.6, sx + Math.sin(t * 0.7 + i + 1) * 14, len); ctx.stroke(); }
+    } else if (loc === 'belfry') { // great pine trunks
+      ctx.fillStyle = pal.mid; ctx.fillRect(x - 22 - m.k * 14, 0, 44 + m.k * 28, GROUND);
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2;
+      for (let y = 40; y < GROUND; y += 70) { ctx.beginPath(); ctx.moveTo(x - 10, y); ctx.lineTo(x + 6, y + 30); ctx.stroke(); }
+    } else if (loc === 'reef') { // icicles hanging from the vault
+      ctx.fillStyle = pal.mid;
+      for (let i = 0; i < 5; i++) { const ix = x - 80 + i * 40, len = 60 + ((i * 53 + m.n * 7) % 140); ctx.beginPath(); ctx.moveTo(ix - 12, 0); ctx.lineTo(ix + 12, 0); ctx.lineTo(ix, len); ctx.closePath(); ctx.fill(); }
     } else { // hub: wooden beams
       ctx.fillStyle = pal.mid; ctx.fillRect(x - 10, 0, 20, H); ctx.fillRect(x - 70, 80 + m.k * 40, 140, 16);
     }
@@ -1476,23 +1491,52 @@ function drawBackground() {
   // the room's own back wall
   ctx.save(); ctx.translate(-cam, 0);
   ctx.fillStyle = pal.wall;
-  for (const a of d.back) {
-    ctx.beginPath(); ctx.moveTo(a.x, GROUND); ctx.lineTo(a.x, GROUND - a.h + 80);
-    ctx.quadraticCurveTo(a.x + 160, GROUND - a.h - 60, a.x + 320, GROUND - a.h + 80); ctx.lineTo(a.x + 320, GROUND);
-    ctx.lineTo(a.x + 280, GROUND); ctx.lineTo(a.x + 280, GROUND - a.h + 100);
-    ctx.quadraticCurveTo(a.x + 160, GROUND - a.h, a.x + 40, GROUND - a.h + 100); ctx.lineTo(a.x + 40, GROUND); ctx.fill();
-  }
-  if (loc === 'clock' || loc === 'belfry') {
-    ctx.strokeStyle = loc === 'clock' ? '#3b4f55' : '#4a3d66'; ctx.lineWidth = 3;
+  if (loc === 'hub') {
     for (const a of d.back) {
-      const cx = a.x + 160, len = 80 + a.k * 200, sw = Math.sin(t * 0.8 + a.x) * 6;
-      for (let y = 0; y < len; y += 14) { ctx.beginPath(); ctx.ellipse(cx + sw * (y / len), y + 7, 4, 7, 0, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(a.x, GROUND); ctx.lineTo(a.x, GROUND - a.h + 80);
+      ctx.quadraticCurveTo(a.x + 160, GROUND - a.h - 60, a.x + 320, GROUND - a.h + 80); ctx.lineTo(a.x + 320, GROUND);
+      ctx.lineTo(a.x + 280, GROUND); ctx.lineTo(a.x + 280, GROUND - a.h + 100);
+      ctx.quadraticCurveTo(a.x + 160, GROUND - a.h, a.x + 40, GROUND - a.h + 100); ctx.lineTo(a.x + 40, GROUND); ctx.fill();
+    }
+  } else if (loc === 'clock') { // a rotten palisade and reeds
+    for (const a of d.back) {
+      for (let i = 0; i < 6; i++) { const px = a.x + 30 + i * 22, ph = 120 + ((i * 41 + a.k * 100) % 90); ctx.beginPath(); ctx.moveTo(px, GROUND); ctx.lineTo(px, GROUND - ph); ctx.lineTo(px + 8, GROUND - ph - 14); ctx.lineTo(px + 16, GROUND - ph); ctx.lineTo(px + 16, GROUND); ctx.fill(); }
+      ctx.strokeStyle = pal.wall; ctx.lineWidth = 3;
+      for (let i = 0; i < 9; i++) { const rx = a.x + 200 + i * 9; ctx.beginPath(); ctx.moveTo(rx, GROUND); ctx.quadraticCurveTo(rx + 4, GROUND - 60, rx + Math.sin(t + i) * 6, GROUND - 90 - (i % 3) * 20); ctx.stroke(); }
+    }
+  } else if (loc === 'belfry') { // root arches of old trees
+    for (const a of d.back) {
+      ctx.beginPath(); ctx.moveTo(a.x, GROUND); ctx.bezierCurveTo(a.x + 20, GROUND - a.h * 0.6, a.x + 140, GROUND - a.h * 0.8, a.x + 160, GROUND - a.h);
+      ctx.lineTo(a.x + 190, GROUND - a.h); ctx.bezierCurveTo(a.x + 170, GROUND - a.h * 0.7, a.x + 60, GROUND - a.h * 0.5, a.x + 40, GROUND); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(a.x + 320, GROUND); ctx.bezierCurveTo(a.x + 300, GROUND - a.h * 0.5, a.x + 200, GROUND - a.h * 0.75, a.x + 175, GROUND - a.h);
+      ctx.lineTo(a.x + 160, GROUND - a.h * 0.9); ctx.bezierCurveTo(a.x + 230, GROUND - a.h * 0.6, a.x + 280, GROUND - a.h * 0.4, a.x + 290, GROUND); ctx.fill();
+    }
+  } else { // frozen tower walls with tall windows of ice
+    for (const a of d.back) {
+      ctx.fillRect(a.x + 20, GROUND - a.h + 40, 280, a.h - 40);
+      ctx.beginPath(); ctx.moveTo(a.x + 10, GROUND - a.h + 40); ctx.lineTo(a.x + 160, GROUND - a.h - 50); ctx.lineTo(a.x + 310, GROUND - a.h + 40); ctx.fill();
+      ctx.fillStyle = 'rgba(170,220,255,0.12)';
+      for (const wx of [80, 210]) { ctx.beginPath(); ctx.moveTo(a.x + wx, GROUND - 60); ctx.lineTo(a.x + wx, GROUND - a.h + 120); ctx.quadraticCurveTo(a.x + wx + 15, GROUND - a.h + 90, a.x + wx + 30, GROUND - a.h + 120); ctx.lineTo(a.x + wx + 30, GROUND - 60); ctx.fill(); }
+      ctx.fillStyle = pal.wall;
     }
   }
-  if (loc === 'reef') for (const l of d.lights) { // glowing coral tufts
-    ctx.fillStyle = l.c; ctx.globalAlpha = 0.5 + Math.sin(t * 2 + l.x) * 0.2;
-    for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(l.x + (i - 2) * 6, l.y + Math.abs(i - 2) * 4, 3, 9, (i - 2) * 0.3, 0, Math.PI * 2); ctx.fill(); }
+  if (loc === 'clock' || loc === 'belfry') { // moss and vines hanging from above
+    ctx.strokeStyle = loc === 'clock' ? '#2f4a2a' : '#26304a'; ctx.lineWidth = 3;
+    for (const a of d.back) {
+      const cx = a.x + 160, len = 80 + a.k * 200, sw = Math.sin(t * 0.8 + a.x) * 6;
+      ctx.beginPath(); ctx.moveTo(cx, 0);
+      for (let y = 0; y < len; y += 12) ctx.lineTo(cx + sw * (y / len) + Math.sin(y * 0.15) * 3, y);
+      ctx.stroke();
+    }
+  }
+  if (loc === 'reef') for (const l of d.lights) { // glowing ice crystals
+    ctx.fillStyle = l.c; ctx.globalAlpha = 0.55 + Math.sin(t * 2 + l.x) * 0.2;
+    for (let i = 0; i < 3; i++) { const cx = l.x + (i - 1) * 9, hh = 16 + (i === 1 ? 10 : 0); ctx.beginPath(); ctx.moveTo(cx - 4, l.y + 20); ctx.lineTo(cx, l.y + 20 - hh); ctx.lineTo(cx + 4, l.y + 20); ctx.closePath(); ctx.fill(); }
     ctx.globalAlpha = 1;
+  }
+  if (loc === 'clock') for (let i = 0; i < 8; i++) { // fireflies of the bog
+    const fx = (i * 211 + Math.sin(t * 0.5 + i) * 60) % state.room.w, fy = 380 + Math.sin(t * 0.9 + i * 2) * 60;
+    ctx.fillStyle = `rgba(200,255,120,${0.4 + Math.sin(t * 3 + i) * 0.3})`; ctx.beginPath(); ctx.arc(fx, fy, 2.2, 0, Math.PI * 2); ctx.fill();
   }
   if (loc === 'hub') for (const l of d.lights) drawHangingLamp(l.x, l.y, t);
   ctx.restore();
@@ -1573,25 +1617,32 @@ function drawHaven() {
 }
 function drawHubStations() {
   const t = state.t;
-  // the Hearth: the Last Lumen itself, where the knight is reborn
+  // the stove, where the Spinner draws the hero's thread back
   drawHearth(170, GROUND, t);
   drawKeeper(290, GROUND, t);
-  // the Shrine
-  ctx.save(); ctx.translate(HUB_X.shrine, GROUND);
-  ctx.fillStyle = '#3a3a3a'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-70, 0); ctx.lineTo(-54, -64); ctx.lineTo(54, -64); ctx.lineTo(70, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#c9a45a'; ctx.fillRect(-60, -70, 120, 7);
+  // the shrine of Rod: a carved wooden idol with a glowing amulet above
+  ctx.save(); ctx.translate(HUB_X.shrine, GROUND); ctx.lineJoin = 'round';
+  ctx.fillStyle = '#3a2a1e'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(0, -4, 70, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // stone ring
+  const ig = ctx.createLinearGradient(-20, 0, 20, 0); ig.addColorStop(0, '#6a4a2e'); ig.addColorStop(0.5, '#9a7046'); ig.addColorStop(1, '#5a3c24');
+  ctx.fillStyle = ig; ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(-18, -120); ctx.quadraticCurveTo(0, -140, 18, -120); ctx.lineTo(18, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#3a2614'; ctx.lineWidth = 2; // carved face and rings
+  ctx.beginPath(); ctx.moveTo(-10, -104); ctx.lineTo(-3, -102); ctx.moveTo(10, -104); ctx.lineTo(3, -102); ctx.moveTo(0, -100); ctx.lineTo(0, -90); ctx.moveTo(-6, -84); ctx.quadraticCurveTo(0, -80, 6, -84); ctx.stroke();
+  for (const y of [-70, -40, -14]) { ctx.beginPath(); ctx.moveTo(-18, y); ctx.lineTo(18, y); ctx.stroke(); }
+  ctx.strokeStyle = '#c9a45a'; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(i * 8 - 4, -62); ctx.lineTo(i * 8, -50); ctx.lineTo(i * 8 + 4, -62); ctx.stroke(); }
   ctx.restore();
-  drawLanternIcon(HUB_X.shrine, GROUND - 106, 2, 1, 0.5 + Math.sin(t * 3) * 0.1);
-  // the lantern-maker's stall: a shelf of lanterns, lit when made
+  drawLanternIcon(HUB_X.shrine, GROUND - 168 + Math.sin(t * 2) * 3, 1.3, 1, 0.5 + Math.sin(t * 3) * 0.1, 'brass');
+  // the Owl Witch's shelf of amulets, lit when made
   ctx.fillStyle = '#4a3424'; ctx.fillRect(HUB_X.lantern + 30, GROUND - 150, 140, 8); ctx.fillRect(HUB_X.lantern + 30, GROUND - 90, 140, 8);
   ctx.fillRect(HUB_X.lantern + 30, GROUND - 150, 8, 150); ctx.fillRect(HUB_X.lantern + 162, GROUND - 150, 8, 150);
+  ctx.strokeStyle = '#6a8a4a'; ctx.lineWidth = 2; // drying herbs
+  for (let i = 0; i < 5; i++) { const hx = HUB_X.lantern + 45 + i * 28; ctx.beginPath(); ctx.moveTo(hx, GROUND - 150); ctx.lineTo(hx, GROUND - 132); ctx.moveTo(hx - 5, GROUND - 128); ctx.lineTo(hx, GROUND - 136); ctx.lineTo(hx + 5, GROUND - 128); ctx.stroke(); }
   LANTERN_ORDER.forEach((id, i) => {
-    const lx = HUB_X.lantern + 62 + (i % 2) * 70, ly = GROUND - 170 + Math.floor(i / 2) * 60;
+    const lx = HUB_X.lantern + 62 + (i % 2) * 70, ly = GROUND - 112 + Math.floor(i / 2) * 60;
     drawLanternIcon(lx, ly, 0.8, save.lanterns[id] ? 1 : 0, save.lanterns[id] ? 0.4 : 0, id, !save.lanterns[id]);
   });
   drawIva(HUB_X.lantern - 30, GROUND, t);
-  // the armorer: anvil and rack
+  // the smithy: anvil, forge glow and a rack
   ctx.save(); ctx.translate(HUB_X.armory + 40, GROUND);
   ctx.fillStyle = '#3c3f44'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(-30, 0); ctx.lineTo(-20, -24); ctx.lineTo(-40, -30); ctx.lineTo(-40, -42); ctx.lineTo(40, -42); ctx.lineTo(30, -30); ctx.lineTo(20, -24); ctx.lineTo(30, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -1602,77 +1653,111 @@ function drawHubStations() {
     ctx.globalAlpha = save.weapons[id] ? 1 : 0.35; drawWeapon(id, 0.75, 0, false); ctx.restore();
   });
   drawSmith(HUB_X.armory - 30, GROUND, t);
-  // the Gate, with the three locations' signs
-  ctx.save(); ctx.translate(HUB_X.gate, GROUND);
-  ctx.fillStyle = '#1a1410'; ctx.strokeStyle = '#a8864a'; ctx.lineWidth = 8;
-  ctx.beginPath(); ctx.moveTo(-80, 0); ctx.lineTo(-80, -170); ctx.quadraticCurveTo(0, -290, 80, -170); ctx.lineTo(80, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-  const gg = ctx.createRadialGradient(0, -120, 5, 0, -120, 110); gg.addColorStop(0, 'rgba(140,200,255,0.45)'); gg.addColorStop(1, 'rgba(140,200,255,0)');
-  ctx.fillStyle = gg; ctx.fillRect(-80, -260, 160, 260);
+  // the gate to Nav: carved posts under a pointed roof, Nav glowing cold behind
+  ctx.save(); ctx.translate(HUB_X.gate, GROUND); ctx.lineJoin = 'round';
+  ctx.fillStyle = '#0c1018'; ctx.fillRect(-70, -200, 140, 200);
+  const gg = ctx.createRadialGradient(0, -100, 5, 0, -100, 120); gg.addColorStop(0, 'rgba(130,200,255,0.45)'); gg.addColorStop(1, 'rgba(130,200,255,0)');
+  ctx.fillStyle = gg; ctx.fillRect(-70, -200, 140, 200);
+  ctx.fillStyle = '#6a4a2e'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  for (const sx of [-1, 1]) { ctx.beginPath(); ctx.rect(sx * 80 - 12, -210, 24, 210); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#3a2614'; ctx.lineWidth = 2; for (let y = -190; y < -10; y += 30) { ctx.beginPath(); ctx.moveTo(sx * 80 - 8, y); ctx.lineTo(sx * 80, y + 10); ctx.lineTo(sx * 80 + 8, y); ctx.stroke(); }
+    ctx.strokeStyle = INK; ctx.lineWidth = 3; }
+  ctx.fillStyle = '#5a3a22'; ctx.beginPath(); ctx.moveTo(-112, -206); ctx.lineTo(0, -280); ctx.lineTo(112, -206); ctx.lineTo(96, -198); ctx.lineTo(0, -258); ctx.lineTo(-96, -198); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#c9a45a'; ctx.beginPath(); ctx.arc(0, -246, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   LOC_ORDER.forEach((id, i) => {
-    const a = -Math.PI / 2 + (i - 1) * 0.7, x = Math.cos(a) * 60, y = -150 + Math.sin(a) * 60 + 30;
+    const x = (i - 1) * 40, y = -170;
     const done = save.bosses[LOCS[id].boss];
     ctx.fillStyle = done ? LOCS[id].sigil : '#3a3a44'; ctx.beginPath();
-    for (let k = 0; k < 8; k++) { const b = k / 8 * Math.PI * 2, r = k % 2 ? 6 : 13; ctx.lineTo(x + Math.cos(b) * r, y + Math.sin(b) * r); }
+    for (let k = 0; k < 8; k++) { const b = k / 8 * Math.PI * 2, r = k % 2 ? 6 : 12; ctx.lineTo(x + Math.cos(b) * r, y + Math.sin(b) * r); }
     ctx.closePath(); ctx.fill();
   });
   ctx.restore();
 }
-function drawHearth(x, y, t) {
-  ctx.save(); ctx.translate(x, y);
-  ctx.fillStyle = '#3a2a20'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-60, 0); ctx.lineTo(-44, -50); ctx.lineTo(44, -50); ctx.lineTo(60, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#c9a45a'; ctx.fillRect(-50, -56, 100, 8);
-  for (let i = 0; i < 3; i++) { // the flame: three layered tongues
-    const h = 90 - i * 22, w = 34 - i * 8, sw = Math.sin(t * (5 + i) + i) * 5;
+function drawHearth(x, y, t) { // the Russian stove: whitewashed brick, an arched mouth with fire inside
+  ctx.save(); ctx.translate(x, y); ctx.lineJoin = 'round';
+  ctx.fillStyle = '#d8cfc0'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-70, 0); ctx.lineTo(-70, -110); ctx.lineTo(-30, -110); ctx.lineTo(-30, -200); ctx.lineTo(0, -200); ctx.lineTo(0, -110); ctx.lineTo(70, -110); ctx.lineTo(70, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,100,80,0.35)'; ctx.lineWidth = 1.5;
+  for (let yy = -100; yy < 0; yy += 16) { ctx.beginPath(); ctx.moveTo(-68, yy); ctx.lineTo(68, yy); ctx.stroke(); }
+  ctx.strokeStyle = '#b03a2a'; ctx.lineWidth = 3; // a painted red border
+  ctx.beginPath(); ctx.moveTo(-66, -96); ctx.lineTo(66, -96); ctx.stroke();
+  ctx.fillStyle = '#1a0e08'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-34, 0); ctx.lineTo(-34, -44); ctx.quadraticCurveTo(0, -78, 34, -44); ctx.lineTo(34, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  for (let i = 0; i < 3; i++) { // the fire inside
+    const h = 54 - i * 14, w = 24 - i * 6, sw = Math.sin(t * (5 + i) + i) * 4;
     ctx.fillStyle = ['#ff8a2a', '#ffc04a', '#fff2c0'][i];
-    ctx.beginPath(); ctx.moveTo(-w, -56); ctx.quadraticCurveTo(-w * 0.8, -56 - h * 0.6, sw, -56 - h); ctx.quadraticCurveTo(w * 0.8, -56 - h * 0.6, w, -56); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-w, -2); ctx.quadraticCurveTo(-w * 0.8, -2 - h * 0.6, sw, -2 - h); ctx.quadraticCurveTo(w * 0.8, -2 - h * 0.6, w, -2); ctx.closePath(); ctx.fill();
   }
   ctx.restore();
 }
-function drawKeeper(x, y, t) { // Tlen, keeper of the Hearth: an old hooded moth with a long staff
-  ctx.save(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.lineJoin = 'round';
-  const br = Math.sin(t * 1.5) * 1.5;
-  ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(22, -96); ctx.stroke();
-  ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.moveTo(22, -104); ctx.lineTo(28, -96); ctx.lineTo(22, -88); ctx.lineTo(16, -96); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#5a5060'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-22, 0); ctx.quadraticCurveTo(-26, -40, -14, -62 + br); ctx.quadraticCurveTo(0, -80 + br, 12, -62 + br); ctx.quadraticCurveTo(20, -40, 20, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#2a2430'; ctx.beginPath(); ctx.ellipse(0, -62 + br, 11, 12, 0, 0, Math.PI * 2); ctx.fill();
-  eyeGlow(4, -64 + br, 2, '#ffd88a'); eyeGlow(-3, -64 + br, 2, '#ffd88a');
-  ctx.strokeStyle = '#c8b89a'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(-4, -76 + br); ctx.quadraticCurveTo(-14, -96, -26, -98); ctx.moveTo(4, -76 + br); ctx.quadraticCurveTo(10, -98, 20, -104); ctx.stroke();
-  ctx.fillStyle = '#7a6a5a'; ctx.beginPath(); ctx.moveTo(-14, -50); ctx.quadraticCurveTo(-40, -70, -46, -30); ctx.quadraticCurveTo(-30, -36, -14, -30); ctx.fill(); ctx.stroke();
+function drawKeeper(x, y, t) { // Dolya, the Spinner of Mokosh: an old woman in a headscarf at her distaff
+  ctx.save(); ctx.translate(x, y); ctx.scale(-1, 1); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const br = Math.sin(t * 1.5) * 1.2;
+  // the distaff and the glowing thread rising from it
+  ctx.strokeStyle = '#7a5434'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(30, -96); ctx.stroke();
+  ctx.fillStyle = '#e8e0d0'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(30, -100, 8, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,215,120,0.9)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(30, -110);
+  for (let i = 1; i <= 10; i++) ctx.lineTo(30 + Math.sin(t * 2 + i * 0.8) * 6 + i * 2, -110 - i * 14);
+  ctx.stroke();
+  // sarafan
+  const sg = ctx.createLinearGradient(-20, 0, 20, 0); sg.addColorStop(0, '#6a1e2a'); sg.addColorStop(1, '#8a2a34');
+  ctx.fillStyle = sg; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-24, 0); ctx.lineTo(-14, -58 + br); ctx.lineTo(12, -58 + br); ctx.lineTo(22, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#e3b55a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-22, -8); ctx.lineTo(20, -8); ctx.moveTo(-1, -56 + br); ctx.lineTo(-1, -8); ctx.stroke();
+  // arm to the thread
+  ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(8, -50 + br); ctx.lineTo(24, -70); ctx.stroke();
+  ctx.fillStyle = '#e0b090'; ctx.beginPath(); ctx.arc(25, -72, 3, 0, Math.PI * 2); ctx.fill();
+  // face and headscarf
+  ctx.fillStyle = '#e8c0a0'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.ellipse(0, -70 + br, 10, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#2a1a14'; ctx.beginPath(); ctx.arc(4, -71 + br, 1.4, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#8a5a40'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(2, -64 + br); ctx.quadraticCurveTo(6, -62 + br, 8, -65 + br); ctx.stroke();
+  ctx.fillStyle = '#c9a45a'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(-14, -60 + br); ctx.quadraticCurveTo(-16, -86 + br, 0, -86 + br); ctx.quadraticCurveTo(12, -86 + br, 11, -74 + br); ctx.lineTo(2, -80 + br); ctx.quadraticCurveTo(-8, -76 + br, -8, -62 + br); ctx.lineTo(-20, -50 + br); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#b03a2a'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(-8 + i * 6, -80 + br, 1.6, 0, Math.PI * 2); ctx.fill(); }
   ctx.restore();
 }
-function drawIva(x, y, t) { // Iva the lantern-maker: a moth with a big shawl and round goggles
+function drawIva(x, y, t) { // Sova the Owl Witch, maker of amulets: an owl in a fringed shawl
   ctx.save(); ctx.translate(x, y); ctx.lineJoin = 'round';
-  const br = Math.sin(t * 2) * 1.2;
-  ctx.fillStyle = '#6b4f7a'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-28, 0); ctx.quadraticCurveTo(-34, -40, -16, -58 + br); ctx.lineTo(16, -58 + br); ctx.quadraticCurveTo(34, -40, 28, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#c99a4c'; ctx.lineWidth = 2; for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(i * 9, -50 + br); ctx.lineTo(i * 11, -6); ctx.stroke(); }
-  ctx.fillStyle = '#e8dcc8'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.ellipse(0, -70 + br, 15, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#6fd0ff'; ctx.strokeStyle = '#8a6a34'; ctx.lineWidth = 2;
-  for (const gx of [-6, 7]) { ctx.beginPath(); ctx.arc(gx, -71 + br, 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-  ctx.strokeStyle = '#d8c8a8'; ctx.lineWidth = 2;
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 4, -82 + br); ctx.quadraticCurveTo(s * 12, -100, s * 22, -98 + Math.sin(t * 3) * 2); ctx.stroke();
-    for (let i = 0; i < 4; i++) { const ax = s * (6 + i * 4), ay = -86 - i * 3; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + s * 3, ay - 4); ctx.stroke(); } }
+  const br = Math.sin(t * 2) * 1.2, blink = Math.sin(t * 0.9) > 0.96 ? 0.15 : 1;
+  ctx.fillStyle = '#7a5a3e'; ctx.strokeStyle = INK; ctx.lineWidth = 3; // body
+  ctx.beginPath(); ctx.ellipse(0, -40 + br, 30, 40, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e8dcc0'; ctx.beginPath(); ctx.ellipse(0, -30 + br, 18, 26, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#9a7a5a'; ctx.lineWidth = 1.5; for (let i = 0; i < 4; i++) for (let j = -1; j <= 1; j++) { ctx.beginPath(); ctx.moveTo(j * 9 - 3, -44 + i * 10 + br); ctx.lineTo(j * 9, -40 + i * 10 + br); ctx.lineTo(j * 9 + 3, -44 + i * 10 + br); ctx.stroke(); }
+  ctx.fillStyle = '#4a2a5a'; ctx.strokeStyle = INK; ctx.lineWidth = 3; // shawl with fringe
+  ctx.beginPath(); ctx.moveTo(-32, -56 + br); ctx.quadraticCurveTo(0, -46 + br, 32, -56 + br); ctx.lineTo(20, -24 + br); ctx.lineTo(0, -14 + br); ctx.lineTo(-20, -24 + br); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#d0a040'; ctx.lineWidth = 1.5; for (let i = -4; i <= 4; i++) { ctx.beginPath(); ctx.moveTo(i * 4.5, -18 - Math.abs(i) * 2 + br); ctx.lineTo(i * 4.5, -10 - Math.abs(i) * 2 + br); ctx.stroke(); }
+  ctx.fillStyle = '#7a5a3e'; ctx.strokeStyle = INK; ctx.lineWidth = 3; // head with ear tufts
+  ctx.beginPath(); ctx.moveTo(-24, -78 + br); ctx.lineTo(-26, -100 + br); ctx.lineTo(-12, -90 + br); ctx.quadraticCurveTo(0, -94 + br, 12, -90 + br); ctx.lineTo(26, -100 + br); ctx.lineTo(24, -78 + br); ctx.quadraticCurveTo(0, -58 + br, -24, -78 + br); ctx.closePath(); ctx.fill(); ctx.stroke();
+  for (const ex of [-9, 9]) {
+    ctx.fillStyle = '#e8dcc0'; ctx.beginPath(); ctx.arc(ex, -80 + br, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffb030'; ctx.beginPath(); ctx.ellipse(ex, -80 + br, 5, 5 * blink, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#1a1008'; ctx.beginPath(); ctx.ellipse(ex, -80 + br, 2.2, 2.2 * blink, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = '#d0a040'; ctx.beginPath(); ctx.moveTo(-3, -74 + br); ctx.lineTo(3, -74 + br); ctx.lineTo(0, -67 + br); ctx.closePath(); ctx.fill();
   ctx.restore();
-  drawLanternIcon(x + 34, y - 46 + Math.sin(t * 2) * 2, 0.7, 1, 0.4, 'storm');
+  drawLanternIcon(x + 38, y - 50 + Math.sin(t * 2) * 2, 0.6, 1, 0.4, 'storm');
 }
-function drawSmith(x, y, t) { // Pantsir the smith: a crab in a leather apron, hammering
+function drawSmith(x, y, t) { // Potap the bear smith, in a leather apron, hammering
   ctx.save(); ctx.translate(x, y); ctx.lineJoin = 'round';
-  const hit = Math.max(0, Math.sin(t * 3));
-  ctx.strokeStyle = INK; ctx.lineWidth = 4;
-  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-14 + i * 14, -20); ctx.lineTo(-24 + i * 20, 0); ctx.stroke(); }
-  ctx.fillStyle = '#c4562e'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-38, -20); ctx.quadraticCurveTo(-40, -62, 0, -64); ctx.quadraticCurveTo(40, -62, 38, -20); ctx.quadraticCurveTo(0, -8, -38, -20); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#6a4a30'; ctx.beginPath(); ctx.moveTo(-20, -40); ctx.lineTo(20, -40); ctx.lineTo(16, -14); ctx.lineTo(-16, -14); ctx.closePath(); ctx.fill(); ctx.stroke();
-  for (const s of [-1, 1]) { ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(s * 8, -62); ctx.lineTo(s * 10, -78); ctx.stroke(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(s * 10, -80, 4, 0, Math.PI * 2); ctx.fill(); }
-  ctx.save(); ctx.translate(34, -44); ctx.rotate(-1.2 + hit * 1.4);
-  ctx.fillStyle = '#c4562e'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(24, -6); ctx.lineTo(36, 4); ctx.lineTo(24, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(30, 4); ctx.lineTo(52, 4); ctx.stroke();
-  ctx.fillStyle = '#555a60'; ctx.fillRect(48, -6, 12, 20);
+  const hit = Math.max(0, Math.sin(t * 3)), br = Math.sin(t * 1.5) * 1;
+  const fur = '#6a4428';
+  ctx.fillStyle = fur; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(s * 14, -10, 10, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); } // legs
+  ctx.beginPath(); ctx.ellipse(0, -50 + br, 34, 40, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // body
+  ctx.fillStyle = '#5a3a20'; ctx.beginPath(); ctx.moveTo(-22, -70 + br); ctx.lineTo(22, -70 + br); ctx.lineTo(26, -16); ctx.lineTo(-26, -16); ctx.closePath(); ctx.fill(); ctx.stroke(); // apron
+  ctx.fillStyle = '#c9a45a'; ctx.fillRect(-4, -54 + br, 8, 6);
+  // head
+  ctx.fillStyle = fur; ctx.beginPath(); ctx.arc(0, -98 + br, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(s * 16, -116 + br, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#a07050'; ctx.beginPath(); ctx.arc(s * 16, -116 + br, 4, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = fur; }
+  ctx.fillStyle = '#b08860'; ctx.beginPath(); ctx.ellipse(8, -92 + br, 11, 8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#1a1008'; ctx.beginPath(); ctx.ellipse(14, -95 + br, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(2, -104 + br, 2.4, 0, Math.PI * 2); ctx.arc(-10, -104 + br, 2.4, 0, Math.PI * 2); ctx.fill();
+  // hammering arm
+  ctx.save(); ctx.translate(26, -64 + br); ctx.rotate(-1.4 + hit * 1.5);
+  ctx.strokeStyle = fur; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(26, 0); ctx.stroke();
+  ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(26, 0); ctx.lineTo(50, 0); ctx.stroke();
+  ctx.fillStyle = '#555a60'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.fillRect(46, -10, 14, 20); ctx.strokeRect(46, -10, 14, 20);
   ctx.restore();
   ctx.restore();
 }
@@ -1718,20 +1803,24 @@ function drawWeapon(wpn, s = 1, ang = 0, glow = false) {
     ctx.beginPath(); ctx.moveTo(L - 8, -5); ctx.lineTo(L + 16, 0); ctx.lineTo(L - 8, 5); ctx.lineTo(L - 3, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(L - 2, -3); ctx.lineTo(L - 10, -10); ctx.lineTo(L - 6, -2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#c99a4c'; ctx.fillRect(L - 14, -3, 5, 6);
-  } else if (wpn === 'hammer') {
-    ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(46, 0); ctx.stroke();
-    ctx.fillStyle = '#b08a46'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(42, -10); ctx.quadraticCurveTo(48, -20, 60, -22); ctx.lineTo(66, 22); ctx.quadraticCurveTo(50, 20, 42, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = '#e8c87a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(52, -16); ctx.lineTo(56, 16); ctx.stroke();
+  } else if (wpn === 'hammer') { // the bulava: a flanged iron head on a long haft
+    ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(48, 0); ctx.stroke();
+    ctx.fillStyle = '#7d858c'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(56 + Math.cos(a - 0.3) * 9, Math.sin(a - 0.3) * 9); ctx.lineTo(56 + Math.cos(a) * 18, Math.sin(a) * 18); ctx.lineTo(56 + Math.cos(a + 0.3) * 9, Math.sin(a + 0.3) * 9); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    const mg = ctx.createRadialGradient(52, -4, 1, 56, 0, 12); mg.addColorStop(0, '#d8dde2'); mg.addColorStop(1, '#5c646b');
+    ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(56, 0, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#c99a4c'; ctx.fillRect(42, -4, 4, 8);
   } else if (wpn === 'sickles') {
     ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(12, 0); ctx.stroke();
     ctx.fillStyle = '#dfe6ea'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(10, -2); ctx.quadraticCurveTo(30, -4, 34, -20); ctx.quadraticCurveTo(38, -30, 30, -34); ctx.quadraticCurveTo(34, -12, 12, 3); ctx.closePath(); ctx.fill(); ctx.stroke();
-  } else {
+  } else { // the kladenets: a broad straight sword with a gilded guard
     ctx.fillStyle = '#e9eef0';
-    ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(38, -2.5); ctx.lineTo(46, 0); ctx.lineTo(38, 3); ctx.lineTo(0, 3); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = 'rgba(160,190,200,0.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(4, 0); ctx.lineTo(36, 0); ctx.stroke();
-    ctx.fillStyle = '#c99a4c'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.fillRect(-3, -7, 5, 14); ctx.strokeRect(-3, -7, 5, 14);
+    ctx.beginPath(); ctx.moveTo(4, -4); ctx.lineTo(40, -3.5); ctx.lineTo(48, 0); ctx.lineTo(40, 3.5); ctx.lineTo(4, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(150,175,190,0.9)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(38, 0); ctx.stroke();
+    ctx.fillStyle = '#d9a640'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(1, -10); ctx.quadraticCurveTo(5, -6, 4, 0); ctx.quadraticCurveTo(5, 6, 1, 10); ctx.lineTo(-1, 10); ctx.lineTo(-1, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5a3a1e'; ctx.fillRect(-8, -2.5, 8, 5); ctx.fillStyle = '#d9a640'; ctx.beginPath(); ctx.arc(-9, 0, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
   ctx.restore();
 }
@@ -1753,7 +1842,7 @@ function drawCape(p, ghost) {
   ctx.beginPath(); ctx.moveTo(...L[0]); for (const q of L) ctx.lineTo(...q); for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(...R[i]); ctx.closePath();
   if (ghost) { ctx.fillStyle = ghost; ctx.fill(); return; }
   const g = ctx.createLinearGradient(c[0].x, c[0].y, c[c.length - 1].x, c[c.length - 1].y);
-  g.addColorStop(0, '#b8682c'); g.addColorStop(1, '#6a2e1c');
+  g.addColorStop(0, '#b3302a'); g.addColorStop(1, '#5a1414');
   ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.stroke();
 }
 function drawKnight(p, opt = {}) {
@@ -1789,65 +1878,61 @@ function drawKnight(p, opt = {}) {
     const [kx, ky] = legIK(hx, hipY, fx, fy, 11, 11);
     ctx.strokeStyle = col(i ? '#3a3344' : '#26202e'); ctx.lineWidth = 6.5;
     ctx.beginPath(); ctx.moveTo(hx, hipY); ctx.lineTo(kx, ky); ctx.lineTo(fx, fy); ctx.stroke();
-    ctx.fillStyle = col('#1a1520'); ctx.beginPath(); ctx.moveTo(fx - 4, fy - 3); ctx.lineTo(fx + 7, fy - 2); ctx.lineTo(fx + 7, fy + 1); ctx.lineTo(fx - 4, fy + 1); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = col('#7a2a1a'); ctx.beginPath(); ctx.moveTo(fx - 4, fy - 5); ctx.lineTo(fx + 7, fy - 2); ctx.lineTo(fx + 7, fy + 1); ctx.lineTo(fx - 4, fy + 1); ctx.closePath(); ctx.fill();
   }
   // torso frame
   ctx.save(); ctx.translate(0, hipY); ctx.rotate(lean);
-  // wings
-  const flap = p.flap > 0 ? Math.sin(p.flap * 30) * 0.6 : !onG ? Math.sin(p.anim * 12) * 0.3 : dash ? -0.5 : Math.sin(p.anim * 2) * 0.06;
-  for (const [rot, k] of [[1.0, 1], [0.15, 0.72]]) {
-    ctx.save(); ctx.translate(-4, -22); ctx.rotate(rot + flap * k);
-    const wg = ctx.createLinearGradient(0, 0, -50, -10);
-    wg.addColorStop(0, ghost || '#e2c287'); wg.addColorStop(1, ghost || '#7a5e3a');
-    ctx.fillStyle = wg; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(-30 * k, -34 * k, -58 * k, -16 * k, -52 * k, 6 * k);
-    ctx.bezierCurveTo(-40 * k, 18 * k, -16 * k, 14 * k, 0, 4); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
-    if (!ghost) {
-      ctx.fillStyle = 'rgba(40,20,10,0.55)'; ctx.beginPath(); ctx.ellipse(-32 * k, -4 * k, 6 * k, 4 * k, 0.3, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(60,35,15,0.6)'; ctx.lineWidth = 1.2; ctx.beginPath();
-      ctx.moveTo(-2, 1); ctx.lineTo(-44 * k, -10 * k); ctx.moveTo(-2, 2); ctx.lineTo(-40 * k, 6 * k); ctx.moveTo(-2, 0); ctx.lineTo(-26 * k, -22 * k); ctx.stroke();
-    }
-    ctx.restore();
-  }
-  // back arm: the lantern (or the second sickle, with the lantern at the belt)
+  // back arm: the amulet hangs at the belt, the arm swings (or holds the second sickle)
   const swing = onG ? -Math.sin(p.runPh) * 0.5 * sp : -0.4;
   const ba = 1.85 + swing + (p.atkT > 0 ? -0.3 : 0);
   const bhx = -3 + Math.cos(ba) * 13, bhy = -24 + Math.sin(ba) * 13;
-  ctx.strokeStyle = col('#2e2838'); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-3, -24); ctx.lineTo(bhx, bhy); ctx.stroke();
+  ctx.strokeStyle = col('#7a1f1c'); ctx.lineWidth = 5.5; ctx.beginPath(); ctx.moveTo(-3, -24); ctx.lineTo(bhx, bhy); ctx.stroke();
   if (!ghost) {
-    if (wpn === 'sickles') {
-      const wp = weaponPose(p, wpn);
-      ctx.save(); ctx.translate(bhx, bhy); drawWeapon('sickles', 1, wp.alt === 0 ? -wp.a * 0.6 + 1.6 : ba - 0.6); ctx.restore();
-      drawHeldLantern(-8, -4, p, lan);
-    } else drawHeldLantern(bhx, bhy, p, lan);
+    ctx.fillStyle = '#d9b48a'; ctx.beginPath(); ctx.arc(bhx, bhy, 2.6, 0, Math.PI * 2); ctx.fill();
+    if (wpn === 'sickles') { const wp = weaponPose(p, wpn); ctx.save(); ctx.translate(bhx, bhy); drawWeapon('sickles', 1, wp.alt === 0 ? -wp.a * 0.6 + 1.6 : ba - 0.6); ctx.restore(); }
   }
-  // body: dark mail under a cream tabard
-  const tg = ctx.createLinearGradient(-10, 0, 10, 0); tg.addColorStop(0, col('#d8cbb0')); tg.addColorStop(0.5, col('#f4ead2')); tg.addColorStop(1, col('#c8b89a'));
-  ctx.fillStyle = col('#2a2433'); ctx.beginPath(); ctx.moveTo(-9, 2); ctx.lineTo(-10, -26); ctx.lineTo(10, -26); ctx.lineTo(9, 2); ctx.closePath(); ctx.fill();
+  // body: chain mail under a red kaftan with a gold-trimmed hem and belt
+  ctx.fillStyle = col('#8f969c'); ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(-10, -27); ctx.lineTo(10, -27); ctx.lineTo(11, 0); ctx.lineTo(-11, 0); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
+  if (!ghost) { // mail rings
+    ctx.strokeStyle = 'rgba(40,44,52,0.55)'; ctx.lineWidth = 1;
+    for (let y = -24; y < -2; y += 4) { ctx.beginPath(); for (let x = -9; x <= 9; x += 4) { ctx.moveTo(x + 1.6, y); ctx.arc(x, y, 1.6, 0, Math.PI); } ctx.stroke(); }
+  }
+  const tg = ctx.createLinearGradient(-10, 0, 10, 0); tg.addColorStop(0, col('#8e2420')); tg.addColorStop(0.5, col('#c23a2c')); tg.addColorStop(1, col('#8a2320'));
   ctx.fillStyle = tg; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(-8, -27); ctx.lineTo(8, -27); ctx.lineTo(10, -6); ctx.lineTo(6, 4); ctx.lineTo(0, 1); ctx.lineTo(-6, 4); ctx.lineTo(-10, -6); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-8, -26); ctx.lineTo(-1, -26); ctx.lineTo(1, -12); ctx.lineTo(2, 4); ctx.lineTo(-11, 5); ctx.lineTo(-10, -12); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
   if (!ghost) {
-    ctx.fillStyle = '#c99a4c'; ctx.fillRect(-10, -10, 20, 3.5);
-    ctx.fillStyle = LANTERNS[lan].light; ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(3, -18); ctx.lineTo(0, -14); ctx.lineTo(-3, -18); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#b9b2a2'; ctx.beginPath(); ctx.ellipse(-8, -25, 5, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.strokeStyle = '#e3b55a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-10.5, 3); ctx.lineTo(1.5, 2); ctx.moveTo(-0.5, -25); ctx.lineTo(1.2, 2); ctx.stroke();
+    ctx.fillStyle = '#5a3a1e'; ctx.fillRect(-11, -11, 22, 4); ctx.fillStyle = '#e3b55a'; ctx.fillRect(-2, -11.5, 4, 5);
+    // the amulet at the belt, glowing in its god's colour
+    const L = LANTERNS[lan], sw2 = Math.sin(p.lanA || 0) * 2;
+    const g2 = ctx.createRadialGradient(6 + sw2, -3, 0, 6 + sw2, -3, 12); g2.addColorStop(0, L.light + 'cc'); g2.addColorStop(1, L.light + '00');
+    ctx.fillStyle = g2; ctx.beginPath(); ctx.arc(6 + sw2, -3, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#5a3a1e'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(5, -8); ctx.lineTo(6 + sw2, -6); ctx.stroke();
+    ctx.fillStyle = '#c99a4c'; ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(6 + sw2, -3, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = L.glass[0]; ctx.beginPath(); ctx.arc(6 + sw2, -3, 1.8, 0, Math.PI * 2); ctx.fill();
+    // shoulder plate
+    ctx.fillStyle = '#b8bec4'; ctx.beginPath(); ctx.ellipse(-7, -25, 5.5, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.stroke();
   }
-  // head: helmet, visor, feathered antennae
+  // head: a pointed shishak helm with a nose guard, mail aventail and a fair beard
   ctx.save(); ctx.translate(1, -29); ctx.rotate(p.hurtFlash > 0 ? -0.2 : Math.sin(p.anim * 1.7) * 0.03);
-  ctx.fillStyle = col('#ddd7c8'); ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(-9, 0); ctx.quadraticCurveTo(-11, -18, 1, -19); ctx.quadraticCurveTo(13, -18, 11, 0); ctx.quadraticCurveTo(1, 3, -9, 0); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
+  ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.fillStyle = col('#7d848b'); // aventail
+  ctx.beginPath(); ctx.moveTo(-9, -8); ctx.lineTo(-10, 2); ctx.quadraticCurveTo(-2, 5, 4, 2); ctx.lineTo(4, -4); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
+  ctx.fillStyle = col('#e8c49c'); // face
+  ctx.beginPath(); ctx.moveTo(2, -10); ctx.quadraticCurveTo(11, -10, 10, -3); ctx.lineTo(8, 0); ctx.lineTo(2, 0); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
   if (!ghost) {
-    const hg = ctx.createLinearGradient(-9, -18, 11, 0); hg.addColorStop(0, 'rgba(255,255,255,0.5)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(-3, -12, 4, 5, -0.4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#1a1520'; ctx.beginPath(); ctx.moveTo(2, -11); ctx.lineTo(12, -9); ctx.lineTo(11, -4); ctx.lineTo(2, -6); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = LANTERNS[lan].light; ctx.beginPath(); ctx.moveTo(4, -9); ctx.lineTo(10, -8); ctx.lineTo(10, -6); ctx.lineTo(4, -7); ctx.fill();
-    ctx.strokeStyle = INK; ctx.lineWidth = 2;
-    for (const k of [1, 0.6]) {
-      const aa = p.antA * k;
-      ctx.save(); ctx.translate(-2, -18); ctx.rotate(aa);
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-6 * k, -16, -16 * k, -20); ctx.stroke();
-      for (let i = 0; i < 4; i++) { const tx = -2 - i * 3.5 * k, ty = -4 - i * 4; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - 4, ty + 3); ctx.stroke(); }
-      ctx.restore();
-    }
+    ctx.fillStyle = '#d9a95a'; ctx.beginPath(); ctx.moveTo(3, -3); ctx.quadraticCurveTo(10, -3, 10, -1); ctx.quadraticCurveTo(8, 8, 2, 7); ctx.quadraticCurveTo(0, 2, 3, -3); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#1a1520'; ctx.beginPath(); ctx.arc(7, -6.5, 1.3, 0, Math.PI * 2); ctx.fill();
+  }
+  const hg2 = ctx.createLinearGradient(-9, -24, 10, -8); hg2.addColorStop(0, col('#e9edf0')); hg2.addColorStop(1, col('#9aa2aa'));
+  ctx.fillStyle = hg2; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(-10, -8); ctx.quadraticCurveTo(-10, -20, 0, -27); ctx.lineTo(1, -31); ctx.lineTo(2, -27); ctx.quadraticCurveTo(12, -20, 11, -8); ctx.closePath(); ctx.fill(); if (!ghost) ctx.stroke();
+  if (!ghost) {
+    ctx.fillStyle = '#c99a4c'; ctx.fillRect(-10, -10, 21, 3); ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.strokeRect(-10, -10, 21, 3);
+    ctx.fillStyle = '#9aa2aa'; ctx.fillRect(7.5, -9, 2.2, 8); ctx.strokeRect(7.5, -9, 2.2, 8); // nose guard
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.beginPath(); ctx.ellipse(-3, -17, 2.5, 5, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = LANTERNS[lan].light; ctx.beginPath(); ctx.arc(1, -30.5, 1.6, 0, Math.PI * 2); ctx.fill();
   }
   ctx.restore();
   // front arm and weapon
@@ -1864,7 +1949,7 @@ function drawKnight(p, opt = {}) {
     const last = p.trail[p.trail.length - 1];
     if (!last || last.t !== state.t) p.trail.push({ x: wpt.x - p.x, y: wpt.y - p.y, bx: wph.x - p.x, by: wph.y - p.y, t: state.t });
   }
-  ctx.strokeStyle = col('#2e2838'); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(shx, shy); ctx.lineTo(hx, hy); ctx.stroke();
+  ctx.strokeStyle = col('#9a2a22'); ctx.lineWidth = 5.5; ctx.beginPath(); ctx.moveTo(shx, shy); ctx.lineTo(hx, hy); ctx.stroke();
   if (!ghost) { ctx.save(); ctx.translate(hx, hy); drawWeapon(wpn, 1, wp.a); ctx.restore(); }
   ctx.restore();
   ctx.restore();
@@ -2084,99 +2169,112 @@ ENEMY_DRAW.jelly = (e, fl, eyes) => { // the Lantern Jelly: a pulsing bell with 
   ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(-rw * 0.35, cy - rh * 0.4, rw * 0.25, rh * 0.25, -0.5, 0, Math.PI); ctx.stroke();
 };
-ENEMY_DRAW.dummy = (e, fl) => { // the training dummy: a post, a straw sack and a brass gear head
-  ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -80); ctx.moveTo(-22, -56); ctx.lineTo(22, -56); ctx.stroke();
-  ctx.fillStyle = shade(fl, '#c8a868'); ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-16, -20); ctx.quadraticCurveTo(-22, -46, -12, -62); ctx.lineTo(12, -62); ctx.quadraticCurveTo(22, -46, 16, -20); ctx.quadraticCurveTo(0, -12, -16, -20); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#8a6a34'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-14, -40); ctx.lineTo(14, -40); ctx.moveTo(-12, -30); ctx.lineTo(12, -30); ctx.stroke();
-  ctx.save(); ctx.translate(0, -76); drawGear(0, 0, 11, 8, e.anim * 0.5, fl ? '#fff' : '#b08a46'); ctx.restore();
+ENEMY_DRAW.dummy = (e, fl) => { // the training effigy: a straw doll on a cross, in a red headscarf
+  ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -80); ctx.moveTo(-26, -56); ctx.lineTo(26, -56); ctx.stroke();
+  ctx.fillStyle = shade(fl, '#d8b868'); ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-18, -14); ctx.lineTo(-12, -60); ctx.lineTo(12, -60); ctx.lineTo(18, -14); ctx.quadraticCurveTo(0, -6, -18, -14); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#a8883a'; ctx.lineWidth = 1.5; for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(i * 5, -56); ctx.lineTo(i * 6, -16); ctx.stroke(); }
+  ctx.strokeStyle = '#b03a2a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-15, -36); ctx.lineTo(15, -36); ctx.stroke();
+  ctx.fillStyle = shade(fl, '#e0c878'); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, -74, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = shade(fl, '#c0302a'); ctx.beginPath(); ctx.moveTo(-13, -72); ctx.quadraticCurveTo(-14, -90, 0, -89); ctx.quadraticCurveTo(14, -90, 13, -72); ctx.lineTo(18, -62); ctx.lineTo(8, -70); ctx.quadraticCurveTo(0, -80, -8, -70); ctx.lineTo(-18, -62); ctx.closePath(); ctx.fill(); ctx.stroke();
+  for (let i = 0; i < 4; i++) { ctx.fillStyle = '#f0e0b0'; ctx.beginPath(); ctx.arc(-6 + i * 4, -84, 1.2, 0, Math.PI * 2); ctx.fill(); }
 };
-ENEMY_DRAW.warden = (e, fl, eyes) => {
-  const h = e.h, w = e.w;
-  const lean = e.st === 'crouch' ? 10 : e.st === 'leap' ? -8 : 0;
-  ctx.translate(0, lean);
-  if (eyes) { eyeGlow(0, -h * 0.28, e.st === 'toll' || e.st === 'sweep' ? 9 : 6, e.phase === 2 ? '#ff7a5a' : '#ff3d8b'); return; }
-  ctx.strokeStyle = '#3b3a3e'; ctx.lineWidth = 4;
-  for (const s of [-1, 1]) {
-    const sw = Math.sin(e.anim * 2 + s) * 10;
-    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.ellipse(s * (w * 0.45 + i * 6), -h * 0.55 + i * 13 + sw * i / 6, 4, 7, 0.3 * s, 0, Math.PI * 2); ctx.stroke(); }
-    ctx.fillStyle = '#7a6a5a'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-    ctx.beginPath(); const hx = s * (w * 0.45 + 36), hy = -h * 0.55 + 80 + sw;
-    ctx.moveTo(hx, hy); ctx.lineTo(hx + s * 12, hy + 10); ctx.lineTo(hx, hy + 22); ctx.lineTo(hx - s * 8, hy + 10); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = '#3b3a3e'; ctx.lineWidth = 4;
-  }
-  const bg = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
-  bg.addColorStop(0, fl ? '#fff' : '#4d3a1f'); bg.addColorStop(0.45, fl ? '#fff' : '#a8803e'); bg.addColorStop(1, fl ? '#fff' : '#3d2d17');
-  ctx.fillStyle = bg; ctx.strokeStyle = INK; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(-w * 0.2, -h + 18);
-  ctx.quadraticCurveTo(-w * 0.32, -h * 0.8, -w * 0.34, -h * 0.4); ctx.quadraticCurveTo(-w * 0.38, -h * 0.12, -w * 0.52, -4);
-  ctx.quadraticCurveTo(0, 8, w * 0.52, -4); ctx.quadraticCurveTo(w * 0.38, -h * 0.12, w * 0.34, -h * 0.4);
-  ctx.quadraticCurveTo(w * 0.32, -h * 0.8, w * 0.2, -h + 18); ctx.quadraticCurveTo(0, -h + 6, -w * 0.2, -h + 18); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#d4b06a'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-w * 0.44, -16); ctx.quadraticCurveTo(0, -6, w * 0.44, -16); ctx.stroke();
-  ctx.strokeStyle = INK; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(w * 0.1, -h + 30); ctx.lineTo(w * 0.16, -h * 0.65); ctx.lineTo(w * 0.08, -h * 0.55); ctx.lineTo(w * 0.15, -h * 0.45); ctx.stroke();
-  ctx.fillStyle = '#100a08'; ctx.beginPath(); ctx.ellipse(0, -h * 0.28, w * 0.2, h * 0.14, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#6b5530'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-  for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(i * 12 - 6, -h + 12); ctx.lineTo(i * 14, -h - 14 - (i === 0 ? 10 : 0)); ctx.lineTo(i * 12 + 6, -h + 12); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+ENEMY_DRAW.warden = (e, fl, eyes) => { // Likho One-Eye: a hunched shaggy giant with one great eye and a club
+  const h = e.h, w = e.w, t = e.anim;
+  const crouch = e.st === 'crouch' ? 12 : e.st === 'leap' ? -10 : 0;
+  ctx.translate(0, crouch);
+  const hy = -h * 0.8;
+  if (eyes) { eyeGlow(6, hy, e.st === 'toll' || e.st === 'sweep' ? 11 : 8, e.phase === 2 ? '#ff7a3a' : '#ffd040'); return; }
+  const skin = fl ? '#fff' : '#6a7a62', furC = fl ? '#fff' : '#3a3026';
+  ctx.lineJoin = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 4;
+  const st = Math.abs(e.vx) > 5 ? Math.sin(t * 5) * 8 : 0;
+  ctx.fillStyle = skin; // legs
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 20 - 14, -h * 0.35); ctx.lineTo(s * 26 - 14 + st * s, -2); ctx.lineTo(s * 26 + 16 + st * s, -2); ctx.lineTo(s * 20 + 14, -h * 0.35); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  // a shaggy hide over the hunched body
+  ctx.fillStyle = furC; ctx.beginPath(); ctx.moveTo(-w * 0.45, -h * 0.3);
+  ctx.quadraticCurveTo(-w * 0.55, -h * 0.75, -w * 0.1, -h * 0.82); ctx.quadraticCurveTo(w * 0.4, -h * 0.85, w * 0.42, -h * 0.5); ctx.lineTo(w * 0.4, -h * 0.28);
+  for (let i = 8; i >= 0; i--) ctx.lineTo(-w * 0.45 + i * w * 0.85 / 8, -h * 0.28 + (i % 2 ? 14 : 0));
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(w * 0.05, -h * 0.52, w * 0.22, h * 0.17, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // belly
+  // the club arm
+  const aa = e.st === 'crouch' ? -2.3 : e.st === 'leap' ? -1.6 : e.st === 'rush' ? 0.15 : e.st === 'sweep' ? 0.2 + Math.sin(t * 12) * 0.5 : e.st === 'toll' ? -1.2 : 0.5 + Math.sin(t * 1.5) * 0.1;
+  ctx.save(); ctx.translate(w * 0.32, -h * 0.66); ctx.rotate(aa);
+  ctx.strokeStyle = skin; ctx.lineWidth = 16; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(52, 0); ctx.stroke();
+  ctx.fillStyle = fl ? '#fff' : '#5a3a1e'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(48, -6); ctx.lineTo(120, -16); ctx.quadraticCurveTo(134, 0, 120, 16); ctx.lineTo(48, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#8a8a8a'; for (const [kx, ky] of [[92, -12], [108, 12], [122, -4]]) { ctx.beginPath(); ctx.moveTo(kx - 4, ky); ctx.lineTo(kx, ky + (ky < 0 ? -9 : 9)); ctx.lineTo(kx + 4, ky); ctx.fill(); }
+  ctx.restore();
+  // the head: one great eye, tusks and a matted mane
+  ctx.fillStyle = skin; ctx.strokeStyle = INK; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(4, hy, 32, 28, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = furC; ctx.beginPath(); ctx.moveTo(-30, hy - 4); for (let i = 0; i < 7; i++) ctx.lineTo(-30 + i * 9, hy - 30 - (i % 2 ? 0 : 10)); ctx.lineTo(34, hy - 6); ctx.quadraticCurveTo(4, hy - 22, -30, hy - 4); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#f0e8d0'; ctx.beginPath(); ctx.ellipse(6, hy, 13, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#1a0e06'; ctx.beginPath(); ctx.arc(9, hy, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8e0c8'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+  for (const tx of [-8, 18]) { ctx.beginPath(); ctx.moveTo(tx - 3, hy + 16); ctx.lineTo(tx, hy + 28); ctx.lineTo(tx + 3, hy + 16); ctx.closePath(); ctx.fill(); ctx.stroke(); }
 };
-ENEMY_DRAW.clockmaker = (e, fl, eyes) => { // a hunched drowned clockmaker: a clock-face chest and a key-blade
+ENEMY_DRAW.clockmaker = (e, fl, eyes) => { // Kikimora of the Bog: a hunched swamp hag, long tangled hair, a crooked spindle-staff
   const h = e.h, t = e.anim, wind = ['throw', 'pend', 'lwind'].includes(e.st);
-  const hunch = e.st === 'lunge' ? 0.35 : wind ? -0.1 : 0.12 + Math.sin(t * 1.5) * 0.03;
-  if (eyes) { ctx.rotate(hunch); eyeGlow(18, -h + 30, wind ? 6 : 4, e.phase === 2 ? '#ff8a5a' : '#ffd36a'); return; }
-  ctx.strokeStyle = '#1e1a1a'; ctx.lineWidth = 10;
+  const hunch = e.st === 'lunge' ? 0.4 : wind ? -0.1 : 0.18 + Math.sin(t * 1.5) * 0.04;
+  if (eyes) { ctx.rotate(hunch); eyeGlow(24, -h + 40, wind ? 6 : 4, e.phase === 2 ? '#ff6a3a' : '#c8ff6a'); eyeGlow(12, -h + 42, wind ? 5 : 3.5, e.phase === 2 ? '#ff6a3a' : '#c8ff6a'); return; }
+  ctx.lineJoin = 'round';
   const st = Math.abs(e.vx) > 5 ? Math.sin(t * 6) * 10 : 0;
-  ctx.beginPath(); ctx.moveTo(-14, -60); ctx.lineTo(-18 + st, 0); ctx.moveTo(14, -60); ctx.lineTo(18 - st, 0); ctx.stroke();
+  ctx.strokeStyle = fl ? '#fff' : '#3a4a2a'; ctx.lineWidth = 7; // bird-thin legs
+  ctx.beginPath(); ctx.moveTo(-10, -50); ctx.lineTo(-16 + st, 0); ctx.lineTo(-26 + st, 2); ctx.moveTo(10, -50); ctx.lineTo(16 - st, 0); ctx.lineTo(26 - st, 2); ctx.stroke();
   ctx.rotate(hunch);
-  const cg = ctx.createLinearGradient(-50, -h, 50, 0); cg.addColorStop(0, fl ? '#fff' : '#3d4a4a'); cg.addColorStop(1, fl ? '#fff' : '#1a2222');
+  // ragged dress of rotting cloth and weed
+  const cg = ctx.createLinearGradient(-50, -h, 50, 0); cg.addColorStop(0, fl ? '#fff' : '#3f5a34'); cg.addColorStop(1, fl ? '#fff' : '#1c2a18');
   ctx.fillStyle = cg; ctx.strokeStyle = INK; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(-46, -56); ctx.quadraticCurveTo(-60, -h * 0.6, -30, -h + 34); ctx.quadraticCurveTo(0, -h + 10, 34, -h + 30); ctx.quadraticCurveTo(54, -h * 0.6, 42, -56); ctx.closePath(); ctx.fill(); ctx.stroke();
-  // clock face on the chest, its hands spinning
-  ctx.fillStyle = fl ? '#fff' : '#e8d8a8'; ctx.beginPath(); ctx.arc(0, -h * 0.52, 26, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#a8864a'; ctx.lineWidth = 4; ctx.stroke();
-  ctx.strokeStyle = INK; ctx.lineWidth = 2;
-  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 20, -h * 0.52 + Math.sin(a) * 20); ctx.lineTo(Math.cos(a) * 24, -h * 0.52 + Math.sin(a) * 24); ctx.stroke(); }
-  ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -h * 0.52); ctx.lineTo(Math.cos(t * 3) * 16, -h * 0.52 + Math.sin(t * 3) * 16); ctx.moveTo(0, -h * 0.52); ctx.lineTo(Math.cos(t * 0.5) * 11, -h * 0.52 + Math.sin(t * 0.5) * 11); ctx.stroke();
-  // head: a drowned hood with a monocle
-  ctx.fillStyle = fl ? '#fff' : '#2a3434'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-4, -h + 46); ctx.quadraticCurveTo(-10, -h + 4, 20, -h + 8); ctx.quadraticCurveTo(40, -h + 24, 30, -h + 46); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#c9a45a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(18, -h + 30, 8, 0, Math.PI * 2); ctx.stroke();
-  // seaweed hanging off it
-  ctx.strokeStyle = '#3d7a6f'; ctx.lineWidth = 3;
-  for (const x of [-30, -10, 22]) { ctx.beginPath(); ctx.moveTo(x, -h * 0.75); ctx.quadraticCurveTo(x + Math.sin(t * 2 + x) * 6, -h * 0.6, x + 2, -h * 0.45); ctx.stroke(); }
-  // arm with the key-blade
+  ctx.beginPath(); ctx.moveTo(-44, -44);
+  for (let i = 0; i <= 8; i++) ctx.lineTo(-44 + i * 11, -44 + (i % 2 ? 12 : 0) + Math.sin(t * 3 + i) * 2);
+  ctx.quadraticCurveTo(54, -h * 0.6, 30, -h + 40); ctx.quadraticCurveTo(0, -h + 20, -30, -h + 44); ctx.quadraticCurveTo(-60, -h * 0.6, -44, -44); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // head with a long nose, under hair like wet moss
+  ctx.fillStyle = fl ? '#fff' : '#8a9a6a'; ctx.beginPath(); ctx.ellipse(16, -h + 42, 20, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(32, -h + 40); ctx.quadraticCurveTo(48, -h + 46, 40, -h + 54); ctx.lineTo(32, -h + 48); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#0e1408'; ctx.beginPath(); ctx.arc(24, -h + 40, 4, 0, Math.PI * 2); ctx.arc(12, -h + 42, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = fl ? '#fff' : '#4f7a3a'; ctx.lineWidth = 4;
+  for (let i = 0; i < 9; i++) { const hx = -6 + i * 4.5; ctx.beginPath(); ctx.moveTo(hx, -h + 26); ctx.quadraticCurveTo(hx - 10 + Math.sin(t * 2 + i) * 5, -h * 0.65, hx - 16 + Math.sin(t * 1.6 + i) * 8, -h * 0.4 - (i % 3) * 8); ctx.stroke(); }
+  // arm with the crooked spindle-staff
   const aa = e.st === 'throw' ? -2.2 + (1 - Math.max(0, e.t) / 0.6) * 0.5 : e.st === 'lwind' ? -0.8 : e.st === 'lunge' ? 0.1 : e.st === 'pend' ? -1.6 : 0.6;
-  ctx.save(); ctx.translate(30, -h * 0.68); ctx.rotate(aa);
-  ctx.strokeStyle = '#1e1a1a'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(40, 0); ctx.stroke();
-  ctx.fillStyle = '#c9a45a'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.arc(46, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#d8dde0'; ctx.beginPath(); ctx.moveTo(54, -4); ctx.lineTo(120, -3); ctx.lineTo(120, 8); ctx.lineTo(110, 8); ctx.lineTo(110, 3); ctx.lineTo(54, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.save(); ctx.translate(26, -h * 0.66); ctx.rotate(aa);
+  ctx.strokeStyle = fl ? '#fff' : '#6a7a52'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(20, 6, 40, 0); ctx.stroke();
+  ctx.strokeStyle = '#4a3420'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(30, 0); ctx.lineTo(60, -3); ctx.lineTo(84, 4); ctx.lineTo(120, -2); ctx.stroke();
+  ctx.fillStyle = '#7aa04a'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(122, -2, 10, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   ctx.restore();
 };
-ENEMY_DRAW.queen = (e, fl, eyes) => { // the Jelly Queen: a vast bell with a crown of light and long tentacles
+ENEMY_DRAW.queen = (e, fl, eyes) => { // Morena of the Frost: a floating ice-maiden in a kokoshnik of icicles
   const t = e.anim, cy = -e.h + 50, pulse = Math.sin(t * (e.st === 'bubbles' ? 14 : 3));
-  const rw = e.w / 2 * (1 + pulse * 0.05), rh = 50 * (1 - pulse * 0.06);
+  const rw = e.w / 2 * (1 + pulse * 0.04);
   if (eyes) {
-    eyeGlow(-22, cy + 6, 5, e.phase === 2 ? '#ff9ad8' : '#9fffff'); eyeGlow(22, cy + 6, 5, e.phase === 2 ? '#ff9ad8' : '#9fffff');
-    ctx.fillStyle = '#ffe9a8'; ctx.beginPath();
-    for (let i = 0; i < 7; i++) { const x = (i - 3) * 14, top = cy - rh - 18 - (i === 3 ? 12 : Math.abs(3 - i) < 2 ? 6 : 0); ctx.moveTo(x - 5, cy - rh + 2); ctx.lineTo(x, top); ctx.lineTo(x + 5, cy - rh + 2); }
+    eyeGlow(-8, cy - 30, 4, e.phase === 2 ? '#ff9ad8' : '#bffcff'); eyeGlow(8, cy - 30, 4, e.phase === 2 ? '#ff9ad8' : '#bffcff');
+    ctx.fillStyle = '#e8fbff'; ctx.beginPath(); // the icicle kokoshnik
+    for (let i = 0; i < 9; i++) { const x = (i - 4) * 7, top = cy - 62 - (4 - Math.abs(4 - i)) * 6; ctx.moveTo(x - 3.5, cy - 48); ctx.lineTo(x, top); ctx.lineTo(x + 3.5, cy - 48); }
     ctx.fill(); return;
   }
-  ctx.strokeStyle = fl ? '#fff' : 'rgba(160,230,255,0.75)'; ctx.lineWidth = 4;
-  for (let i = -5; i <= 5; i++) {
-    ctx.beginPath(); ctx.moveTo(i * 13, cy + rh * 0.5);
-    for (let s = 1; s <= 7; s++) ctx.lineTo(i * 13 + Math.sin(t * 2 + i * 0.7 + s * 0.6) * (6 + s * 2), cy + rh * 0.5 + s * 16);
-    ctx.stroke();
-  }
-  const g = ctx.createRadialGradient(-rw * 0.3, cy - rh * 0.5, 4, 0, cy, rw * 1.1);
-  g.addColorStop(0, fl ? '#fff' : 'rgba(235,255,255,0.95)'); g.addColorStop(0.5, fl ? '#fff' : 'rgba(110,170,230,0.9)'); g.addColorStop(1, fl ? '#fff' : 'rgba(60,40,120,0.95)');
+  ctx.lineJoin = 'round';
+  // frost trails under the gown
+  ctx.strokeStyle = fl ? '#fff' : 'rgba(190,235,255,0.6)'; ctx.lineWidth = 3;
+  for (let i = -4; i <= 4; i++) { ctx.beginPath(); ctx.moveTo(i * rw / 5, cy + 50); for (let s = 1; s <= 5; s++) ctx.lineTo(i * rw / 5 + Math.sin(t * 2 + i + s * 0.7) * (4 + s * 2), cy + 50 + s * 16); ctx.stroke(); }
+  // the gown: a wide bell of ice-blue cloth
+  const g = ctx.createLinearGradient(0, cy - 30, 0, cy + 60);
+  g.addColorStop(0, fl ? '#fff' : '#e8f6ff'); g.addColorStop(0.5, fl ? '#fff' : '#8ab8e0'); g.addColorStop(1, fl ? '#fff' : '#3a4e8a');
   ctx.fillStyle = g; ctx.strokeStyle = INK; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(-rw, cy + rh * 0.5);
-  ctx.quadraticCurveTo(-rw * 1.08, cy - rh, 0, cy - rh * 1.1); ctx.quadraticCurveTo(rw * 1.08, cy - rh, rw, cy + rh * 0.5);
-  for (let i = 8; i >= -8; i--) ctx.lineTo(i * rw / 8, cy + rh * 0.5 + (i % 2 ? 8 : 0));
-  ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
-  for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(i * 18, cy - rh * 0.9); ctx.quadraticCurveTo(i * 26, cy, i * 30, cy + rh * 0.45); ctx.stroke(); }
-  ctx.fillStyle = '#0a0820'; ctx.beginPath(); ctx.ellipse(-22, cy + 6, 9, 7, 0, 0, Math.PI * 2); ctx.ellipse(22, cy + 6, 9, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-16, cy - 16); ctx.quadraticCurveTo(-rw * 0.9, cy + 10, -rw, cy + 52);
+  for (let i = -8; i <= 8; i++) ctx.lineTo(i * rw / 8, cy + 52 + (i % 2 ? 8 : 0));
+  ctx.quadraticCurveTo(rw * 0.9, cy + 10, 16, cy - 16); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2; // embroidered frost hem
+  ctx.beginPath(); for (let i = -7; i <= 7; i++) { ctx.moveTo(i * rw / 8 - 5, cy + 40); ctx.lineTo(i * rw / 8, cy + 32); ctx.lineTo(i * rw / 8 + 5, cy + 40); } ctx.stroke();
+  // arms spread wide
+  const spread = e.st === 'bubbles' ? 0.9 : e.st === 'tent' ? -0.6 : e.st === 'rise' || e.st === 'dive' ? -1.2 : 0.2 + Math.sin(t * 1.5) * 0.1;
+  ctx.strokeStyle = fl ? '#fff' : '#cfe4f4'; ctx.lineWidth = 6;
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 12, cy - 12); ctx.quadraticCurveTo(s * 34, cy - 6 - spread * 20, s * 58, cy + 4 - spread * 34); ctx.stroke(); }
+  // long white hair, the pale face and the kokoshnik base
+  ctx.fillStyle = fl ? '#fff' : '#f4fbff'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-14, cy - 44); ctx.quadraticCurveTo(-30, cy - 10, -22 + Math.sin(t * 2) * 4, cy + 20); ctx.lineTo(22 + Math.sin(t * 2 + 1) * 4, cy + 20); ctx.quadraticCurveTo(30, cy - 10, 14, cy - 44); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = fl ? '#fff' : '#dde8f0'; ctx.beginPath(); ctx.ellipse(0, cy - 30, 12, 15, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#20304a'; ctx.beginPath(); ctx.ellipse(-5, cy - 30, 2.5, 1.6, 0, 0, Math.PI * 2); ctx.ellipse(5, cy - 30, 2.5, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#9ac8f0'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(-16, cy - 42); ctx.quadraticCurveTo(0, cy - 56, 16, cy - 42); ctx.lineTo(14, cy - 48); ctx.quadraticCurveTo(0, cy - 62, -14, cy - 48); ctx.closePath(); ctx.fill(); ctx.stroke();
 };
 function drawLoot(m) {
   ctx.save(); ctx.translate(m.x, m.y);
@@ -2189,9 +2287,9 @@ function drawLoot(m) {
 function drawResIcon(type, x, y, s) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.lineWidth = 1.5; ctx.strokeStyle = INK;
   if (type === 'ember') { ctx.fillStyle = '#ffe18a'; ctx.strokeStyle = '#8a4a10'; ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(4, 0); ctx.lineTo(0, 6); ctx.lineTo(-4, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  else if (type === 'gears') { drawGear(0, 0, 5, 7, 0, RES.gears.color); }
-  else if (type === 'bronze') { ctx.fillStyle = RES.bronze.color; ctx.beginPath(); ctx.moveTo(-6, 4); ctx.lineTo(-3, -5); ctx.lineTo(6, -3); ctx.lineTo(4, 5); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  else if (type === 'pearls') { const g = ctx.createRadialGradient(-2, -2, 0, 0, 0, 6); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#9ab8e0'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  else if (type === 'gears') { ctx.fillStyle = RES.gears.color; ctx.beginPath(); ctx.moveTo(-6, 2); ctx.lineTo(-4, -4); ctx.lineTo(2, -6); ctx.lineTo(6, -1); ctx.lineTo(4, 5); ctx.lineTo(-3, 6); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.arc(-1, 0, 1.8, 0, Math.PI * 2); ctx.fill(); }
+  else if (type === 'bronze') { ctx.fillStyle = RES.bronze.color; ctx.beginPath(); ctx.moveTo(0, -7); ctx.quadraticCurveTo(6, 1, 0, 6); ctx.quadraticCurveTo(-6, 1, 0, -7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(-1.5, 1, 1.4, 0, Math.PI * 2); ctx.fill(); }
+  else if (type === 'pearls') { ctx.fillStyle = '#e8f8ff'; ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(4, -1); ctx.lineTo(2, 6); ctx.lineTo(-2, 6); ctx.lineTo(-4, -1); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   else { ctx.fillStyle = RES.cores.color; ctx.beginPath(); ctx.moveTo(0, 7); ctx.bezierCurveTo(-9, 0, -6, -8, 0, -3); ctx.bezierCurveTo(6, -8, 9, 0, 0, 7); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   ctx.restore();
 }
@@ -2203,11 +2301,28 @@ function drawShot(s) {
     ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-26, 0); ctx.quadraticCurveTo(-6, -50, 0, -46); ctx.quadraticCurveTo(6, -50, 26, 0); ctx.fill();
     ctx.restore(); return;
   }
-  if (s.kind === 'gear') {
-    const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 30); g.addColorStop(0, 'rgba(255,220,140,0.6)'); g.addColorStop(1, 'rgba(255,200,100,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, 30, 0, Math.PI * 2); ctx.fill();
-    drawGear(s.x, s.y, s.r * 0.85, 9, s.spin || 0, '#d8b46a');
+  if (s.kind === 'gear') { // Kikimora's thrown snag: a rotten log, spinning, dripping bog water
+    ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.spin || 0);
+    ctx.fillStyle = '#5a4a2e'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, s.r * 1.3, s.r * 0.7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#3a2e1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-s.r * 1.6, -4); ctx.lineTo(-s.r * 0.8, -2); ctx.moveTo(s.r, -6); ctx.lineTo(s.r * 1.6, -12); ctx.stroke();
+    ctx.fillStyle = '#7aa04a'; ctx.beginPath(); ctx.ellipse(-4, -s.r * 0.5, 6, 3, 0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore(); return;
+  }
+  if (s.kind === 'bubble') { // Morena's ice shard
+    const a = Math.atan2(s.vy, s.vx);
+    const g0 = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 2); g0.addColorStop(0, 'rgba(220,250,255,0.6)'); g0.addColorStop(1, 'rgba(160,220,255,0)');
+    ctx.fillStyle = g0; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(a); ctx.fillStyle = '#e8fbff'; ctx.strokeStyle = '#3a6aa0'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(s.r * 1.4, 0); ctx.lineTo(0, -s.r * 0.5); ctx.lineTo(-s.r, 0); ctx.lineTo(0, s.r * 0.5); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
     return;
+  }
+  if (s.kind === 'note') { // Likho's hurled stone
+    const g0 = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 2); g0.addColorStop(0, 'rgba(255,200,120,0.45)'); g0.addColorStop(1, 'rgba(255,180,90,0)');
+    ctx.fillStyle = g0; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#7a7a72'; ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath();
+    for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + state.t * 4, r = s.r * (0.8 + (i % 3) * 0.12); ctx.lineTo(s.x + Math.cos(a) * r, s.y + Math.sin(a) * r); }
+    ctx.closePath(); ctx.fill(); ctx.stroke(); return;
   }
   const c = s.c || (s.kind === 'glob' ? ['#e9ffb0', '#8acb2a'] : s.kind === 'bubble' ? ['#ffffff', '#6fd0ff'] : ['#ffd0e0', '#ff4f8a']);
   const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 2);
@@ -2232,19 +2347,18 @@ function drawHazard(h) {
   if (h.kind === 'pend') { // a pendulum blade swinging down through the column
     const sw = Math.sin(k * Math.PI) * 0.0, len = GROUND - 30;
     ctx.save(); ctx.translate(h.x, 0); ctx.rotate(sw);
-    ctx.strokeStyle = '#6a6a70'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, len * Math.min(1, k * 4)); ctx.stroke();
+    ctx.strokeStyle = '#3f5a2a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, len * Math.min(1, k * 4)); ctx.stroke();
     const y = len * Math.min(1, k * 4);
-    ctx.fillStyle = '#e8eef2'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(-50, y - 10); ctx.quadraticCurveTo(0, y + 30, 50, y - 10); ctx.quadraticCurveTo(0, y + 8, -50, y - 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5a4a2e'; ctx.strokeStyle = INK; ctx.lineWidth = 3; // a snag log on a vine, dropping into the bog
+    ctx.beginPath(); ctx.moveTo(-46, y - 16); ctx.lineTo(46, y - 12); ctx.lineTo(50, y + 6); ctx.lineTo(-44, y + 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#3a2e1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-30, y - 4); ctx.lineTo(20, y - 2); ctx.moveTo(30, y + 8); ctx.lineTo(38, y + 20); ctx.lineTo(44, y + 14); ctx.stroke();
     ctx.restore();
-  } else { // a glowing tentacle rising from the floor
+  } else { // a spike of ice bursting from the floor
     const hgt = 300 * Math.sin(Math.min(1, k * 2.5) * Math.PI / 2) * (k > 0.8 ? (1 - k) / 0.2 : 1);
-    const g = ctx.createLinearGradient(0, GROUND - hgt, 0, GROUND); g.addColorStop(0, '#e0ffff'); g.addColorStop(1, '#3a7ab0');
+    const g = ctx.createLinearGradient(0, GROUND - hgt, 0, GROUND); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#5a90c8');
     ctx.fillStyle = g; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(h.x - 22, GROUND);
-    for (let y = 0; y <= hgt; y += 20) ctx.lineTo(h.x - 22 * (1 - y / hgt * 0.8) + Math.sin(y * 0.05 + state.t * 8) * 8, GROUND - y);
-    for (let y = hgt; y >= 0; y -= 20) ctx.lineTo(h.x + 22 * (1 - y / hgt * 0.8) + Math.sin(y * 0.05 + state.t * 8) * 8, GROUND - y);
-    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(h.x - 26, GROUND); ctx.lineTo(h.x - 8, GROUND - hgt * 0.7); ctx.lineTo(h.x, GROUND - hgt); ctx.lineTo(h.x + 10, GROUND - hgt * 0.6); ctx.lineTo(h.x + 26, GROUND); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h.x - 6, GROUND - 10); ctx.lineTo(h.x - 2, GROUND - hgt * 0.8); ctx.stroke();
   }
 }
 function drawSpawn(s) {
@@ -2343,29 +2457,35 @@ function drawAmbient() {
 }
 
 // ---- Drawing: HUD -----------------------------------------------------------------------------------
+// The god's amulet: a bronze ring, its stone filling with light as it charges, the god's sign on top.
 function drawLanternIcon(x, y, s, fill, glow, id = 'brass', locked = false) {
   const L = LANTERNS[id] || LANTERNS.brass, [r, g, b] = hexRgb(L.light);
-  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   if (glow > 0) { const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, 34); gg.addColorStop(0, `rgba(${r},${g},${b},${glow})`); gg.addColorStop(1, `rgba(${r},${g},${b},0)`); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill(); }
-  const frame = locked ? '#6a6050' : id === 'storm' ? '#9ab8c8' : id === 'moon' ? '#d8dcf0' : id === 'witch' ? '#9a7ab8' : '#d7b06a';
-  ctx.strokeStyle = frame; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.arc(0, -22, 5, Math.PI, 0); ctx.stroke();
-  const body = () => {
-    ctx.beginPath();
-    if (id === 'moon') { ctx.ellipse(0, -1, 13, 16, 0, 0, Math.PI * 2); }
-    else if (id === 'witch') { ctx.moveTo(0, -19); ctx.lineTo(12, -6); ctx.lineTo(9, 15); ctx.lineTo(-9, 15); ctx.lineTo(-12, -6); ctx.closePath(); }
-    else if (id === 'storm') { ctx.moveTo(-12, -17); ctx.lineTo(12, -17); ctx.lineTo(10, 15); ctx.lineTo(-10, 15); ctx.closePath(); }
-    else { ctx.moveTo(-10, -17); ctx.lineTo(10, -17); ctx.lineTo(13, 15); ctx.lineTo(-13, 15); ctx.closePath(); }
-  };
-  ctx.fillStyle = '#1a1410'; body(); ctx.fill();
-  ctx.save(); body(); ctx.clip();
-  const lg = ctx.createLinearGradient(0, 15, 0, -17); lg.addColorStop(0, locked ? '#3a342c' : L.glass[1]); lg.addColorStop(1, locked ? '#4a443a' : L.glass[0]);
-  ctx.fillStyle = lg; ctx.fillRect(-14, 15 - 34 * fill, 28, 34 * fill); ctx.restore();
-  body(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(0, 15); ctx.stroke();
-  if (id === 'storm') { ctx.strokeStyle = '#eaf8ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(3, -10); ctx.lineTo(-3, 0); ctx.lineTo(3, 1); ctx.lineTo(-2, 10); ctx.stroke(); }
-  ctx.fillStyle = frame; ctx.fillRect(-15, 15, 30, 4); ctx.fillRect(-12, -20, 24, 3);
-  if (locked) { ctx.strokeStyle = '#c8bfa8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 5, Math.PI, 0); ctx.stroke(); ctx.fillStyle = '#c8bfa8'; ctx.fillRect(-6, 0, 12, 9); }
+  ctx.strokeStyle = '#8a6a34'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-10, -26); ctx.lineTo(0, -18); ctx.lineTo(10, -26); ctx.stroke(); // cord
+  ctx.fillStyle = locked ? '#5a5040' : '#c99a4c'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; ctx.fillStyle = locked ? '#3a3428' : '#8a6a34'; ctx.beginPath(); ctx.arc(Math.cos(a) * 15.5, Math.sin(a) * 15.5, 1.2, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = '#1a1410'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.clip();
+  const lg = ctx.createLinearGradient(0, 12, 0, -12); lg.addColorStop(0, locked ? '#3a342c' : L.glass[1]); lg.addColorStop(1, locked ? '#4a443a' : L.glass[0]);
+  ctx.fillStyle = lg; ctx.fillRect(-12, 12 - 24 * fill, 24, 24 * fill); ctx.restore();
+  ctx.strokeStyle = locked ? '#8a8070' : fill > 0.5 ? '#2a1a10' : L.light; ctx.fillStyle = ctx.strokeStyle; ctx.lineWidth = 2;
+  if (locked) { ctx.beginPath(); ctx.arc(0, -2, 4.5, Math.PI, 0); ctx.stroke(); ctx.fillRect(-6, -2, 12, 9); }
+  else if (id === 'storm') { // Perun's thunder sign: six petals in a ring
+    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.stroke();
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(Math.cos(a + 0.5) * 6, Math.sin(a + 0.5) * 6, Math.cos(a) * 8, Math.sin(a) * 8); ctx.stroke(); }
+  } else if (id === 'moon') { // Zhiva's sprout
+    ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(0, -6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-8, -2, -7, -8); ctx.quadraticCurveTo(-2, -6, 0, 0); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, -3); ctx.quadraticCurveTo(8, -5, 7, -11); ctx.quadraticCurveTo(2, -9, 0, -3); ctx.fill();
+  } else if (id === 'witch') { // Veles: the horned crescent
+    ctx.beginPath(); ctx.arc(0, -2, 7, 0.2, Math.PI - 0.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-7, -1); ctx.quadraticCurveTo(-9, -8, -5, -10); ctx.moveTo(7, -1); ctx.quadraticCurveTo(9, -8, 5, -10); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 6, 2, 0, Math.PI * 2); ctx.fill();
+  } else { // Svarog: a flame
+    ctx.beginPath(); ctx.moveTo(0, 8); ctx.quadraticCurveTo(-8, 2, -3, -6); ctx.quadraticCurveTo(-2, -1, 0, -2); ctx.quadraticCurveTo(0, -8, 3, -10); ctx.quadraticCurveTo(9, 0, 0, 8); ctx.fill();
+  }
   ctx.restore();
 }
 function drawBoonIcon(kind, x, y, s) {
@@ -2431,9 +2551,9 @@ function drawHUD() {
   }
   // where am I
   let where;
-  if (hub) where = 'Очаг · база';
-  else if (room.kind === 'haven') where = `Убежище · после: ${LOCS[room.loc].name}`;
-  else where = `${LOCS[room.loc].name} · ${room.kind === 'boss' ? 'Страж' : `комната ${room.k}/${tune.rooms_per_loc}`}`;
+  if (hub) where = 'Застава · база';
+  else if (room.kind === 'haven') where = `Привал · после: ${LOCS[room.loc].name}`;
+  else where = `${LOCS[room.loc].name} · ${room.kind === 'boss' ? 'Логово' : `комната ${room.k}/${tune.rooms_per_loc}`}`;
   if (state.run) where += ` · локация ${state.run.locI + 1}/3`;
   if (state.ash) where += ` · Пепел ${state.ash}`;
   textShadow(where, W / 2, 30, 18, '#d8e6e2');
@@ -2462,11 +2582,11 @@ function drawHUD() {
   // hub teaching, by doing
   if (hub) {
     const c = state.cam;
-    const tips = [[560, 300, 'A / D — бег · Пробел — прыжок · Shift — рывок'], [HUB_X.dummy, 300, 'J — удар по манекену · L — Вспышка'], [HUB_X.gate, 260, 'E у Врат — в путь']];
+    const tips = [[560, 300, 'A / D — бег · Пробел — прыжок · Shift — рывок'], [HUB_X.dummy, 300, 'J — удар по чучелу · L — Вспышка'], [HUB_X.gate, 260, 'E у Ворот — в Навь']];
     for (const [x, y, s] of tips) if (Math.abs(x - c - W / 2) < W) textShadow(s, x - c, y, 18, '#f3e6c8');
   }
   if (room.kind === 'haven') for (const it of room.inter) if (it.door) {
-    const nm = it.door === 'home' ? 'Домой, к Очагу' : LOCS[it.door].name;
+    const nm = it.door === 'home' ? 'Домой, на заставу' : LOCS[it.door].name;
     textShadow(nm, it.x - state.cam, GROUND - 175, 18, it.door === 'home' ? '#ffd99a' : LOCS[it.door].sigil);
   }
   if (state.mode === 'intro' && room.kind === 'combat') textShadow('Двери запечатаны', W / 2, 140, 26, '#f0b0c8');
@@ -2484,7 +2604,7 @@ function drawHUD() {
 }
 function drawBoonCards() {
   ctx.fillStyle = 'rgba(3,5,12,0.72)'; ctx.fillRect(0, 0, W, H);
-  textShadow('Выбери дар', W / 2, 120, 36, '#ffe7b8');
+  textShadow('Выбери руну', W / 2, 120, 36, '#ffe7b8');
   text('← / → и Enter, или 1 / 2 / 3', W / 2, 160, 18, '#c8bfa8');
   state.offer.forEach((b, i) => {
     const x = W / 2 - 390 + i * 270, y = 200, w = 240, h = 330, sel = i === state.sel;
@@ -2497,14 +2617,14 @@ function drawBoonCards() {
     ctx.fillStyle = glow; ctx.fillRect(x, yy + 10, w, 120);
     drawBoonIcon(b.kind, x + w / 2, yy + 70, 2);
     textShadow(b.name, x + w / 2, yy + 145, 21, '#ffe7b8');
-    const kindName = { strike: 'Удар', lantern: 'Фонарь', flare: 'Вспышка', dash: 'Рывок', move: 'Движение', body: 'Тело' }[b.kind];
+    const kindName = { strike: 'Удар', lantern: 'Оберег', flare: 'Вспышка', dash: 'Рывок', move: 'Движение', body: 'Тело' }[b.kind];
     text(kindName, x + w / 2, yy + 172, 15, '#c2a26a');
     wrapText(b.desc, x + w / 2, yy + 208, w - 36, 17, '#e8e0d0', 24);
     text(`${i + 1}`, x + w / 2, yy + h - 20, 18, '#8f8068');
   });
   if (state.rerolls > 0) text(`R — перебросить (${state.rerolls})`, W / 2, 575, 18, '#c8bfa8');
 }
-const MENU_TITLE = { shrine: 'Святилище Очага', lantern: 'Фонарщица Ива', weapon: 'Кузнец Панцирь', gate: 'Врата' };
+const MENU_TITLE = { shrine: 'Капище Рода', lantern: 'Ведунья Сова', weapon: 'Кузнец Потап', gate: 'Ворота в Навь' };
 function drawMenu() {
   const m = state.menu, rows = menuRows(m.kind);
   ctx.fillStyle = 'rgba(3,4,10,0.7)'; ctx.fillRect(0, 0, W, H);
@@ -2607,7 +2727,7 @@ function drawMenuBackdrop(lightX, lightY, r) {
   const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1e140e'); g.addColorStop(1, '#06080e');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   const t = clock.now();
-  for (let i = 0; i < 7; i++) drawGear(120 + i * 190, 120 + (i % 3) * 140, 50 + (i % 4) * 22, 10 + i, t * 0.05 * (i % 2 ? 1 : -1), '#24180f');
+  for (let i = 0; i < 9; i++) drawPine(60 + i * 150 + (i % 2) * 40, 600, 300 + (i % 3) * 90, 120, i % 2 ? '#1a130e' : '#22180f');
   const lg = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, r);
   lg.addColorStop(0, 'rgba(255,190,90,0.35)'); lg.addColorStop(1, 'rgba(255,170,60,0)');
   ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);
@@ -2626,7 +2746,7 @@ const scenes = {
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = '#1c2a32'; ctx.fillRect(0, 330, W, 6); ctx.fillRect(0, 640, W, 80);
       ctx.fillStyle = '#4f8f8a'; ctx.fillRect(0, 330, W, 2); ctx.fillRect(0, 640, W, 3);
-      textShadow('Фигуры Last Lumen', W / 2, 34, 26, '#ffe7b8');
+      textShadow('Фигуры Нави', W / 2, 34, 26, '#ffe7b8');
       const t = state.t;
       figKnight(80, 330, 1.3, t); textShadow('Рыцарь', 80, 352, 14, '#f3e6c8');
       const one = (k, x, y, s, label) => {
@@ -2636,11 +2756,11 @@ const scenes = {
       };
       one('crawler', 210, 330, 1.2); one('bat', 350, 250, 1.2); one('sentry', 490, 330, 1.1); one('bloat', 640, 260, 1.1);
       one('ringer', 790, 330, 1.1); one('jelly', 940, 260, 1.1); one('dummy', 1080, 330, 1);
-      one('clockmaker', 160, 640, 1, 'Часовщик (босс)'); one('warden', 440, 640, 0.95, 'Колокольный Страж (босс)'); one('queen', 760, 560, 0.85, 'Королева Медуз (босс)');
+      one('clockmaker', 160, 640, 1, 'Кикимора (босс)'); one('warden', 440, 640, 0.95, 'Лихо (босс)'); one('queen', 760, 560, 0.85, 'Морена (босс)');
       ctx.save(); ctx.translate(-60, 0);
-      drawIva(1040, 640, t); textShadow('Ива', 1040, 662, 14, '#f3e6c8');
-      drawSmith(1150, 640, t); textShadow('Панцирь', 1150, 662, 14, '#f3e6c8');
-      drawKeeper(1260, 640, t); textShadow('Тлен', 1260, 662, 14, '#f3e6c8');
+      drawIva(1040, 640, t); textShadow('Сова', 1040, 662, 14, '#f3e6c8');
+      drawSmith(1150, 640, t); textShadow('Потап', 1150, 662, 14, '#f3e6c8');
+      drawKeeper(1260, 640, t); textShadow('Доля', 1260, 662, 14, '#f3e6c8');
       ctx.restore();
       LANTERN_ORDER.forEach((id, i) => drawLanternIcon(1100 + i * 44, 120, 0.8, 1, 0.3, id));
       WEAPON_ORDER.forEach((id, i) => drawWeaponIcon(id, 1100 + i * 44, 190, 0.9));
@@ -2655,8 +2775,8 @@ const scenes = {
       text(TITLE, W / 2, 70, 72, '#ffe7b8', 'center', 'bold'); ctx.restore();
       STORY_INTRO.forEach((l, i) => text(l, W / 2, 124 + i * 24, 17, '#d8cdb4'));
       CONTROLS.forEach((c, i) => text(c, W / 2, 425 + i * 23, 16, '#c8bfa8'));
-      textShadow('Enter — в Очаг', W / 2, 672, 24, '#ffd99a');
-      if (save.runs) text(`Углей: ${save.embers} · забегов: ${save.runs} · стражей повержено: ${Object.values(save.bosses).reduce((a, b) => a + b, 0)} · побед: ${save.wins}`, W / 2, 704, 15, '#a89a80');
+      textShadow('Enter — на заставу', W / 2, 672, 24, '#ffd99a');
+      if (save.runs) text(`Углей: ${save.embers} · забегов: ${save.runs} · чудищ повержено: ${Object.values(save.bosses).reduce((a, b) => a + b, 0)} · побед: ${save.wins}`, W / 2, 704, 15, '#a89a80');
     },
   },
   play: {
@@ -2684,21 +2804,23 @@ const scenes = {
 function drawEnd(good) {
   scenes.play.draw();
   ctx.fillStyle = good ? 'rgba(20,14,4,0.78)' : 'rgba(14,2,6,0.8)'; ctx.fillRect(0, 0, W, H);
-  textShadow(state.won ? 'Победа' : state.home ? 'Домой, к Очагу' : 'Свет погас', W / 2, 170, 60, good ? '#ffe29a' : '#f0a0b0');
-  textShadow(state.gained, W / 2, 240, 24, '#ffe7b8');
+  textShadow(state.won ? 'Победа' : state.home ? 'Домой, на заставу' : 'Ты пал', W / 2, 170, 60, good ? '#ffe29a' : '#f0a0b0');
+  const gp = state.gained.split(' · ');
+  textShadow(gp[0], W / 2, 236, 24, '#ffe7b8');
+  if (gp[1]) text('Добыча: ' + gp.slice(1).join(' · '), W / 2, 268, 18, '#e0d0a8');
   const route = state.run ? state.run.route.map(r => LOCS[r].name).join(' → ') : '';
   const rows = [
     `Путь: ${route}`,
-    `Стражей повержено: ${state.bosses} из 3`,
+    `Чудищ повержено: ${state.bosses} из 3`,
     `Комнат пройдено: ${state.cleared}`,
     `Врагов повержено: ${state.kills}`,
-    `Даров собрано: ${state.boons.length}`,
+    `Рун собрано: ${state.boons.length}`,
     `Сид забега: ${state.runSeed}`,
   ];
-  rows.forEach((r, i) => text(r, W / 2, 300 + i * 32, 20, '#d8d0bc'));
-  if (state.won) text(`Открыт уровень Пепла ${save.maxAsh}: выбери его у Врат`, W / 2, 510, 20, '#e0a08a');
-  else text('Тлен снова зажжёт тебя у Очага. Потрать добычу у жителей.', W / 2, 510, 18, '#c8bfa8');
-  textShadow('Enter — к Очагу', W / 2, 590, 26, '#ffd99a');
+  rows.forEach((r, i) => text(r, W / 2, 310 + i * 30, 20, '#d8d0bc'));
+  if (state.won) text(`Открыт уровень Пепла ${save.maxAsh}: выбери его у Ворот`, W / 2, 510, 20, '#e0a08a');
+  else text('Пряха снова вытянет твою нить. Потрать добычу у жителей.', W / 2, 510, 18, '#c8bfa8');
+  textShadow('Enter — на заставу', W / 2, 590, 26, '#ffd99a');
 }
 
 // ---- Loop: fixed step, frame time clamped ---------------------------------------------
