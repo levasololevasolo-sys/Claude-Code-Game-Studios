@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="70" viewBox="-24 -42 50 70">
+<defs><linearGradient id="g1" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#FFE08A"/><stop offset="0.5" stop-color="#FFC94A"/><stop offset="1" stop-color="#C8902E"/></linearGradient><linearGradient id="g2" x1="0.9" y1="0.05" x2="0.1" y2="0.95"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#FFF2C0"/><stop offset="1" stop-color="#FFC94A"/></linearGradient></defs>
+<g><path d="M-12 -38 Q-10 -12 -2 -8 M4 -38 Q7 -16 3 -8" fill="none" stroke="#8A6020" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<path d="M-12 -38 Q-10 -12 -2 -8 M4 -38 Q7 -16 3 -8" fill="none" stroke="#C8902E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="1.0"/>
+<circle cx="0" cy="5" r="15" fill="url(#g1)" stroke="#120D12" stroke-width="6"/>
+<circle cx="11.0" cy="5.0" r="1.8" fill="#8A6020"/>
+<circle cx="7.8" cy="12.8" r="1.8" fill="#8A6020"/>
+<circle cx="0.0" cy="16.0" r="1.8" fill="#8A6020"/>
+<circle cx="-7.8" cy="12.8" r="1.8" fill="#8A6020"/>
+<circle cx="-11.0" cy="5.0" r="1.8" fill="#8A6020"/>
+<circle cx="-7.8" cy="-2.8" r="1.8" fill="#8A6020"/>
+<circle cx="-0.0" cy="-6.0" r="1.8" fill="#8A6020"/>
+<circle cx="7.8" cy="-2.8" r="1.8" fill="#8A6020"/>
+<circle cx="0" cy="5" r="6.5" fill="url(#g2)" stroke="#120D12" stroke-width="3"/>
+</g></svg>

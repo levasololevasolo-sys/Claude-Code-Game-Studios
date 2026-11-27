@@ -109,6 +109,10 @@ var roll_rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var bolts: Array[Dictionary] = []
 var _quaked: bool = false
 var _blasts: int = 0
+## The cutout rig (ADR-0005, HeroVisual); null if the scene is missing. Reads
+## this node's state only; when present, _draw() keeps just the shield ring.
+var visual: Node2D
+const VISUAL_SCENE: String = "res://scenes/hero/hero_visual.tscn"
 
 func _ready() -> void:
 	hp = Tune.f("player_hp")
@@ -130,6 +134,12 @@ func _ready() -> void:
 	# Input before damage in one tick (amulet-and-flare §5): the hero's tick runs
 	# before the enemies', the World's (hitstop/slow clocks) before the hero's.
 	process_physics_priority = -1
+	if ResourceLoader.exists(VISUAL_SCENE):
+		visual = (load(VISUAL_SCENE) as PackedScene).instantiate() as Node2D
+		visual.set("player", self)
+		add_child(visual)
+		if visual.has_method("set_weapon_sprite"):
+			visual.call("set_weapon_sprite", null)
 
 func _held(a: StringName) -> bool:
 	return bool(fake.get(a, false)) if scripted else Input.is_action_pressed(a)
@@ -771,6 +781,12 @@ const BLADE := Color("#e8f1f2")
 const GLOW := Color("#ffd27a")
 
 func _draw() -> void:
+	if visual != null:
+		# Until each weapon has its rig sprite, the weapon and chain bolts stay
+		# procedural over the rig (the rig's own stick sprite is hidden).
+		_draw_shield()
+		_draw_blade()
+		return
 	for gh: Dictionary in ghosts:
 		var gp: Vector2 = gh.p - position
 		draw_rect(Rect2(gp.x - W / 2.0, gp.y - H, W, H), Color(0.6, 0.85, 0.9, gh.t * 1.4))
@@ -802,10 +818,13 @@ func _draw() -> void:
 		var k := flare_t / maxf(Tune.f("flare_windup"), 0.01)
 		draw_arc(Vector2(-11, 13), 12.0 + 80.0 * k, 0.0, TAU, 32, Color(GLOW, 0.9), 3.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_draw_shield()
+	_draw_blade()
+
+func _draw_shield() -> void:
 	if shield > 0.0:
 		# Zhiva shield (§3.14): green ring around the hero.
 		draw_arc(Vector2(0, -H / 2.0), H * 0.75, 0.0, TAU, 40, Color("#9ff0b0", 0.4 + 0.5 * shield / maxf(Tune.f("shield_max"), 1.0)), 3.0)
-	_draw_blade()
 
 func _blade_angle() -> float:
 	if atk_t <= 0.0:
