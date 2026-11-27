@@ -113,6 +113,17 @@ var _blasts: int = 0
 ## this node's state only; when present, _draw() keeps just the shield ring.
 var visual: Node2D
 const VISUAL_SCENE: String = "res://scenes/hero/hero_visual.tscn"
+## Pre-rendered 3D-to-2D hero (art slice); chosen by visual_scene_path().
+const SPRITE_SCENE: String = "res://scenes/hero/hero_sprite.tscn"
+
+## The hero visual scene: the sprite hero with `-- --hero-art=sprite` or the
+## project setting navi/art/hero_art = "sprite", otherwise the cutout rig.
+static func visual_scene_path(args: PackedStringArray) -> String:
+	var art := String(ProjectSettings.get_setting("navi/art/hero_art", "rig"))
+	for a in args:
+		if a.begins_with("--hero-art="):
+			art = a.trim_prefix("--hero-art=")
+	return SPRITE_SCENE if art == "sprite" and ResourceLoader.exists(SPRITE_SCENE) else VISUAL_SCENE
 
 func _ready() -> void:
 	hp = Tune.f("player_hp")
@@ -134,8 +145,9 @@ func _ready() -> void:
 	# Input before damage in one tick (amulet-and-flare §5): the hero's tick runs
 	# before the enemies', the World's (hitstop/slow clocks) before the hero's.
 	process_physics_priority = -1
-	if ResourceLoader.exists(VISUAL_SCENE):
-		visual = (load(VISUAL_SCENE) as PackedScene).instantiate() as Node2D
+	var vis_path := visual_scene_path(OS.get_cmdline_user_args())
+	if ResourceLoader.exists(vis_path):
+		visual = (load(vis_path) as PackedScene).instantiate() as Node2D
 		visual.set("player", self)
 		add_child(visual)
 		if visual.has_method("set_weapon_sprite"):
@@ -791,7 +803,8 @@ func _draw() -> void:
 		# Until each weapon has its rig sprite, the weapon and chain bolts stay
 		# procedural over the rig (the rig's own stick sprite is hidden).
 		_draw_shield()
-		_draw_blade()
+		if not visual.get("bakes_weapon"):
+			_draw_blade()
 		return
 	for gh: Dictionary in ghosts:
 		var gp: Vector2 = gh.p - position

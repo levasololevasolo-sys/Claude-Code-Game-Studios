@@ -26,3 +26,10 @@
   date: 2026-11-27
   ai_made: yes (shapes authored as code by an AI agent; no image model, no third-party art)
   note: 6 god signs (folk shapes, no hooked/swastika-like forms), one icon per rune of runes.json, door reward icons of doors.json. Re-run the script after adding a rune, god or door type.
+- path: assets/art/sprites/{hero,crawler,swamp}/*.png, assets/art/sprites/*/*_sheets.json
+  source: rendered by tools/asset-pipeline/blender/{build_hero,build_crawler,build_swamp_bg}.py (Blender 4.0.2 EEVEE, headless) and packed by pack_sheets.py; models built from primitives by script, animated by script
+  licence: project-owned (original work); no third-party models, textures, HDRIs or animations
+  author: technical-artist agent (Claude), for the developer
+  date: 2026-11-27
+  ai_made: yes (geometry, rigs, poses and shaders authored as code by an AI agent; no image model)
+  note: art slice (design/art/visual-upgrade-plan.md). Hero tier 1, Трясинник, Топь backdrop (3 parallax layers, ground strip, log platform). Each sheet has a _n.png normal map (OpenGL convention). Blender is GPL; its rendered output is not covered by the GPL.

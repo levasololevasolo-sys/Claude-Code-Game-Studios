@@ -1,0 +1,111 @@
+{
+ "cell": [
+  560,
+  480
+ ],
+ "origin": [
+  230,
+  452
+ ],
+ "height_px": 320,
+ "anims": {
+  "idle": {
+   "frames": 16,
+   "fps": 12,
+   "loop": true,
+   "cols": 8,
+   "rows": 2
+  },
+  "run": {
+   "frames": 12,
+   "fps": 24,
+   "loop": true,
+   "cols": 8,
+   "rows": 2
+  },
+  "jump": {
+   "frames": 4,
+   "fps": 12,
+   "loop": false,
+   "cols": 4,
+   "rows": 1
+  },
+  "fall": {
+   "frames": 4,
+   "fps": 12,
+   "loop": true,
+   "cols": 4,
+   "rows": 1
+  },
+  "roll": {
+   "frames": 8,
+   "fps": 24,
+   "loop": false,
+   "cols": 8,
+   "rows": 1
+  },
+  "dash": {
+   "frames": 4,
+   "fps": 24,
+   "loop": false,
+   "cols": 4,
+   "rows": 1
+  },
+  "strike_1": {
+   "frames": 6,
+   "fps": 24,
+   "loop": false,
+   "cols": 6,
+   "rows": 1
+  },
+  "strike_2": {
+   "frames": 6,
+   "fps": 24,
+   "loop": false,
+   "cols": 6,
+   "rows": 1
+  },
+  "strike_3": {
+   "frames": 10,
+   "fps": 24,
+   "loop": false,
+   "cols": 8,
+   "rows": 2
+  },
+  "strike_up": {
+   "frames": 6,
+   "fps": 24,
+   "loop": false,
+   "cols": 6,
+   "rows": 1
+  },
+  "strike_down": {
+   "frames": 4,
+   "fps": 24,
+   "loop": false,
+   "cols": 4,
+   "rows": 1
+  },
+  "hurt": {
+   "frames": 3,
+   "fps": 12,
+   "loop": false,
+   "cols": 3,
+   "rows": 1
+  },
+  "death": {
+   "frames": 10,
+   "fps": 12,
+   "loop": false,
+   "cols": 8,
+   "rows": 2
+  },
+  "flare": {
+   "frames": 8,
+   "fps": 16,
+   "loop": false,
+   "cols": 8,
+   "rows": 1
+  }
+ }
+}

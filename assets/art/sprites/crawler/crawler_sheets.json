@@ -1,0 +1,55 @@
+{
+ "cell": [
+  640,
+  400
+ ],
+ "origin": [
+  300,
+  372
+ ],
+ "height_px": 230,
+ "anims": {
+  "idle": {
+   "frames": 8,
+   "fps": 10,
+   "loop": true,
+   "cols": 8,
+   "rows": 1
+  },
+  "walk": {
+   "frames": 8,
+   "fps": 12,
+   "loop": true,
+   "cols": 8,
+   "rows": 1
+  },
+  "windup": {
+   "frames": 6,
+   "fps": 12,
+   "loop": false,
+   "cols": 6,
+   "rows": 1
+  },
+  "attack": {
+   "frames": 6,
+   "fps": 16,
+   "loop": false,
+   "cols": 6,
+   "rows": 1
+  },
+  "hurt": {
+   "frames": 3,
+   "fps": 12,
+   "loop": false,
+   "cols": 3,
+   "rows": 1
+  },
+  "death": {
+   "frames": 10,
+   "fps": 12,
+   "loop": false,
+   "cols": 8,
+   "rows": 2
+  }
+ }
+}
