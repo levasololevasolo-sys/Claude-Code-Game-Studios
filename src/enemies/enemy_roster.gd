@@ -9,6 +9,7 @@ const KINDS: Dictionary = {
 	"crawler": preload("res://src/enemies/crawler.gd"),
 	"bat": preload("res://src/enemies/bat.gd"),
 	"sentry": preload("res://src/enemies/sentry.gd"),
+	"thrower": preload("res://src/enemies/thrower.gd"),
 	"bloat": preload("res://src/enemies/bloat.gd"),
 	"knight": preload("res://src/enemies/knight.gd"),
 	"ringer": preload("res://src/enemies/ringer.gd"),

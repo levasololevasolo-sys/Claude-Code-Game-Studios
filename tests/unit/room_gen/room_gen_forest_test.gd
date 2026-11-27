@@ -41,4 +41,4 @@ func test_forest_roster_per_gdd_3_3() -> void:
 	var ros := EnemyRoster.for_tier(2, locs, _t())
 	assert_array(ros.roster).contains_exactly(["ringer", "sentry", "rootling"])
 	assert_array(ros.late).contains_exactly(["bat"])
-	assert_array(EnemyRoster.for_tier(1, locs, _t()).roster).contains_exactly(["crawler", "sentry", "bat"])
+	assert_array(EnemyRoster.for_tier(1, locs, _t()).roster).contains_exactly(["crawler", "thrower", "sentry", "bat"])

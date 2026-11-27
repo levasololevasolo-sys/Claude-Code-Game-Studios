@@ -1106,8 +1106,11 @@
 			"burst": "dirt_burst"
 		},
 		"sentry": {
-			"aim": "bow_draw",
 			"bash": "shield_bash"
+		},
+		"thrower": {
+			"aim": "bow_draw",
+			"shove": "shield_bash"
 		},
 		"wolf": {
 			"crouch": "wolf_growl",

@@ -258,7 +258,7 @@ func _fight(p: Player) -> void:
 		for x: Enemy in get_tree().get_nodes_in_group("enemies"):
 			if not x.dead:
 				_note("  alive: %s st=%s asleep=%s pos=(%d,%d) hp=%d" % [x.kind_id, x.st, x.asleep, x.position.x, x.position.y, x.hp])
-				x.hurt(Hit.make(Hit.Kind.STRIKE, 1.0e6, x.position.x - 10.0, 0.0))
+				x.hurt(Hit.make(Hit.Kind.STRIKE, 1.0e6, x.position.x, 0.0))  # from its own x: no front shield
 		return
 	if fight_s > 60.0 and int(_anom.get("ROOM_SLOW_" + _room_name, 0)) == 0:
 		_anom["ROOM_SLOW_" + _room_name] = 1

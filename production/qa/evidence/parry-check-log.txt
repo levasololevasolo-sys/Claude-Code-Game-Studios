@@ -1,0 +1,13 @@
+screenshot parry-reflect.png
+OK   the thrower threw a stone
+OK   parry result on the stone: ["reflect"]
+OK   no damage to the hero: hp 1000
+OK   reflected stone hurt its thrower: [24.0] (want 24.0)
+OK   screenshot of the reflected stone in flight
+OK   front strike stopped by the shield: [0.0]
+OK   back strike full damage: [11.0] (want 11.0)
+OK   parried bash only stuns: ["stun"], stun 0.60
+OK   no damage from the parried bash: hp 1000
+OK   thrower retreated 89 px (now dx 239)
+screenshot shield-thrower.png
+DONE: 0 failed checks

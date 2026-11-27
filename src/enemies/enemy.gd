@@ -40,7 +40,7 @@ var weight: float = 1.0
 var kb_scale: float = 1.0
 ## Fraction of knockback speed kept per second (F9).
 var drag: float = 0.002
-## True for kinds with a front shield (sentry, knight on guard).
+## True for kinds with a front shield (shield-bearer, knight on guard).
 var front_shield: bool = false
 ## Facing, -1 or 1. Front shields block hits from this side.
 var face: int = 1
@@ -292,6 +292,7 @@ func hit_view() -> Dictionary:
 		"shield": front_shield, "stunned": stun > 0.0, "weight": weight, "kb_scale": kb_scale,
 		"burning": status.burning(), "cursed": status.cursed(), "rooted": status.rooted(),
 		"clean": not status.has_god_status(),
+		"block": float(stats.get("shield_block", Tune.f("sentry_block"))),
 	}
 
 ## The ONLY way to damage an enemy (GDD §3.7 order). Returns the damage taken.

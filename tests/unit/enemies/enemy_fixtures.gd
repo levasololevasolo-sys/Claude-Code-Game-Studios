@@ -20,10 +20,16 @@ static func bat() -> Dictionary:
 		"spit_speed": 280, "spit_dmg": 10, "spit_r": 8, "spit_life": 3, "spit_cd_min": 1.8, "spit_cd_max": 3.0 }
 
 static func sentry() -> Dictionary:
-	return { "w": 40, "h": 76, "hp": 50, "flies": false, "weight": 1.8, "contact": 8, "front_shield": true, "turn": 0.7,
-		"keep_min": 240, "keep_max": 460, "walk_speed": 70, "back_speed": 60, "fire_range": 900, "aim": 0.6, "fire": 2.4,
-		"fire_jitter": 0.15, "shot_speed": 310, "shot_dmg": 14, "shot_r": 11, "shot_life": 4, "muzzle_x": 18, "muzzle_y": 58,
-		"bash_range": 100, "bash_wind": 0.35, "bash_dmg": 14, "bash_push": 420, "bash_cd": 2.2, "bash_hit_x": 110, "bash_hit_y": 80 }
+	return { "w": 40, "h": 76, "hp": 50, "flies": false, "weight": 1.8, "contact": 8, "front_shield": true, "shield_block": 0.0,
+		"turn": 0.7, "walk_speed": 65, "stop": 80, "bash_range": 115, "bash_wind": 0.6, "bash_dmg": 16, "bash_push": 420,
+		"bash_cd": 2.0, "bash_hit_x": 120, "bash_hit_y": 80, "bash_recover": 0.5, "recover_damp": 0.85 }
+
+static func thrower() -> Dictionary:
+	return { "w": 36, "h": 70, "hp": 34, "flies": false, "weight": 1.1, "contact": 6, "keep_min": 300, "keep_max": 520,
+		"walk_speed": 75, "back_speed": 70, "flee_range": 220, "flee_speed": 140, "corner_px": 110, "fire_range": 950,
+		"aim": 0.8, "fire": 2.6, "fire_jitter": 0.15, "lob_speed": 380, "lob_t_min": 0.7, "lob_t_max": 1.4, "lob_grav": 900,
+		"shot_dmg": 12, "shot_r": 10, "shot_life": 4, "muzzle_x": 14, "muzzle_y": 66, "shove_range": 95, "shove_wind": 0.4,
+		"shove_dmg": 8, "shove_push": 300, "shove_cd": 1.6, "shove_hit_x": 100, "shove_hit_y": 80 }
 
 static func bloat() -> Dictionary:
 	return { "w": 56, "h": 56, "hp": 26, "flies": true, "weight": 0.8, "contact": 0, "speed": 75, "bob": 30, "bob_freq": 3,

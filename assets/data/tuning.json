@@ -119,6 +119,7 @@
   "late_from_tier": 2,
   "swamp_roster": [
     "crawler",
+    "thrower",
     "sentry",
     "bat"
   ],
@@ -431,7 +432,7 @@
   "limb_shake": 9.0,
   "limb_elite_hits_needed": 3,
   "death_sever_chance": 0.3,
-  "_parry_note": "Parry (GDD parry): window s from the press, cooldown s, whiff lock s (no strike, dash or parry), stun on the attacker s, stun on a boss s (0 = none), hit-stop s, shake, spark time s.",
+  "_parry_note": "Parry (GDD parry): window s from the press, cooldown s, whiff lock s (no strike, dash or parry), stun on the attacker s, stun on a boss s (0 = none), hit-stop s, shake, spark time s. Reflect (§3.5, P5-P7): a shot reaching the hero in the window flies back at its shooter at x parry_reflect_speed, deals x parry_reflect_dmg of its damage to enemies, knockback parry_reflect_kb px/s.",
   "parry_window": 0.18,
   "parry_cooldown": 0.6,
   "parry_whiff_lock": 0.25,
@@ -439,5 +440,10 @@
   "parry_boss_stun": 0.2,
   "parry_hitstop": 0.1,
   "parry_shake": 6.0,
-  "parry_fx_time": 0.3
+  "parry_fx_time": 0.3,
+  "parry_reflect_speed": 1.6,
+  "parry_reflect_dmg": 2.0,
+  "parry_reflect_kb": 260.0,
+  "parry_reflect_life": 3.0,
+  "parry_reflect_colour": "#ffe9a8"
 }
