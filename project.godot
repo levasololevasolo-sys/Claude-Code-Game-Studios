@@ -21,3 +21,7 @@ renderer/rendering_method="forward_plus"
 [autoload]
 
 Tune="*res://src/core/tune.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")

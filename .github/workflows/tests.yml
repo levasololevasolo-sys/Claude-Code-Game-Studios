@@ -1,0 +1,42 @@
+name: Automated Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run GdUnit4 Tests
+    runs-on: ubuntu-latest
+    # Results are published as a check run: checks: write is required.
+    # Require the `Run GdUnit4 Tests` job check on main, not `test-results`.
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          lfs: true
+
+      # Pinned to the developer's editor (4.7.1). `version: installed` runs the
+      # gdUnit4 committed in addons/ instead of downloading the latest.
+      - name: Run GdUnit4 Tests
+        uses: godot-gdunit-labs/gdUnit4-action@v1
+        with:
+          godot-version: '4.7.1'
+          version: 'installed'
+          paths: |
+            tests/unit
+            tests/integration
+          report-name: test-results
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: reports/
