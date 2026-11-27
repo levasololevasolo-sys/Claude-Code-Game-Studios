@@ -52,134 +52,844 @@
 #   entry of a section); its fields sit two columns past the dash, and a deeper
 #   line belongs to the field above it. Quote a value that holds ": ". A line
 #   in any other shape is reported as unsupported layout, with its number.
+#
+# PROJECT NOTE («Навь»): this game has no gold. The currency named "gold" in
+# the template is `embers` (Угли); value_gold is therefore not used — prices
+# are given as price_embers / price_<resource> fields.
 
 version: 1
-last_updated: ""
+last_updated: "2026-11-27"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
-# Named game-world objects: enemies, NPCs, characters, factions, bosses.
-# Register an entity here when it appears in more than one GDD — e.g., an
-# enemy defined in combat.md that also drops items listed in inventory.md.
-#
-# Required fields: name, status, source, referenced_by, added
-# Attribute fields: any key stats that could appear in another GDD
-#   (health, damage, drops, faction, etc.)
 
-entities: []
+entities:
+  - name: god_svarog
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Сварог
+    status_effect: burn
+    color: "#ff8a3a"
+    door_symbol: солнечное коло
+    added: 2026-11-27
+    revised: ""
 
-# Example (remove when first real entry is added):
-#
-# entities:
-#   - name: goblin
-#     status: active              # active | deprecated
-#     source: design/gdd/combat.md
-#     referenced_by:
-#       - design/gdd/combat.md
-#       - design/gdd/inventory.md
-#     health: 40
-#     damage: 8
-#     drops:
-#       - item: goblin_arm        # must match an entry in items section
-#         qty: 1
-#         drop_rate: 0.8          # 0.0–1.0
-#     added: 2026-03-26
-#     revised: ""
+  - name: god_perun
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Перун
+    status_effect: shock
+    color: "#8fd3ff"
+    door_symbol: громовой знак
+    added: 2026-11-27
+    revised: ""
 
+  - name: god_stribog
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/movement-and-combat.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Стрибог
+    status_effect: cut
+    color: "#bff0d8"
+    door_symbol: вихрь
+    added: 2026-11-27
+    revised: ""
+
+  - name: god_veles
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/economy-and-meta.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Велес
+    status_effect: curse
+    color: "#c08aff"
+    door_symbol: рога
+    added: 2026-11-27
+    revised: ""
+
+  - name: god_zhiva
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Жива
+    status_effect: root
+    hero_effect: shield
+    color: "#9ff0b0"
+    door_symbol: росток
+    added: 2026-11-27
+    revised: ""
+
+  - name: god_rod
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/room-generation-and-doors.md
+      - design/gdd/enemies-and-elites.md
+    display_name: Род
+    status_effect: none
+    color: "#e0c080"
+    notes: "Не бог-стихия: чистая сила; руна Рода — один из камней награды витязя"
+    added: 2026-11-27
+    revised: ""
+
+  - name: status_burn
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/weapons-and-loot.md
+      - design/gdd/enemies-and-elites.md
+    display_name: горение
+    label: ГОРИТ
+    key: burn_dps
+    added: 2026-11-27
+    revised: ""
+
+  - name: status_shock
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/weapons-and-loot.md
+    display_name: заряд → разряд
+    label: ЗАРЯД n/3
+    key: shock_dmg
+    added: 2026-11-27
+    revised: ""
+
+  - name: status_cut
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/movement-and-combat.md
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/weapons-and-loot.md
+    display_name: порезы (вскрываются ударом о стену)
+    label: ПОРЕЗ n / ВСКРЫТ
+    key: cut_burst
+    notes: "В прототипе — bleed"
+    added: 2026-11-27
+    revised: ""
+
+  - name: status_curse
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/weapons-and-loot.md
+    display_name: проклятие
+    label: ПРОКЛЯТ
+    key: curse_mult
+    value: 1.3
+    added: 2026-11-27
+    revised: ""
+
+  - name: status_root
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/enemies-and-elites.md
+    display_name: оплетение
+    label: ОПЛЕТЁН
+    notes: "Враг стоит, но бьёт (требование к ИИ врагов)"
+    added: 2026-11-27
+    revised: ""
+
+  - name: elite_mark_flame
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/gdd/buffs-and-debuffs.md
+    display_name: Пламя
+    aura: оранжевый
+    fire_trail_time: 2.5
+    fire_trail_dmg: 6
+    added: 2026-11-27
+    revised: ""
+
+  - name: elite_mark_rot
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/gdd/buffs-and-debuffs.md
+    display_name: Порча
+    aura: болотно-зелёный
+    curse_radius: 180
+    curse_taken: 0.2
+    notes: "Внутри круга герой не лечится"
+    added: 2026-11-27
+    revised: ""
+
+  - name: elite_mark_glamour
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by: []
+    display_name: Морок
+    aura: синий
+    blink_cd: 4
+    added: 2026-11-27
+    revised: ""
+
+  - name: elite_mark_call
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by: []
+    display_name: Зов
+    aura: костяной белый
+    added: 2026-11-27
+    revised: ""
+
+  - name: elite_mark_bulwark
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/gdd/amulet-and-flare.md
+    display_name: Заслон
+    aura: золотой
+    shield_frac: 0.4
+    added: 2026-11-27
+    revised: ""
+
+  - name: elite_mark_blast
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by: []
+    display_name: Взрыв
+    aura: багрово-красный
+    death_blast_delay: 0.8
+    death_blast_dmg: 20
+    added: 2026-11-27
+    revised: ""
+
+  - name: vow_svarog
+    status: active
+    source: design/gdd/buffs-and-debuffs.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/economy-and-meta.md
+    display_name: Обет Сварога «Неугасимый жар»
+    power: burn_dps ×2
+    cost: всё лечение ×0.5
+    added: 2026-11-27
+    revised: ""
+
+  - name: vow_perun
+    status: active
+    source: design/gdd/buffs-and-debuffs.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/movement-and-combat.md
+    display_name: Обет Перуна «Тяжёлый гром»
+    power: shock_dmg ×2
+    cost: перезарядка рывка ×1.5 (до пола F5)
+    added: 2026-11-27
+    revised: ""
+
+  - name: vow_stribog
+    status: active
+    source: design/gdd/buffs-and-debuffs.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/movement-and-combat.md
+    display_name: Обет Стрибога «Вольный ветер»
+    power: вскрытие ×2, отброс врагов ×1.3
+    cost: отброс героя ×2 (760/660)
+    added: 2026-11-27
+    revised: ""
+
+  - name: vow_veles
+    status: active
+    source: design/gdd/buffs-and-debuffs.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/economy-and-meta.md
+    display_name: Обет Велеса «Навья плата»
+    power: curse_mult 1.3 → 1.6
+    cost: угли и ресурсы забега ×0.5
+    added: 2026-11-27
+    revised: ""
+
+  - name: vow_zhiva
+    status: active
+    source: design/gdd/buffs-and-debuffs.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/amulet-and-flare.md
+    display_name: Обет Живы «Только щит»
+    power: shield_max ×2 (40 → 80)
+    cost: здоровье не восстанавливается (кроме «Крепкой нити»)
+    added: 2026-11-27
+    revised: ""
+
+  - name: vow_rod
+    status: active
+    source: design/gdd/buffs-and-debuffs.md
+    referenced_by:
+      - design/gdd/weapons-and-loot.md
+      - design/gdd/economy-and-meta.md
+    display_name: Обет Рода «Удача»
+    power: угли ×1.5, сдвиг броска редкости 9 (luckN = 1)
+    cost: макс. здоровье −20
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_god
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+    reward: окно из 3 рун этого бога
+    weight: только по времени богов
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_rod
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/buffs-and-debuffs.md
+    reward: окно рун Рода
+    weight: только по времени богов
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_surica
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+    display_name: Сурица
+    reward: поднять одну свою руну на 1 уровень (до 3)
+    surica_chance: 0.35
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_arms
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/weapons-and-loot.md
+    reward: одно оружие, качество +1
+    weight: 0.25
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_loot
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+    display_name: Добыча
+    reward: 5 ресурса локации + 20 углей (× M)
+    weight: 0.40
+    notes: "Слиты прежние двери «ресурс» и «горсть углей»"
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_heal
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+      - design/gdd/buffs-and-debuffs.md
+    display_name: живой родник
+    reward: лечение 35% макс. здоровья
+    weight: 0.18
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_cache
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/enemies-and-elites.md
+      - design/gdd/economy-and-meta.md
+    display_name: Тайник
+    reward: богатый сундук (40 углей, 6 ресурса, 50% оружие); в Кощеевом царстве — «Кощеева смерть»
+    weight: 0.12
+    added: 2026-11-27
+    revised: ""
+
+  - name: door_yaga
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/weapons-and-loot.md
+    display_name: Избушка Яги
+    reward: сделка кровью (руна союза или легендарное оружие)
+    weight: 0.05
+    yaga_hp_floor: 40
+    added: 2026-11-27
+    revised: ""
+
+  - name: navy_knight
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/gdd/room-generation-and-doors.md
+      - design/gdd/economy-and-meta.md
+      - design/gdd/weapons-and-loot.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/game-concept.md
+    display_name: Навий витязь
+    per_location: 1
+    knight_hp: 230
+    knight_dmg: 20
+    embers: 14
+    reward: "выбор 1 из 3: руна Рода, оружие (качество +1), богатый сундук (40 углей, 8 ресурса, 20 HP); без благословений"
+    added: 2026-11-27
+    revised: ""
+
+  - name: boss_lair_reward
+    status: active
+    source: design/gdd/gods-and-runes.md
+    referenced_by:
+      - design/gdd/room-generation-and-doors.md
+      - design/gdd/enemies-and-elites.md
+    rule: "выбор из 3 разных богов; хотя бы один новый для героя; выбранный бог открывает окно своих рун"
+    added: 2026-11-27
+    revised: ""
+
+  - name: locations_1_0
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/enemies-and-elites.md
+      - design/gdd/economy-and-meta.md
+      - design/gdd/game-concept.md
+      - design/narrative/story-bible.md
+      - design/art/art-bible.md
+    tiers:
+      - "1: Топь Кикиморы — Кикимора Болотная (gears)"
+      - "2–3: Тёмный бор — Лихо Одноглазое (bronze)"
+      - "2–3: Царство Морены — Морена (pearls)"
+      - "4: Калинов мост — Змей Горыныч (один из трёх ресурсов, открыт)"
+      - "5: Кощеево царство — Кощей Бессмертный (финал, один из трёх ресурсов, открыт)"
+    added: 2026-11-27
+    revised: ""
+
+  - name: enemy_rootling
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/narrative/story-bible.md
+    display_name: Лешачонок
+    location: Тёмный бор
+    notes: "Было «Леший-корнеед»"
+    added: 2026-11-27
+    revised: ""
+
+  - name: enemy_wolf
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/narrative/story-bible.md
+      - design/art/art-bible.md
+    display_name: Снежный волк
+    location: Царство Морены
+    added: 2026-11-27
+    revised: ""
+
+  - name: enemy_ratnik
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/narrative/story-bible.md
+    display_name: Костяной полонянин
+    location: Кощеево царство
+    notes: "Было «Костяной ратник»; id ratnik не меняется"
+    added: 2026-11-27
+    revised: ""
 
 # ─── ITEMS ───────────────────────────────────────────────────────────────────
-# Named collectables, equipment, consumables, crafting materials, currency.
-# Register an item when its name or value appears in more than one GDD.
-#
-# Required fields: name, status, source, referenced_by, added
-# Attribute fields: value_gold, weight, stackable, category, and any stat
-#   modifiers that another system (e.g., economy, crafting) might reference.
 
-items: []
+items:
+  - name: embers
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/enemies-and-elites.md
+      - design/gdd/room-generation-and-doors.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/weapons-and-loot.md
+    display_name: Угли
+    category: currency
+    notes: "Единственная «золотая» валюта игры (cinder/gold в брифах = embers). Банк пополняется только в endRun"
+    added: 2026-11-27
+    revised: ""
 
-# Example:
-#
-# items:
-#   - name: goblin_arm
-#     status: active
-#     source: design/gdd/combat.md   # drop defined in combat GDD
-#     referenced_by:
-#       - design/gdd/combat.md
-#       - design/gdd/inventory.md    # inventory GDD lists its weight/stack rules
-#       - design/gdd/economy.md      # economy GDD references its sell price
-#     value_gold: 5
-#     weight: 1
-#     stackable: true
-#     category: crafting_material
-#     added: 2026-03-26
-#     revised: ""
+  - name: gears
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Болотное железо
+    category: location_resource
+    location: Топь Кикиморы
+    added: 2026-11-27
+    revised: ""
 
+  - name: bronze
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Живица
+    category: location_resource
+    location: Тёмный бор
+    added: 2026-11-27
+    revised: ""
+
+  - name: pearls
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/room-generation-and-doors.md
+    display_name: Иней-камень
+    category: location_resource
+    location: Царство Морены
+    added: 2026-11-27
+    revised: ""
+
+  - name: cores
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/enemies-and-elites.md
+      - design/gdd/amulet-and-flare.md
+    display_name: Сердца чудищ
+    category: boss_resource
+    drop: 1 с каждого хозяина
+    added: 2026-11-27
+    revised: ""
+
+  - name: weapon_stick
+    status: active
+    source: design/gdd/armor-and-hero-progression.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+      - design/gdd/weapons-and-loot.md
+      - design/art/art-bible.md
+    display_name: Дрын
+    category: main_weapon
+    price_embers: 0
+    price_gears: 0
+    dmg: 0.75
+    reach: 0.9
+    no_drop: true
+    notes: "Стартовое оружие"
+    added: 2026-11-27
+    revised: ""
+
+  - name: weapon_blade
+    status: active
+    source: design/gdd/armor-and-hero-progression.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+      - design/gdd/weapons-and-loot.md
+    display_name: Меч-кладенец
+    category: main_weapon
+    price_gears: 8
+    tuning_key: blade_price_iron
+    dmg: 1.0
+    added: 2026-11-27
+    revised: ""
+
+  - name: armor_slots
+    status: active
+    source: design/gdd/armor-and-hero-progression.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+      - design/gdd/movement-and-combat.md
+      - design/art/art-bible.md
+    slots:
+      - "head: dr 0.04 / 0.08"
+      - "torso: hp 20 / 40"
+      - "arms: dmg 0.05 / 0.10"
+      - "legs: cd_legs 0.05 / 0.10"
+      - "cloak: emb 0.10 / 0.20"
+    tiers: 4
+    full_cost: "11 250 углей, 228 железа, 336 живицы, 336 иней-камня, 15 сердец"
+    notes: "5 слотов (не 6); оберег — не слот доспеха, он у Совы"
+    added: 2026-11-27
+    revised: ""
+
+  - name: amulet_ring
+    status: active
+    source: design/gdd/amulet-and-flare.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+      - design/gdd/movement-and-combat.md
+      - design/art/art-bible.md
+    display_name: Коло
+    price: "бесплатно (было: Оберег Сварога)"
+    added: 2026-11-27
+    revised: ""
+
+  - name: amulet_beam
+    status: active
+    source: design/gdd/amulet-and-flare.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+      - design/gdd/movement-and-combat.md
+    display_name: Луч
+    price_gears: 14
+    price_cores: 1
+    notes: "Было: Оберег Перуна"
+    added: 2026-11-27
+    revised: ""
+
+  - name: amulet_wave
+    status: active
+    source: design/gdd/amulet-and-flare.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+    display_name: Волна
+    price_bronze: 14
+    price_cores: 1
+    notes: "Было: Оберег Велеса"
+    added: 2026-11-27
+    revised: ""
+
+  - name: amulet_knot
+    status: active
+    source: design/gdd/amulet-and-flare.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+    display_name: Узел
+    price_pearls: 14
+    price_cores: 1
+    notes: "Было: Оберег Живы"
+    added: 2026-11-27
+    revised: ""
+
+  - name: koschei_needle
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/enemies-and-elites.md
+      - design/narrative/story-bible.md
+    display_name: Кощеева смерть (игла)
+    rule: "лежит в первом открытом тайнике Кощеева царства; не переносится между забегами"
+    added: 2026-11-27
+    revised: ""
+
+  - name: kapishche_rules
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+      - design/gdd/movement-and-combat.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/amulet-and-flare.md
+    display_name: Капище Рода
+    rules:
+      - "reroll «Второй взгляд»: 60, 250 углей"
+      - "second «Крепкая нить»: 150 углей, воскрешение с 35% раз за забег"
+      - "wide «Широкий выбор»: 400 углей, 4 руны в первом выборе локации (принято в gods-and-runes 3.3)"
+    total_embers: 860
+    notes: "Было «Святилище Рода»; «Последний огонёк» = «Крепкая нить»"
+    added: 2026-11-27
+    revised: ""
 
 # ─── FORMULAS ────────────────────────────────────────────────────────────────
-# Named calculations with defined variables and output ranges.
-# Register a formula when its output feeds into another system's input,
-# or when another GDD references it by name.
-#
-# Required fields: name, status, source, referenced_by, variables[],
-#   output_range[min, max], added
-# Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: dash_cooldown
+    status: active
+    source: design/gdd/movement-and-combat.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+      - design/gdd/buffs-and-debuffs.md
+      - design/gdd/gods-and-runes.md
+    variables:
+      - dash_cooldown
+      - k_swift
+      - k_vihr
+      - cd_legs
+      - k_vow_perun
+      - cd_t2a
+      - dash_dur
+      - dash_cd_floor
+      - dash_gap
+    output_range: [0.37, 1.2]
+    expression: "max(dash_cd_floor, dash_dur + dash_gap, dash_cooldown · k_swift · k_vihr · (1 − cd_legs) · k_vow_perun · (1 − cd_t2a))"
+    notes: "dash_floor = max(0.25, длина рывка + 0.2): 0.37 с в воздухе, 0.5 с перекатом. cd_legs (0–0.10) входит один раз. Пого — исключение 0.05 с"
+    added: 2026-11-27
+    revised: ""
 
-# Example:
-#
-# formulas:
-#   - name: damage_formula
-#     status: active
-#     source: design/gdd/combat.md
-#     referenced_by:
-#       - design/gdd/combat.md
-#       - design/gdd/progression.md   # progression GDD scales attack variable
-#     variables:
-#       - attack
-#       - defense
-#       - crit_chance
-#       - crit_multiplier
-#     output_range: [0, 999]
-#     expression: "max(0, attack - defense) * (1 + crit_chance * crit_multiplier)"
-#     notes: "Output feeds into health-system damage intake. Min is 0 (armour
-#       can absorb all damage). Max is uncapped in formula but tuning knob
-#       damage_cap in combat.md clamps at 999."
-#     added: 2026-03-26
-#     revised: ""
-
+  - name: enemy_hp
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+    variables:
+      - base_hp
+      - ash
+      - ash_hp
+      - tier
+      - tier_hp
+      - boss_tier_hp
+      - elite_hp
+    output_range: [20, 3000]
+    expression: "base_hp · (1 + ash · ash_hp) · (1 + (tier − 1) · T) · (elite ? elite_hp : 1)"
+    added: 2026-11-27
+    revised: ""
 
 # ─── CONSTANTS ───────────────────────────────────────────────────────────────
-# Named numerical values referenced across multiple systems.
-# Register a constant when it is defined in one GDD but another GDD must
-# agree with it (e.g., gold carry limit defined in economy but checked in
-# inventory, or base inventory slots defined in inventory but displayed in HUD).
-#
-# Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: dash_cd_floor
+    status: active
+    source: design/gdd/movement-and-combat.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+    value: 0.25
+    unit: s
+    added: 2026-11-27
+    revised: ""
 
-# Example:
-#
-# constants:
-#   - name: gold_carry_limit
-#     status: active
-#     source: design/gdd/economy.md
-#     referenced_by:
-#       - design/gdd/economy.md
-#       - design/gdd/inventory.md   # inventory enforces the carry limit
-#       - design/gdd/ui.md          # HUD displays current gold vs limit
-#     value: 9999
-#     unit: gold
-#     added: 2026-03-26
-#     revised: ""
-#
-#   - name: base_inventory_slots
-#     status: active
-#     source: design/gdd/inventory.md
-#     referenced_by:
-#       - design/gdd/inventory.md
-#       - design/gdd/progression.md  # progression unlocks additional slots
-#     value: 20
-#     unit: slots
-#     added: 2026-03-26
-#     revised: ""
+  - name: dash_gap
+    status: active
+    source: design/gdd/movement-and-combat.md
+    referenced_by:
+      - design/gdd/armor-and-hero-progression.md
+    value: 0.2
+    unit: s
+    added: 2026-11-27
+    revised: ""
+
+  - name: aggro_range
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/enemies-and-elites.md
+    value: 520
+    unit: px
+    notes: "Всегда меньше pack_gap (не выше pack_gap − 60)"
+    added: 2026-11-27
+    revised: ""
+
+  - name: pack_gap
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/enemies-and-elites.md
+    value: 640
+    unit: px
+    added: 2026-11-27
+    revised: ""
+
+  - name: ash_levels
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/enemies-and-elites.md
+      - design/gdd/amulet-and-flare.md
+      - design/gdd/game-concept.md
+    value: 5
+    unit: levels
+    notes: "Было «10 уровней» в game-concept.md; угли ×(1 + 0.3·a)"
+    added: 2026-11-27
+    revised: ""
+
+  - name: revive_hp_frac
+    status: active
+    source: design/gdd/economy-and-meta.md
+    referenced_by:
+      - design/gdd/movement-and-combat.md
+      - design/gdd/buffs-and-debuffs.md
+    value: 0.35
+    unit: fraction of maxHp
+    notes: "«Крепкая нить»"
+    added: 2026-11-27
+    revised: ""
+
+  - name: haven_heal
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+      - design/gdd/buffs-and-debuffs.md
+    value: 0.4
+    unit: fraction of maxHp
+    added: 2026-11-27
+    revised: ""
+
+  - name: res_drop
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/gdd/economy-and-meta.md
+    value: 0.35
+    unit: chance
+    added: 2026-11-27
+    revised: ""
+
+  - name: vow_max
+    status: active
+    source: design/gdd/buffs-and-debuffs.md
+    referenced_by:
+      - design/gdd/gods-and-runes.md
+    value: 2
+    unit: vows per run
+    added: 2026-11-27
+    revised: ""
+
+  - name: elite_max
+    status: active
+    source: design/gdd/enemies-and-elites.md
+    referenced_by:
+      - design/gdd/room-generation-and-doors.md
+    value: 2
+    unit: elites per room
+    added: 2026-11-27
+    revised: ""
+
+  - name: arms_auto_cap
+    status: active
+    source: design/gdd/room-generation-and-doors.md
+    referenced_by:
+      - design/gdd/weapons-and-loot.md
+      - design/gdd/enemies-and-elites.md
+    value: 7
+    unit: weapons per run
+    notes: "Цель 8–10 оружий за забег"
+    added: 2026-11-27
+    revised: ""

@@ -265,7 +265,8 @@ n(T)            = 0 при T = 0;  1 при T = 1 или 2;  2 при T = 3 ил
 maxHp       = player_hp + hp_torso + hp_t2a          (+ руны и обеты после)
 d_по_герою  = (F12 как раньше) · (1 − dr_head) · k_лоб · k_чешуя · k_сварог
 dmg_удара   = (F6 как раньше) · (1 + dmg_arms)
-dash_cd     = max(dash_floor, (F5 как раньше) · (1 − cd_legs) · (1 − cd_t2a))
+dash_cd     = max(dash_floor, raw_F5 · (1 − cd_t2a))     (raw_F5 уже содержит (1 − cd_legs))
+dash_floor  = max(dash_cd_floor, dash_dur + dash_gap) = max(0.25, длина рывка + 0.2)
 M_углей     = magnet · embers_mult · (1 + emb_cloak + emb_t2a) · (1 + ash_embers · ash)
 ```
 
@@ -273,7 +274,7 @@ M_углей     = magnet · embers_mult · (1 + emb_cloak + emb_t2a) · (1 + as
 - `k_лоб` = 0.5 для первого удара в комнате при «Крепком лбе», иначе 1.
 - `k_чешуя` = 0 для каждого 5-го удара при «Чешуе», иначе 1.
 - `k_сварог` = 0.7, если бьёт горящий враг и активна «Кольчуга Сварога», иначе 1.
-- `cd_t2a` = 0.08 при «Лёгком шаге», иначе 0. `dash_floor` — нижний порог из `movement-and-combat.md`.
+- `cd_t2a` = 0.08 при «Лёгком шаге», иначе 0. `dash_floor` — нижний порог из `movement-and-combat.md` F5 (`dash_cd_floor` 0.25, `dash_gap` 0.2; 0.37 с в воздухе, 0.5 с перекатом); `cd_legs` умножается один раз — внутри F5.
 - `emb_t2a` = 0.15 при «Запасливом», иначе 0.
 
 Примеры (крайние значения включены):
