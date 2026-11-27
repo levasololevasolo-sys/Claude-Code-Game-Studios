@@ -23,10 +23,24 @@ const AMULET_PX: Vector2 = Vector2(256, 238)
 
 ## Hero height on a 1080p screen, px (bible §5.1: 160).
 @export var height_px: float = 160.0
+## Sheet metadata and folder. A "%d" in sheet_dir is the armour tier (1..5):
+## the drawn hero (tools/asset-pipeline/hero2d) has one sheet set per tier.
+@export var sheets_json: String = SHEETS_JSON
+@export var sheet_dir: String = SHEET_DIR
+## The sheets have *_n.png normal maps (the 3D render) or not (the drawn hero).
+@export var has_normals: bool = true
+## The weapon is part of the rendered frames: Player skips its procedural blade.
+## False for the drawn hero: Player draws the weapon at hand_point().
+@export var bakes_weapon: bool = true
+## Amulet light strength multiplier: the drawn sheets have no normal maps, so a
+## full-strength light washes the whole flat-lit body out.
+@export var light_k: float = 1.0
 ## The hero shown. Set before adding to the tree.
 var player: Player
-## The weapon is part of the rendered frames: Player skips its procedural blade.
-var bakes_weapon: bool = true
+## Armour tier shown (1..5) when sheet_dir has a "%d"; the highest tier of any
+## dressed part (set_tier), or `-- --hero-tier=N`.
+var tier: int = 1
+var _part_tiers: Dictionary = {}
 
 var _meta: Dictionary = {}
 var _tex: Dictionary = {}
@@ -37,15 +51,20 @@ var _frame_f: float = 0.0
 var _hurt_t: float = 0.0
 var _flash_t: float = 0.0
 var _scale: float = 0.5
+var _origin: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
-	_meta = load_meta(SHEETS_JSON)
+	_meta = load_meta(sheets_json)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--hero-tier="):
+			tier = clampi(int(a.trim_prefix("--hero-tier=")), 1, 5)
 	_sprite = $Sprite
 	_light = $AmuletLight
 	var zoom := Tune.f("camera_zoom") if Tune.data.has("camera_zoom") else 1.0
 	_scale = height_px / zoom / float(_meta.get("height_px", 320))
 	var origin: Array = _meta.get("origin", [230, 452])
+	_origin = Vector2(float(origin[0]), float(origin[1]))
 	_sprite.centered = false
 	_sprite.offset = -Vector2(float(origin[0]), float(origin[1]))
 	_sprite.scale = Vector2.ONE * _scale
@@ -70,11 +89,45 @@ static func frame_for_progress(k: float, n: int) -> int:
 	return clampi(int(k * float(n)), 0, maxi(n - 1, 0))
 
 
+## Shows armour tier `t` for one body part (ShopRules.dress); the drawn hero
+## has whole-body tier sheets, so the highest part tier is shown.
+func set_tier(part: String, t: int) -> void:
+	_part_tiers[part] = clampi(t, 1, 5)
+	var best := 1
+	for v: int in _part_tiers.values():
+		best = maxi(best, v)
+	set_all_tiers(best)
+
+
+## Every part in tier `t` (QA lineup); no-op for single-tier sheets.
+func set_all_tiers(t: int) -> void:
+	if not sheet_dir.contains("%d") or clampi(t, 1, 5) == tier:
+		return
+	tier = clampi(t, 1, 5)
+	_tex.clear()
+	var keep := _cur
+	_cur = ""
+	if _sprite and keep != "":
+		_show(keep)
+
+
+## The weapon pivot (near fist) in the Player's local space, for the current
+## frame; the fixed old anchor when the sheets carry no hand points.
+func hand_point() -> Vector2:
+	var face: float = float(player.face) if player else 1.0
+	if _sprite == null or _cur == "" or not _meta.anims[_cur].has("hand"):
+		return Vector2(8.0 * face, -34.0)
+	var hp: Array = _meta.anims[_cur].hand[clampi(_sprite.frame, 0, _meta.anims[_cur].hand.size() - 1)]
+	return transform * ((Vector2(float(hp[0]), float(hp[1])) - _origin) * _scale)
+
+
 func _texture(anim_name: String) -> CanvasTexture:
 	if not _tex.has(anim_name):
 		var ct := CanvasTexture.new()
-		ct.diffuse_texture = load(SHEET_DIR + "hero_%s.png" % anim_name) as Texture2D
-		ct.normal_texture = load(SHEET_DIR + "hero_%s_n.png" % anim_name) as Texture2D
+		var dir := sheet_dir % tier if sheet_dir.contains("%d") else sheet_dir
+		ct.diffuse_texture = load(dir + "hero_%s.png" % anim_name) as Texture2D
+		if has_normals:
+			ct.normal_texture = load(dir + "hero_%s_n.png" % anim_name) as Texture2D
 		ct.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 		_tex[anim_name] = ct
 	return _tex[anim_name]
@@ -124,8 +177,11 @@ func _process(dt: float) -> void:
 	var fill := 0.0
 	if player.amulet:
 		fill = clampf(player.amulet.charge / maxf(player.amulet.ready_at(), 0.001), 0.0, 1.5)
-	_light.energy = 0.9 + 0.8 * fill
-	_light.texture_scale = 2.2 + 1.2 * fill
+	if a.has("amulet"):
+		var ap: Array = a.amulet[_sprite.frame]
+		_light.position = (Vector2(float(ap[0]), float(ap[1])) - _origin) * _scale
+	_light.energy = (0.9 + 0.8 * fill) * light_k
+	_light.texture_scale = (2.2 + 1.2 * fill) * (0.6 if light_k < 1.0 else 1.0)
 
 
 func _on_hurt(_amount: float, _hit: Hit) -> void:

@@ -119,14 +119,17 @@ var visual: Node2D
 const VISUAL_SCENE: String = "res://scenes/hero/hero_visual.tscn"
 ## Pre-rendered 3D-to-2D hero (art slice); chosen by visual_scene_path().
 const SPRITE_SCENE: String = "res://scenes/hero/hero_sprite.tscn"
+## Hand-drawn hero «Медвежья шкура» (tools/asset-pipeline/hero2d); the default.
+const DRAWN_SCENE: String = "res://scenes/hero/hero_drawn.tscn"
 
 ## Check modes that inspect the cutout rig itself (HeroVisual tiers, rig poses):
 ## they get the rig unless `--hero-art=` is given explicitly.
 const RIG_MODES: Array[String] = ["--hero-shots=", "--base-check="]
 
-## The hero visual scene: the project setting navi/art/hero_art ("sprite" =
-## pre-rendered hero, default since the art slice; "rig" = cutout rig), forced to
-## the rig in RIG_MODES; `-- --hero-art=sprite|rig` overrides both.
+## The hero visual scene: the project setting navi/art/hero_art ("drawn" =
+## hand-drawn hero sheets, the default; "sprite" = pre-rendered 3D hero; "rig" =
+## cutout rig), forced to the rig in RIG_MODES; `-- --hero-art=drawn|sprite|rig`
+## overrides both.
 static func visual_scene_path(args: PackedStringArray) -> String:
 	var art := String(ProjectSettings.get_setting("navi/art/hero_art", "rig"))
 	for a in args:
@@ -136,6 +139,8 @@ static func visual_scene_path(args: PackedStringArray) -> String:
 	for a in args:
 		if a.begins_with("--hero-art="):
 			art = a.trim_prefix("--hero-art=")
+	if art == "drawn" and ResourceLoader.exists(DRAWN_SCENE):
+		return DRAWN_SCENE
 	return SPRITE_SCENE if art == "sprite" and ResourceLoader.exists(SPRITE_SCENE) else VISUAL_SCENE
 
 func _ready() -> void:
@@ -885,6 +890,8 @@ func _blade_angle() -> float:
 
 func _draw_blade() -> void:
 	var hand := Vector2(8.0 * face, -34.0)
+	if visual != null and visual.has_method("hand_point"):
+		hand = visual.call("hand_point")
 	var a := _blade_angle()
 	var dir := Vector2(cos(a) * face, sin(a))
 	var body := weapon.body_id()
