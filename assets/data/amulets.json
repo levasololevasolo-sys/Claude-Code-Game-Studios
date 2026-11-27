@@ -1,0 +1,19 @@
+{
+  "_note": "Amulets by id (ADR-0001, GDD amulet-and-flare §3.4-3.5, §7). The amulet gives the Flare's shape, the god of the Flare-slot rune gives its element. Sizes are at power P = 1 and are scaled by S (F3). Distances px, times s, speeds px/s. keeps_ready: a health hit in overcharge drops charge to 100 instead of 100 - over_spill. dash_charge / kill_charge: flat charge per dash / per kill (0 = none). slam_charge_f: f of F1 for each enemy hit by a ground slam.",
+  "ring": {
+    "name": "Коло", "glyph": "О", "shape_dmg": 1.0, "keeps_ready": true, "dash_charge": 0, "kill_charge": 0, "slam_charge_f": 0.5,
+    "radius": 430, "kb": 520, "fx_time": 0.4
+  },
+  "beam": {
+    "name": "Луч", "glyph": "Л", "shape_dmg": 1.5, "keeps_ready": false, "dash_charge": 8, "kill_charge": 0, "slam_charge_f": 0.5,
+    "len": 1000, "h": 140, "kb": 750, "fx_time": 0.35
+  },
+  "wave": {
+    "name": "Волна", "glyph": "В", "shape_dmg": 1.2, "keeps_ready": false, "dash_charge": 0, "kill_charge": 0, "slam_charge_f": 2.0,
+    "speed": 900, "time": 0.9, "h": 110, "launch_mult": 1.2, "kb": 0
+  },
+  "knot": {
+    "name": "Узел", "glyph": "У", "shape_dmg": 1.8, "keeps_ready": false, "dash_charge": 0, "kill_charge": 12, "slam_charge_f": 0.5,
+    "arm": 0.3, "trigger": 140, "life": 5, "pull_r": 360, "pull_speed": 500, "pull_time": 0.5, "r": 300, "kb": 420, "fx_time": 0.4
+  }
+}

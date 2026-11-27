@@ -9,3 +9,6 @@ signal enemy_killed(enemy: Node2D, hit: RefCounted)
 ## The hero lost `amount` hp to `hit` (shield-absorbed damage is not counted).
 @warning_ignore("unused_signal")
 signal player_hurt(amount: float, hit: RefCounted)
+## The hero released a Flare: amulet shape id, power P (amulet-and-flare §3.3).
+@warning_ignore("unused_signal")
+signal flare_fired(shape: String, power: float)

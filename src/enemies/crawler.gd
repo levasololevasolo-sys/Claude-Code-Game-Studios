@@ -81,5 +81,5 @@ func _draw() -> void:
 		var lx := -w / 2 + 10 + i * 12
 		draw_line(Vector2(lx, -4), Vector2(lx - 6 + sin(anim * 12 + i) * 3, 0), Color("#2b3527"), 3.0)
 	_draw_windup_outline(body)
-	_draw_eyes(Vector2(w / 2 - 12, -h * 0.75 - rear), Vector2(w / 2 - 4, -h * 0.6 - rear), 3.0)
+	_draw_eyes(Vector2(w / 2 - 12, -h * 0.75 - rear), Vector2(w / 2 - 4, -h * 0.6 - rear), 3.0, face)
 	_draw_overlay()

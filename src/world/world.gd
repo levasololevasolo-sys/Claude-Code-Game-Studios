@@ -4,7 +4,10 @@
 ## change these only through request_hitstop(), add_shake() and add_ring().
 ## Run with `-- --demo=<dir>` to play a scripted check that saves screenshots,
 ## `-- --enemy-check=<dir>` for the enemy check, `--room=<k>` / `--seed=<n>` to
-## pick the room, `--ai-debug` to draw enemy state names.
+## pick the room, `--ai-debug` to draw enemy state names, `--amulet=<id>` to pick
+## the hero's amulet (ring, beam, wave, knot; amulets.json), `--flare-check=<dir>`
+## for the scripted Flare check (GDD amulet-and-flare). Also owns the world slow
+## of the Flare "breath" (request_slow, time_mult) and the screen flash.
 class_name World
 extends Node2D
 
@@ -24,6 +27,15 @@ var tier: int = 1
 var seed_value: int = 1
 ## Draw each enemy's state name (AI debugging).
 var ai_debug: bool = false
+## Amulet id the hero wears (--amulet=, default from tuning "amulet_default").
+var amulet_id: String = "ring"
+## Screen flash 0..1 (Flare), decays by flash_decay per s; lightens the darkness (F5).
+var flash: float = 0.0
+## World time multiplier while slow_t > 0 (Flare breath, ×flare_slow).
+var slow: float = 1.0
+var slow_t: float = 0.0
+var darkness: Darkness
+var amulet_hud: AmuletHud
 
 ## Camera framing offset in world units (prototype px): the hero sits below centre.
 const CAM_OFFSET: Vector2 = Vector2(0, -120)
@@ -32,8 +44,12 @@ const CAM_OFFSET: Vector2 = Vector2(0, -120)
 const HUD_FONT_SIZE: int = 27
 ## HUD margin from the top-left corner, 1080p screen px.
 const HUD_MARGIN: Vector2 = Vector2(24, 18)
+## Top-left of the amulet charge ring, 1080p screen px.
+const HUD_RING_POS: Vector2 = Vector2(28, 900)
 
 func _ready() -> void:
+	# Hit-feel clocks tick before the hero and the enemies (Player sets -1).
+	process_physics_priority = -2
 	InputSetup.register()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--seed="):
@@ -42,6 +58,11 @@ func _ready() -> void:
 			room_k = maxi(1, int(a.trim_prefix("--room=")))
 		elif a == "--ai-debug":
 			ai_debug = true
+		elif a.begins_with("--amulet="):
+			amulet_id = a.trim_prefix("--amulet=")
+	if not Tune.table("amulets").has(amulet_id) or amulet_id.begins_with("_"):
+		push_error("World: unknown amulet '%s', using ring" % amulet_id)
+		amulet_id = "ring"
 	RenderingServer.set_default_clear_color(Color("#0c1418"))
 	start_room()
 	for a in OS.get_cmdline_user_args():
@@ -53,11 +74,16 @@ func _ready() -> void:
 			var c: Node = (load("res://tests/integration/enemies/enemy_check_driver.gd") as GDScript).new()
 			c.set("out_dir", a.trim_prefix("--enemy-check="))
 			add_child(c)
+		elif a.begins_with("--flare-check="):
+			var fc: Node = (load("res://tests/integration/amulet/flare_check_driver.gd") as GDScript).new()
+			fc.set("out_dir", a.trim_prefix("--flare-check="))
+			add_child(fc)
 
 ## Clears the level and builds room number room_k of location tier.
 func start_room() -> void:
 	for c in get_children():
-		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer:
+		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
+				or c is Flare or c is Darkness:
 			c.queue_free()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value * 1000 + tier * 100 + room_k
@@ -78,8 +104,12 @@ func start_room() -> void:
 			if bool(table[kinds[j]].get("flies", false)):
 				y = rng.randf_range(float(fly_y[0]), float(fly_y[1]))
 			spawn_enemy(e, Vector2(pack[j], y), i, true, rng.randi())
+	var keep_charge := player.amulet.charge if player and is_instance_valid(player) and player.amulet else 0.0
 	player = Player.new()
 	player.world = self
+	player.amulet = Amulet.make(amulet_id, Tune.data)
+	# The charge stays between rooms of one location (amulet-and-flare §3.1).
+	player.amulet.charge = minf(keep_charge, player.amulet.cap)
 	player.position = Vector2(160, Tune.f("ground_y"))
 	add_child(player)
 	cam = Camera2D.new()
@@ -99,7 +129,14 @@ func start_room() -> void:
 	hud.position = HUD_MARGIN
 	hud.add_theme_font_size_override("font_size", HUD_FONT_SIZE)
 	layer.add_child(hud)
+	amulet_hud = AmuletHud.new()
+	amulet_hud.amulet = player.amulet
+	amulet_hud.position = HUD_RING_POS
+	layer.add_child(amulet_hud)
 	add_child(layer)
+	darkness = Darkness.new()
+	darkness.world = self
+	add_child(darkness)
 
 ## Adds an enemy to the room: injects world, tier and walls, seeds its random
 ## stream, and puts it to sleep in pack `pack_id` (-1 = no pack) if `sleeping`.
@@ -130,12 +167,30 @@ func request_hitstop(t: float) -> void:
 func add_shake(s: float) -> void:
 	shake = maxf(shake, s)
 
+## Slows the world to `scale` for `t` real seconds (Flare breath). The stronger
+## (smaller) slow and the longer time win; never summed.
+func request_slow(scale: float, t: float) -> void:
+	slow = minf(slow, scale) if slow_t > 0.0 else scale
+	slow_t = maxf(slow_t, t)
+
+## Multiplier for actors' dt: `slow` while a slow runs, else 1.
+func time_mult() -> float:
+	return slow if slow_t > 0.0 else 1.0
+
+## Flashes the screen (lightens the darkness, F5 `flash`); the stronger wins.
+func add_flash(v: float) -> void:
+	flash = clampf(maxf(flash, v), 0.0, 1.0)
+
 ## Adds a shock ring (down-strike slam) at a point.
 func add_ring(at: Vector2, r: float) -> void:
 	rings.append({ "p": at, "r": r, "t": 0.0 })
 
 func _physics_process(dt: float) -> void:
 	hitstop = maxf(0.0, hitstop - dt)
+	slow_t = maxf(0.0, slow_t - dt)
+	if slow_t <= 0.0:
+		slow = 1.0
+	flash = maxf(0.0, flash - dt * Tune.f("flash_decay"))
 	shake = maxf(0.0, shake - dt * Tune.f("shake_decay"))
 	if cam:
 		# Shake moves the offset, never the zoom (ADR-0004).
@@ -151,7 +206,7 @@ func _physics_process(dt: float) -> void:
 			total += 1
 			if not (e as Enemy).asleep:
 				awake += 1
-		hud.text = "Навь — проверка основы (Godot)    Комната %d, ширина %d px    Враги: %d (не спят %d)    HP %d\nA/D бег · Пробел прыжок · J удар (W вверх, S в воздухе вниз) · Shift перекат/рывок · S+Пробел спрыгнуть" % [room_k, int(room.layout.w), total, awake, roundi(player.hp)]
+		hud.text = "Навь — проверка основы (Godot)    Комната %d, ширина %d px    Враги: %d (не спят %d)    HP %d\nA/D бег · Пробел прыжок · J удар (W вверх, S в воздухе вниз) · Shift перекат/рывок · S+Пробел спрыгнуть · L / ПКМ Вспышка" % [room_k, int(room.layout.w), total, awake, roundi(player.hp)]
 	queue_redraw()
 
 func _draw() -> void:

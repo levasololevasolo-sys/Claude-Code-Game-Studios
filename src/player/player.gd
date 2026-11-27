@@ -1,6 +1,9 @@
 ## The hero: run, variable jump, coyote time, jump buffer, ground roll / air dash,
 ## a three-swing blade combo, an up strike, and a down strike that pogos off foes
 ## and slams the ground. The origin sits at the feet. Ported from updatePlayer().
+## Wears an Amulet (GDD amulet-and-flare): landed hits charge it, a health hit in
+## overcharge spills it, the `flare` action starts the 0.12 s breath (world slow,
+## hero frozen and invulnerable) and then releases a Flare of the amulet's shape.
 class_name Player
 extends CharacterBody2D
 
@@ -10,6 +13,9 @@ signal hit_landed(enemy: Enemy, dmg: float)
 signal hurt_taken(amount: float, hit: Hit)
 ## Emitted once when hp reaches 0.
 signal died(hit: Hit)
+## Emitted when the breath ends, just before the new Flare enters the world (an
+## instant shape strikes in its _ready, so listeners connect to `struck` here).
+signal flare_released(flare: Flare)
 ## Emitted at the end of every physics tick, hitstop ticks included. Test drivers
 ## await it so the input they set is guaranteed to have been read.
 signal stepped
@@ -48,6 +54,17 @@ var land: float = 0.0
 var ghosts: Array[Dictionary] = []
 var was_on_floor: bool = false
 var fall_v: float = 0.0
+## The worn amulet (injected by World; a ring amulet is made if left null).
+var amulet: Amulet
+## Element of the Flare. HOOK: set from the god of the Flare-slot rune when
+## gods-and-runes is ported (FlareElement documents the ids); "pure" = no rune.
+var flare_element: String = FlareElement.PURE
+## Seconds of the breath left (frozen, invulnerable, world slowed); 0 = none.
+var flare_t: float = 0.0
+## Power P captured at the press (F3).
+var flare_p: float = 0.0
+## Buffered Flare press (during a dash), s.
+var flare_buf: float = 0.0
 ## Scripted input for automated runs. Set `scripted` to true and fill `fake` with
 ## action -> bool to drive the hero instead of the real Input.
 var scripted: bool = false
@@ -56,6 +73,7 @@ var _fake_prev: Dictionary = {}
 var _tap_jump: bool = false
 var _tap_strike: bool = false
 var _tap_dash: bool = false
+var _tap_flare: bool = false
 
 func _ready() -> void:
 	hp = Tune.f("player_hp")
@@ -67,6 +85,12 @@ func _ready() -> void:
 	shape.position = Vector2(0, -H / 2.0)
 	add_child(shape)
 	floor_snap_length = Tune.f("floor_snap")
+	if amulet == null:
+		amulet = Amulet.make("ring", Tune.data)
+	Events.enemy_killed.connect(_on_enemy_killed)
+	# Input before damage in one tick (amulet-and-flare §5): the hero's tick runs
+	# before the enemies', the World's (hitstop/slow clocks) before the hero's.
+	process_physics_priority = -1
 
 func _held(a: StringName) -> bool:
 	return bool(fake.get(a, false)) if scripted else Input.is_action_pressed(a)
@@ -84,6 +108,8 @@ func _physics_process(dt: float) -> void:
 		_tap_strike = true
 	if _tapped(&"dash"):
 		_tap_dash = true
+	if _tapped(&"flare"):
+		_tap_flare = true
 	if world and world.hitstop > 0.0:
 		_end_tick()
 		return
@@ -101,9 +127,21 @@ func _step(dt: float) -> void:
 	if _tap_strike:
 		atk_buf = Tune.f("strike_buffer")
 	var want_dash: bool = _tap_dash
+	if _tap_flare:
+		flare_buf = Tune.f("flare_buffer")
 	_tap_jump = false
 	_tap_strike = false
 	_tap_dash = false
+	_tap_flare = false
+	if flare_t > 0.0:
+		_breath(dt)
+		return
+	if flare_buf > 0.0 and dash_t <= 0.0:
+		flare_buf = 0.0
+		if _press_flare():
+			_breath(0.0)
+			return
+	flare_buf -= dt
 	var on_floor := is_on_floor()
 	if want_dash and dash_cd <= 0.0 and dash_t <= 0.0:
 		rolling = on_floor
@@ -114,6 +152,8 @@ func _step(dt: float) -> void:
 		face = dash_dir
 		inv = maxf(inv, dash_dur + 0.05)
 		atk_t = 0.0
+		if amulet.dash_charge() > 0.0:
+			amulet.add_flat(amulet.dash_charge())
 	if dash_t > 0.0:
 		dash_t -= dt
 		if rolling:
@@ -229,7 +269,9 @@ func _strike_hits() -> void:
 			DamageRules.strike_knockback(Tune.f("knockback"), fin, Tune.f("finisher_knockback_mult")))
 		hit.finisher = fin
 		hit.source = self
+		var blocked := DamageRules.shield_blocks(hit, e.hit_view())
 		var dealt := e.hurt(hit)
+		_gain_hit(Tune.f("charge_f_shield") if blocked else 1.0)
 		if atk_dir == "up":
 			e.launch(Tune.f("launch_speed"))
 		if atk_dir == "down":
@@ -252,6 +294,56 @@ func _slam() -> void:
 			var hit := Hit.make(Hit.Kind.SLAM, Tune.f("slam_dmg"), position.x, Tune.f("slam_knockback"))
 			hit.source = self
 			e.hurt(hit)
+			_gain_hit(amulet.slam_f())
+
+# ---------------- amulet and Flare (GDD amulet-and-flare §3.1-3.3) ----------------
+
+## F1 for one landed hit of source factor `f` with the blade's charge multiplier.
+## No charge during the breath.
+func _gain_hit(f: float) -> void:
+	if flare_t > 0.0 or amulet == null:
+		return
+	amulet.add_hit(f, float(_blade().get("charge", 1.0)))
+
+func _on_enemy_killed(_enemy: Node2D, _hit: RefCounted) -> void:
+	if amulet and amulet.kill_charge() > 0.0 and flare_t <= 0.0:
+		amulet.add_flat(amulet.kill_charge())
+
+## The Flare key: below 100 a fizzle; at 100+ starts the breath. True if started.
+func _press_flare() -> bool:
+	var p := amulet.try_fire()
+	if p <= 0.0:
+		return false
+	flare_p = p
+	flare_t = Tune.f("flare_windup")
+	atk_t = 0.0
+	atk_buf = 0.0
+	if world:
+		world.request_slow(Tune.f("flare_slow"), flare_t)
+	return true
+
+## One tick of the breath: frozen in place (real time, not the slowed world's).
+func _breath(dt: float) -> void:
+	velocity = Vector2.ZERO
+	flare_t -= dt
+	if flare_t <= 0.0:
+		flare_t = 0.0
+		_release_flare()
+	queue_redraw()
+
+func _release_flare() -> void:
+	inv = maxf(inv, Tune.f("flare_iframes"))
+	if amulet.shape() == "knot":
+		Flare.detonate_knots(get_tree())
+	var f := Flare.new()
+	f.setup(self, amulet.row, amulet.shape(), flare_p, flare_element)
+	flare_released.emit(f)
+	if world:
+		world.add_child(f)
+	elif get_parent():
+		get_parent().add_child(f)
+	FlareElement.apply_to_hero(flare_element, self, f.touched(), Tune.data)
+	Events.flare_fired.emit(amulet.shape(), flare_p)
 
 func _enemies() -> Array[Enemy]:
 	var out: Array[Enemy] = []
@@ -266,7 +358,7 @@ func _enemies() -> Array[Enemy]:
 ## Not yet applied (no source systems): F12 multipliers (ash, tier, armour,
 ## Iron Will), hub immunity and the "Last Ember" revive.
 func hurt(hit: Hit) -> float:
-	if dead or inv > 0.0 or dash_t > 0.0:
+	if dead or inv > 0.0 or dash_t > 0.0 or flare_t > 0.0:
 		return 0.0
 	var split := DamageRules.split_shield(hit.dmg, shield)
 	shield -= split.x
@@ -274,6 +366,8 @@ func hurt(hit: Hit) -> float:
 		inv = Tune.f("hurt_iframes") * Tune.f("shield_iframes_mult")
 		return 0.0
 	hp -= split.y
+	if amulet:
+		amulet.on_health_damage()
 	inv = Tune.f("hurt_iframes")
 	velocity.x = (signf(position.x - hit.from_x) if position.x != hit.from_x else 1.0) * Tune.f("hurt_knock_x")
 	velocity.y = -Tune.f("hurt_knock_y")
@@ -323,7 +417,11 @@ func _draw() -> void:
 	# lantern at the hip
 	draw_line(Vector2(-8, 2), Vector2(-11, 10), CLOAK_DARK, 2.0)
 	draw_circle(Vector2(-11, 13), 4.5, GLOW)
-	draw_circle(Vector2(-11, 13), 9.0, Color(GLOW, 0.18))
+	var fill := clampf(amulet.charge / amulet.ready_at(), 0.0, 1.5) if amulet else 0.0
+	draw_circle(Vector2(-11, 13), 9.0 + 6.0 * fill, Color(GLOW, 0.18 + 0.2 * fill))
+	if flare_t > 0.0:
+		var k := flare_t / maxf(Tune.f("flare_windup"), 0.01)
+		draw_arc(Vector2(-11, 13), 12.0 + 80.0 * k, 0.0, TAU, 32, Color(GLOW, 0.9), 3.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_draw_blade()
 

@@ -87,5 +87,5 @@ func _draw() -> void:
 	draw_colored_polygon(shield, Color("#8d7a55") if not (stun > 0.0) else Color("#5a4d36"))
 	draw_polyline(shield + PackedVector2Array([shield[0]]), Color("#c9b88a"), 2.0)
 	_draw_windup_outline(body)
-	_draw_eyes(Vector2(0, -h * 0.85), Vector2(8, -h * 0.85), 2.5)
+	_draw_eyes(Vector2(0, -h * 0.85), Vector2(8, -h * 0.85), 2.5, face)
 	_draw_overlay()

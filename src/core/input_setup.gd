@@ -10,8 +10,9 @@ const KEYS := {
 	"jump": [KEY_SPACE],
 	"strike": [KEY_J],
 	"dash": [KEY_SHIFT, KEY_K],
+	"flare": [KEY_L],
 }
-const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON_RIGHT_SHOULDER,
+const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON_RIGHT_SHOULDER, "flare": JOY_BUTTON_Y,
 	"move_left": JOY_BUTTON_DPAD_LEFT, "move_right": JOY_BUTTON_DPAD_RIGHT,
 	"move_up": JOY_BUTTON_DPAD_UP, "move_down": JOY_BUTTON_DPAD_DOWN }
 
@@ -31,6 +32,9 @@ static func register() -> void:
 	var mouse := InputEventMouseButton.new()
 	mouse.button_index = MOUSE_BUTTON_LEFT
 	InputMap.action_add_event("strike", mouse)
+	var rmb := InputEventMouseButton.new()
+	rmb.button_index = MOUSE_BUTTON_RIGHT
+	InputMap.action_add_event("flare", rmb)
 	for pair: Array in [["move_left", JOY_AXIS_LEFT_X, -1.0], ["move_right", JOY_AXIS_LEFT_X, 1.0],
 			["move_up", JOY_AXIS_LEFT_Y, -1.0], ["move_down", JOY_AXIS_LEFT_Y, 1.0]]:
 		var ax := InputEventJoypadMotion.new()

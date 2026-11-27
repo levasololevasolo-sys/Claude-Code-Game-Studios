@@ -1,0 +1,39 @@
+ring: 10 swings -> charge 100; press: breath t=0.120 world x0.20, probe hit took 0 (hp 1000 -> 1000), charge after press 0
+ring: released after 9 ticks (press delayed 0 by hitstop), P=1.00 S=1.00 D=38.0, hero inv 0.30
+screenshot flare-ring.png
+  dummy@+60        HIT dealt 38.0 stun 1.40  moved (+74, +0) now y 640 vy 0
+  dummy@+400       HIT dealt 38.0 stun 1.40  moved (+74, +0) now y 640 vy 0
+  dummy@-520       not hit  moved (+0, +0) now y 640 vy 0
+  bat@+150 up260   HIT dealt 38.0 stun 1.40 -> KILLED (hp was 20)
+ring: enemies hit 3, stunned 2, charge after 0
+beam: 10 swings -> charge 100; press: breath t=0.120 world x0.20, probe hit took 0 (hp 1000 -> 1000), charge after press 0
+beam: released after 9 ticks (press delayed 0 by hitstop), P=1.00 S=1.00 D=57.0, hero inv 0.30
+screenshot flare-beam.png
+  dummy@+60        HIT dealt 57.0 stun 1.40  moved (+103, +0) now y 640 vy 0
+  dummy@+900       HIT dealt 57.0 stun 1.40  moved (+103, +0) now y 640 vy 0
+  dummy@-50        not hit  moved (+0, +0) now y 640 vy 0
+  sentry@+600      HIT dealt 57.0 stun 1.40 -> KILLED (hp was 50)
+  bat@+300 up200   not hit  moved (-58, -6) now y 434 vy -8
+beam: enemies hit 3, stunned 2, charge after 0
+wave: 10 swings -> charge 100; press: breath t=0.120 world x0.20, probe hit took 0 (hp 1000 -> 1000), charge after press 0
+wave: released after 9 ticks (press delayed 0 by hitstop), P=1.00 S=1.00 D=45.6, hero inv 0.30
+screenshot flare-wave.png
+  dummy@+60        HIT dealt 45.6 stun 1.40  moved (+0, +0) now y 640 vy 0
+  dummy@-700       HIT dealt 45.6 stun 1.40  moved (+0, -121) now y 519 vy -78
+  crawler@+500     HIT dealt 45.6 stun 1.40 -> KILLED (hp was 34)
+  bat@+200 up200   not hit  moved (-20, -4) now y 436 vy 6
+wave: enemies hit 3, stunned 2, charge after 0
+knot: 10 swings -> charge 100; press: breath t=0.120 world x0.20, probe hit took 0 (hp 1000 -> 1000), charge after press 0
+knot: released after 9 ticks (press delayed 0 by hitstop), P=1.00 S=1.00 D=68.4, hero inv 0.30
+knot: boom after 54 ticks (armed at 0.30 s, trigger 140 px)
+screenshot flare-knot.png
+  dummy@+60        HIT dealt 68.4 stun 1.40  moved (-60, +0) now y 640 vy 0
+  dummy@+250       HIT dealt 68.4 stun 1.40  moved (-250, +0) now y 640 vy 0
+  dummy@-330       HIT dealt 68.4 stun 1.40  moved (+199, +0) now y 640 vy 0
+  dummy@-600       not hit  moved (+0, +0) now y 640 vy 0
+knot: enemies hit 3, stunned 3, charge after 0
+dark: charge 0, light radius 360 (light_min 359), darkness 0.78, glow spots 10, crawler state wind at dx +600, shot at dx -189
+screenshot flare-dark-0.png
+dark+ash: darkness 0.86, crawler wind
+screenshot flare-dark-0-ash.png
+summary hit/stunned: ring=3/2 beam=3/2 wave=3/2 knot=3/3 (bat/bloat: hover approach)

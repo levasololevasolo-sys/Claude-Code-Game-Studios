@@ -20,6 +20,8 @@ var world: World
 func _physics_process(dt: float) -> void:
 	if world and world.hitstop > 0.0:
 		return
+	if world:
+		dt *= world.time_mult()
 	step(dt)
 	if life <= 0.0:
 		queue_free()
@@ -47,6 +49,12 @@ func step(dt: float) -> void:
 		if absf(position.y - (p.position.y - Tune.f("hero_aim_dy"))) < Tune.f("shot_swat_dy") \
 				and (position.x - p.position.x) * p.face > 0.0 and absf(position.x - p.position.x) < reach + Tune.f("shot_swat_extra"):
 			life = 0.0
+
+## Glow through the darkness (amulet-and-flare §3.9): one spot shot_glow_r at shot_glow_a.
+func light_spots() -> Array[Vector4]:
+	if life <= 0.0:
+		return []
+	return [Vector4(position.x, position.y, Tune.f("shot_glow_r"), Tune.f("shot_glow_a"))]
 
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, Tune.f("shot_glow_r"), Color(color, Tune.f("shot_glow_a") * 0.25))

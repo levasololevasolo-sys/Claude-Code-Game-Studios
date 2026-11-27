@@ -77,6 +77,9 @@ var show_state: bool = false
 var rng: RandomNumberGenerator
 ## Shots fired while not in a world (tests read and free them).
 var orphan_shots: Array[EnemyShot] = []
+## Eye points in local space recorded by the last _draw_eyes() (light_spots()).
+var eye_pts: Array[Vector2] = []
+var eye_size: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -276,6 +279,8 @@ func _wake_my_pack() -> void:
 func _physics_process(dt: float) -> void:
 	if world and world.hitstop > 0.0:
 		return
+	if world:
+		dt *= world.time_mult()
 	anim += dt
 	flash -= dt
 	alert = maxf(0.0, alert - dt)
@@ -337,8 +342,25 @@ func _draw_glow(at: Vector2, radius: float, c: Color, alpha: float) -> void:
 		var k := 1.0 - float(i) / 6.0
 		draw_circle(at, radius * k, Color(c, alpha * 0.18))
 
-## Two glowing eyes of the kind's colour; closed slits while asleep.
-func _draw_eyes(a: Vector2, b: Vector2, size: float) -> void:
+## What glows through the darkness (amulet-and-flare §3.9): Vector4(x, y, radius,
+## strength) in world space. Eyes always at full strength; the wind-up adds a
+## windup_glow_r spot at windup_glow_a over the body.
+func light_spots() -> Array[Vector4]:
+	var out: Array[Vector4] = []
+	var r := eye_size * Tune.f("eye_glow_mult")
+	for p: Vector2 in eye_pts:
+		out.append(Vector4(position.x + p.x, position.y + p.y, r, 1.0))
+	if is_winding():
+		var c := center()
+		out.append(Vector4(c.x, c.y, Tune.f("windup_glow_r"), Tune.f("windup_glow_a")))
+	return out
+
+## Two glowing eyes of the kind's colour; closed slits while asleep. `flip` is the
+## x scale of the current draw transform (kinds that mirror with face pass it),
+## so the recorded eye points for light_spots() are in plain local space.
+func _draw_eyes(a: Vector2, b: Vector2, size: float, flip: float = 1.0) -> void:
+	eye_pts.assign([Vector2(a.x * flip, a.y), Vector2(b.x * flip, b.y)])
+	eye_size = size
 	var c := Color(String(stats.get("eye", "#ffffff")))
 	for p: Vector2 in [a, b]:
 		if asleep:
