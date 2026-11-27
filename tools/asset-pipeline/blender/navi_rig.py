@@ -103,6 +103,7 @@ class Rig:
             self.rest_dir[bn] = math.degrees(math.atan2(d.z, d.x))
         self.root = root
         self.legs = {}
+        self.ik_dz = 0.0      # added to every ik target height (ankle height of the model - 0.1)
         for pb in self.arm.pose.bones:
             pb.rotation_mode = "QUATERNION"
 
@@ -148,17 +149,72 @@ class Rig:
         ang[th] = phi + al - rest - self.cum(th, ang)
         ang[sh] = -(180.0 - kn) - (self.rest_dir[sh] - self.rest_dir[th])
 
-    def apply(self, pose):
+    def solve(self, pose):
+        """Local angles (after IK and world-angle channels) and root offset of a pose."""
         ang = {k: v for k, v in pose.items() if isinstance(v, (int, float)) and k in self.parent}
         off = Vector((pose.get("rx", 0.0), pose.get("rz", 0.0)))
         for k, v in pose.items():
             if k.startswith("ik:") and v is not None:
+                v = (v[0], v[1] + self.ik_dz)
                 self.solve_ik(k[3:], v, ang, off)
         for k, v in pose.items():
             if k.startswith("w:") and v is not None:
                 b = k[2:]
                 # world angle of the bone = rest_dir + cumulative parents + local
                 ang[b] = v - self.rest_dir[b] - self.cum(b, ang)
+        return ang, off
+
+    def secondary(self, poses, springs, fps, loop):
+        """Follow-through for hanging parts (hair, beard, belt end, amulet): each
+        spring bone's tip is a damped point mass pulled toward the bone's rigid
+        direction blended toward gravity, constrained to the bone length, simulated
+        over the sampled poses (loops: three cycles, the last one kept so the cycle
+        closes). Returns per-frame {bone: local angle}."""
+        n = len(poses)
+        out = [{} for _ in range(n)]
+        if not springs or n == 0:
+            return out
+        sols = [self.solve(p) for p in poses]
+        sub = 6
+        dt = 1.0 / fps / sub
+        for sp in springs:
+            b = sp["bone"]
+            L = max(0.02, self.length[b])
+            heads = [self.joint(b, a, o) for a, o in sols]
+            wr = [self.rest_dir[b] + self.cum(b, a) for a, o in sols]
+
+            def tgt(a):
+                d = ((-90.0 - a + 180.0) % 360.0) - 180.0
+                return a + sp.get("g", 0.3) * d
+
+            def tip(h, a):
+                r = math.radians(a)
+                return h + Vector((math.cos(r), math.sin(r))) * L
+            p = tip(heads[0], tgt(wr[0]))
+            pv = p.copy()
+            k, damp = sp.get("k", 260.0), sp.get("damp", 0.86)
+            for c in range(3 if loop else 1):
+                for i in range(n):
+                    if c == (2 if loop else 0):
+                        d = p - heads[i]
+                        a = math.degrees(math.atan2(d.y, d.x)) - wr[i]
+                        out[i][b] = ((a + 180.0) % 360.0) - 180.0
+                    j = (i + 1) % n if loop else min(i + 1, n - 1)
+                    da = ((wr[j] - wr[i] + 180.0) % 360.0) - 180.0
+                    for s in range(sub):
+                        t = (s + 1) / sub
+                        h = heads[i].lerp(heads[j], t)
+                        q = tip(h, tgt(wr[i] + da * t))
+                        npos = p + (p - pv) * damp + (q - p) * k * dt * dt
+                        dd = npos - h
+                        npos = h + dd.normalized() * L
+                        pv, p = p, npos
+        return out
+
+    def apply(self, pose, extra=None):
+        ang, off = self.solve(pose)
+        if extra:
+            ang.update(extra)
         for pb in self.arm.pose.bones:
             q_rest = pb.bone.matrix_local.to_quaternion()
             R = Quaternion((0, -1, 0), math.radians(ang.get(pb.name, 0.0)))
@@ -184,7 +240,7 @@ def _swap_materials(mat):
         _saved.clear()
 
 
-def render_anims(rig, anims, raw_dir, smears, outlined, prefix):
+def render_anims(rig, anims, raw_dir, smears, outlined, prefix, springs=None):
     """anims: {name: dict(keys=[...], frames=n, fps=f, loop=bool)}. Renders colour and
     normal passes of every frame to raw_dir/<anim>_<i>_c.png / _n.png; returns meta + timings."""
     os.makedirs(raw_dir, exist_ok=True)
@@ -195,14 +251,16 @@ def render_anims(rig, anims, raw_dir, smears, outlined, prefix):
     n_frames = 0
     for name, spec in anims.items():
         poses = sample(spec["keys"], spec["frames"])
+        extra = rig.secondary(poses, springs, spec["fps"], spec.get("loop", False))
         for pass_ in ("c", "n"):
             normal = pass_ == "n"
             _swap_materials(nm if normal else None)
             sc.view_settings.view_transform = "Raw" if normal else "Standard"
             for o in outlined:
-                o.modifiers["outline"].show_render = not normal
+                if "outline" in o.modifiers:
+                    o.modifiers["outline"].show_render = not normal
             for i, p in enumerate(poses):
-                rig.apply(p)
+                rig.apply(p, extra[i])
                 for sn, so in smears.items():
                     so.hide_render = normal or p.get("smear") != sn
                 sc.render.filepath = os.path.join(raw_dir, "%s_%02d_%s.png" % (name, i, pass_))

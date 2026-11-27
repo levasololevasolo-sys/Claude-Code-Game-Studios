@@ -40,3 +40,10 @@
   date: 2026-11-27
   ai_made: yes (geometry and shaders authored as code by an AI agent; no image model)
   note: Тёмный бор, Царство Морены and Застава parallax backdrops (3 tiling layers each, 2560/3200/3840 x 1080, 0.84 MB total). Used through visuals.json tex slots.
+- path: tools/asset-pipeline/blender/data/hero_base.json.gz (and the hero body in assets/art/sprites/hero/*.png from 2026-11-27, v2)
+  source: derived by tools/asset-pipeline/blender/mh_base.py from the MakeHuman hm08 base mesh (makehuman/data/3dobjs/base.obj), macro targets (caucasian-male-young, universal-male-young-maxmuscle-minweight, male-young-maxmuscle-averageweight-maxheight), default skeleton and skin weights (rigs/default.mhskel, default_weights.mhw) of https://github.com/makehumancommunity/makehuman at commit a8bc2d54ff0ac92e78ff71431b1023eda42bf482
+  licence: CC0 1.0 Universal (LICENSE.ASSETS.md of that repo; every used file's header and the mhskel/mhw "license" field say CC0, released September 2020; copyright holders at release Data Collection AB, Joel Palmius, Jonas Hauquier; targets originally Manuel Bastioni 2014, transferred). No attribution required; credited here anyway.
+  author: MakeHuman team (base data); re-posed, stylised, re-rigged, clothed and textured by the technical-artist agent (Claude) for the developer
+  date: 2026-11-27
+  ai_made: partly (third-party CC0 human base mesh; everything built on it - pose, proportions, clothes, hair, beard, props, procedural painted materials, animation - authored as code by an AI agent; no image model)
+  note: the MakeHuman repository itself is not shipped or committed; fetch_makehuman.sh re-fetches the exact files. MakeHuman's code is AGPL but no code of it is used, only CC0 data.
