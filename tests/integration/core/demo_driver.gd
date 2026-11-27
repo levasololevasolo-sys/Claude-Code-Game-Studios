@@ -41,8 +41,18 @@ func _nearest_dummy(p: Player) -> Enemy:
 			best = e
 	return best
 
+## The core moves are checked on straw dummies: every enemy the room spawned is
+## replaced by a dummy at its x, so packs cannot interfere with the scripted moves.
+func _swap_enemies_for_dummies() -> void:
+	for e: Enemy in get_tree().get_nodes_in_group("enemies"):
+		var x := e.position.x
+		e.remove_from_group("enemies")
+		e.queue_free()
+		_main.spawn_enemy(StrawDummy.new(), Vector2(x, Tune.f("ground_y")), -1, false, 1)
+
 func _run() -> void:
 	var main: World = _main
+	_swap_enemies_for_dummies()
 	await _frames(20)
 	var p: Player = main.player
 	_note("start x=%.0f y=%.0f on_floor=%s room_w=%d dummies=%d plats=%d" % [p.position.x, p.position.y, p.is_on_floor(), main.room.layout.w, get_tree().get_nodes_in_group("enemies").size(), main.room.layout.plats.size()])

@@ -1,0 +1,9 @@
+crawler: screenshot in state 'wind' (t=0.27)
+crawler: woke at tick 1, states idle > walk > wind > charge, hero hits 1 [18.0] kinds ["CONTACT"], hero hp 982
+bat: screenshot in state 'wind' (t=0.32)
+bat: woke at tick 1, states idle > hover > wind > swoop, hero hits 1 [10.0] kinds ["CONTACT"], hero hp 990
+sentry: screenshot in state 'aim' (t=0.37)
+sentry: woke at tick 1, states idle > walk > aim > walk, hero hits 1 [14.0] kinds ["PROJECTILE"], hero hp 986
+bloat: screenshot in state 'swell' (t=0.62)
+bloat: woke at tick 1, states idle > approach > swell, hero hits 1 [22.0] kinds ["PROJECTILE"], hero hp 978, dummy took 44 from the blast
+summary: crawler=DAMAGED bat=DAMAGED sentry=DAMAGED bloat=DAMAGED
