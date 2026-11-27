@@ -21,6 +21,7 @@ renderer/rendering_method="forward_plus"
 [autoload]
 
 Tune="*res://src/core/tune.gd"
+Events="*res://src/core/events.gd"
 
 [editor_plugins]
 

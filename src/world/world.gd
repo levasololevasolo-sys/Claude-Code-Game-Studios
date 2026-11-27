@@ -1,12 +1,15 @@
-## Entry scene: generates one combat room, places the hero and straw dummies,
-## runs the camera, hitstop and screen shake. Run with `-- --demo=<dir>` to play
-## a scripted check that saves screenshots into <dir>.
-class_name Main
+## Root of the combat scene (formerly Main, ADR-0002): generates one combat room,
+## places the hero and straw dummies, runs the camera and is the only owner of
+## hit feel: hitstop, screen shake and slam rings. Actors read `hitstop` but
+## change these only through request_hitstop(), add_shake() and add_ring().
+## Run with `-- --demo=<dir>` to play a scripted check that saves screenshots.
+class_name World
 extends Node2D
 
 ## Seconds of freeze left after a hit; actors skip their update while above 0.
+## Read-only for actors: use request_hitstop().
 var hitstop: float = 0.0
-## Current screen shake strength in px.
+## Current screen shake strength in px. Read-only for actors: use add_shake().
 var shake: float = 0.0
 ## Active slam shock rings: {p: Vector2, r: float, t: float}.
 var rings: Array[Dictionary] = []
@@ -34,7 +37,7 @@ func _ready() -> void:
 ## Clears the level and builds room number room_k of location tier.
 func start_room() -> void:
 	for c in get_children():
-		if c is Room or c is Player or c is StrawDummy or c is Camera2D or c is CanvasLayer:
+		if c is Room or c is Player or c is Enemy or c is Camera2D or c is CanvasLayer:
 			c.queue_free()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value * 1000 + tier * 100 + room_k
@@ -67,6 +70,15 @@ func start_room() -> void:
 	hud.add_theme_font_size_override("font_size", 18)
 	layer.add_child(hud)
 	add_child(layer)
+
+## Freezes the action for `t` seconds. A running hitstop is extended to the
+## larger of the two, never summed (GDD movement-and-combat §3.10, F13).
+func request_hitstop(t: float) -> void:
+	hitstop = maxf(hitstop, t)
+
+## Shakes the screen with strength `s` px; the stronger shake wins.
+func add_shake(s: float) -> void:
+	shake = maxf(shake, s)
 
 ## Adds a shock ring (down-strike slam) at a point.
 func add_ring(at: Vector2, r: float) -> void:

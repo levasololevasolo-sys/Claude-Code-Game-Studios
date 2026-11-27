@@ -1,14 +1,14 @@
 ## Scripted check of the core: plays a fixed input sequence on the main scene and
-## saves screenshots plus a log of numbers into out_dir. Started by main.gd with
+## saves screenshots plus a log of numbers into out_dir. Started by world.gd with
 ## `-- --demo=<dir>`; quits when done.
 extends Node
 
 var out_dir: String = "user://demo"
 var log_lines: PackedStringArray = []
-var _main: Main
+var _main: World
 
 func _ready() -> void:
-	_main = get_parent() as Main
+	_main = get_parent() as World
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	_run.call_deferred()
 
@@ -34,15 +34,15 @@ func _note(s: String) -> void:
 	log_lines.append(s)
 	print("[demo] ", s)
 
-func _nearest_dummy(p: Player) -> StrawDummy:
-	var best: StrawDummy = null
-	for e: StrawDummy in get_tree().get_nodes_in_group("enemies"):
+func _nearest_dummy(p: Player) -> Enemy:
+	var best: Enemy = null
+	for e: Enemy in get_tree().get_nodes_in_group("enemies"):
 		if best == null or absf(e.position.x - p.position.x) < absf(best.position.x - p.position.x):
 			best = e
 	return best
 
 func _run() -> void:
-	var main: Main = _main
+	var main: World = _main
 	await _frames(20)
 	var p: Player = main.player
 	_note("start x=%.0f y=%.0f on_floor=%s room_w=%d dummies=%d plats=%d" % [p.position.x, p.position.y, p.is_on_floor(), main.room.layout.w, get_tree().get_nodes_in_group("enemies").size(), main.room.layout.plats.size()])
@@ -60,13 +60,21 @@ func _run() -> void:
 	p.face = 1
 	await _frames(5)
 	var hp0 := d.hp
+	# The dummy refills below 50% (GDD §3.7 p.7), so also log what it took and its lowest hp.
+	var taken: Array[float] = []
+	var low := [d.hp]
+	var on_dmg := func(e: Enemy, amount: float, _h: Hit) -> void:
+		taken.append(amount)
+		low[0] = minf(low[0], e.hp)
+	d.damaged.connect(on_dmg)
 	for i in 3:
 		await _frames(1, { "strike": true })
 		await _frames(i * 2 + 6)
 		if i == 2:
 			await _shot("03_combo_finisher")
 		await _frames(14 - i * 2)
-	_note("combo dummy hp %.0f -> %.0f" % [hp0, d.hp])
+	d.damaged.disconnect(on_dmg)
+	_note("combo dummy hp %.0f -> %.0f, lowest %.0f, hits %d, dealt %s" % [hp0, d.hp, low[0], taken.size(), str(taken)])
 	await _frames(30)
 	# up strike
 	p.position = Vector2(d.position.x - 30, d.position.y)

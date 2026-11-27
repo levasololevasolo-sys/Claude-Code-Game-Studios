@@ -4,8 +4,12 @@
 class_name Player
 extends CharacterBody2D
 
-## Emitted when a strike connects with an enemy.
-signal hit_landed(enemy: StrawDummy, dmg: float)
+## Emitted when a strike connects with an enemy; dmg is what the enemy took.
+signal hit_landed(enemy: Enemy, dmg: float)
+## Emitted when the hero loses hp (shield-absorbed damage excluded).
+signal hurt_taken(amount: float, hit: Hit)
+## Emitted once when hp reaches 0.
+signal died(hit: Hit)
 ## Emitted at the end of every physics tick, hitstop ticks included. Test drivers
 ## await it so the input they set is guaranteed to have been read.
 signal stepped
@@ -14,9 +18,13 @@ const W: float = 28.0
 const H: float = 64.0
 const PLATFORM_LAYER: int = 2
 
-## The Main scene: owns `hitstop`, `shake` and `add_ring()`. Null in isolated tests.
-var world: Main
+## The combat scene root: hit feel goes through request_hitstop(), add_shake(),
+## add_ring(). Null in isolated tests.
+var world: World
 var hp: float = 100.0
+## Shield points (from Zhiva); absorbs damage before hp (GDD §3.11).
+var shield: float = 0.0
+var dead: bool = false
 var face: int = 1
 var coyote_t: float = 0.0
 var jump_buf: float = 0.0
@@ -34,7 +42,7 @@ var atk_dir: String = "side"
 var combo: int = 0
 var combo_t: float = 0.0
 var slammed: bool = false
-var hit_set: Array[StrawDummy] = []
+var hit_set: Array[Enemy] = []
 var run_ph: float = 0.0
 var land: float = 0.0
 var ghosts: Array[Dictionary] = []
@@ -208,47 +216,79 @@ func _strike_hits() -> void:
 	var r := strike_rect()
 	var mult: Array = b.mult
 	combo = clampi(combo, 1, mult.size())
-	var fin := combo == mult.size()
-	for e: StrawDummy in _enemies():
+	var fin := DamageRules.is_finisher(combo, mult.size())
+	for e: Enemy in _enemies():
 		if e in hit_set or e.dead:
 			continue
-		var er := Rect2(e.position.x - e.w / 2.0, e.position.y - e.h, e.w, e.h)
-		if not r.intersects(er):
+		if not r.intersects(e.hurt_rect()):
 			continue
 		hit_set.append(e)
-		var dmg := Tune.f("strike_dmg") * float(mult[combo - 1])
-		if e.position.y < Tune.f("ground_y") - Tune.f("air_target_margin") and not e.flies:
-			dmg *= Tune.f("air_mult")
-		var kb := Tune.f("knockback") * (Tune.f("finisher_knockback_mult") if fin else 1.0)
-		var from_x := position.x if atk_dir == "side" else e.position.x - face
-		e.hurt(dmg, from_x, kb)
-		if atk_dir == "up" and not e.flies:
+		var hit := Hit.make(Hit.Kind.STRIKE,
+			DamageRules.strike_damage(Tune.f("strike_dmg"), mult, combo),
+			position.x if atk_dir == "side" else e.position.x - face,
+			DamageRules.strike_knockback(Tune.f("knockback"), fin, Tune.f("finisher_knockback_mult")))
+		hit.finisher = fin
+		hit.source = self
+		var dealt := e.hurt(hit)
+		if atk_dir == "up":
 			e.launch(Tune.f("launch_speed"))
 		if atk_dir == "down":
 			velocity.y = -Tune.f("pogo_speed")
 			atk_t = 0.0
 		if world:
-			world.hitstop = Tune.f("hitstop")
-			world.shake = maxf(world.shake, Tune.f("shake_finisher") if fin else Tune.f("shake_hit"))
-		hit_landed.emit(e, dmg)
+			world.request_hitstop(Tune.f("hitstop"))
+			world.add_shake(Tune.f("shake_finisher") if fin else Tune.f("shake_hit"))
+		hit_landed.emit(e, dealt)
 
 func _slam() -> void:
 	slammed = true
 	if world:
-		world.shake = maxf(world.shake, Tune.f("shake_slam"))
+		world.add_shake(Tune.f("shake_slam"))
 		world.add_ring(position, Tune.f("slam_r"))
-	for e: StrawDummy in _enemies():
+	for e: Enemy in _enemies():
 		if e.dead:
 			continue
 		if absf(e.position.x - position.x) < Tune.f("slam_r") and absf(e.position.y - position.y) < Tune.f("slam_reach_y"):
-			e.hurt(Tune.f("slam_dmg"), position.x, Tune.f("slam_knockback"))
+			var hit := Hit.make(Hit.Kind.SLAM, Tune.f("slam_dmg"), position.x, Tune.f("slam_knockback"))
+			hit.source = self
+			e.hurt(hit)
 
-func _enemies() -> Array[StrawDummy]:
-	var out: Array[StrawDummy] = []
+func _enemies() -> Array[Enemy]:
+	var out: Array[Enemy] = []
 	for n in get_tree().get_nodes_in_group("enemies"):
-		if n is StrawDummy:
+		if n is Enemy:
 			out.append(n)
 	return out
+
+## The ONLY way to damage the hero (GDD movement-and-combat §3.11, ADR-0002).
+## Ignored while dead, invulnerable or dashing. The shield absorbs first; a fully
+## absorbed hit gives half the i-frames and nothing else. Returns the hp lost.
+## Not yet applied (no source systems): F12 multipliers (ash, tier, armour,
+## Iron Will), hub immunity and the "Last Ember" revive.
+func hurt(hit: Hit) -> float:
+	if dead or inv > 0.0 or dash_t > 0.0:
+		return 0.0
+	var split := DamageRules.split_shield(hit.dmg, shield)
+	shield -= split.x
+	if split.y <= 0.0:
+		inv = Tune.f("hurt_iframes") * Tune.f("shield_iframes_mult")
+		return 0.0
+	hp -= split.y
+	inv = Tune.f("hurt_iframes")
+	velocity.x = (signf(position.x - hit.from_x) if position.x != hit.from_x else 1.0) * Tune.f("hurt_knock_x")
+	velocity.y = -Tune.f("hurt_knock_y")
+	if world:
+		world.add_shake(Tune.f("shake_hurt"))
+		world.request_hitstop(Tune.f("hitstop_hurt"))
+	hurt_taken.emit(split.y, hit)
+	Events.player_hurt.emit(split.y, hit)
+	if hp <= 0.0:
+		hp = 0.0
+		dead = true
+		if world:
+			world.request_hitstop(Tune.f("hitstop_player_death"))
+		died.emit(hit)
+	return split.y
 
 # ---------------- drawing (placeholder art until the asset pass) ----------------
 const CLOAK := Color("#2f4a52")

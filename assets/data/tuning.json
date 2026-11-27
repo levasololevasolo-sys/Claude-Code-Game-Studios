@@ -55,5 +55,21 @@
   "shake_decay": 30,
   "ring_time": 0.35,
   "dummy_drag": 0.02,
-  "dummy_knockback_mult": 0.6
+  "dummy_knockback_mult": 0.6,
+  "dummy_w": 40,
+  "dummy_h": 70,
+  "dummy_weight": 1,
+  "dummy_restore_below": 0.5,
+  "enemy_flash_time": 0.12,
+  "damage_number_time": 0.7,
+  "sentry_block": 0.15,
+  "shield_kb_mult": 0.4,
+  "boss_stun_mult": 0.3,
+  "hurt_iframes": 0.8,
+  "shield_iframes_mult": 0.5,
+  "hurt_knock_x": 380,
+  "hurt_knock_y": 330,
+  "shake_hurt": 9,
+  "hitstop_hurt": 0.07,
+  "hitstop_player_death": 0.25
 }
