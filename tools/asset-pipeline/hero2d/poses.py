@@ -16,8 +16,12 @@ def shoulder_n(hip, lean):
 
 
 def blade_hand(hip, lean, a, r=1.15):
-    """Fist on the blade arc: Player._blade_angle() a (0 = forward, + = down)."""
-    return tuple(shoulder_n(hip, lean) + r * np.array([np.cos(a), np.sin(a)]))
+    """Fist on the blade arc: Player._blade_angle() a (0 = forward, + = down).
+    Above the shoulder the fist goes higher and further back, so the arm
+    passes behind/over the head instead of across the face."""
+    up = max(0.0, -np.sin(a))
+    v = r * np.array([np.cos(a), np.sin(a)]) + np.array([0.0, -0.15 * up])
+    return tuple(shoulder_n(hip, lean) + v)
 
 
 def idle(n=12):
@@ -174,6 +178,30 @@ def flare(n=8):
     return out
 
 
+def parry(n=5):
+    """0-2 raise and hold the guard (blade up in front, far palm bracing it),
+    3 recoil after a caught blow, 4 dropped guard after a whiff."""
+    out = []
+    spec = [  # hip x, hip y, lean, hand angle, reach, blade angle (Player._blade_angle), face
+        (0.0, -1.68, 0.02, 0.6, 1.0, -0.6, 'shout'),
+        (0.05, -1.64, -0.04, 0.22, 1.15, -1.25, 'shout'),
+        (0.05, -1.62, -0.06, 0.18, 1.15, -1.25, 'calm'),
+        (-0.18, -1.66, -0.22, 0.05, 1.05, -1.6, 'pain'),
+        (0.12, -1.6, 0.32, 0.6, 1.1, 0.5, 'pain'),
+    ]
+    for i, (hx, hy, lean, a, r, ba, face) in enumerate(spec[:n]):
+        hip = (hx, hy)
+        hN = np.asarray(shoulder_n(hip, lean)) + r * np.array([np.cos(a), np.sin(a)])
+        bd = np.array([np.cos(ba), np.sin(ba)])
+        brace = hN + bd * 0.32 + np.array([0.12, 0.05])
+        hF = tuple(brace) if i < 4 else (0.85, -1.9)
+        out.append(dict(hip=hip, lean=lean, tilt=-0.08 if i < 3 else (-0.2 if i == 3 else 0.2),
+                        fN=(-0.6 - (0.15 if i == 3 else 0.0), -0.11), fF=(0.6, -0.11), pF=0.0,
+                        hN=tuple(hN), eN=(-0.6, 0.8), hF=hF, eF=(0.2, 1.0), handF='open' if i < 4 else 'fist',
+                        drag=(0.3 if i == 3 else 0.0, -0.05), face=face))
+    return out
+
+
 # name -> (poses, fps, loop)
 ANIMS = {
     'idle': (idle(12), 10, True),
@@ -182,12 +210,13 @@ ANIMS = {
     'fall': (fall(4), 10, True),
     'roll': (roll(8), 24, False),
     'dash': (dash(4), 24, False),
-    'strike_1': (strike(-2.0, 0.9, 6), 24, False),
-    'strike_2': (strike(1.2, -1.6, 6), 24, False),
-    'strike_3': (strike(-2.0, 0.9, 8, heavy=True), 24, False),
-    'strike_up': (strike_up(6), 24, False),
-    'strike_down': (strike_down(4), 24, False),
+    'strike_1': (strike(-2.0, 0.9, 8), 24, False),
+    'strike_2': (strike(1.2, -1.6, 8), 24, False),
+    'strike_3': (strike(-2.0, 0.9, 10, heavy=True), 24, False),
+    'strike_up': (strike_up(8), 24, False),
+    'strike_down': (strike_down(6), 24, False),
     'hurt': (hurt(3), 12, False),
     'death': (death(10), 12, False),
     'flare': (flare(8), 16, False),
+    'parry': (parry(5), 12, False),
 }

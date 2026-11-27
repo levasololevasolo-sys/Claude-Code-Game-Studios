@@ -971,6 +971,10 @@ func _draw_shield() -> void:
 		draw_arc(Vector2(0, -H / 2.0), H * 0.75, 0.0, TAU, 40, Color("#9ff0b0", 0.4 + 0.5 * shield / maxf(Tune.f("shield_max"), 1.0)), 3.0)
 
 func _blade_angle() -> float:
+	match parry_pose():
+		"parry": return -1.25
+		"parry_hit": return -1.6
+		"parry_open": return 0.5
 	if atk_t <= 0.0:
 		return 2.2 if dash_t > 0.0 and rolling else 0.9
 	var k := clampf(1.0 - atk_t / atk_dur, 0.0, 1.0)

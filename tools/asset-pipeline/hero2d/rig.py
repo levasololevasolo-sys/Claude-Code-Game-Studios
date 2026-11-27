@@ -177,9 +177,14 @@ class Drawn:
         self.leg('N')
         self.torso_()
         self.amulet()
+        # an overhead near arm passes behind the head (3/4 view), not across the face
+        over = self.hand[1] < self.shN[1] - 0.55
+        if over:
+            self.arm('N')
         self.head_()
         self.pelt_front()
-        self.arm('N')
+        if not over:
+            self.arm('N')
         cv.outer_outline(1.0)
         return cv
 

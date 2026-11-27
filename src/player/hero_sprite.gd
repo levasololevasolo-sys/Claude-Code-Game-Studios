@@ -71,6 +71,7 @@ func _ready() -> void:
 	_light.position = (AMULET_PX - Vector2(float(origin[0]), float(origin[1]))) * _scale
 	if player:
 		player.hurt_taken.connect(_on_hurt)
+		player.parry_succeeded.connect(_on_parry_succeeded)
 	_show("idle")
 
 
@@ -186,4 +187,10 @@ func _process(dt: float) -> void:
 
 func _on_hurt(_amount: float, _hit: Hit) -> void:
 	_hurt_t = HURT_TIME
+	_flash_t = FLASH_TIME
+
+
+## A caught blow flashes the hero like a hit does (the recoil frame is chosen
+## by HeroVisual.choose() from Player.parry_pose()).
+func _on_parry_succeeded(_enemy: Enemy, _result: String) -> void:
 	_flash_t = FLASH_TIME

@@ -179,6 +179,7 @@ static func state_of(p: Player) -> Dictionary:
 		"atk_t": p.atk_t, "atk_dur": p.atk_dur, "atk_dir": p.atk_dir, "combo": p.combo,
 		"on_floor": p.is_on_floor() if p.is_inside_tree() else true,
 		"vx": p.velocity.x, "vy": p.velocity.y,
+		"parry": p.parry_pose(), "parry_t": p.parry_t, "parry_window": Tune.f("parry_window"),
 	}
 
 ## Picks the animation for a state: {anim, k} where k in 0..1 is the progress to
@@ -192,6 +193,9 @@ static func choose(s: Dictionary, hurt_t: float = 0.0) -> Dictionary:
 	if float(s.dash_t) > 0.0:
 		var dk := clampf(1.0 - float(s.dash_t) / maxf(float(s.dash_dur), 0.001), 0.0, 1.0)
 		return { "anim": "roll" if bool(s.rolling) else "dash", "k": dk }
+	var pp := String(s.get("parry", ""))
+	if pp != "":
+		return { "anim": "parry", "k": parry_k(pp, float(s.get("parry_t", 0.0)), float(s.get("parry_window", 1.0))) }
 	if float(s.atk_t) > 0.0:
 		var k := clampf(1.0 - float(s.atk_t) / maxf(float(s.atk_dur), 0.001), 0.0, 1.0)
 		match String(s.atk_dir):
@@ -205,6 +209,15 @@ static func choose(s: Dictionary, hurt_t: float = 0.0) -> Dictionary:
 	if absf(float(s.vx)) > 20.0:
 		return { "anim": "run", "k": -1.0 }
 	return { "anim": "idle", "k": -1.0 }
+
+## Progress into the 5-frame parry sheet for Player.parry_pose(): frames 0-2
+## raise and hold the guard over the window, 3 = recoil after a catch, 4 = the
+## dropped guard of a whiff.
+static func parry_k(pose: String, parry_t: float, window: float) -> float:
+	match pose:
+		"parry_hit": return 0.7
+		"parry_open": return 0.9
+	return clampf(1.0 - parry_t / maxf(window, 0.001), 0.0, 1.0) * 0.59
 
 # ---------------- per frame ----------------
 
@@ -220,6 +233,9 @@ func _process(dt: float) -> void:
 	var pick := choose(state_of(player), _hurt_t)
 	var anim_name: String = pick.anim
 	var k: float = pick.k
+	if not _anim.has_animation(anim_name):
+		anim_name = "idle"
+		k = -1.0
 	if k >= 0.0:
 		if anim_name != _cur:
 			_play(anim_name, 0.0)
