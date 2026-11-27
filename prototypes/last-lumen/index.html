@@ -307,7 +307,7 @@ function blankState() {
     hint: '', hintT: 0, run: null, ash: save.ash, menu: null, slowT: 0, banner: null, lanternPulse: 0,
     lantern: save.lantern, weapon: baseOf(save.weapon), motes: [], runSeed: 0,
     arm: { id: save.weapon, q: 1, aff: null }, sub: save.sub ? { id: save.sub, q: 1, aff: null } : null, subCd: 0, subQ: 0,
-    pshots: [], traps: [], words: [], armStack: 0, growth: 0, crit: false, armQuake: false };
+    pshots: [], traps: [], words: [], buffs: [], armStack: 0, growth: 0, crit: false, armQuake: false };
 }
 // reset(): back to the base, the start of every session and the end of every run.
 function reset() {
@@ -325,7 +325,7 @@ function startRun(resume) {
     seed = r.seed;
     Object.assign(s, { world: 'run', boons: r.boons.slice(), runEmbers: r.runEmbers, runRes: { ...r.runRes },
       rerolls: r.rerolls, revive: r.revive, ash: r.ash, lantern: r.lantern, runSeed: r.runSeed,
-      arm: r.arm || { id: r.weapon, q: 1, aff: null }, sub: r.sub || null, weapon: baseOf((r.arm || { id: r.weapon }).id), growth: r.growth || 0,
+      buffs: (r.buffs || []).slice(), arm: r.arm || { id: r.weapon, q: 1, aff: null }, sub: r.sub || null, weapon: baseOf((r.arm || { id: r.weapon }).id), growth: r.growth || 0,
       cleared: r.cleared, kills: r.kills, bosses: r.bosses });
     s.run = { route: r.route.slice(), locI: r.locI, order: r.order };
     s.p = makePlayer(); s.p.hp = r.hp; s.p.maxHp = r.maxHp; s.p.charge = r.charge;
@@ -333,7 +333,7 @@ function startRun(resume) {
     return;
   }
   s.runSeed = base + save.runs * 101; seed = s.runSeed;
-  s.world = 'run'; s.ash = save.ash; s.lantern = save.lantern; s.weapon = baseOf(save.weapon); s.growth = 0;
+  s.world = 'run'; s.ash = save.ash; s.lantern = save.lantern; s.weapon = baseOf(save.weapon); s.growth = 0; s.buffs = [];
   s.arm = { id: save.weapon, q: 1, aff: null }; s.sub = save.sub ? { id: save.sub, q: 1, aff: null } : null; s.subCd = 0;
   s.boons = []; s.runEmbers = 0; s.runRes = { gears: 0, bronze: 0, pearls: 0, cores: 0 };
   s.rerolls = save.up.reroll; s.revive = save.up.second > 0; s.cleared = 0; s.kills = 0; s.bosses = 0;
@@ -356,7 +356,7 @@ function snapshotRun() {
   const s = state, p = s.p;
   save.run = { route: s.run.route.slice(), locI: s.run.locI, order: s.run.order, hp: p.hp, maxHp: p.maxHp,
     charge: p.charge, boons: s.boons.slice(), runEmbers: s.runEmbers, runRes: { ...s.runRes }, rerolls: s.rerolls,
-    revive: s.revive, ash: s.ash, lantern: s.lantern, weapon: s.weapon, arm: s.arm, sub: s.sub, growth: s.growth, runSeed: s.runSeed, cleared: s.cleared,
+    revive: s.revive, ash: s.ash, lantern: s.lantern, weapon: s.weapon, arm: s.arm, sub: s.sub, growth: s.growth, buffs: s.buffs.slice(), runSeed: s.runSeed, cleared: s.cleared,
     kills: s.kills, bosses: s.bosses, seed };
   writeSave();
 }
@@ -367,7 +367,7 @@ function enterRoom(kind, loc, k) {
   if (kind === 'hub') tmpl = HUB_ROOM;
   else if (kind === 'boss') tmpl = BOSS_ROOM;
   else if (kind === 'haven') tmpl = HAVEN_ROOM;
-  else tmpl = ROOMS[s.run.order[loc][k - 1] ?? 0];
+  else tmpl = genRoom(loc, k);
   s.room = { kind, loc: loc || 'hub', k: k || 0, w: tmpl.w, plats: tmpl.plats, inter: [] };
   s.enemies = []; s.spawns = []; s.shots = []; s.fires = []; s.flares = []; s.haz = []; s.bolts = [];
   s.wisps = []; s.corpses = []; s.loot = []; s.waves = []; s.menu = null; s.slowT = 0; s.echoT = 0;
@@ -416,7 +416,7 @@ function enterRoom(kind, loc, k) {
     s.mode = 'intro'; s.modeT = 0.9;
     s.room.reward = s.nextReward || pacedReward();
     s.nextReward = null;
-    s.waves = genWaves(loc, tier(), k);
+    s.waves = []; s.room.gen = tmpl;
   }
   events.push({ t: s.t, type: 'room', kind, loc, k });
 }
@@ -485,7 +485,7 @@ function hurtEnemy(e, dmg, srcX, o = {}) {
   if (has('reaper') && e.stun > 0 && !o.burnTick) d *= 2;
   if (e.curse > 0) d *= tune.curse_mult;
   if (e.burn > 0 && has('svarog_p')) d *= 1.3;
-  if (e.kind === 'sentry' && !o.flare && !o.burnTick && !o.breaker && e.stun <= 0 && Math.sign(srcX - e.x) === e.face) {
+  if ((e.kind === 'sentry' || e.kind === 'knight' && e.st === 'guard') && !o.flare && !o.burnTick && !o.breaker && e.stun <= 0 && Math.sign(srcX - e.x) === e.face) {
     d *= tune.sentry_block; blocked = true; sfx.clang();
     burst(e.x + e.face * 20, e.y - 40, 6, '#e8e0c0', 220, 0.25, 2);
   }
@@ -529,12 +529,14 @@ function killEnemy(e) {
     state.spawns = []; state.shots = []; state.haz = []; state.waves = [];
   }
   armOnKill(e);
+  if (e.kind === 'knight' && state.world === 'run') eliteReward(e);
+  if (buffN('vamp')) heal(2 * buffN('vamp'));
   if (state.world === 'run' && (d.boss || e.elite && rng() < tune.elite_arm)) spawnArmsDrop(e.x, rollArms(null, d.boss ? 1 : 0));
   if (d.boss) { state.hitstop = 0.45; state.shake = 20; state.flash = 1; state.bosses++; save.bosses[e.kind] = (save.bosses[e.kind] || 0) + 1; }
 }
 function dropLoot(x, y, type, n) {
   let mult = has('magnet') ? 1.4 : 1;
-  if (type === 'ember') mult *= tune.embers_mult * (1 + save.up.sense * 0.15) * ashM('embers');
+  if (type === 'ember') mult *= tune.embers_mult * (1 + save.up.sense * 0.15) * ashM('embers') * (1 + 0.3 * buffN('luck'));
   const total = type === 'cores' ? n : Math.max(1, Math.round(n * mult));
   for (let i = 0; i < total; i++) {
     const a = -Math.PI / 2 + (rng() - 0.5) * 2.2, s = 260 + rng() * 260;
@@ -555,7 +557,7 @@ function explode(x, y, src, friendly = false) {
 function hurtPlayer(d, srcX, mult = 1) {
   const p = state.p;
   if (state.world === 'hub' || p.inv > 0 || p.dashT > 0 || state.mode === 'dead' || state.won) return;
-  d *= ashM('dmg') * (1 + (tier() - 1) * tune.tier_dmg) * mult * armTaken();
+  d *= ashM('dmg') * (1 + (tier() - 1) * tune.tier_dmg) * mult * armTaken() * Math.pow(0.8, buffN('iron'));
   if (p.shield > 0) { const a = Math.min(p.shield, d); p.shield -= a; d -= a; addNum(p.x, p.y - p.h - 30, a, '#9ff0b0'); if (d <= 0) { p.inv = tune.hurt_iframes * 0.5; sfx.clang(); return; } }
   p.hp -= d; p.inv = tune.hurt_iframes; p.hurtFlash = 0.3; armOnHurt();
   p.vx = Math.sign(p.x - srcX || 1) * 380; p.vy = -330;
@@ -683,7 +685,7 @@ function updatePlayer(dt) {
     if (p.dashT <= 0) p.vx = p.dashDir * tune.run_speed;
   } else {
     const slow = p.atkT > 0 ? (state.weapon === 'hammer' ? 0.15 : 0.35) : 1;
-    const target = mx * tune.run_speed * slow * (has('stribog_p') ? 1.2 : 1);
+    const target = mx * tune.run_speed * slow * (has('stribog_p') ? 1.2 : 1) * (1 + 0.15 * buffN('haste'));
     p.vx += (target - p.vx) * Math.min(1, dt * (p.onGround ? 16 : 9));
     if (mx && p.atkT <= 0) p.face = mx;
     let g = tune.gravity;
@@ -796,7 +798,7 @@ function strikeHits(k) {
       p.hitSet.add(e);
       const ground = !EDEF[e.kind].fly && !EDEF[e.kind].boss && e.kind !== 'dummy';
       state.crit = false;
-      const f = hurtEnemy(e, dmg * armDmgMul(e, fin, dir) * (ground && e.y < GROUND - 8 ? tune.air_mult : 1), dir === 'side' ? p.x : e.x - p.face, { kb: tune.knockback * (fin ? 1.8 : 1) * (wpn === 'hammer' ? 1.5 : 1), breaker: wpn === 'hammer', stun: wpn === 'hammer' ? 0.35 : 0 });
+      const f = hurtEnemy(e, dmg * armDmgMul(e, fin, dir) * (1 + 0.2 * buffN('might')) * (ground && e.y < GROUND - 8 ? tune.air_mult : 1), dir === 'side' ? p.x : e.x - p.face, { kb: tune.knockback * (fin ? 1.8 : 1) * (wpn === 'hammer' ? 1.5 : 1), breaker: wpn === 'hammer', stun: wpn === 'hammer' ? 0.35 : 0 });
       gainCharge(f * Wp.charge);
       const sg = slotGod('strike'); if (sg && f > 0) applyGod(sg, e);
       if (sg === 'stribog') e.kb *= 1.4;
@@ -1239,7 +1241,7 @@ function canDrop(def) { return !def.shop || (def.base ? save.weapons[def.id] : s
 
 // A freshly found copy: quality from the location tier, sometimes an extra effect.
 function rollQuality(bonus = 0) {
-  const r = rng() * 100 - (tier() - 1) * 12 - bonus * 18;
+  const r = rng() * 100 - (tier() - 1) * 12 - (bonus + buffN('luck') * 0.5) * 18;
   const q = r < 5 ? 5 : r < 18 ? 4 : r < 42 ? 3 : r < 72 ? 2 : 1;
   return clamp(q, 1, 5);
 }
@@ -1269,11 +1271,11 @@ function instName(dr) {
   return (a ? a.name + ' · ' : '') + d.name;
 }
 // Put a weapon on the floor of this room: E to take it, the held one drops in its place.
-function spawnArmsDrop(x, dr) {
+function spawnArmsDrop(x, dr, group) {
   if (!dr) return;
   const room = state.room;
   x = clamp(x, 120, room.w - 120);
-  const it = { x, drop: dr, born: state.t, label: '', act: null };
+  const it = { x, drop: dr, born: state.t, label: '', act: null, group, anyMode: true };
   it.label = `взять: ${instName(dr)}`;
   it.act = () => {
     const cur = it.drop;
@@ -1282,8 +1284,9 @@ function spawnArmsDrop(x, dr) {
     else { old = state.sub ? { kind: 'sub', inst: state.sub } : null; state.sub = cur.inst; state.subCd = 0; }
     sfx.buy(); burst(it.x, GROUND - 40, 16, RAR[(cur.kind === 'arm' ? ARMS : SUBS)[cur.inst.id].rar].color, 260, 0.5, 3);
     state.hint = `В руках: ${instName(cur)}`; state.hintT = 2;
+    if (it.group) { room.inter = room.inter.filter(o => o.group !== it.group || o === it); it.group = null; }
     if (old) { it.drop = old; it.label = `взять: ${instName(old)}`; it.born = state.t; }
-    else room.inter.splice(room.inter.indexOf(it), 1);
+    else if (room.inter.includes(it)) room.inter.splice(room.inter.indexOf(it), 1);
   };
   room.inter.push(it);
   burst(x, GROUND - 60, 20, RAR[(dr.kind === 'arm' ? ARMS : SUBS)[dr.inst.id].rar].color, 300, 0.6, 3);
@@ -1308,7 +1311,7 @@ function armDmgMul(e, fin, dir) {
   if (m === 'frost' && e.stun > 0) k *= 1.5;
   return k;
 }
-const armSpd = () => armDef().spd * (armAff() === 'a_speed' ? 1.15 : 1);
+const armSpd = () => armDef().spd * (armAff() === 'a_speed' ? 1.15 : 1) * (1 + 0.15 * buffN('haste'));
 const armReach = () => armDef().reach * (armAff() === 'a_reach' ? 1.2 : 1);
 function armOnHit(e, f, fin, dmg) {
   const p = state.p, m = armMech(), a = armAff();
@@ -1584,6 +1587,7 @@ function updateEnemy(e, dt) {
   if (e.dead) return;
   tickStatus(e, dt);
   if (e.dead) return;
+  if (sleeping(e)) return;
   const d = EDEF[e.kind], fly = d.fly;
   let spd = ashM('speed');
   if (has('halo') && Math.hypot(p.x - e.x, p.y - 30 - (e.y - e.h / 2)) < lightR()) spd *= 0.65;
@@ -1736,6 +1740,7 @@ function updateEnemy(e, dt) {
       break;
     }
     case 'warden': updateWarden(e, edt, spd); break;
+    case 'knight': updateKnight(e, edt, spd); break;
     case 'clockmaker': updateClockmaker(e, edt, spd); break;
     case 'queen': updateQueen(e, edt, spd); break;
   }
@@ -1766,7 +1771,7 @@ function updateEnemy(e, dt) {
   }
   if (!e.dead && e.stun <= 0 && e.kind !== 'dummy' && e.alpha > 0.5 && overlap(p, e)) {
     const dmg = e.kind === 'crawler' ? tune.crawler_dmg * (e.st === 'charge' || e.st === 'leap' ? 1.5 : 1)
-      : e.kind === 'bat' ? tune.bat_dmg : e.kind === 'sentry' ? 8 : e.kind === 'ringer' ? 6 : e.kind === 'jelly' ? 6
+      : e.kind === 'knight' ? (e.st === 'lunge' ? tune.knight_dmg : 6) : e.kind === 'bat' ? tune.bat_dmg : e.kind === 'sentry' ? 8 : e.kind === 'ringer' ? 6 : e.kind === 'jelly' ? 6
       : d.boss ? tune.warden_dmg * (e.st === 'rush' || e.st === 'lunge' || e.st === 'dive' ? 1.3 : 0.8) : 0;
     if (dmg) hurtPlayer(dmg, e.x, dm);
   }
@@ -1962,13 +1967,14 @@ function updatePlay(dt) {
   if (state.echoT > 0) { state.echoT -= dt; if (state.echoT <= 0) flare(0.5); }
   // interact with what is near: stations, doors, people
   state.near = null;
-  for (const it of room.inter) if (Math.abs(it.x - p.x) < 70 && p.onGround) state.near = it;
-  if (state.near && tapped(K.use) && state.mode === 'open') { sfx.menu(); state.near.act(); return; }
+  for (const it of room.inter) if (Math.abs(it.x - p.x) < 70 && p.onGround && (it.y === undefined || Math.abs(it.y - p.y) < 60)) state.near = it;
+  if (state.near && tapped(K.use) && (state.mode === 'open' || state.near.anyMode && state.mode === 'fight')) { sfx.menu(); state.near.act(); return; }
 
   if (state.mode === 'intro') {
     state.modeT -= dt;
     if (state.modeT <= 0) {
-      state.mode = 'fight'; spawnWave(state.waves.shift());
+      state.mode = 'fight'; if (state.waves.length) spawnWave(state.waves.shift());
+      if (room.gen) { placeRoom(room.gen); room.gen = null; }
       if (room.kind === 'boss') { const b = EDEF[LOCS[room.loc].boss]; state.banner = { name: b.name, sub: b.sub, t: 2.8 }; }
     }
   } else if (state.mode === 'fight') {
@@ -3288,6 +3294,213 @@ function drawWisp(w) {
   ctx.restore();
 }
 
+// ---- Big generated rooms, packs of enemies, the Nav knight and his rewards ------------------------
+// A combat room is generated from the run's seed: its length grows with the room number and the
+// location, platforms climb in two or three tiers, and enemies stand in packs along it. A pack sleeps
+// until the hero comes near (or hits one of them), then the whole pack wakes. From the second room on,
+// a Nav knight guards the room; beating him gives a choice of blessings, a choice of weapons, or a chest.
+EDEF.knight = { w: 46, h: 88, hp: 'knight_hp', embers: 14, name: 'Навий витязь' };
+WEIGHT.knight = 2.6;
+const BUFFS = {
+  might: { name: 'Сила витязя', desc: '+20% урона', color: '#ff7a5a' },
+  haste: { name: 'Быстрые ноги', desc: '+15% к бегу и скорости ударов', color: '#9ff0d0' },
+  hide: { name: 'Дублёная кожа', desc: '+25 к здоровью', color: '#e0c080' },
+  vamp: { name: 'Упырья жажда', desc: 'Каждое убийство лечит 2', color: '#ff6a7a' },
+  iron: { name: 'Железная воля', desc: 'Получаешь на 20% меньше урона', color: '#b8c4d0' },
+  luck: { name: 'Удача', desc: '+30% углей, оружие лучше качеством', color: '#ffd36a' },
+};
+function buffN(id) { let n = 0; for (const b of state.buffs || []) if (b === id) n++; return n; }
+
+function genRoom(loc, k) {
+  const tr = tier(), first = tr === 1 && k === 1;
+  const w = first ? 2000 : Math.min(5600, tune.room_w_base + (k - 1) * tune.room_w_step + (tr - 1) * 400);
+  const ys = [530, 440, 350, 260], plats = [];
+  for (let x = 300 + rng() * 120; x < w - 420;) {
+    const pw = 160 + Math.floor(rng() * 180), lvl = Math.floor(rng() * 3);
+    plats.push([Math.round(x), ys[lvl], pw]);
+    if (lvl >= 1 && rng() < 0.45) plats.push([Math.round(x + pw * 0.5 + 50), ys[lvl + 1], 140 + Math.floor(rng() * 90)]);
+    x += pw + 150 + rng() * 260;
+  }
+  const L = LOCS[loc], pool = L.roster.concat(tr >= 2 || k >= 3 ? L.late : []);
+  const packs = [], base = first ? 2 : 3 + Math.floor((k - 1) * 0.5) + (tr - 1);
+  for (let px = 820; px < w - 260; px += tune.pack_gap + rng() * 260) {
+    const list = [], size = first ? 2 : clamp(base + Math.floor(rng() * 2), 2, 8);
+    for (let i = 0; i < size; i++) {
+      const kind = i === 0 ? L.roster[(k + packs.length) % L.roster.length] : pool[Math.floor(rng() * pool.length)];
+      list.push({ kind, x: clamp(px + (rng() - 0.5) * 380, 400, w - 200), elite: tr >= 2 && rng() < tune.elite_chance * 0.5 });
+    }
+    packs.push(list);
+    if (first && packs.length >= 2) break;
+  }
+  const knights = [];
+  if (!first && (k >= 2 || tr >= 2)) knights.push(Math.round(w * (0.5 + rng() * 0.25)));
+  if (tr >= 3 && k >= 3) knights.push(Math.round(w * 0.88));
+  let chest = null;
+  if (!first && rng() < tune.chest_chance && plats.length) {
+    const hi = plats.filter(q => q[1] <= 350); const q = (hi.length ? hi : plats)[Math.floor(rng() * (hi.length || plats.length))];
+    chest = { x: q[0] + q[2] / 2, y: q[1] };
+  }
+  return { w, plats, packs, knights, chest };
+}
+// Put the room's packs, knights and chest in place when the fight begins.
+function placeRoom(r) {
+  const s = state;
+  r.packs.forEach((list, i) => { for (const m of list) {
+    const fly = EDEF[m.kind].fly, e = makeEnemy(m.kind, m.x, fly ? 250 + rng() * 160 : GROUND, m.elite);
+    e.asleep = true; e.pack = i; e.face = -1; s.enemies.push(e);
+  } });
+  r.knights.forEach((x, i) => { const e = makeEnemy('knight', x, GROUND); e.asleep = true; e.pack = 'k' + i; e.face = -1; s.enemies.push(e); });
+  if (r.chest) addChest(r.chest.x, r.chest.y, false);
+}
+function wakePack(e) {
+  for (const o of state.enemies) if (o.asleep && o.pack === e.pack) {
+    o.asleep = false; o.t = 0.3 + rng() * 0.4;
+    state.words.push({ x: o.x, y: o.y - o.h - 20, s: '!', c: o.kind === 'knight' ? '#ff5a4a' : '#ffd36a', t: 0.8 });
+  }
+  if (e.kind === 'knight') { state.hint = 'Навий витязь!'; state.hintT = 1.6; sfx.bell(); }
+}
+// Returns true while the enemy still sleeps (the caller then skips its AI).
+function sleeping(e) {
+  if (!e.asleep) return false;
+  const p = state.p;
+  if (Math.abs(p.x - e.x) < tune.aggro_range && Math.abs(p.y - e.y) < 520 || e.hp < e.maxHp) { wakePack(e); return false; }
+  e.vx = 0; return true;
+}
+
+// The Nav knight: walks in, winds up (his eyes flare), lunges, then stands behind his shield.
+function updateKnight(e, dt, spd) {
+  const p = state.p, dx = p.x - e.x, adx = Math.abs(dx), ph2 = e.hp < e.maxHp * 0.5;
+  e.t -= dt; e.cd -= dt;
+  if (e.st === 'idle' || e.st === 'walk') {
+    e.st = 'walk'; e.face = Math.sign(dx) || e.face;
+    e.vx = adx > 110 ? e.face * tune.knight_speed * spd * (ph2 ? 1.3 : 1) : 0;
+    if (adx < 320 && e.cd <= 0 && Math.abs(p.y - e.y) < 170) { e.st = 'wind'; e.t = ph2 ? 0.36 : 0.55; e.vx = 0; tone(200, 0.3, 'sawtooth', 0.05, 0.5); }
+  } else if (e.st === 'wind') { e.vx = 0; if (e.t <= 0) { e.st = 'lunge'; e.t = 0.34; e.vx = e.face * (ph2 ? 1000 : 800); sfx.swing(); } }
+  else if (e.st === 'lunge') { if (e.t <= 0) { e.st = 'guard'; e.t = ph2 ? 0.5 : 0.9; e.vx = 0; } }
+  else if (e.st === 'guard') { e.vx = 0; e.face = Math.sign(dx) || e.face; if (e.t <= 0) { e.st = 'walk'; e.cd = ph2 ? 0.7 : 1.2; } }
+}
+
+// What the knight leaves: three blessings, three weapons, or a rich chest.
+function eliteReward(e) {
+  const room = state.room, x = clamp(e.x, 260, room.w - 260), g = 'g' + room.inter.length + '_' + Math.round(e.x), r = rng();
+  state.words.push({ x: e.x, y: e.y - e.h - 40, s: 'Витязь повержен!', c: '#ffd36a', t: 1.6 });
+  if (r < 0.4) {
+    const ids = Object.keys(BUFFS), pick = [];
+    while (pick.length < 3) { const id = ids.splice(Math.floor(rng() * ids.length), 1)[0]; pick.push(id); }
+    pick.forEach((id, i) => {
+      const it = { x: x + (i - 1) * 140, buff: id, group: g, anyMode: true, label: `${BUFFS[id].name}: ${BUFFS[id].desc}`, act: () => {
+        state.buffs.push(id); sfx.buy(); burst(it.x, GROUND - 50, 22, BUFFS[id].color, 320, 0.6, 3);
+        if (id === 'hide') { state.p.maxHp += 25; state.p.hp += 25; }
+        state.hint = `Благословение: ${BUFFS[id].name}`; state.hintT = 2;
+        room.inter = room.inter.filter(o => o.group !== g);
+      } };
+      room.inter.push(it);
+    });
+    state.hint = 'Выбери одно благословение'; state.hintT = 2;
+  } else if (r < 0.7) {
+    spawnArmsDrop(x - 140, rollArms('arm', 1), g); spawnArmsDrop(x, rollArms('arm', 1), g); spawnArmsDrop(x + 140, rollArms('sub', 1), g);
+    state.hint = 'Выбери одно оружие'; state.hintT = 2;
+  } else addChest(x, GROUND, true);
+}
+function addChest(x, y, rich) {
+  const room = state.room;
+  const it = { x, y, chest: true, rich, anyMode: true, label: rich ? 'открыть сундук витязя' : 'открыть сундук', act: () => {
+    room.inter.splice(room.inter.indexOf(it), 1); sfx.buy(); state.shake = Math.max(state.shake, 4);
+    burst(x, y - 20, 26, '#ffd36a', 360, 0.6, 3);
+    dropLoot(x, y - 30, 'ember', rich ? 40 : 18);
+    if (LOCS[room.loc]) dropLoot(x, y - 30, LOCS[room.loc].res, rich ? 8 : 3);
+    if (rich || rng() < 0.35) spawnArmsDrop(x + 60, rollArms(null, rich ? 1 : 0));
+    if (rich && rng() < 0.5) { state.p.hp = Math.min(state.p.maxHp, state.p.hp + 20); addNum(state.p.x, state.p.y - 90, 20, '#9ff0a0'); }
+  } };
+  room.inter.push(it);
+}
+
+// ---- Drawing: the knight, blessing stones, chests, and where the enemies are ----
+ENEMY_DRAW.knight = (e, fl, eyes) => {
+  const h = e.h, wind = e.st === 'wind', lunge = e.st === 'lunge', guard = e.st === 'guard';
+  const step = Math.abs(e.vx) > 5 && !lunge ? Math.sin(e.anim * 9) : 0;
+  if (eyes) { eyeGlow(9, -h + 16, wind ? 5 : 2.8, wind ? '#ffffff' : '#ff4a3a'); eyeGlow(3, -h + 16, wind ? 3 : 2, '#ff4a3a'); return; }
+  const iron = fl ? '#fff' : '#3a3846', iron2 = fl ? '#fff' : '#5c5a6e';
+  // cape
+  ctx.fillStyle = fl ? '#fff' : '#2a0e18'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(-8, -h + 26); ctx.quadraticCurveTo(-26 - (lunge ? 14 : 0), -h / 2, -22 - (lunge ? 20 : 0) + Math.sin(e.anim * 3) * 3, -4);
+  ctx.lineTo(-14, -10); ctx.lineTo(-6, -2); ctx.lineTo(-2, -h + 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // legs
+  ctx.strokeStyle = iron; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(-6, -26); ctx.lineTo(-8 + step * 7 - (lunge ? 10 : 0), 0); ctx.moveTo(6, -26); ctx.lineTo(8 - step * 7 + (lunge ? 14 : 0), 0); ctx.stroke();
+  // body
+  const bg = ctx.createLinearGradient(-15, 0, 16, 0); bg.addColorStop(0, iron); bg.addColorStop(0.55, iron2); bg.addColorStop(1, iron);
+  ctx.fillStyle = bg; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-15, -24); ctx.lineTo(-14, -h + 30); ctx.quadraticCurveTo(0, -h + 20, 15, -h + 30); ctx.lineTo(14, -24); ctx.quadraticCurveTo(0, -18, -15, -24); ctx.fill(); ctx.stroke();
+  if (!fl) { ctx.strokeStyle = '#8a2a3a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -h + 28); ctx.lineTo(0, -26); ctx.moveTo(-8, -h + 44); ctx.lineTo(8, -h + 44); ctx.stroke(); }
+  // horned helm with a slit visor
+  ctx.fillStyle = iron2; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-11, -h + 30); ctx.lineTo(-11, -h + 10); ctx.quadraticCurveTo(0, -h - 2, 12, -h + 10); ctx.lineTo(13, -h + 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = fl ? '#fff' : '#d8ccb0';
+  for (const sx of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sx * 9, -h + 8); ctx.quadraticCurveTo(sx * 24, -h + 2, sx * 20, -h - 16); ctx.quadraticCurveTo(sx * 16, -h - 2, sx * 4, -h + 4); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  ctx.fillStyle = '#08060a'; ctx.fillRect(0, -h + 14, 13, 4);
+  // shield on the near arm: raised in guard
+  const shx = guard ? 18 : 6, shy = guard ? -h + 50 : -h + 56;
+  ctx.fillStyle = fl ? '#fff' : '#4a1a28'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(shx, shy, guard ? 9 : 12, 17, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  if (!fl) { ctx.strokeStyle = '#c9a04a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(shx, shy, guard ? 5 : 7, 11, 0, 0, Math.PI * 2); ctx.stroke(); }
+  // the sword: raised back while winding up, thrust forward in the lunge
+  ctx.save(); ctx.translate(10, -h + 44);
+  ctx.rotate(wind ? -2.4 : lunge ? 0.05 : guard ? 1.2 : 0.9);
+  ctx.strokeStyle = INK; ctx.lineWidth = 2;
+  ctx.fillStyle = '#6a4424'; ctx.fillRect(-2, -3, 12, 6);
+  ctx.fillStyle = '#c9a04a'; ctx.fillRect(10, -7, 4, 14);
+  const sg = ctx.createLinearGradient(14, 0, 64, 0); sg.addColorStop(0, fl ? '#fff' : '#b9bec8'); sg.addColorStop(1, fl ? '#fff' : '#eef2f6');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.moveTo(14, -4); ctx.lineTo(60, -3); ctx.lineTo(68, 0); ctx.lineTo(60, 3); ctx.lineTo(14, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (wind && !fl) { ctx.fillStyle = 'rgba(255,80,60,0.8)'; ctx.beginPath(); ctx.arc(66, 0, 5 + Math.sin(e.anim * 40) * 2, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+};
+function drawBuffOrb(it) {
+  const b = BUFFS[it.buff], [r, g, bl] = hexRgb(b.color), y = GROUND - 60 + Math.sin(state.t * 2.2 + it.x) * 5;
+  ctx.fillStyle = '#3a3440'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(it.x - 16, GROUND); ctx.lineTo(it.x - 12, GROUND - 30); ctx.lineTo(it.x + 12, GROUND - 30); ctx.lineTo(it.x + 16, GROUND); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const gl = ctx.createRadialGradient(it.x, y, 0, it.x, y, 46); gl.addColorStop(0, `rgba(${r},${g},${bl},0.7)`); gl.addColorStop(1, `rgba(${r},${g},${bl},0)`);
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(it.x, y, 46, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = b.color; ctx.beginPath(); ctx.moveTo(it.x, y - 14); ctx.lineTo(it.x + 10, y); ctx.lineTo(it.x, y + 14); ctx.lineTo(it.x - 10, y); ctx.closePath(); ctx.fill(); ctx.stroke();
+  text(b.name, it.x, y - 30, 13, b.color);
+}
+function drawChest(it) {
+  const y = it.y, open = false;
+  ctx.save(); ctx.translate(it.x, y);
+  const gl = ctx.createRadialGradient(0, -16, 0, 0, -16, 60); gl.addColorStop(0, it.rich ? 'rgba(255,210,100,0.45)' : 'rgba(255,210,100,0.25)'); gl.addColorStop(1, 'rgba(255,210,100,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, -16, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = it.rich ? '#6a2a30' : '#6a4424'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.rect(-22, -26, 44, 26); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-22, -26); ctx.quadraticCurveTo(0, -44 - (open ? 10 : 0), 22, -26); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#c9a04a'; ctx.fillRect(-24, -28, 4, 28); ctx.fillRect(20, -28, 4, 28); ctx.fillRect(-4, -30, 8, 10);
+  ctx.restore();
+}
+// Enemies left in a big room, and an arrow to the nearest one off screen.
+function drawEnemyPointer() {
+  const s = state, p = s.p;
+  if (s.room.kind !== 'combat' || s.mode !== 'fight') return;
+  const live = s.enemies.filter(e => !e.dead && e.kind !== 'dummy');
+  if (!live.length) return;
+  textShadow(`Врагов: ${live.length}`, W / 2, 56, 15, '#e8b0a0');
+  let best = null, bd = 1e9; for (const e of live) { const d = Math.abs(e.x - p.x); if (d < bd) { bd = d; best = e; } }
+  const sx = best.x - s.cam;
+  if (sx > 0 && sx < W) return;
+  const right = sx >= W, ax = right ? W - 30 : 30, ay = H / 2;
+  ctx.save(); ctx.translate(ax, ay); ctx.scale(right ? 1 : -1, 1);
+  ctx.fillStyle = best.kind === 'knight' ? '#ff5a4a' : '#ffd36a'; ctx.globalAlpha = 0.6 + Math.sin(s.t * 6) * 0.3;
+  ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-8, -14); ctx.lineTo(-8, 14); ctx.closePath(); ctx.fill(); ctx.restore();
+  text(`${Math.round(bd / 100) * 10} м`, right ? W - 44 : 44, H / 2 + 26, 12, '#e8d9b8');
+}
+function drawBuffsHUD() {
+  const counts = {}; for (const b of state.buffs || []) counts[b] = (counts[b] || 0) + 1;
+  Object.keys(counts).forEach((id, i) => {
+    const b = BUFFS[id], y = 106 + i * 24;
+    panel(W - 250, y - 10, 230, 20, 0.55);
+    ctx.fillStyle = b.color; ctx.beginPath(); ctx.moveTo(W - 238, y - 6); ctx.lineTo(W - 232, y); ctx.lineTo(W - 238, y + 6); ctx.lineTo(W - 244, y); ctx.fill();
+    text(`${b.name}${counts[id] > 1 ? ' ×' + counts[id] : ''}`, W - 224, y + 1, 13, b.color, 'left');
+  });
+}
+
 // A negative radius throws and would stop the loop mid-run: clamp it at the canvas instead.
 for (const c of [ctx, dctx]) {
   const arc = c.arc.bind(c), ell = c.ellipse.bind(c);
@@ -3499,8 +3712,10 @@ function drawHUD() {
     drawBoonIcon(b.kind || SLOT_KIND[b.slot] || 'body', x, y, 0.85);
   });
   // what to press here
-  if (state.near && state.near.drop && !state.menu && !state.dialog && state.mode === 'open') drawArmsCard(state.near);
-  if (state.near && !state.menu && !state.dialog && state.mode === 'open') {
+  const nearOk = state.mode === 'open' || state.near && state.near.anyMode && state.mode === 'fight';
+  if (state.near && state.near.drop && !state.menu && !state.dialog && nearOk) drawArmsCard(state.near);
+  drawEnemyPointer(); drawBuffsHUD();
+  if (state.near && !state.menu && !state.dialog && nearOk) {
     const sx = state.near.x - state.cam;
     const s = `E — ${state.near.label}`;
     ctx.font = `bold 18px ${FONT}`; const w = ctx.measureText(s).width + 30;
@@ -3621,7 +3836,7 @@ function drawPlayScene() {
     const g = ctx.createLinearGradient(0, GROUND - 30, 0, GROUND); g.addColorStop(0, 'rgba(255,120,30,0)'); g.addColorStop(1, 'rgba(255,150,40,0.7)');
     ctx.fillStyle = g; ctx.fillRect(f.x - f.w / 2, GROUND - 30, f.w, 30);
   }
-  for (const it of state.room.inter) if (it.drop) drawArmsDrop(it);
+  for (const it of state.room.inter) { if (it.drop) drawArmsDrop(it); else if (it.buff) drawBuffOrb(it); else if (it.chest) drawChest(it); }
   for (const tr of state.traps) drawTrap(tr);
   for (const c of state.corpses) drawEnemy(c.e, false, c.t / 0.6);
   for (const e of state.enemies) drawEnemy(e);

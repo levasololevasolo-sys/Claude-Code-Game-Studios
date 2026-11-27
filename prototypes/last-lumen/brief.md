@@ -40,6 +40,9 @@ Chosen: «Механики, потом Godot» (mechanics finished in the browse
 After play: взять и бесплатные варианты по графике и ии генерации
 After play: боги есть, но механики их не доработаны, все что увидел, это то что работает бог огня и он поджигает, остальные не заметил разницы, проклятия и светлячки даже во врагов не летят
 After play: надо бы еще уменьшить колличество комнат с богами, пусть это будет руна случайного бога на старте, потом будут 1-2 случайно рум с ресурсами и потом опять появляются боги
+After play: как убил босса, меня перенесло на базу и не пустило дальше
+After play: еще нужно добавить случайные генерации уровней, как в дедселс, огромные случайные локации и куча врагов сразу, добавить каких то элитных войнов, что бы после победы над ними давали бафы какие то или сундуки или выбор оружия
+After play: доделай изменения и будем переходить в годот, он уже скачан
 
 **Pitch:** A fallen bogatyr, held to life by the thread of the goddess Mokosh, cuts his way through Nav, the Slavic underworld that has flooded into the living world, taking back the gods' elemental powers from the monsters of the tales; every blow charges his god's amulet until it bursts in that god's wrath. *(you chose the world; details inferred)*
 
@@ -98,7 +101,7 @@ The first room is gentle; by its third room a mix of fliers and a shielded spitt
 - [x] A fork of 2-3 doors after each room, each showing its reward (a resource, a rune, a weapon, a buff)
 - [x] Merchant: buys unlock weapons into the drop pool; more than half the weapons (bows, bombs, traps, wands) only drop in runs
 - [x] Weapon loot: 35 main and 20 secondary weapons, rarity and quality, high quality may roll an extra effect; a secondary weapon slot
-- [ ] Buffs and debuffs (enemy statuses done and visible: burn, shock, bleed, curse; hero shield done; hero buffs like haste still to do) (burn, frost, bleed, curse, haste, shield) shown on the HUD
+- [x] Buffs and debuffs (enemy statuses burn, shock, bleed, curse; hero shield; hero blessings from the Nav knight) (burn, frost, bleed, curse, haste, shield) shown on the HUD
 - [x] Re-theme to Nav: bogatyr hero, Spinner / Owl Witch / bear smith, Kikimora's Bog, Likho's Pinewood, Morena's Frost; enemies and bosses redrawn as Slavic creatures
 
 ## Your systems
@@ -145,3 +148,4 @@ The first room is gentle; by its third room a mix of fliers and a shielded spitt
 **Games you love / don't:** Love Dead Cells (format, look) and Hades 1 and 2 (format).
 
 - [ ] Godot 4 port with free assets and AI-generated art; check every asset license allows selling on Steam
+- [x] Generated big rooms with packs of enemies; Nav knight elite with blessings, weapon choice or a chest

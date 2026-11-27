@@ -119,6 +119,16 @@ window.CONFIG = {
   elite_arm: { value: 0.3, min: 0, max: 1, step: 0.05 },          // chance an elite drops a weapon (bosses always do)
   door_arms: { value: 0.1, min: 0, max: 0.4, step: 0.01 },        // extra share of fork doors that offer a weapon
 
+  // ---- Generated rooms and the Nav knight ----
+  room_w_base: { value: 2800, min: 1400, max: 6000, step: 100 },  // px length of the second room of the first location
+  room_w_step: { value: 450, min: 0, max: 1500, step: 50 },       // px longer for each further room
+  pack_gap: { value: 640, min: 300, max: 1500, step: 20 },         // px between packs of enemies
+  aggro_range: { value: 760, min: 300, max: 2000, step: 20 },      // px at which a sleeping pack wakes
+  chest_chance: { value: 0.45, min: 0, max: 1, step: 0.05 },       // chance a room hides a chest on a high platform
+  knight_hp: { value: 230, min: 50, max: 1000, step: 10 },
+  knight_dmg: { value: 20, min: 1, max: 80, step: 1 },
+  knight_speed: { value: 150, min: 40, max: 400, step: 10 },
+
   // ---- Gods' statuses and runes ----
   shock_stacks: { value: 3, min: 1, max: 8, step: 1 },            // Perun charges before a discharge
   shock_dmg: { value: 22, min: 1, max: 100, step: 1 },            // discharge damage to the charged enemy
