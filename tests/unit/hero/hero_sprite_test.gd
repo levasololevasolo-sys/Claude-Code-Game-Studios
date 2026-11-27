@@ -45,7 +45,8 @@ func test_drawn_hero_has_every_animation_in_every_tier_with_hand_points() -> voi
 	var meta := HeroSprite.load_meta("res://assets/art/sprites/hero_drawn/hero_drawn_sheets.json")
 	var anims: Dictionary = meta.get("anims", {})
 	for a in ["idle", "run", "jump", "fall", "roll", "dash", "strike_1", "strike_2", "strike_3",
-			"strike_up", "strike_down", "hurt", "death", "flare"]:
+			"strike_up", "strike_down", "hurt", "death", "flare",
+			"parry_blade", "parry_hammer", "parry_spear", "parry_staff", "parry_sickles"]:
 		assert_bool(anims.has(a)).override_failure_message("no drawn sheet for %s" % a).is_true()
 		if not anims.has(a):
 			continue
@@ -55,3 +56,25 @@ func test_drawn_hero_has_every_animation_in_every_tier_with_hand_points() -> voi
 			assert_bool(ResourceLoader.exists(path)).override_failure_message("missing %s" % path).is_true()
 	assert_int(int(anims.idle.frames)).is_greater_equal(8)
 	assert_int(int(anims.run.frames)).is_equal(8)
+
+func test_parry_pose_picks_parry_frames() -> void:
+	var s := { "dead": false, "flare_t": 0.0, "flare_dur": 1.0, "dash_t": 0.0, "dash_dur": 1.0, "rolling": false,
+		"atk_t": 0.0, "atk_dur": 1.0, "atk_dir": "side", "combo": 1, "on_floor": true, "vx": 0.0, "vy": 0.0,
+		"parry": "parry", "parry_t": 0.18, "parry_window": 0.18 }
+	var p := HeroVisual.choose(s)
+	assert_str(String(p.anim)).is_equal("parry")
+	assert_int(HeroSprite.frame_for_progress(p.k, 5)).is_equal(0)
+	s.parry_t = 0.0001
+	assert_int(HeroSprite.frame_for_progress(HeroVisual.choose(s).k, 5)).is_equal(2)
+	s.parry = "parry_hit"
+	assert_int(HeroSprite.frame_for_progress(HeroVisual.choose(s).k, 5)).is_equal(3)
+	s.parry = "parry_open"
+	assert_int(HeroSprite.frame_for_progress(HeroVisual.choose(s).k, 5)).is_equal(4)
+	s.parry = ""
+	assert_str(String(HeroVisual.choose(s).anim)).is_equal("idle")
+
+func test_parry_sheet_follows_the_weapon_body() -> void:
+	var anims := { "parry_blade": {}, "parry_hammer": {} }
+	assert_str(HeroSprite.parry_anim("hammer", anims)).is_equal("parry_hammer")
+	assert_str(HeroSprite.parry_anim("", anims)).is_equal("parry_blade")
+	assert_str(HeroSprite.parry_anim("spear", {})).is_equal("parry")

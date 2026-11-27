@@ -27,7 +27,7 @@ Status: **had** = first pass, **new** = this pass, **re-skinned** = id kept, new
 | revive | `revived` | `hero_revive` | new |
 | weapon swap | `weapon_changed` | `weapon_swap` | new |
 | weapon pick-up / compare card | WeaponDrop `taken` / `near` | `weapon_pickup` / `ui_card_deal` | new |
-| parry hit / miss | called by parry code | `parry_clang` (2) / `parry_whiff` | new |
+| parry start / hit / miss | Player.start_parry() / parry code | `parry_start` / `parry_clang` (2) / `parry_whiff` | new |
 
 ## Amulet and flare
 
@@ -114,7 +114,7 @@ ui_hover_wood, ui_open_wood, ui_close, ui_cancel_wood, ui_confirm_gold, ui_error
 ui_card_deal, ui_rune_select, ui_thread_run, ui_bark_unroll, ui_text_tick, ui_shop_knock, ui_forge_buy,
 ui_page_turn, ui_tab_switch, ui_count_tick, ui_thread_snap, ui_victory_swell, ui_door_near, ui_codex_new,
 ui_rebind_wait, ui_menu_start, limb_sever_1, limb_sever_2, limb_head_pop, limb_part_thud_1,
-limb_part_thud_2, parry_clang_1, parry_clang_2, parry_whiff, enemy_death_2, enemy_death_3, step_mud_1-3,
+limb_part_thud_2, parry_clang_1, parry_clang_2, parry_whiff, parry_start, enemy_death_2, enemy_death_3, step_mud_1-3,
 step_dirt_1-3, step_snow_1-3, step_wood_1-3, hero_death, hero_revive, weapon_swap, weapon_pickup,
 amulet_ready, amulet_overcharge, amulet_crack, flare_fizzle, enemy_wake, wolf_growl, bite_snap,
 claw_swipe, bat_screech, spit_wind, bloat_swell, bloat_burst, frost_charge, frost_breath, knight_windup,

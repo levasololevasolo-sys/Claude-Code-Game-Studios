@@ -71,6 +71,7 @@ func _ready() -> void:
 	_light.position = (AMULET_PX - Vector2(float(origin[0]), float(origin[1]))) * _scale
 	if player:
 		player.hurt_taken.connect(_on_hurt)
+		player.parry_succeeded.connect(_on_parry_succeeded)
 	_show("idle")
 
 
@@ -82,6 +83,14 @@ static func load_meta(path: String) -> Dictionary:
 		return {}
 	var d: Variant = JSON.parse_string(f.get_as_text())
 	return d if d is Dictionary else {}
+
+
+## Sheet of the parry pose for a strike body ("parry_blade" for the stick and
+## unknown bodies; plain "parry" if the sheets have no per-body poses).
+static func parry_anim(body: String, anims: Dictionary) -> String:
+	if anims.has("parry_" + body):
+		return "parry_" + body
+	return "parry_blade" if anims.has("parry_blade") else "parry"
 
 
 ## Frame index for progress k (0..1) of an n-frame move.
@@ -157,7 +166,10 @@ func _process(dt: float) -> void:
 	_hurt_t -= adt
 	_flash_t -= dt
 	var pick := HeroVisual.choose(HeroVisual.state_of(player), _hurt_t)
-	_show(String(pick.anim))
+	var anim_name := String(pick.anim)
+	if anim_name == "parry":
+		anim_name = parry_anim(player.weapon.body_id() if player.weapon else "", _meta.get("anims", {}))
+	_show(anim_name)
 	var a: Dictionary = _meta.anims[_cur]
 	var n := int(a.frames)
 	var k: float = pick.k
@@ -186,4 +198,10 @@ func _process(dt: float) -> void:
 
 func _on_hurt(_amount: float, _hit: Hit) -> void:
 	_hurt_t = HURT_TIME
+	_flash_t = FLASH_TIME
+
+
+## A caught blow flashes the hero like a hit does (the recoil frame is chosen
+## by HeroVisual.choose() from Player.parry_pose()).
+func _on_parry_succeeded(_enemy: Enemy, _result: String) -> void:
 	_flash_t = FLASH_TIME

@@ -92,6 +92,10 @@ func _run() -> void:
 	await _frames(7, { "move_right": true })
 	await _shot("roll")
 	await _frames(40)
+	p.start_parry()
+	await _frames(6)
+	await _shot("parry")
+	await _frames(40)
 	p.position = Vector2(p.position.x + 200, Tune.f("ground_y") - 260)
 	p.velocity = Vector2.ZERO
 	await _frames(2)

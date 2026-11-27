@@ -16,8 +16,12 @@ def shoulder_n(hip, lean):
 
 
 def blade_hand(hip, lean, a, r=1.15):
-    """Fist on the blade arc: Player._blade_angle() a (0 = forward, + = down)."""
-    return tuple(shoulder_n(hip, lean) + r * np.array([np.cos(a), np.sin(a)]))
+    """Fist on the blade arc: Player._blade_angle() a (0 = forward, + = down).
+    Above the shoulder the fist goes higher and further back, so the arm
+    passes behind/over the head instead of across the face."""
+    up = max(0.0, -np.sin(a))
+    v = r * np.array([np.cos(a), np.sin(a)]) + np.array([0.0, -0.15 * up])
+    return tuple(shoulder_n(hip, lean) + v)
 
 
 def idle(n=12):
@@ -174,6 +178,46 @@ def flare(n=8):
     return out
 
 
+# Parry guard per strike body (assets/data/weapon_bodies.json; the start stick
+# is a blade body). Per frame: (hand angle from the near shoulder, reach,
+# Player._blade_angle() in that frame, far-hand grip distance along the weapon
+# in units or None = free hand). Frames 0-2 raise and hold the guard, 3 is the
+# recoil after a caught blow, 4 the dropped guard after a whiff.
+# PARRY_BLADE in player.gd must hold the same blade angles (guard, hit, open).
+PARRY = {
+    # blade: takes the blow on the flat, raised across the chest, palm on the flat
+    'blade': [(0.55, 1.0, -0.6, 0.3), (0.05, 1.15, -0.3, 0.42), (0.0, 1.15, -0.3, 0.42), (-0.1, 1.05, -0.65, 0.4), (0.6, 1.1, 0.5, None)],
+    # axe/hammer: knocks the blow aside, haft gripped with both hands
+    'hammer': [(0.6, 0.95, 0.4, 0.22), (0.15, 1.0, -1.45, 0.25), (0.1, 1.0, -1.45, 0.25), (0.25, 1.1, -0.35, 0.25), (0.75, 1.0, 1.0, None)],
+    # pole (spear, staff): two-handed block, shaft slanted across the body
+    'spear': [(0.5, 0.95, -0.4, 0.45), (0.3, 1.0, -1.15, 0.5), (0.3, 1.0, -1.15, 0.5), (0.15, 0.9, -1.4, 0.5), (0.65, 1.1, 0.35, None)],
+    'staff': [(0.5, 0.95, -0.4, 0.45), (0.3, 1.0, -1.05, 0.5), (0.3, 1.0, -1.05, 0.5), (0.15, 0.9, -1.3, 0.5), (0.65, 1.1, 0.4, None)],
+    # sickles: crossed in an X before the chest, far fist with the second sickle
+    'sickles': [(0.5, 0.95, -0.4, 'x'), (0.1, 1.05, -1.0, 'x'), (0.05, 1.05, -1.0, 'x'), (-0.05, 0.95, -1.3, 'x'), (0.65, 1.1, 0.4, None)],
+}
+
+
+def parry(body):
+    out = []
+    body_spec = [  # hip x, hip y, lean, tilt, face
+        (0.0, -1.68, 0.02, -0.05, 'shout'), (0.05, -1.64, -0.04, -0.08, 'shout'), (0.05, -1.62, -0.06, -0.08, 'calm'),
+        (-0.18, -1.66, -0.22, -0.2, 'pain'), (0.12, -1.6, 0.32, 0.2, 'pain')]
+    for i, ((hx, hy, lean, tilt, face), (a, r, ba, grip)) in enumerate(zip(body_spec, PARRY[body])):
+        hip = (hx, hy)
+        hN = np.asarray(shoulder_n(hip, lean)) + r * np.array([np.cos(a), np.sin(a)])
+        bd = np.array([np.cos(ba), np.sin(ba)])
+        if grip is None:
+            hF, handF = (0.85, -1.9), 'fist'
+        elif grip == 'x':
+            hF, handF = tuple(hN + np.array([0.3, -0.25])), 'fist'
+        else:
+            hF, handF = tuple(hN + bd * grip), ('open' if body == 'blade' else 'fist')
+        out.append(dict(hip=hip, lean=lean, tilt=tilt, fN=(-0.6 - (0.15 if i == 3 else 0.0), -0.11), fF=(0.6, -0.11),
+                        hN=tuple(hN), eN=(-0.6, 0.8), hF=hF, eF=(0.2, 1.0), handF=handF,
+                        drag=(0.3 if i == 3 else 0.0, -0.05), face=face))
+    return out
+
+
 # name -> (poses, fps, loop)
 ANIMS = {
     'idle': (idle(12), 10, True),
@@ -182,12 +226,17 @@ ANIMS = {
     'fall': (fall(4), 10, True),
     'roll': (roll(8), 24, False),
     'dash': (dash(4), 24, False),
-    'strike_1': (strike(-2.0, 0.9, 6), 24, False),
-    'strike_2': (strike(1.2, -1.6, 6), 24, False),
-    'strike_3': (strike(-2.0, 0.9, 8, heavy=True), 24, False),
-    'strike_up': (strike_up(6), 24, False),
-    'strike_down': (strike_down(4), 24, False),
+    'strike_1': (strike(-2.0, 0.9, 8), 24, False),
+    'strike_2': (strike(1.2, -1.6, 8), 24, False),
+    'strike_3': (strike(-2.0, 0.9, 10, heavy=True), 24, False),
+    'strike_up': (strike_up(8), 24, False),
+    'strike_down': (strike_down(6), 24, False),
     'hurt': (hurt(3), 12, False),
     'death': (death(10), 12, False),
     'flare': (flare(8), 16, False),
+    'parry_blade': (parry('blade'), 12, False),
+    'parry_hammer': (parry('hammer'), 12, False),
+    'parry_spear': (parry('spear'), 12, False),
+    'parry_staff': (parry('staff'), 12, False),
+    'parry_sickles': (parry('sickles'), 12, False),
 }
