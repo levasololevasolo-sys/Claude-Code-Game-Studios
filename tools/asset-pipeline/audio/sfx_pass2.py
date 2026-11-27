@@ -904,6 +904,8 @@ def sounds():
     s["lunge_whoosh_1"] = lambda: lunge_whoosh(5301)
     s["lunge_whoosh_2"] = lambda: lunge_whoosh(5302)
     s.update(SWAMP)
+    s.update(FROST)
+    s.update(FOREST)
     return s
 
 
@@ -998,3 +1000,184 @@ SWAMP = {"swing_heavy": swing_heavy, "shishiga_squeak_1": lambda: shishiga_squea
          "shishiga_squeak_2": lambda: shishiga_squeak(8082), "cling_latch": cling_latch, "bog_bubble": bog_bubble,
          "bog_plunge": bog_plunge, "song_ward": song_ward, "ward_gain": ward_gain, "ward_break": ward_break,
          "water_push": water_push}
+
+
+# ---------------------------------------------------------------- Царство Морены roster (bestiary §3.4)
+
+def _ice_tink(r, sec, f0):
+    """A struck ice body: high inharmonic glassy modes."""
+    return modes(sec, r, [(f0, 1.0, 0.08), (f0 * 2.31, 0.6, 0.05), (f0 * 3.97, 0.35, 0.03), (f0 * 5.4, 0.2, 0.02)])
+
+
+def staff_raise():
+    """Карачун lifts the staff: a creaking groan of wood and gathering rime."""
+    r = rng_of(8101)
+    creak = modes(0.6, r, [(180, 1.0, 0.2), (410, 0.5, 0.15), (770, 0.25, 0.1)]) * 0.5
+    rise = whoosh(0.8, r, 300, 2500, 4500, 1.4, "bp", 0.9) * 0.45
+    rime = grains(0.8, r, 40, 0.003, 0.6, 4000, 11000, power=0.7) * 0.3
+    return tail(mix(creak, rise, rime), r, 0.35, 0.08, 0.15)
+
+
+def ice_wave():
+    """Spikes burst along the floor: a running crackle of breaking ice over a low crunch."""
+    r = rng_of(8111)
+    buf = np.zeros(n_of(1.2))
+    for i in range(14):
+        tk = _ice_tink(r, 0.12, r.uniform(1800, 3200)) * r.uniform(0.25, 0.5) * (1.0 - i / 18.0)
+        st = int((i * 0.07 + r.uniform(0, 0.02)) * SR)
+        buf[st:st + len(tk)] += tk[:len(buf) - st]
+    crunch = burst(0.9, r, 2500, 600, 0.25, 0.7, "lp") * 0.6
+    body = thump(0.3, 120, 50, 0.08) * 0.8
+    return tail(mix(buf, crunch, body), r, 0.3, 0.07, 0.12)
+
+
+def needle_cast():
+    """Снежница gathers needles: a thin rising shimmer."""
+    r = rng_of(8121)
+    shim = mix(*[at(_ice_tink(r, 0.25, 2600 + i * 420) * 0.25, i * 0.12) for i in range(4)])
+    air = whoosh(0.55, r, 2000, 7000, 9000, 2.0, "bp", 0.9) * 0.3
+    return tail(mix(shim, air), r, 0.3, 0.07, 0.2)
+
+
+def needle_fly():
+    """A frost needle flies: a short high hiss."""
+    r = rng_of(8131)
+    return burst(0.18, r, 9000, 5000, 0.05, 2.0, "bp", 0.005) * 0.7
+
+
+def hero_freeze():
+    """The hero freezes: a sharp ice clamp closing with a crackle."""
+    r = rng_of(8141)
+    clamp = burst(0.08, r, 6000, 2000, 0.02, 1.0, "bp") * 1.0
+    crack = at(grains(0.5, r, 30, 0.003, 0.25, 2500, 10000) * 0.6, 0.02)
+    body = mix(_ice_tink(r, 0.6, 1200) * 0.5, thump(0.25, 220, 90, 0.06) * 0.5)
+    return tail(mix(clamp, crack, body), r, 0.4, 0.1, 0.2)
+
+
+def freeze_shatter():
+    """The ice on the hero breaks: a bright shatter of glassy pieces."""
+    r = rng_of(8151)
+    hit = burst(0.12, r, 8000, 2000, 0.03, 0.9) * 0.9
+    shards = mix(*[at(_ice_tink(r, 0.2, r.uniform(2000, 4500)) * r.uniform(0.2, 0.4), r.uniform(0.0, 0.25)) for _ in range(9)])
+    return tail(mix(hit, shards), r, 0.3, 0.07, 0.15)
+
+
+def icicle_creak():
+    """An icicle strains on the ceiling: a high strained creak with grit."""
+    r = rng_of(8161)
+    n = n_of(0.5)
+    cr = osc(sweep(n, 900, 1300, 0.7), shape="saw") * env(n, 0.05, 0.25) * 0.12
+    cr = band(cr, 600, 4000)
+    grit = grains(0.5, r, 25, 0.002, 0.4, 3000, 9000) * 0.5
+    return tail(mix(cr, grit), r, 0.25, 0.06, 0.1)
+
+
+def icicle_fall():
+    """The icicle drops: a falling whistle into a hard crash."""
+    r = rng_of(8171)
+    fall = whoosh(0.35, r, 1500, 5000, 3000, 2.2, "bp", 0.3) * 0.5
+    crash = at(mix(burst(0.3, r, 7000, 1500, 0.06, 0.8) * 0.9, thump(0.25, 160, 60, 0.06) * 0.8), 0.3)
+    return tail(mix(fall, crash), r, 0.35, 0.08, 0.15)
+
+
+def ice_shatter():
+    """An ice body breaks into pieces: crash and tinkling shards."""
+    r = rng_of(8181)
+    hit = mix(burst(0.15, r, 7000, 1800, 0.04, 0.8), thump(0.2, 200, 80, 0.05) * 0.6)
+    shards = mix(*[at(_ice_tink(r, 0.18, r.uniform(1800, 4200)) * r.uniform(0.15, 0.35), r.uniform(0.02, 0.4)) for _ in range(12)])
+    return tail(mix(hit, shards), r, 0.35, 0.08, 0.18)
+
+
+def mara_raise():
+    """Мара calls the dead: a breathy low whisper choir with a cold shimmer."""
+    r = rng_of(8191)
+    wh = voice(0.9, r, 140, 110, [(500, 4, 1.0), (1100, 5, 0.6), (2400, 6, 0.3)], 0.6, 1.0) * env(n_of(0.9), 0.25, 0.4) * 0.9
+    air = band(noise(n_of(0.9), r), 1500, 6000) * env(n_of(0.9), 0.3, 0.35) * 0.15
+    shim = at(_ice_tink(r, 0.4, 1900) * 0.25, 0.5)
+    return tail(mix(wh, air, shim), r, 0.45, 0.12, 0.25)
+
+
+def frozen_rise():
+    """A body rises in ice: growing crackle and a frozen thud."""
+    r = rng_of(8201)
+    grow = grains(0.6, r, 50, 0.003, 0.5, 2000, 9000, power=0.6) * 0.6
+    thud = at(mix(thump(0.3, 180, 70, 0.07) * 0.7, _ice_tink(r, 0.3, 1500) * 0.4), 0.45)
+    return tail(mix(grow, thud), r, 0.35, 0.08, 0.15)
+
+
+def frozen_crack():
+    """An ice copy cracks: a dry crack and a few falling shards."""
+    r = rng_of(8211)
+    crack = burst(0.1, r, 5000, 1500, 0.025, 1.2, "bp") * 1.0
+    shards = mix(*[at(_ice_tink(r, 0.15, r.uniform(1500, 3500)) * 0.25, r.uniform(0.03, 0.25)) for _ in range(6)])
+    return tail(mix(crack, shards), r, 0.3, 0.07, 0.12)
+
+
+FROST = {f.__name__: f for f in [staff_raise, ice_wave, needle_cast, needle_fly, hero_freeze, freeze_shatter,
+                                  icicle_creak, icicle_fall, ice_shatter, mara_raise, frozen_rise, frozen_crack]}
+# ---------------------------------------------------------------- Тёмный бор roster (bestiary §3.3)
+
+def auka_call():
+    """Аука calls: a hollow far-off "a-u" through the trees, falling, with a forest echo."""
+    r = rng_of(8101)
+    n = n_of(0.75)
+    a = voice(0.35, r, 520, 480, [(800, 5, 1.0), (1250, 6, 0.5)], 0.12, 1.0) * env(n_of(0.35), 0.04, 0.2)
+    u = at(voice(0.4, r, 470, 360, [(350, 5, 1.0), (800, 6, 0.3)], 0.1, 1.0) * env(n_of(0.4), 0.03, 0.25), 0.3)
+    v = mix(a, u)
+    v = v[:n] * vib(min(n, len(v)), 5.0, 0.2, r)[:len(v[:n])]
+    return tail(v * 1.2, r, 0.7, 0.22, 0.4, 250.0, 3500.0)
+
+
+def branch_creak():
+    """Сучковик draws the branch back: a slow wooden creak, strained fibres."""
+    r = rng_of(8111)
+    n = n_of(0.7)
+    fric = svf(noise(n, r) * env(n, 0.2, 0.4), sweep(n, 250, 520), 12.0, "bp") * 1.2
+    groan = modes(0.7, r, [(180, 1.0, 0.3), (410, 0.5, 0.25), (930, 0.25, 0.15)], 0.15) * 0.5
+    ticks = grains(0.7, r, 14, 0.004, 0.6, 900, 3000) * 0.3
+    return tail(mix(fric, groan, ticks), r, 0.3, 0.08, 0.15)
+
+
+def branch_spear():
+    """The branch-spear leaves: a sharp woody whip and a fast airy swish."""
+    r = rng_of(8121)
+    whip = burst(0.06, r, 4000, 1200, 0.015, 1.4, "bp") * 1.0
+    knock = modes(0.15, r, [(620, 1.0, 0.04), (1480, 0.5, 0.03)]) * 0.6
+    air = at(whoosh(0.3, r, 800, 3500, 900, 1.4, "bp", 0.3) * 0.9, 0.02)
+    return tail(mix(whip, knock, air), r, 0.25, 0.05, 0.1)
+
+
+def spear_thunk():
+    """The spear sticks in the wall: a hard wooden thunk with a short twang of the shaft."""
+    r = rng_of(8131)
+    hit = thump(0.18, 210, 90, 0.04) * 1.1
+    wood = modes(0.3, r, [(340, 1.0, 0.08), (780, 0.6, 0.05), (1620, 0.3, 0.03)]) * 0.7
+    twang = at(modes(0.35, r, [(95, 1.0, 0.12), (190, 0.4, 0.08)]) * vib(n_of(0.35), 18.0, 0.6, r) * 0.35, 0.01)
+    return tail(mix(hit, wood, twang), r, 0.3, 0.08, 0.14)
+
+
+def lesavka_whistle():
+    """Лесавка whistles: a shrill rising two-note whistle through the leaves."""
+    r = rng_of(8141)
+    n1, n2 = n_of(0.22), n_of(0.38)
+    f1 = sweep(n1, 1900, 2300)
+    f2 = sweep(n2, 2300, 3100, 0.6)
+    w1 = np.sin(2 * np.pi * np.cumsum(f1) / SR) * env(n1, 0.02, 0.12)
+    w2 = np.sin(2 * np.pi * np.cumsum(f2) / SR) * env(n2, 0.03, 0.2)
+    breath = svf(noise(n1 + n2, r) * 0.25, 2600, 3.0, "bp")
+    buf = np.concatenate([w1, w2]) * 0.6 + breath * env(n1 + n2, 0.02, 0.3)
+    leaves = grains(0.6, r, 20, 0.005, 0.5, 2500, 8000) * 0.2
+    return tail(mix(buf, leaves), r, 0.4, 0.1, 0.2)
+
+
+def haste_on():
+    """Haste takes an ally: a quick rising rustle and a dry ember crackle."""
+    r = rng_of(8151)
+    rise = whoosh(0.3, r, 500, 3000, 4500, 1.6, "bp", 0.7) * 0.7
+    crack = grains(0.3, r, 16, 0.003, 0.2, 2000, 9000) * 0.5
+    tick = at(modes(0.12, r, [(1760, 1.0, 0.03), (2640, 0.5, 0.02)]) * 0.35, 0.2)
+    return tail(mix(rise, crack, tick), r, 0.25, 0.06, 0.12)
+
+
+FOREST = {"auka_call": auka_call, "branch_creak": branch_creak, "branch_spear": branch_spear,
+          "spear_thunk": spear_thunk, "lesavka_whistle": lesavka_whistle, "haste_on": haste_on}

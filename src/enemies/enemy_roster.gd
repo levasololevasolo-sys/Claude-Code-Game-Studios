@@ -20,6 +20,12 @@ const KINDS: Dictionary = {
 	"shishiga": preload("res://src/enemies/shishiga.gd"),
 	"bognitsa": preload("res://src/enemies/bognitsa.gd"),
 	"vodyanitsa": preload("res://src/enemies/vodyanitsa.gd"),
+	"karachun": preload("res://src/enemies/karachun.gd"),
+	"snezhnitsa": preload("res://src/enemies/snezhnitsa.gd"),
+	"sosulnik": preload("res://src/enemies/sosulnik.gd"),
+	"mara": preload("res://src/enemies/mara.gd"),
+	"suchkovik": preload("res://src/enemies/suchkovik.gd"),
+	"lesavka": preload("res://src/enemies/lesavka.gd"),
 }
 
 ## New, not yet set up enemy of `kind` (null for an unknown kind).
@@ -60,7 +66,7 @@ static func pack_kinds_intro(rng: RandomNumberGenerator, size: int, pack_i: int,
 	var first: Array[String] = []
 	for id: String in intro:
 		var row: Dictionary = table.get(id, {})
-		if spot_ok and String(row.get("spot", "")) != "":
+		if String(row.get("spot", "")) != "" and (spot_ok or bool(row.get("spot_only", false))):
 			continue
 		if int(intro[id]) <= k:
 			open.append(id)
@@ -103,7 +109,12 @@ static func kind_fits(out: Array[String], id: String, size: int, tier: int, tabl
 		return 0
 	var caps: Dictionary = t.get("pack_role_max", {})
 	var n := maxi(1, int(row.get("pack_min", 1)) - out.count(id))
-	if caps.has(role) and same_role + n > int(caps[role]):
+	if bool(row.get("pack_pairs", false)):
+		n = 2  # Снежные волки only in pairs (bestiary §3.7 item 4).
+	# §3.7.2: some roles are capped per kind (two ambushers of one kind), not per role.
+	var per_kind: Array = t.get("pack_role_per_kind", [])
+	var have := out.count(id) if per_kind.has(role) else same_role
+	if caps.has(role) and have + n > int(caps[role]):
 		return 0
 	if out.size() + n > size:
 		return 0

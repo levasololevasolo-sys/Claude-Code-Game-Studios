@@ -8,7 +8,7 @@ OK   material metal made 18 particles
 OK   material heavy made 28 particles
 OK   parry burst made 43 particles
 screenshot vfx-hits.png
-OK   blood left floor splats: 12
+OK   blood left floor splats: 11
 crawler dmg 6.0 material flesh
 OK   crawler hit made particles
 knight dmg 6.0 material metal
@@ -18,14 +18,14 @@ screenshot vfx-strip.png
 OK   emerge: the riser is still coming out of the ground (scale.y 0.41)
 screenshot vfx-spawn.png
 OK   emerge finished at full size
-perf level много: VFX own CPU 1.401 ms/frame (tick + draw calls)
-perf level много: frame 253.52 ms avg, process 271.97 ms avg, peak particles 85, fps monitor 5
-perf level выкл: VFX own CPU 0.809 ms/frame (tick + draw calls)
-perf level выкл: frame 218.47 ms avg, process 231.96 ms avg, peak particles 2, fps monitor 4
+perf level много: VFX own CPU 1.399 ms/frame (tick + draw calls)
+perf level много: frame 90.93 ms avg, process 96.86 ms avg, peak particles 104, fps monitor 12
+perf level выкл: VFX own CPU 0.744 ms/frame (tick + draw calls)
+perf level выкл: frame 84.99 ms avg, process 90.25 ms avg, peak particles 2, fps monitor 11
 perf level узел выключен: VFX own CPU 0.000 ms/frame (tick + draw calls)
-perf level VFX узел выключен: frame 230.35 ms avg, process 252.05 ms avg, peak particles 119, fps monitor 5
-perf: VFX cost ≈ 23.17 ms/frame (много − узел выключен, software GL under xvfb)
-OK   VFX own CPU 1.401 ms/frame ≤ 2 ms budget
+perf level VFX узел выключен: frame 75.98 ms avg, process 82.99 ms avg, peak particles 102, fps monitor 13
+perf: VFX cost ≈ 14.95 ms/frame (много − узел выключен, software GL under xvfb)
+OK   VFX own CPU 1.399 ms/frame ≤ 2 ms budget
 OK   swamp: grass tufts 108
 OK   swamp: lamps 1
 OK   swamp: ripples / glow particles live in the bog
@@ -33,7 +33,7 @@ OK   swamp: 3 tufts bent by the hero / wind
 screenshot vfx-world-swamp.png
 OK   forest: grass tufts 194
 OK   forest: lamps 3
-OK   forest: 2 tufts bent by the hero / wind
+OK   forest: 1 tufts bent by the hero / wind
 screenshot vfx-world-forest.png
 OK   frost: grass tufts 130
 OK   frost: lamps 2

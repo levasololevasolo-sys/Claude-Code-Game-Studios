@@ -83,7 +83,7 @@ func think(dt: float, hp_pos: Vector2, standing: bool = false) -> void:
 				st = "dive"
 				t = stat("dive_time")
 				_drop_hummock()
-				position.y = Tune.f("ground_y")
+				position.y = ground()
 		"dive":
 			vel.x = 0.0
 			if t <= 0.0:
@@ -151,6 +151,8 @@ func _drop_hummock() -> void:
 		plat = null
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	if st == "dive":
 		# Under water: only rings and bubbles where it went down.
 		var k := 1.0 - clampf(t / maxf(stat("dive_time"), 0.01), 0.0, 1.0)

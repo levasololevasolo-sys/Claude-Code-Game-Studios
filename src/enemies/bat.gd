@@ -57,11 +57,13 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				st = "hover"
 				cd = _stat_range("spit_cd_min", "spit_cd_max")
 		"swoop":
-			if t <= 0.0 or position.y > Tune.f("ground_y") - stat("swoop_floor"):
+			if t <= 0.0 or position.y > ground() - stat("swoop_floor"):
 				st = "hover"
 				cd = _stat_range("cd_min", "cd_max")
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	_draw_windup_glow()
 	var flap := sin(anim * (30.0 if st == "swoop" else 14.0)) * 10.0
 	if st == "wind":

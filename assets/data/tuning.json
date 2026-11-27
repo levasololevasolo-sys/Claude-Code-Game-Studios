@@ -320,6 +320,40 @@
   "cell": 40,
   "module_w": 16,
   "module_h": 9,
+  "level": {
+    "_note": "Level structure, GDD design/gdd/level-structure.md §7. Which locations use it: LevelMode (project setting navi/levels/mode, --levels=).",
+    "rise_cells": 3,
+    "gap_cells": 5,
+    "gap_dash_cells": 8,
+    "forks_per_loc": 3,
+    "trail_combat_t1": 1,
+    "sec1_rooms_t1": 2,
+    "link_max": 6,
+    "link_max_three": 9,
+    "branch_second": 0.4,
+    "branch_w": { "nook": 0.35, "secret": 0.25, "gauntlet": 0.2, "climb": 0.2 },
+    "depth_min": 20,
+    "gen_attempts": 50,
+    "fallback_seed": 7007,
+    "trail_budget_base": 6,
+    "trail_budget_tier": 2,
+    "chest_chance": 0.5,
+    "depth_dark": 0.05,
+    "gate_seal_cells": 3,
+    "roots_time": 0.6,
+    "cam_fall_lead": 120,
+    "cam_fall_speed": 600,
+    "minimap_px_per_module": 10,
+    "minimap_size": [320, 180],
+    "minimap_alpha": 0.85,
+    "map_hold_time": 0.4,
+    "bog_speed_mult": 0.6,
+    "bog_jump_cells": 2,
+    "thorn_dmg": 10,
+    "thorn_cd": 0.6,
+    "fall_out_time": 3.0,
+    "member_gap": 70
+  },
   "L_first": 3,
   "L_base": 4,
   "L_tier": 0.5,
@@ -394,7 +428,24 @@
   },
   "elite_forbid": {
     "crawler": [],
-    "bat": [],
+    "bat": [
+      "fire"
+    ],
+    "ringer": [
+      "blink"
+    ],
+    "rootling": [
+      "fire",
+      "blink"
+    ],
+    "suchkovik": [
+      "blink",
+      "fire"
+    ],
+    "lesavka": [
+      "call",
+      "ward"
+    ],
     "sentry": [
       "ward"
     ],
@@ -414,6 +465,22 @@
     "vodyanitsa": [
       "ward",
       "call"
+    ],
+    "wolf": [],
+    "karachun": [
+      "ward"
+    ],
+    "snezhnitsa": [],
+    "sosulnik": [
+      "blink",
+      "fire"
+    ],
+    "mara": [
+      "call"
+    ],
+    "jelly": [
+      "curse",
+      "fire"
     ]
   },
   "elite_fallback": [
@@ -481,8 +548,22 @@
     "ambusher": 2
   },
   "pack_support_min": 3,
+  "_forest_note": "Тёмный бор (GDD bestiary §3.3, §3.7.2): pack_role_per_kind = roles capped per kind, not per role (two ambushers of one kind); haste_colour = sparks at the feet of allies hasted by Лесавка.",
+  "pack_role_per_kind": [
+    "ambusher"
+  ],
+  "haste_colour": "#ff8a3d",
   "cling_slow": 0.15,
   "cling_max": 2,
   "bog_max": 1,
-  "tina_colour": "#b6e36b"
+  "tina_colour": "#b6e36b",
+  "_frost_note": "Царство Морены mechanics (GDD bestiary §3.4, §4 B5, §7). frost_marks = needle marks that freeze the hero, frost_decay = s per mark falling off, freeze_time = hero frozen s, freeze_guard = s after a freeze with no new marks; ceiling_max = Сосульники per room on ceiling spots; ice_copy_dmg = damage mult of Мара's copies; ice_tint = copy tint; ice_hang_dy = px under the platform top the icicle hangs from.",
+  "frost_marks": 3,
+  "frost_decay": 1.5,
+  "freeze_time": 0.7,
+  "freeze_guard": 3.0,
+  "ceiling_max": 2,
+  "ice_copy_dmg": 0.8,
+  "ice_tint": "#9fdcff",
+  "ice_hang_dy": 16.0
 }

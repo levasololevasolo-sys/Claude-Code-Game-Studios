@@ -1158,6 +1158,186 @@
 			"pitch": 0.06,
 			"cd": 0.1,
 			"max": 3
+		},
+		"staff_raise": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"staff_raise"
+			],
+			"db": -5.0,
+			"cd": 0.3
+		},
+		"ice_wave": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"ice_wave"
+			],
+			"db": -4.0,
+			"cd": 0.2
+		},
+		"needle_cast": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"needle_cast"
+			],
+			"db": -6.0,
+			"cd": 0.2
+		},
+		"needle_fly": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"needle_fly"
+			],
+			"db": -10.0,
+			"cd": 0.06
+		},
+		"hero_freeze": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"hero_freeze"
+			],
+			"db": -3.0,
+			"cd": 0.3
+		},
+		"freeze_shatter": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"freeze_shatter"
+			],
+			"db": -4.0,
+			"cd": 0.3
+		},
+		"icicle_creak": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"icicle_creak"
+			],
+			"db": -5.0,
+			"cd": 0.3
+		},
+		"icicle_fall": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"icicle_fall"
+			],
+			"db": -4.0,
+			"cd": 0.2
+		},
+		"ice_shatter": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"ice_shatter"
+			],
+			"db": -3.0,
+			"cd": 0.15
+		},
+		"mara_raise": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"mara_raise"
+			],
+			"db": -5.0,
+			"cd": 0.3
+		},
+		"frozen_rise": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"frozen_rise"
+			],
+			"db": -4.0,
+			"cd": 0.3
+		},
+		"frozen_crack": {
+			"bus": "SFX",
+			"pitch": 0.05,
+			"max": 3,
+			"files": [
+				"frozen_crack"
+			],
+			"db": -3.0,
+			"cd": 0.1
+		},
+		"auka_call": {
+			"files": [
+				"auka_call"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.3,
+			"max": 2
+		},
+		"branch_creak": {
+			"files": [
+				"branch_creak"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.2,
+			"max": 3
+		},
+		"branch_spear": {
+			"files": [
+				"branch_spear"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.06,
+			"cd": 0.08,
+			"max": 3
+		},
+		"spear_thunk": {
+			"files": [
+				"spear_thunk"
+			],
+			"bus": "SFX",
+			"db": -3.0,
+			"pitch": 0.06,
+			"cd": 0.08,
+			"max": 3
+		},
+		"lesavka_whistle": {
+			"files": [
+				"lesavka_whistle"
+			],
+			"bus": "SFX",
+			"db": -4.0,
+			"pitch": 0.06,
+			"cd": 0.4,
+			"max": 2
+		},
+		"haste_on": {
+			"files": [
+				"haste_on"
+			],
+			"bus": "SFX",
+			"db": -6.0,
+			"pitch": 0.06,
+			"cd": 0.15,
+			"max": 3
 		}
 	},
 	"voice_limit": 3,
@@ -1197,7 +1377,7 @@
 			"guard": "shield_raise"
 		},
 		"ringer": {
-			"call": "bell_ring",
+			"call": "auka_call",
 			"appear": "spirit_appear",
 			"gone": "spirit_vanish",
 			"swipe": "claw_swipe"
@@ -1257,12 +1437,37 @@
 		"vodyanitsa": {
 			"song": "song_ward",
 			"push": "water_push"
+		},
+		"karachun": {
+			"slam_wind": "staff_raise",
+			"slam": "heavy_thud",
+			"poke_wind": "claw_swipe"
+		},
+		"snezhnitsa": {
+			"cast": "needle_cast"
+		},
+		"sosulnik": {
+			"shake": "icicle_creak",
+			"fall": "icicle_fall",
+			"poke_wind": "claw_swipe"
+		},
+		"mara": {
+			"raise_w": "mara_raise",
+			"scratch": "claw_swipe"
+		},
+		"suchkovik": {
+			"wind": "branch_creak"
+		},
+		"lesavka": {
+			"whistle": "lesavka_whistle",
+			"bite_wind": "shishiga_squeak"
 		}
 	},
 	"deaths": {
 		"bloat": "bloat_burst",
 		"boss": "boss_death",
-		"wall": ""
+		"wall": "",
+		"sosulnik": "ice_shatter"
 	},
 	"traps": {
 		"warn": "trap_warn",

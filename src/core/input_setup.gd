@@ -15,9 +15,11 @@ const KEYS := {
 	"sub": [KEY_U],
 	"parry": [KEY_I],
 	"aim": [KEY_Q],
+	"map": [KEY_M],
+	"map_pad": [],
 }
 const PADS := { "jump": JOY_BUTTON_A, "strike": JOY_BUTTON_X, "dash": JOY_BUTTON_RIGHT_SHOULDER, "flare": JOY_BUTTON_Y, "interact": JOY_BUTTON_B,
-	"sub": JOY_BUTTON_LEFT_SHOULDER, "parry": JOY_BUTTON_RIGHT_STICK,
+	"sub": JOY_BUTTON_LEFT_SHOULDER, "parry": JOY_BUTTON_RIGHT_STICK, "map_pad": JOY_BUTTON_BACK,
 	"move_left": JOY_BUTTON_DPAD_LEFT, "move_right": JOY_BUTTON_DPAD_RIGHT,
 	"move_up": JOY_BUTTON_DPAD_UP, "move_down": JOY_BUTTON_DPAD_DOWN }
 

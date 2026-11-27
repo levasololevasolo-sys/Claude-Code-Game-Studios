@@ -105,6 +105,8 @@ func _draw() -> void:
 		var at := Vector2(dest_x - position.x, 0)
 		draw_arc(at + Vector2(0, -6), 26.0 + 10.0 * k, 0.0, TAU, 24, Color(eye, 0.5 + 0.4 * k), 3.0)
 		draw_line(at + Vector2(0, -6), at + Vector2(0, -h * 0.9), Color(eye, 0.25 + 0.3 * k), 2.0)
+	if _skin_draw():
+		return
 	if st == "gone":
 		_draw_overlay()
 		return

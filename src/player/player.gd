@@ -64,6 +64,12 @@ var dash_dir: int = 1
 var rolling: bool = false
 ## Шишиги hanging on the hero now (bestiary §3.2, B7); each slows the run.
 var cling_n: int = 0
+## Снежница frost (bestiary §3.4, B5): marks on the hero, decay clock, freeze
+## left (no walking, striking, dashing or parrying, edge case 7), freeze guard left.
+var frost: int = 0
+var frost_clock: float = 0.0
+var frozen_t: float = 0.0
+var freeze_guard_t: float = 0.0
 var inv: float = 0.0
 var atk_t: float = 0.0
 var atk_dur: float = 0.0
@@ -140,6 +146,10 @@ var _blasts: int = 0
 var visual: Node2D
 const VISUAL_SCENE: String = "res://scenes/hero/hero_visual.tscn"
 ## Pre-rendered 3D-to-2D hero (art slice); chosen by visual_scene_path().
+## Drawn weapon sprites (tools/asset-pipeline/enemies2d/weapons.py).
+const WEAPON_ART: String = "res://assets/art/sprites/weapons_drawn/"
+static var _weapon_art: Dictionary = {}
+static var _weapon_tex: Dictionary = {}
 const SPRITE_SCENE: String = "res://scenes/hero/hero_sprite.tscn"
 ## Hand-drawn hero «Медвежья шкура» (tools/asset-pipeline/hero2d); the default.
 const DRAWN_SCENE: String = "res://scenes/hero/hero_drawn.tscn"
@@ -244,6 +254,16 @@ func _step(dt: float) -> void:
 	if _tap_sub:
 		sub_buf = Tune.f("sub_buffer")
 	_tap_sub = false
+	_tick_frost(dt)
+	if frozen_t > 0.0:
+		# Frozen (bestiary §3.4, edge case 7): no input at all, running dash i-frames stay.
+		mx = 0
+		want_dash = false
+		_tap_parry = false
+		atk_buf = 0.0
+		sub_buf = 0.0
+		jump_buf = 0.0
+		velocity.x = 0.0
 	_update_parry(dt)
 	if parry_lock > 0.0:
 		# A whiffed parry leaves the hero open: no strike, dash or parry (GDD parry §3.2).
@@ -294,6 +314,10 @@ func _step(dt: float) -> void:
 		if aiming and sub != null and AimRules.aimable(sub.row()):
 			slow *= Tune.f("aim_move_mult")
 		slow *= SwampRules.cling_slow_mult(cling_n, Tune.f("cling_slow"), int(Tune.f("cling_max")))
+		# Bog water `~` of a level (level-structure §3.2): slower, lower jump.
+		var bog := world != null and world.room is LevelRoom and (world.room as LevelRoom).in_bog(position)
+		if bog:
+			slow *= float((Tune.data.get("level", {}) as Dictionary).get("bog_speed_mult", 0.6))
 		var target := mx * Tune.f("run_speed") * slow * build.value("stribog_p", "run", 1.0)
 		velocity.x += (target - velocity.x) * minf(1.0, dt * (Tune.f("accel_ground") if on_floor else Tune.f("accel_air")))
 		if mx != 0 and atk_t <= 0.0:
@@ -308,6 +332,9 @@ func _step(dt: float) -> void:
 				jump_buf = 0.0
 			elif on_floor or coyote_t > 0.0:
 				velocity.y = -Tune.f("jump_speed")
+				if bog:
+					var lv: Dictionary = Tune.data.get("level", {})
+					velocity.y = -minf(Tune.f("jump_speed"), sqrt(2.0 * Tune.f("gravity") * float(lv.get("bog_jump_cells", 2)) * Tune.f("cell") + 1.0))
 				coyote_t = 0.0
 				jump_buf = 0.0
 				Events.hero_acted.emit(&"jump", 1.0)
@@ -344,6 +371,8 @@ func _on_platform() -> bool:
 		var col := c.get_collider()
 		if col is CollisionObject2D and (col as CollisionObject2D).get_collision_layer_value(PLATFORM_LAYER):
 			return true
+	if world and world.room is LevelRoom:
+		return (world.room as LevelRoom).oneway_under(position)
 	return position.y < Tune.f("ground_y") - 1.0
 
 ## The strike body row of the main weapon (weapon_bodies.json).
@@ -488,7 +517,7 @@ func _mech_mult(e: Enemy) -> float:
 			if atk_dir == "down":
 				m *= float(r.get("mult", 2.0))
 		"juggle":
-			if e.has_meta(&"juggled") and DamageRules.is_airborne(e.position.y, Tune.f("ground_y"), Tune.f("air_target_margin")):
+			if e.has_meta(&"juggled") and DamageRules.is_airborne(e.position.y, e.ground(), Tune.f("air_target_margin")):
 				e.remove_meta(&"juggled")
 				m *= float(r.get("mult", 1.5))
 	if e.boss:
@@ -947,6 +976,37 @@ func reflect_shot(s: EnemyShot) -> bool:
 	queue_redraw()
 	return true
 
+## A frost needle of Снежница hit the hero (bestiary §3.4, B5): +1 mark; at
+## frost_marks the hero freezes for freeze_time s, then freeze_guard s without
+## marks. Returns true when this mark froze him.
+func add_frost() -> bool:
+	if dead:
+		return false
+	var n := FrostRules.add_mark(frost, int(Tune.f("frost_marks")), freeze_guard_t, frozen_t)
+	if n == frost:
+		return false
+	frost = n
+	frost_clock = 0.0
+	if FrostRules.freezes(frost, int(Tune.f("frost_marks"))):
+		frost = 0
+		frozen_t = Tune.f("freeze_time")
+		freeze_guard_t = Tune.f("freeze_guard") + frozen_t
+		parry_t = 0.0
+		Audio.play_at(&"hero_freeze", position)
+		return true
+	return false
+
+func _tick_frost(dt: float) -> void:
+	freeze_guard_t = maxf(0.0, freeze_guard_t - dt)
+	if frozen_t > 0.0:
+		frozen_t -= dt
+		if frozen_t <= 0.0:
+			frozen_t = 0.0
+			Audio.play_at(&"freeze_shatter", position)
+	var d := FrostRules.decay_tick(frost, frost_clock, Tune.f("frost_decay"), dt)
+	frost = int(d.x)
+	frost_clock = d.y
+
 func _parry_success(e: Enemy) -> void:
 	var res := e.parried(position.x)
 	_parry_fx_common()
@@ -1069,6 +1129,31 @@ func _blade_angle() -> float:
 			return lerpf(-2.4, 1.2, k)
 	return lerpf(-2.0, 0.9, k) if combo % 2 == 1 else lerpf(1.2, -1.6, k)
 
+## Drawn weapon sprite of a body ("stick" = the starting club), from
+## assets/art/sprites/weapons_drawn/weapons_drawn.json: {tex, grip, tip}; {} = none.
+static func weapon_art(key: String) -> Dictionary:
+	if _weapon_art.is_empty() and FileAccess.file_exists(WEAPON_ART + "weapons_drawn.json"):
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(WEAPON_ART + "weapons_drawn.json"))
+		_weapon_art = d if d is Dictionary else {}
+	if not _weapon_art.has(key) or not _weapon_art[key] is Dictionary:
+		return {}
+	var row: Dictionary = _weapon_art[key]
+	if not _weapon_tex.has(key):
+		var path := WEAPON_ART + String(row.get("file", ""))
+		_weapon_tex[key] = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	if _weapon_tex[key] == null:
+		return {}
+	var g: Array = row.get("grip", [0, 0])
+	return { "tex": _weapon_tex[key], "grip": Vector2(float(g[0]), float(g[1])), "tip": float(row.get("tip_px", 1.0)) }
+
+## One weapon sprite: the grip on at, along dir, the tip length px away
+## (mirrored across the blade line when facing left).
+func _draw_weapon_sprite(art: Dictionary, at: Vector2, dir: Vector2, length: float, tint: Color) -> void:
+	var s := length / maxf(float(art.tip), 1.0)
+	draw_set_transform(at, dir.angle(), Vector2(s, s * float(face)))
+	draw_texture(art.tex as Texture2D, -(art.grip as Vector2), tint)
+	draw_set_transform(Vector2.ZERO)
+
 func _draw_blade() -> void:
 	var hand := Vector2(8.0 * face, -34.0)
 	if visual != null and visual.has_method("hand_point"):
@@ -1093,28 +1178,35 @@ func _draw_blade() -> void:
 			draw_line(hand + dd * 14.0, hand + dd * length, Color(weapon.colour().lerp(Color(1, 0.95, 0.8), 0.5), 0.28 - i * 0.03), 10.0 - i)
 			if body == "staff" or weapon.mech() == "both_sides":
 				draw_line(hand - dd * 14.0, hand - dd * length * 0.5, Color(1, 0.95, 0.8, 0.2 - i * 0.02), 8.0 - i)
-	match body:
-		"spear":
-			draw_line(hand - dir * 18.0, hand + dir * (length - 14.0), Color("#6b4a2b"), 4.0)
-			draw_colored_polygon(PackedVector2Array([hand + dir * length, hand + dir * (length - 18.0) + dir.orthogonal() * 6.0,
-				hand + dir * (length - 18.0) - dir.orthogonal() * 6.0]), tip)
-		"staff":
-			draw_line(hand - dir * length * 0.5, hand + dir * length, Color("#8a6a3e"), 5.0)
-			draw_circle(hand + dir * length, 4.0, tip)
-			draw_circle(hand - dir * length * 0.5, 4.0, tip)
-		"hammer":
-			draw_line(hand, hand + dir * length, Color("#6b4a2b"), 4.0)
-			var hd := hand + dir * length
-			var o := dir.orthogonal() * 12.0
-			draw_colored_polygon(PackedVector2Array([hd - o - dir * 9.0, hd + o - dir * 9.0, hd + o + dir * 9.0, hd - o + dir * 9.0]), tip)
-		"sickles":
-			draw_line(hand, hand + dir * 10.0, Color("#6b4a2b"), 4.0)
-			var c := hand + dir * length * 0.55
-			draw_arc(c, length * 0.45, dir.angle() - 1.2, dir.angle() + 0.9, 10, tip, 3.0)
-			draw_arc(Vector2(-6.0 * face, -30.0) + dir * length * 0.3, length * 0.32, dir.angle() + 2.0, dir.angle() + 3.6, 8, tip.darkened(0.3), 2.5)
-		_:
-			draw_line(hand, hand + dir * 12.0, Color("#6b4a2b"), 4.0)
-			draw_line(hand + dir * 12.0, hand + dir * length, Color("#a07a4a") if weapon.id == "stick" else (BLADE if weapon.rarity() == "c" else tip), 3.5)
+	var art := weapon_art("stick" if weapon.id == "stick" else body)
+	if not art.is_empty():
+		var tint := Color.WHITE if weapon.id == "stick" or weapon.rarity() == "c" else Color.WHITE.lerp(weapon.colour(), 0.3)
+		_draw_weapon_sprite(art, hand, dir, length, tint)
+		if body == "sickles":
+			_draw_weapon_sprite(art, Vector2(-6.0 * face, -30.0) + dir * length * 0.3, dir.rotated(2.6 * face), length * 0.75, tint.darkened(0.3))
+	else:
+		match body:
+			"spear":
+				draw_line(hand - dir * 18.0, hand + dir * (length - 14.0), Color("#6b4a2b"), 4.0)
+				draw_colored_polygon(PackedVector2Array([hand + dir * length, hand + dir * (length - 18.0) + dir.orthogonal() * 6.0,
+					hand + dir * (length - 18.0) - dir.orthogonal() * 6.0]), tip)
+			"staff":
+				draw_line(hand - dir * length * 0.5, hand + dir * length, Color("#8a6a3e"), 5.0)
+				draw_circle(hand + dir * length, 4.0, tip)
+				draw_circle(hand - dir * length * 0.5, 4.0, tip)
+			"hammer":
+				draw_line(hand, hand + dir * length, Color("#6b4a2b"), 4.0)
+				var hd := hand + dir * length
+				var o := dir.orthogonal() * 12.0
+				draw_colored_polygon(PackedVector2Array([hd - o - dir * 9.0, hd + o - dir * 9.0, hd + o + dir * 9.0, hd - o + dir * 9.0]), tip)
+			"sickles":
+				draw_line(hand, hand + dir * 10.0, Color("#6b4a2b"), 4.0)
+				var c := hand + dir * length * 0.55
+				draw_arc(c, length * 0.45, dir.angle() - 1.2, dir.angle() + 0.9, 10, tip, 3.0)
+				draw_arc(Vector2(-6.0 * face, -30.0) + dir * length * 0.3, length * 0.32, dir.angle() + 2.0, dir.angle() + 3.6, 8, tip.darkened(0.3), 2.5)
+			_:
+				draw_line(hand, hand + dir * 12.0, Color("#6b4a2b"), 4.0)
+				draw_line(hand + dir * 12.0, hand + dir * length, Color("#a07a4a") if weapon.id == "stick" else (BLADE if weapon.rarity() == "c" else tip), 3.5)
 	for bl: Dictionary in bolts:
 		var pa: Vector2 = bl.a - position
 		var pb: Vector2 = bl.b - position

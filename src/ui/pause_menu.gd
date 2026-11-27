@@ -19,6 +19,8 @@ var can_quit: bool = true
 var settings_screen: SettingsScreen
 var _box: VBoxContainer
 var _buttons: Array[Button] = []
+## Opens the full level map (graph-mode levels, level-structure §3.6); invalid = no «Карта».
+var on_map: Callable
 ## The «are you sure» panel of «На заставу» (null until asked).
 var confirm_box: VBoxContainer
 
@@ -64,6 +66,10 @@ func _ready() -> void:
 	_box.custom_minimum_size = Vector2(400, 0)
 	add_child(_box)
 	_add("Продолжить", close)
+	if on_map.is_valid():
+		_add("Карта", func() -> void:
+			close()
+			on_map.call())
 	_add("Настройки", open_settings)
 	var q := _add("На заставу", ask_quit)
 	q.disabled = not can_quit

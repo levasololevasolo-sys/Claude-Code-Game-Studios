@@ -93,6 +93,8 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				vel.x = 0.0
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	_draw_windup_glow()
 	if st == "aim":
 		_draw_glow(muzzle() - position, 22.0, Color(String(stats.eye)), 1.0)

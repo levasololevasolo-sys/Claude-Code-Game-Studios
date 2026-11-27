@@ -135,7 +135,7 @@ func _process(dt: float) -> void:
 	var cam := get_viewport().get_camera_2d()
 	var cc := cam.get_screen_center_position() if cam else Vector2.ZERO
 	for e in _air:
-		e.global_position = Vector2(cc.x, Tune.f("ground_y") - 40.0) if bool(e.get_meta("low", false)) else cc
+		e.global_position = Vector2(cc.x, (World.floor_at(world, cc) if world.room is LevelRoom else Tune.f("ground_y")) - 40.0) if bool(e.get_meta("low", false)) else cc
 	var p := world.player
 	if p == null or not is_instance_valid(p):
 		_glow.visible = false

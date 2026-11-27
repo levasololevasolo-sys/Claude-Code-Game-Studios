@@ -78,7 +78,7 @@ func _fly(dt: float) -> void:
 	vel.y += gravity * dt
 	position += vel * dt
 	var room_w := float(hero.world.room.layout.w) if hero.world and hero.world.room else 1.0e9
-	if position.x < 0.0 or position.x > room_w or position.y > Tune.f("ground_y"):
+	if position.x < 0.0 or position.x > room_w or World.shot_blocked(hero.world, position, 0.0):
 		life = 0.0
 		return
 	for e in _enemies():
@@ -95,8 +95,9 @@ func _fly(dt: float) -> void:
 func _bomb(dt: float) -> void:
 	vel.y += gravity * dt
 	position += vel * dt
-	if position.y >= Tune.f("ground_y"):
-		position.y = Tune.f("ground_y")
+	var fy := World.floor_at(hero.world, position)
+	if position.y >= fy:
+		position.y = fy
 		life = 0.0
 		return
 	for e in _enemies():
