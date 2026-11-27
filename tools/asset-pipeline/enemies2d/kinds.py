@@ -49,7 +49,7 @@ def water_ring(cv, c, rx, k=1.0, col=None):
 # =====================================================================
 class Balvan(Body):
     """Болванчик: stocky clay idol with a club, cracks, straw, rust eyes."""
-    BOUNDS = (-2.1, 3.4, -4.5, 0.4)
+    BOUNDS = (-3.9, 3.4, -4.5, 0.4)
     CLAY = hexc('8A6A4A')
     CLUB = hexc('5B3A24')
     STRAW = hexc('C9A85A')

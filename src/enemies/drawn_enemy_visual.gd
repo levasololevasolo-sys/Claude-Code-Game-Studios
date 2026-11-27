@@ -25,6 +25,9 @@ var kind: String = ""
 var _meta: Dictionary = {}
 var _tex: Dictionary = {}
 var _sprite: Sprite2D
+## Outline + back-light copy above the Darkness layer (visuals.json enemy_rim), as EnemySprite.
+var _rim: Sprite2D
+var _rim_mat: ShaderMaterial
 var _cur: String = ""
 var _frame_f: float = 0.0
 var _hurt_t: float = 0.0
@@ -102,12 +105,36 @@ func _ready() -> void:
 	_sprite.offset = -Vector2(float(origin[0]), float(origin[1]))
 	_sprite.scale = Vector2.ONE / maxf(float(registry().get("px_per_world", 1.5)), 0.01)
 	add_child(_sprite)
+	_make_rim()
 	if enemy:
 		enemy.art_skin = true
 		enemy.queue_redraw()
 		enemy.limb_severed.connect(_on_limb_severed)
 		_prev_st = enemy.st
 	_show("idle")
+
+
+func _make_rim() -> void:
+	var rim: Dictionary = Tune.table("visuals").get("enemy_rim", {})
+	if rim.is_empty() or not ResourceLoader.exists(EnemySprite.RIM_SHADER):
+		return
+	_rim = Sprite2D.new()
+	_rim.name = "Rim"
+	_rim.centered = false
+	_rim.offset = _sprite.offset
+	_rim.scale = _sprite.scale
+	_rim.z_as_relative = false
+	_rim.z_index = Darkness.Z + 1
+	_rim_mat = ShaderMaterial.new()
+	_rim_mat.shader = load(EnemySprite.RIM_SHADER) as Shader
+	_rim_mat.set_shader_parameter("rim_col", Color(String(rim.get("col", "#b8e0c4"))))
+	_rim_mat.set_shader_parameter("rim_alpha", float(rim.get("alpha", 0.5)))
+	_rim_mat.set_shader_parameter("width", float(rim.get("width", 5.0)) * 0.6)
+	_rim_mat.set_shader_parameter("back_col", Color(String(rim.get("back", "#e8f4c8"))))
+	_rim_mat.set_shader_parameter("back_alpha", float(rim.get("back_alpha", 0.55)))
+	_rim.material = _rim_mat
+	_rim.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	add_child(_rim)
 
 
 func _exit_tree() -> void:
@@ -131,6 +158,10 @@ func _show(key: String) -> void:
 	_sprite.hframes = int(a.get("cols", 1))
 	_sprite.vframes = int(a.get("rows", 1))
 	_sprite.frame = 0
+	if _rim:
+		_rim.texture = _sprite.texture
+		_rim.hframes = _sprite.hframes
+		_rim.vframes = _sprite.vframes
 
 
 func _process(dt: float) -> void:
@@ -173,6 +204,9 @@ func _process(dt: float) -> void:
 	if done and _oneshot == anim:
 		_oneshot = ""
 	scale.x = float(enemy.face)
+	if _rim:
+		_rim.frame = _sprite.frame
+		_rim_mat.set_shader_parameter("fade", 0.0 if enemy.dead else 1.0)
 	modulate = Color(2.2, 2.2, 2.2) if enemy.flash > 0.0 else Color.WHITE
 	if kind == "vodyanitsa":
 		queue_redraw()

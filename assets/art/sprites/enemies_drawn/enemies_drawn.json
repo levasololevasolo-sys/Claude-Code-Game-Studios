@@ -4,11 +4,11 @@
  "kinds": {
   "balvan": {
    "cell": [
-    198,
+    262,
     176
    ],
    "origin": [
-    75.6,
+    140.4,
     162.0
    ],
    "anims": {
@@ -96,7 +96,7 @@
     "arm": {
      "file": "balvan_part_arm.png",
      "pivot": [
-      15.7,
+      16.5,
       14.6
      ],
      "size": [
@@ -107,11 +107,11 @@
     "head": {
      "file": "balvan_part_head.png",
      "pivot": [
-      18.8,
+      19.6,
       46.0
      ],
      "size": [
-      45,
+      44,
       56
      ]
     }
