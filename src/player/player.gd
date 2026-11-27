@@ -146,6 +146,10 @@ var _blasts: int = 0
 var visual: Node2D
 const VISUAL_SCENE: String = "res://scenes/hero/hero_visual.tscn"
 ## Pre-rendered 3D-to-2D hero (art slice); chosen by visual_scene_path().
+## Drawn weapon sprites (tools/asset-pipeline/enemies2d/weapons.py).
+const WEAPON_ART: String = "res://assets/art/sprites/weapons_drawn/"
+static var _weapon_art: Dictionary = {}
+static var _weapon_tex: Dictionary = {}
 const SPRITE_SCENE: String = "res://scenes/hero/hero_sprite.tscn"
 ## Hand-drawn hero «Медвежья шкура» (tools/asset-pipeline/hero2d); the default.
 const DRAWN_SCENE: String = "res://scenes/hero/hero_drawn.tscn"
@@ -1116,6 +1120,31 @@ func _blade_angle() -> float:
 			return lerpf(-2.4, 1.2, k)
 	return lerpf(-2.0, 0.9, k) if combo % 2 == 1 else lerpf(1.2, -1.6, k)
 
+## Drawn weapon sprite of a body ("stick" = the starting club), from
+## assets/art/sprites/weapons_drawn/weapons_drawn.json: {tex, grip, tip}; {} = none.
+static func weapon_art(key: String) -> Dictionary:
+	if _weapon_art.is_empty() and FileAccess.file_exists(WEAPON_ART + "weapons_drawn.json"):
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(WEAPON_ART + "weapons_drawn.json"))
+		_weapon_art = d if d is Dictionary else {}
+	if not _weapon_art.has(key) or not _weapon_art[key] is Dictionary:
+		return {}
+	var row: Dictionary = _weapon_art[key]
+	if not _weapon_tex.has(key):
+		var path := WEAPON_ART + String(row.get("file", ""))
+		_weapon_tex[key] = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	if _weapon_tex[key] == null:
+		return {}
+	var g: Array = row.get("grip", [0, 0])
+	return { "tex": _weapon_tex[key], "grip": Vector2(float(g[0]), float(g[1])), "tip": float(row.get("tip_px", 1.0)) }
+
+## One weapon sprite: the grip on at, along dir, the tip length px away
+## (mirrored across the blade line when facing left).
+func _draw_weapon_sprite(art: Dictionary, at: Vector2, dir: Vector2, length: float, tint: Color) -> void:
+	var s := length / maxf(float(art.tip), 1.0)
+	draw_set_transform(at, dir.angle(), Vector2(s, s * float(face)))
+	draw_texture(art.tex as Texture2D, -(art.grip as Vector2), tint)
+	draw_set_transform(Vector2.ZERO)
+
 func _draw_blade() -> void:
 	var hand := Vector2(8.0 * face, -34.0)
 	if visual != null and visual.has_method("hand_point"):
@@ -1140,28 +1169,35 @@ func _draw_blade() -> void:
 			draw_line(hand + dd * 14.0, hand + dd * length, Color(weapon.colour().lerp(Color(1, 0.95, 0.8), 0.5), 0.28 - i * 0.03), 10.0 - i)
 			if body == "staff" or weapon.mech() == "both_sides":
 				draw_line(hand - dd * 14.0, hand - dd * length * 0.5, Color(1, 0.95, 0.8, 0.2 - i * 0.02), 8.0 - i)
-	match body:
-		"spear":
-			draw_line(hand - dir * 18.0, hand + dir * (length - 14.0), Color("#6b4a2b"), 4.0)
-			draw_colored_polygon(PackedVector2Array([hand + dir * length, hand + dir * (length - 18.0) + dir.orthogonal() * 6.0,
-				hand + dir * (length - 18.0) - dir.orthogonal() * 6.0]), tip)
-		"staff":
-			draw_line(hand - dir * length * 0.5, hand + dir * length, Color("#8a6a3e"), 5.0)
-			draw_circle(hand + dir * length, 4.0, tip)
-			draw_circle(hand - dir * length * 0.5, 4.0, tip)
-		"hammer":
-			draw_line(hand, hand + dir * length, Color("#6b4a2b"), 4.0)
-			var hd := hand + dir * length
-			var o := dir.orthogonal() * 12.0
-			draw_colored_polygon(PackedVector2Array([hd - o - dir * 9.0, hd + o - dir * 9.0, hd + o + dir * 9.0, hd - o + dir * 9.0]), tip)
-		"sickles":
-			draw_line(hand, hand + dir * 10.0, Color("#6b4a2b"), 4.0)
-			var c := hand + dir * length * 0.55
-			draw_arc(c, length * 0.45, dir.angle() - 1.2, dir.angle() + 0.9, 10, tip, 3.0)
-			draw_arc(Vector2(-6.0 * face, -30.0) + dir * length * 0.3, length * 0.32, dir.angle() + 2.0, dir.angle() + 3.6, 8, tip.darkened(0.3), 2.5)
-		_:
-			draw_line(hand, hand + dir * 12.0, Color("#6b4a2b"), 4.0)
-			draw_line(hand + dir * 12.0, hand + dir * length, Color("#a07a4a") if weapon.id == "stick" else (BLADE if weapon.rarity() == "c" else tip), 3.5)
+	var art := weapon_art("stick" if weapon.id == "stick" else body)
+	if not art.is_empty():
+		var tint := Color.WHITE if weapon.id == "stick" or weapon.rarity() == "c" else Color.WHITE.lerp(weapon.colour(), 0.3)
+		_draw_weapon_sprite(art, hand, dir, length, tint)
+		if body == "sickles":
+			_draw_weapon_sprite(art, Vector2(-6.0 * face, -30.0) + dir * length * 0.3, dir.rotated(2.6 * face), length * 0.75, tint.darkened(0.3))
+	else:
+		match body:
+			"spear":
+				draw_line(hand - dir * 18.0, hand + dir * (length - 14.0), Color("#6b4a2b"), 4.0)
+				draw_colored_polygon(PackedVector2Array([hand + dir * length, hand + dir * (length - 18.0) + dir.orthogonal() * 6.0,
+					hand + dir * (length - 18.0) - dir.orthogonal() * 6.0]), tip)
+			"staff":
+				draw_line(hand - dir * length * 0.5, hand + dir * length, Color("#8a6a3e"), 5.0)
+				draw_circle(hand + dir * length, 4.0, tip)
+				draw_circle(hand - dir * length * 0.5, 4.0, tip)
+			"hammer":
+				draw_line(hand, hand + dir * length, Color("#6b4a2b"), 4.0)
+				var hd := hand + dir * length
+				var o := dir.orthogonal() * 12.0
+				draw_colored_polygon(PackedVector2Array([hd - o - dir * 9.0, hd + o - dir * 9.0, hd + o + dir * 9.0, hd - o + dir * 9.0]), tip)
+			"sickles":
+				draw_line(hand, hand + dir * 10.0, Color("#6b4a2b"), 4.0)
+				var c := hand + dir * length * 0.55
+				draw_arc(c, length * 0.45, dir.angle() - 1.2, dir.angle() + 0.9, 10, tip, 3.0)
+				draw_arc(Vector2(-6.0 * face, -30.0) + dir * length * 0.3, length * 0.32, dir.angle() + 2.0, dir.angle() + 3.6, 8, tip.darkened(0.3), 2.5)
+			_:
+				draw_line(hand, hand + dir * 12.0, Color("#6b4a2b"), 4.0)
+				draw_line(hand + dir * 12.0, hand + dir * length, Color("#a07a4a") if weapon.id == "stick" else (BLADE if weapon.rarity() == "c" else tip), 3.5)
 	for bl: Dictionary in bolts:
 		var pa: Vector2 = bl.a - position
 		var pb: Vector2 = bl.b - position

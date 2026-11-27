@@ -133,6 +133,11 @@ var ice_copy: bool = false
 var haste_t: float = 0.0
 var haste_mult: float = 1.0
 var haste_cd_mult: float = 1.0
+## True while a drawn skin (DrawnEnemyVisual) shows this enemy: the kind's own
+## _draw() then paints only the wind-up glow and the overlay (_skin_draw()).
+var art_skin: bool = false
+## The last flying part thrown by _spawn_part (the skin gives it the real sprite).
+var last_part: LimbPart
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -559,6 +564,7 @@ func _spawn_part(limb: String, row: Dictionary, away: int) -> LimbPart:
 		world.add_child(part)
 	else:
 		orphan_parts.append(part)
+	last_part = part
 	return part
 
 # ---------------- tick ----------------
@@ -743,6 +749,15 @@ func _draw_overlay() -> void:
 	_draw_status(font)
 	for n: Dictionary in numbers:
 		draw_string(font, Vector2(n.x - 8, -h - 26 - (life - n.t) * 60.0), str(n.v), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 0.9, 0.5, n.t / life))
+
+## Call first in _draw(): with a drawn skin attached (art_skin) paints the
+## wind-up glow and the overlay and returns true, so the code body is skipped.
+func _skin_draw() -> bool:
+	if not art_skin:
+		return false
+	_draw_windup_glow()
+	_draw_overlay()
+	return true
 
 ## Wind-up glow behind the body; call first in _draw().
 func _draw_windup_glow() -> void:

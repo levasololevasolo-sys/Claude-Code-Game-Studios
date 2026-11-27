@@ -115,6 +115,8 @@ func break_song() -> void:
 	_mark().say("Песня сорвана!", Tune.f("limb_word_time") * 0.6)
 
 func _draw() -> void:
+	if _skin_draw():
+		return
 	_draw_windup_glow()
 	var ring := Color(String(stats.ring))
 	if st == "song":

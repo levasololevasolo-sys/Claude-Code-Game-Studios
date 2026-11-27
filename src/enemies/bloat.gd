@@ -78,6 +78,8 @@ func _dead_tick(dt: float) -> void:
 		queue_free()
 
 func _draw() -> void:
+	if not exploded and _skin_draw():
+		return
 	if exploded:
 		var k := 1.0 - blast_t / maxf(stat("blast_time"), 0.01)
 		var cc := center() - position
