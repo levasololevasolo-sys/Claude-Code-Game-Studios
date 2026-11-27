@@ -1,26 +1,32 @@
 ## Fires the hero's secondary weapon (GDD weapons-and-loot §3.4). Instant kinds
 ## (chain lightning, gust, bell ring) hit here; the rest spawn a HeroShot. Each
 ## hit goes through Player.sub_hit(). Static: no state of its own.
+## Shots, the pot and the axes fly along Player.shot_dir(): toward the cursor /
+## right stick while `aim` is held, else by facing (AimRules, §3.4 «Прицел»).
 class_name SubWeapons
 extends RefCounted
 
 ## Fires `w` from `hero` once. Returns the number of things made / enemies hit.
 static func fire(hero: Player, w: Weapon) -> int:
 	var row := w.row()
-	var at := hero.position - Vector2(0, Player.H * 0.55)
+	var at := hero.hand()
+	var dir := hero.shot_dir()
 	match String(row.get("type", "shot")):
 		"shot":
-			_spawn(hero, w, "shot", at, Vector2(hero.face * float(row.get("speed", 1000)), 0.0), float(row.get("r", 8)), float(row.get("life", 1.0)))
+			_spawn(hero, w, "shot", at, dir * float(row.get("speed", 1000)), float(row.get("r", 8)), float(row.get("life", 1.0)))
 			return 1
 		"bomb":
-			var b := _spawn(hero, w, "bomb", at, Vector2(hero.face * float(row.get("speed", 520)), -float(row.get("up", 560))), float(row.get("r", 10)), float(row.get("life", 2.0)))
+			var bv := Vector2(hero.face * float(row.get("speed", 520)), -float(row.get("up", 560)))
+			if hero.aiming_with(row):
+				bv = AimRules.bomb_velocity(dir, float(row.get("speed", 520)), float(row.get("up", 560)))
+			var b := _spawn(hero, w, "bomb", at, bv, float(row.get("r", 10)), float(row.get("life", 2.0)))
 			b.gravity = float(row.get("gravity", 1600))
 			return 1
 		"axes":
 			var n := int(row.get("count", 2))
 			for i in n:
 				var dy := (i - (n - 1) / 2.0) * float(row.get("spread", 40))
-				_spawn(hero, w, "axe", at + Vector2(0, dy * 0.3), Vector2(hero.face * float(row.get("speed", 820)), dy), float(row.get("r", 12)), float(row.get("life", 1.4)))
+				_spawn(hero, w, "axe", at + Vector2(0, dy * 0.3), AimRules.axe_velocity(dir, float(row.get("speed", 820)), i, n, float(row.get("spread", 40))), float(row.get("r", 12)), float(row.get("life", 1.4)))
 			return n
 		"trap":
 			_spawn(hero, w, "trap", Vector2(hero.position.x + hero.face * float(row.get("ahead", 50)), Tune.f("ground_y")), Vector2.ZERO, float(row.get("w", 44)) / 2.0, float(row.get("life", 12)))

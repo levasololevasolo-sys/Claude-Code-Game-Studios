@@ -3,7 +3,8 @@
 ## (ConfigFile), not in the save. Autoload name: Settings (after Audio, whose
 ## buses it sets). The model is plain data so tests drive it without a tree:
 ##   bindings: action -> { "kbm": [code, code], "pad": [code] }
-##   code: "key:<physical keycode>", "mouse:<button>", "pad:<button>", "" = empty.
+##   code: "key:<physical keycode>", "mouse:<button>", "pad:<button>",
+##   "padaxis:<trigger axis>" (LT / RT pressed past half), "" = empty.
 ## Left-stick motions are not rebindable and always stay in the InputMap.
 ## Difficulty is NOT here: it belongs to the save (MetaState.difficulty).
 ## `--settings=<path>` points the file elsewhere (checks never touch the player's).
@@ -17,10 +18,10 @@ const DEFAULT_PATH: String = "user://settings.cfg"
 ## Format of settings.cfg; a newer file is ignored (defaults), an older one migrates.
 const FORMAT: int = 1
 ## Rebindable actions in menu order with their labels.
-const ACTIONS: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "strike", "dash", "flare", "sub", "parry", "interact"]
+const ACTIONS: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "strike", "dash", "flare", "sub", "parry", "aim", "interact"]
 const LABELS: Dictionary = { "move_left": "Влево", "move_right": "Вправо", "move_up": "Вверх / удар вверх",
 	"move_down": "Вниз / удар вниз", "jump": "Прыжок", "strike": "Удар", "dash": "Рывок / перекат",
-	"flare": "Вспышка", "sub": "Доп. оружие", "parry": "Парирование", "interact": "Взять / говорить" }
+	"flare": "Вспышка", "sub": "Доп. оружие", "parry": "Парирование", "aim": "Прицел", "interact": "Взять / говорить" }
 ## Slots per device kind.
 const SLOTS: Dictionary = { "kbm": 2, "pad": 1 }
 ## Keys and buttons owned by the menus (pause, debug); binding them is refused.
@@ -68,6 +69,8 @@ static func default_bindings() -> Dictionary:
 			if kbm[i] == null:
 				kbm[i] = ""
 		var pad: Array = ["pad:%d" % int(InputSetup.PADS[action])] if InputSetup.PADS.has(action) else [""]
+		if InputSetup.PAD_AXES.has(action):
+			pad = ["padaxis:%d" % int(InputSetup.PAD_AXES[action])]
 		out[action] = { "kbm": kbm, "pad": pad }
 	return out
 
@@ -88,7 +91,7 @@ func reset_controls() -> void:
 static func device_of(code: String) -> String:
 	if code.begins_with("key:") or code.begins_with("mouse:"):
 		return "kbm"
-	if code.begins_with("pad:"):
+	if code.begins_with("pad:") or code.begins_with("padaxis:"):
 		return "pad"
 	return ""
 
@@ -102,7 +105,14 @@ static func code_of(ev: InputEvent) -> String:
 		return "mouse:%d" % (ev as InputEventMouseButton).button_index
 	if ev is InputEventJoypadButton:
 		return "pad:%d" % (ev as InputEventJoypadButton).button_index
+	if is_trigger_press(ev):
+		return "padaxis:%d" % (ev as InputEventJoypadMotion).axis
 	return ""
+
+## True for an LT / RT motion pressed past half (sticks are never bound here).
+static func is_trigger_press(ev: InputEvent) -> bool:
+	var m := ev as InputEventJoypadMotion
+	return m != null and (m.axis == JOY_AXIS_TRIGGER_LEFT or m.axis == JOY_AXIS_TRIGGER_RIGHT) and m.axis_value >= 0.5
 
 ## InputEvent of a code (null for "" or an unknown kind).
 static func event_of(code: String) -> InputEvent:
@@ -119,6 +129,11 @@ static func event_of(code: String) -> InputEvent:
 		var j := InputEventJoypadButton.new()
 		j.button_index = n as JoyButton
 		return j
+	if code.begins_with("padaxis:"):
+		var t := InputEventJoypadMotion.new()
+		t.axis = n as JoyAxis
+		t.axis_value = 1.0
+		return t
 	return null
 
 ## Player-facing name of a code («K», «Пробел», «ЛКМ», «A»); «—» when empty.
@@ -127,7 +142,10 @@ static func label_of(code: String) -> String:
 		return "—"
 	var n := int(code.get_slice(":", 1))
 	if code.begins_with("mouse:"):
-		return { MOUSE_BUTTON_LEFT: "ЛКМ", MOUSE_BUTTON_RIGHT: "ПКМ", MOUSE_BUTTON_MIDDLE: "СКМ" }.get(n, "Мышь %d" % n)
+		return { MOUSE_BUTTON_LEFT: "ЛКМ", MOUSE_BUTTON_RIGHT: "ПКМ", MOUSE_BUTTON_MIDDLE: "СКМ",
+			MOUSE_BUTTON_XBUTTON1: "Мышь 4", MOUSE_BUTTON_XBUTTON2: "Мышь 5" }.get(n, "Мышь %d" % n)
+	if code.begins_with("padaxis:"):
+		return { JOY_AXIS_TRIGGER_LEFT: "LT", JOY_AXIS_TRIGGER_RIGHT: "RT" }.get(n, "Ось %d" % n)
 	if code.begins_with("pad:"):
 		return { JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y",
 			JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB", JOY_BUTTON_BACK: "Back",
@@ -259,13 +277,14 @@ func apply() -> void:
 	flash_on = flash
 	changed.emit()
 
-## Replaces the key, mouse and pad-button events of every action; stick motions stay.
+## Replaces the key, mouse, pad-button and trigger events of every action; stick motions stay.
 func apply_input() -> void:
 	for a: String in ACTIONS:
 		if not InputMap.has_action(a):
 			InputMap.add_action(a, 0.3)
 		for ev in InputMap.action_get_events(a):
-			if not ev is InputEventJoypadMotion:
+			var m := ev as InputEventJoypadMotion
+			if m == null or m.axis == JOY_AXIS_TRIGGER_LEFT or m.axis == JOY_AXIS_TRIGGER_RIGHT:
 				InputMap.action_erase_event(a, ev)
 		for dev: String in ["kbm", "pad"]:
 			for code: Variant in bindings[a][dev]:
