@@ -1048,7 +1048,7 @@
 				"amb_swamp"
 			],
 			"bus": "Music",
-			"db": -14.0,
+			"db": -17.0,
 			"pitch": 0.0,
 			"cd": 0.0,
 			"max": 1,
@@ -1059,7 +1059,7 @@
 				"amb_forest"
 			],
 			"bus": "Music",
-			"db": -14.0,
+			"db": -17.0,
 			"pitch": 0.0,
 			"cd": 0.0,
 			"max": 1,
@@ -1070,7 +1070,7 @@
 				"amb_frost"
 			],
 			"bus": "Music",
-			"db": -14.0,
+			"db": -17.0,
 			"pitch": 0.0,
 			"cd": 0.0,
 			"max": 1,
@@ -1081,7 +1081,7 @@
 				"amb_base"
 			],
 			"bus": "Music",
-			"db": -14.0,
+			"db": -17.0,
 			"pitch": 0.0,
 			"cd": 0.0,
 			"max": 1,
@@ -1575,5 +1575,52 @@
 			"open": "ui_text_tick"
 		}
 	},
-	"count_ticks": 8
+	"count_ticks": 8,
+	"music": {
+		"_note": "Background music, src/core/music.gd, design/audio/music.md. Files assets/audio/music/<file>.ogg from tools/asset-pipeline/audio/build_music.py. tracks.<key>: file = theme, cave = underground stem (same length, played in sync, faded in while the hero is in a room with depth band != 0), db = theme level. Keys: location lib, base, title, boss_<locations.boss>. haven = theme of the rest stop. fade = cross-fade between themes (s), cave_fade = stem swap, boss_out_fade = battle theme -> location after the boss falls (after_boss_under: the cave stem then), poll = hero room check period (s). The ambient beds (amb_*) keep playing under the music.",
+		"db": -10.0,
+		"fade": 2.5,
+		"cave_fade": 3.0,
+		"boss_out_fade": 4.0,
+		"after_boss_under": true,
+		"poll": 0.3,
+		"haven": "base",
+		"tracks": {
+			"title": {
+				"file": "mus_title",
+				"db": -9.0
+			},
+			"base": {
+				"file": "mus_base",
+				"db": -11.0
+			},
+			"swamp": {
+				"file": "mus_swamp",
+				"cave": "mus_swamp_cave",
+				"db": -10.0
+			},
+			"forest": {
+				"file": "mus_forest",
+				"cave": "mus_forest_cave",
+				"db": -10.0
+			},
+			"frost": {
+				"file": "mus_frost",
+				"cave": "mus_frost_cave",
+				"db": -10.0
+			},
+			"boss_kikimora": {
+				"file": "mus_boss_kikimora",
+				"db": -9.0
+			},
+			"boss_likho": {
+				"file": "mus_boss_likho",
+				"db": -9.0
+			},
+			"boss_morena": {
+				"file": "mus_boss_morena",
+				"db": -9.0
+			}
+		}
+	}
 }

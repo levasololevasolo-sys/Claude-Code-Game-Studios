@@ -1,0 +1,17 @@
+OK   Audio has a music player
+OK   the main menu opens
+OK   main menu: title (playing true, -9 dB)
+OK   the base opens
+OK   base: base (playing true, -11 dB)
+OK   the gate starts a run
+OK   the swamp level is on (phase level)
+OK   swamp, surface: swamp (playing true, -10 dB, stems surface -0 dB / cave -60 dB)
+OK   the level has an underground room (11)
+  hero in room 11 (band 1)
+OK   swamp, underground: swamp (playing true, -10 dB, stems surface -60 dB / cave 0 dB)
+OK   swamp, back on the surface: swamp (playing true, -10 dB, stems surface -0 dB / cave -60 dB)
+OK   the lair door leads to the boss
+OK   lair: boss_kikimora (playing true, -9 dB)
+OK   the boss stands in the lair
+OK   the boss fell: swamp (playing true, -10 dB, stems surface -60 dB / cave 0 dB)
+DONE: 0 failed checks

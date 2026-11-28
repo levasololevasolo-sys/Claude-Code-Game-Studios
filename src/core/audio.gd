@@ -35,6 +35,8 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _amb: Array[AudioStreamPlayer] = []
 var _amb_id: String = ""
 var _amb_cur: int = 0
+## Background music (src/core/music.gd), fed by the same hooks as the beds.
+var music: MusicPlayer
 ## Polled nodes (weak, so freed nodes drop out).
 var _hero: WeakRef = null
 var _amulet: Object = null
@@ -74,6 +76,9 @@ func _ready() -> void:
 		a.bus = &"Music"
 		add_child(a)
 		_amb.append(a)
+	music = MusicPlayer.new()
+	music.cfg = config.get("music", {})
+	add_child(music)
 	Events.enemy_killed.connect(_on_enemy_killed)
 	Events.player_hurt.connect(func(_a: float, _h: RefCounted) -> void: play(&"hero_hurt"))
 	Events.flare_fired.connect(func(_s: String, _p: float) -> void: play(&"flare"))
@@ -291,6 +296,8 @@ func _on_hero_acted(action: StringName, power: float) -> void:
 			play(action)
 
 func _on_enemy_killed(e: Node2D, _h: RefCounted) -> void:
+	if bool(e.get("boss")) and music != null:
+		music.on_boss_killed()
 	play_at(StringName(death_sound(config, String(e.get("kind_id")), bool(e.get("boss")))), e.global_position)
 
 func _on_node_added(n: Node) -> void:
@@ -323,6 +330,12 @@ func _on_node_added(n: Node) -> void:
 		"Base":
 			n.connect("gate_used", func() -> void: play(&"gate_whoosh"))
 			set_ambient("base")
+			if music != null:
+				music.on_base()
+			return
+		"MainMenu":
+			if music != null:
+				music.on_title()
 			return
 	if n.has_signal("hit_landed") and n.has_signal("hurt_taken"):
 		_hook_hero(n)
@@ -393,6 +406,8 @@ func _play_ui(id: StringName) -> void:
 	play(id)
 
 func _on_room_started(stage: String, _k: int, dir: Node) -> void:
+	if music != null:
+		music.on_room(stage, dir)
 	if stage == "base":
 		set_ambient("base")
 		return
