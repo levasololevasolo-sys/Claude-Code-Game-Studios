@@ -45,3 +45,19 @@ func test_grass_on_level_stands_on_surfaces() -> void:
 			if is_equal_approx(g.y[i], v.z + 1.0) and g.x[i] >= v.x and g.x[i] <= v.y:
 				on = true
 		assert_bool(on).override_failure_message("tuft %d at (%s, %s) floats" % [i, g.x[i], g.y[i]]).is_true()
+
+func test_lamps_on_level_stand_on_surfaces() -> void:
+	# Arrange
+	var l: VfxLamps = auto_free(VfxLamps.new())
+	l.spec = { "every": 200.0 }
+	var sf := [Vector3(0, 1200, 400), Vector3(1400, 2600, 800), Vector3(2700, 2780, 600)]
+	# Act
+	l.build({ "w": 3000.0, "surfaces": sf }, 1000.0)
+	# Assert
+	assert_int(l.at.size()).is_greater(0)
+	for p: Vector2 in l.at:
+		var on := false
+		for v: Vector3 in sf:
+			if is_equal_approx(p.y, v.z) and p.x >= v.x and p.x <= v.y and v.y - v.x >= 160.0:
+				on = true
+		assert_bool(on).is_true()

@@ -32,6 +32,9 @@ func _ready() -> void:
 ## Places lamps on the ground every `every` px (hash jitter), not on solids,
 ## not at the hero spawn and not at the room's far edge.
 func build(layout: Dictionary, ground: float) -> void:
+	if layout.has("surfaces"):
+		_build_on_surfaces(layout.surfaces)
+		return
 	var w := float(layout.get("w", 2000.0))
 	var every := float(spec.get("every", 1000.0))
 	var cx := SPAWN_CLEAR + every * 0.4
@@ -46,6 +49,24 @@ func build(layout: Dictionary, ground: float) -> void:
 		if free:
 			at.append(Vector2(px, ground))
 		cx += every
+
+## A whole level (LevelRoom): lamps only on open floor tops at least 160 px
+## wide, about one per `every` px of floor, never near the hero spawn.
+func _build_on_surfaces(surfaces: Array) -> void:
+	var every := float(spec.get("every", 1000.0))
+	var walked := every * 0.6
+	var k := 0
+	for sf: Vector3 in surfaces:
+		var span := sf.y - sf.x
+		if span < 160.0:
+			continue
+		walked += span
+		if walked >= every:
+			walked = 0.0
+			k += 1
+			var px := lerpf(sf.x + 60.0, sf.y - 60.0, Room._h(k, 31))
+			if px > SPAWN_CLEAR:
+				at.append(Vector2(px, sf.z))
 
 ## Flicker factor of lamp i at time t, around 1.
 func flick(i: int) -> float:
