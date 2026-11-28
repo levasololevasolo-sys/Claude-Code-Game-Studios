@@ -1,0 +1,14 @@
+{
+ "_note": "Enemy kind -> painted shot (tools/asset-pipeline/navart/props.py), flying to the right.",
+ "thrower": "res://assets/art/fx/shots/mud.webp",
+ "bat": "res://assets/art/fx/shots/glob.webp",
+ "suchkovik": "res://assets/art/fx/shots/arrow.webp",
+ "snezhnitsa": "res://assets/art/fx/shots/ice_needle.webp",
+ "karachun": "res://assets/art/fx/shots/ice_shard.webp",
+ "jelly": "res://assets/art/fx/shots/ice_shard.webp",
+ "kikimora": "res://assets/art/fx/shots/glob.webp",
+ "likho": "res://assets/art/fx/shots/dark.webp",
+ "morena": "res://assets/art/fx/shots/wind.webp",
+ "mara": "res://assets/art/fx/shots/dark.webp",
+ "vodyanitsa": "res://assets/art/fx/shots/wind.webp"
+}

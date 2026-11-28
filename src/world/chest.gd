@@ -31,8 +31,23 @@ func open() -> void:
 		world.director.open_chest(self)
 	opened.emit(self)
 
+## Painted chest of the approved art (navart/props.py): plain, iron (seal
+## vault) or gold (secret pocket), closed or open; null when missing.
+func art() -> Texture2D:
+	var p := "res://assets/art/props/chest_%s_%s.webp" % ["iron" if vault else ("gold" if rich else "plain"), "open" if is_open else "closed"]
+	return load(p) as Texture2D if ResourceLoader.exists(p) else null
+
 func _draw() -> void:
 	var gold := Color("#9fe0ff") if vault else (Color("#e8c060") if rich else Color("#b08a4a"))
+	var tex := art()
+	if tex:
+		var sz := tex.get_size() * (Tune.f("chest_art_h") / tex.get_height())
+		if is_open:
+			draw_circle(Vector2(0, -sz.y * 0.5), sz.x * 0.6, Color(gold, 0.18))
+		draw_texture_rect(tex, Rect2(Vector2(-sz.x * 0.5, -sz.y + 2.0), sz), false)
+		if near and not is_open:
+			draw_string(ThemeDB.fallback_font, Vector2(-80, -sz.y - 14.0), "E — открыть", HORIZONTAL_ALIGNMENT_CENTER, 160, 16, Color(1, 1, 1, 0.9))
+		return
 	draw_rect(Rect2(-26, -30, 52, 30), Color("#5b3a1e"))
 	draw_rect(Rect2(-26, -30, 52, 30), gold, false, 3.0)
 	if is_open:

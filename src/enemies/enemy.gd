@@ -305,6 +305,7 @@ func fire(from: Vector2, v: Vector2, radius: float, dmg: float, life: float) -> 
 	s.dmg = dmg * dmg_mult()
 	s.life = life
 	s.color = Color(String(stats.get("eye", "#ffffff")))
+	s.art = EnemyShot.art_for(kind_id)
 	s.source = self
 	s.world = world
 	if world:

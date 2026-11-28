@@ -26,6 +26,19 @@ var world: World
 var targets: Array = []
 ## Enemies a piercing reflected shot already went through (Горн Сварога «отбив»).
 var targets_hit: Array = []
+## Painted shot (flying to the right), null = the glowing ball.
+var art: Texture2D = null
+
+const SHOTS_JSON: String = "res://assets/art/fx/shots.json"
+static var _shots: Dictionary = {}
+
+## The painted shot of an enemy kind (assets/art/fx/shots.json), or null.
+static func art_for(kind: String) -> Texture2D:
+	if _shots.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(SHOTS_JSON)) if FileAccess.file_exists(SHOTS_JSON) else null
+		_shots = d if d is Dictionary else { "_": "" }
+	var p := String(_shots.get(kind, ""))
+	return load(p) as Texture2D if p != "" and ResourceLoader.exists(p) else null
 
 func _physics_process(dt: float) -> void:
 	if world and world.hitstop > 0.0:
@@ -120,6 +133,12 @@ func light_spots() -> Array[Vector4]:
 
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, Tune.f("shot_glow_r"), Color(color, Tune.f("shot_glow_a") * 0.25))
+	if art:
+		var sz := art.get_size() * (r * Tune.f("shot_art_k") / maxf(art.get_height(), 1.0))
+		draw_set_transform(Vector2.ZERO, vel.angle() if vel.length_squared() > 1.0 else 0.0)
+		draw_texture_rect(art, Rect2(-sz * 0.5 - Vector2(sz.x * 0.25, 0), sz), false)
+		draw_set_transform(Vector2.ZERO)
+		return
 	draw_circle(Vector2.ZERO, r * 1.6, Color(color, 0.35))
 	draw_circle(Vector2.ZERO, r, color)
 	draw_circle(Vector2.ZERO, r * 0.45, Color.WHITE)
