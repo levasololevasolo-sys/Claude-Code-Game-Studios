@@ -9,8 +9,9 @@ frame counts, variants, parts, states) so gameplay and hit boxes do not move:
 
 Per kind: the body is scaled so it stands as tall as the old idle frame (and
 fits the cell), its feet on the cell origin. Variants: "nohead" cuts the body
-at the neck (a dark stump), "rage" (bosses) reddens it; "noarm" keeps the
-body (the painted arm cannot be lifted off the full figure). Parts: the
+at the neck (a dark stump), "rage" (bosses) reddens it. Two-legged kinds in
+enemy_rig.RIGS are joint-animated on the hero skeleton instead (their cut
+parts moved by the hero poses), and "noarm" / "nohead" leave that part out. Parts: the
 sheet's separate head / arm pieces at the same scale. Kinds without art in the
 drop (KINDS has no entry) keep their old sheets. Deterministic.
 """
@@ -21,6 +22,9 @@ import sys
 
 import numpy as np
 from PIL import Image, ImageDraw
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import enemy_rig  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
@@ -33,6 +37,7 @@ REGS = ['enemies_drawn', 'enemies_drawn_forest', 'enemies_drawn_frost', 'enemies
 #   fly: hovers (death drops instead of falling over), pieces for special anims
 KINDS = {
     'crawler': {'sheet': 'char_en_swamp_tryasinnik', 'head': 0, 'arm': 4, 'quad': True},
+    'balvan': {'sheet': 'char_en_swamp_balvan', 'head': 0, 'arm': 6, 'body': 5},
     'thrower': {'sheet': 'char_en_swamp_upyr_thrower', 'head': 0, 'arm': 2},
     'bloat': {'sheet': 'char_en_swamp_utoplennik', 'head': 0, 'arm': 3},
     'shishiga': {'sheet': 'char_en_swamp_shishiga', 'head': 0, 'arm': 3},
@@ -146,6 +151,10 @@ class Kind:
             a = load(sh, spec['arm'])
             a = a.crop(bbox_a(a))
             self.arm = a.resize((max(1, round(a.width * k)), max(1, round(a.height * k))), Image.LANCZOS)
+        self.rig = None
+        if name in enemy_rig.RIGS and not spec.get('puppet'):
+            self.rig = enemy_rig.Rig(name)
+            self.rig_h = min(old_h, self.origin[1] * 0.98)
         self.hummock = None
         if spec.get('hummock') is not None:
             m = load(sh, spec['hummock'])
@@ -189,7 +198,44 @@ class Kind:
             dr.ellipse([x0 + (x1 - x0) * 0.2, cut - 2, x0 + (x1 - x0) * 0.8, cut + 9], fill=(70, 12, 14, 255))
         return out
 
+    def rig_frame(self, anim, i, n, variant=''):
+        """Joint-animated frame (enemy_rig): the pose moves the limbs; whole-body
+        motion is kept only for anims the hero poses do not cover, plus fade,
+        flash, sink and rage. A severed head / arm is left out of the drawing."""
+        skip = ()
+        if variant == 'nohead' or anim == 'death_sever_head':
+            skip = ('head',)
+        elif variant == 'noarm' or anim == 'death_sever_arm':
+            skip = ('armN',)
+        im, whole = self.rig.frame(anim, i, n, self.cell, self.origin, self.rig_h, skip)
+        dx, dy, r, sx, sy, alpha, flash, sink = motion(anim, i, n, False)
+        if not whole:
+            dx, dy, r, sx, sy = 0, 0, 0, 1, 1
+        if (dx, dy, r, sx, sy, sink) != (0, 0, 0, 1, 1, 0):
+            # affine about the feet (cell origin): scale, turn, shift, sink
+            ox, oy = self.origin
+            oy2 = oy + self.rig_h * sink
+            c, sn = math.cos(-r), math.sin(-r)
+            # inverse map: out -> in
+            a_ = c / sx; b_ = sn / sx; d_ = -sn / sy; e_ = c / sy
+            tx, ty = ox + dx, oy2 + dy
+            im = im.transform(im.size, Image.AFFINE, (a_, b_, ox - a_ * tx - b_ * ty, d_, e_, oy - d_ * tx - e_ * ty),
+                              resample=Image.BICUBIC)
+        a = np.asarray(im).astype(np.float32)
+        if flash:
+            a[..., :3] = a[..., :3] + (255 - a[..., :3]) * 0.6 * flash
+        if variant == 'rage':
+            a[..., 0] = np.minimum(255, a[..., 0] * 1.15 + 18)
+            a[..., 1] *= 0.82
+            a[..., 2] *= 0.82
+        a[..., 3] *= alpha
+        if sink:
+            a[int(self.origin[1]) + 4:, :, 3] = 0
+        return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
+
     def frame(self, anim, i, n, variant=''):
+        if self.rig is not None and anim not in ('hummock', 'bubble'):
+            return self.rig_frame(anim, i, n, variant)
         body = self.body
         if anim in ('hummock', 'bubble') and self.hummock is not None:
             body = self.hummock

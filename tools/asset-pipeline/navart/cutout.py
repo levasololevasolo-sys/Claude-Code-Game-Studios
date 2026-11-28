@@ -127,6 +127,12 @@ class Char:
             if c:
                 im = P(c['piece'])
                 self.feet[k] = Part(im, _pt(im, c['pivot']), _pt(im, c['pivot']) + (0, 100.0))
+        self.held = {}
+        for side in 'NF':
+            c = cfg.get('held' + side)
+            if c:
+                im = P(c['piece'])
+                self.held[side] = Part(im, _pt(im, c['pivot']), _pt(im, c['pivot']) + (0, 100.0))
         h = cfg['head']
         im = P(h['piece'])
         self.head = Part(im, _pt(im, h['pivot']), _pt(im, h['pivot']) - (0, 100.0))
@@ -172,7 +178,7 @@ class Char:
             J['fdir' + side] = d
         return J
 
-    def draw(self, pose):
+    def draw(self, pose, skip=()):
         J = self.joints(pose)
         p = J['p']
         cv = Image.new('RGBA', (int((X1 - X0) * PX), int((Y1 - Y0) * PX)), (0, 0, 0, 0))
@@ -194,6 +200,9 @@ class Char:
                 cape_front = (Part(Image.fromarray(ta.astype(np.uint8), 'RGBA'), part.a, part.b), at, ang)
 
         def arm(side):
+            held = self.cfg.get('held' + side)
+            if 'arm' + side in skip:
+                return
             up, lo = self.limbs['arm' + side]
             place(cv, up, J['sh' + side], J['el' + side], g)
             place(cv, lo, J['el' + side], J['wr' + side], g)
@@ -201,6 +210,10 @@ class Char:
             if hk:
                 d = J['fdir' + side]
                 place_rigid(cv, hk, J['wr' + side] - d * 0.04, np.arctan2(d[1], d[0]) - np.pi / 2, g)
+            if held:
+                d = J['fdir' + side]
+                ang = held['fixed'] if 'fixed' in held else np.arctan2(d[1], d[0]) - np.pi / 2
+                place_rigid(cv, self.held[side], J['fist' + side], ang + held.get('turn', 0.0), g * held.get('scale', 1.0))
 
         def leg(side):
             up, lo = self.limbs['leg' + side]
@@ -217,8 +230,9 @@ class Char:
         over = J['fistN'][1] < J['shN'][1] - 0.55
         if over:
             arm('N')
-        place_rigid(cv, self.head, J['neck'], J['lean'] * 0.5 + p['tilt'] + self.cfg['head'].get('turn', 0.0), g)
-        if cape_front:
+        if 'head' not in skip:
+            place_rigid(cv, self.head, J['neck'], J['lean'] * 0.5 + p['tilt'] + self.cfg['head'].get('turn', 0.0), g)
+        if cape_front and 'head' not in skip:
             place_rigid(cv, cape_front[0], cape_front[1], cape_front[2], g)
         if not over:
             arm('N')
@@ -229,9 +243,10 @@ def to_px(pt):
     return ((pt[0] - X0) * PX / 2, (pt[1] - Y0) * PX / 2)
 
 
-def render(char, pose):
-    """RGBA cell image, the near fist and the amulet in cell px (like rig.render)."""
-    cv, J = char.draw(pose)
+def render(char, pose, skip=()):
+    """RGBA cell image, the near fist and the amulet in cell px (like rig.render);
+    `skip` leaves out parts ("armN", "head") for severed variants."""
+    cv, J = char.draw(pose, skip)
     img = cv.resize(CELL, Image.LANCZOS)
     hand, amu = to_px(J['fistN']), to_px(J['amulet'])
     p = dict(BASE_POSE)

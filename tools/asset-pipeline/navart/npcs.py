@@ -24,7 +24,9 @@ REG = os.path.join(OUT, 'npc_drawn.json')
 NPCS = {
     'sova': ('char_npc_sova', 0.42), 'potap': ('char_npc_potap', 0.42), 'ofenya': ('char_npc_ofenya', 0.42),
     'chur': ('char_npc_chur', 0.5), 'bayun': ('char_npc_kot_bayun', 0.7), 'dolya': ('char_npc_dolya', 0.38),
+    'prorok': ('char_npc_prorok', 0.4, 3),
 }
+# a third value: the sheet's own painted portrait piece, used instead of a bust crop
 
 
 def body_of(sheet):
@@ -84,7 +86,8 @@ def portrait(fig, share, warm):
 
 def main():
     reg = json.load(open(REG))
-    for name, (sheet, share) in NPCS.items():
+    for name, spec in NPCS.items():
+        sheet, share = spec[0], spec[1]
         row = reg['npcs'].get(name)
         if not row:
             continue
@@ -100,7 +103,11 @@ def main():
                 sh.alpha_composite(frame(body, cell, origin, anim, i, n), ((i % cols) * cell[0], (i // cols) * cell[1]))
             sh.save(os.path.join(OUT, m['sheet']), optimize=True)
         for mood, path in row.get('portraits', {}).items():
-            portrait(fig, share, mood != 'calm').save(os.path.join(OUT, path), optimize=True)
+            src = fig
+            if len(spec) > 2:
+                pim = Image.open(os.path.join(SRC, sheet, '%02d.webp' % spec[2])).convert('RGBA')
+                src, share = pim.crop(pim.getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox()), 1.0
+            portrait(src, share, mood != 'calm').save(os.path.join(OUT, path), optimize=True)
         row['height_world'] = round(body.height / reg['px_per_world'], 1)
     if 'navart' not in reg['_note']:
         reg['_note'] += ' NPCs with approved art are rebuilt by tools/asset-pipeline/navart/npcs.py.'

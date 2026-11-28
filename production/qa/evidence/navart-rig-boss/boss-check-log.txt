@@ -1,0 +1,16 @@
+OK   she sleeps, hp 680
+OK   intro line: Натоптал, натоптал! Кто тебя звал в мою воду?
+screenshot boss-kikimora-intro.png
+screenshot boss-kikimora-attack.png
+OK   attack wind-up seen: ["lunge", "lunge", "lunge", "pend"]
+OK   summon at 65%: 2 minions (hp 408)
+OK   rage below 50%: phase 2, line «Кикимора в ярости»
+OK   water rose to 80 px
+screenshot boss-kikimora-phase2.png
+OK   4 different attacks: ["lunge", "lunge", "lunge", "pend", "throw", "pend", "pend", "wave", "pend"]
+OK   second summon at 30%: summons 2
+OK   she dies
+screenshot boss-kikimora-dead.png
+OK   death line: Вода... светлеет. Иди. Забирай своих. Моих.
+OK   minions (2 alive before) and hazards vanished: 0 enemies left
+DONE: 0 failed checks

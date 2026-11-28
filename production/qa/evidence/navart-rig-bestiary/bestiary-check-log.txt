@@ -1,0 +1,26 @@
+screenshot bestiary-balvan.png
+OK   Болванчик wind-up 0.68 s (want 0.70)
+OK   Болванчик swing hit the hero: hp 1000.0 -> 990.4
+OK   Трясинник charged (state charge)
+OK   Шишига latched on the hero (cling_n 1)
+OK   hero run speed x0.85 with one clinger
+OK   Шишига rides on the hero (ran 143 px)
+screenshot bestiary-shishiga.png
+OK   a dash threw it off: state recover, stun 0.77
+OK   Упырь-метатель threw a stone
+OK   Утопленник swelled (state swell)
+OK   Болотница lies as a hummock (state hide)
+OK   hero stands on the hummock (y 518, top 520)
+OK   it bubbles after the hero stood on it
+screenshot bestiary-bognitsa.png
+OK   it dived, the hummock is gone
+OK   hero fell to the floor (y 640)
+OK   it surfaced beside the hero (dx 120)
+OK   its tina arm hit the hero: hp 1000.0 -> 986.8
+OK   Водяница started the song
+screenshot bestiary-vodyanitsa.png
+OK   allies got tina shields 6.0 / 8.5 (want 6.0 / 8.5)
+OK   a hit went into the shield: hp 24.0, tina 6.0 -> 2.0
+OK   a hit broke the song: state walk, ally tina 0.0
+screenshot swamp-roster.png
+DONE: 0 failed checks
