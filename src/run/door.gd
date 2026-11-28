@@ -35,7 +35,31 @@ func colour() -> Color:
 
 ## True when it is a reward door (the line starts «за следующей комнатой:»).
 func is_reward_door() -> bool:
-	return String(info.get("type", "")) in ["god", "rod", "surica", "loot", "heal", "arms"]
+	return String(info.get("type", "")) in ["god", "rod", "surica", "loot", "heal", "arms", "svarog"]
+
+## Горн Сварога (gods-expansion §3.12): a stone forge mouth around the door,
+## coals glowing inside, sparks rising. Drawn under the frame.
+func _draw_forge(col: Color, a: float) -> void:
+	var t := float(Time.get_ticks_msec()) / 1000.0
+	for i in 6:
+		draw_circle(Vector2(0, -H * 0.45), 150.0 - i * 20.0, Color(col, 0.035 * (i + 1) * a))
+	var stone := Color("#4a3a30")
+	var pts := PackedVector2Array()
+	for k in 13:
+		var ang := PI + k * PI / 12.0
+		pts.append(Vector2(cos(ang) * (W / 2.0 + 26.0), -H + 10.0 + sin(ang) * 34.0))
+	pts.append(Vector2(W / 2.0 + 26.0, 0))
+	pts.append(Vector2(-W / 2.0 - 26.0, 0))
+	draw_colored_polygon(pts, Color(stone, a))
+	for k in 6:
+		var y := -H + 30.0 + k * 26.0
+		draw_line(Vector2(-W / 2.0 - 26.0, y), Vector2(-W / 2.0 - 2.0, y), Color(0.15, 0.1, 0.08, a), 2.0)
+		draw_line(Vector2(W / 2.0 + 2.0, y + 13.0), Vector2(W / 2.0 + 26.0, y + 13.0), Color(0.15, 0.1, 0.08, a), 2.0)
+	for k in 7:
+		var sx := sin(t * 1.7 + k * 2.1) * 30.0
+		var sy := -fmod(t * 60.0 + k * 37.0, 200.0)
+		draw_circle(Vector2(sx, -H * 0.2 + sy), 2.5, Color(1.0, 0.75, 0.3, (1.0 + sy / 200.0) * a))
+	queue_redraw()
 
 func _god_name(g: String) -> String:
 	return String((Tune.table("gods").get(g, {}) as Dictionary).get("name", g))
@@ -44,6 +68,8 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var col := colour()
 	var a := 1.0 if active else 0.35
+	if String(info.get("type", "")) == "svarog":
+		_draw_forge(col, a)
 	draw_rect(Rect2(-W / 2.0, -H, W, H), Color(0.05, 0.06, 0.07, 0.95 * a))
 	draw_rect(Rect2(-W / 2.0, -H, W, H), Color(col, a), false, 4.0 if near else 2.5)
 	draw_rect(Rect2(-W / 2.0 + 10, -H + 12, W - 20, H - 12), Color(col, 0.18 * a))

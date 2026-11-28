@@ -13,6 +13,10 @@ const COMBAT_SLOTS: Array[String] = ["strike", "dash", "flare"]
 const SLOT_LABEL: Dictionary = { "strike": "Удар", "dash": "Рывок", "flare": "Вспышка",
 	"passive": "Свойство", "duo": "Союз", "legend": "Легенда", "rest": "Отдых" }
 const MAX_LEVEL: int = 3
+## Timer statuses of gods-expansion §3.2: amount × tune["<status>_time"] seconds.
+const TIMER_STATUSES: Array[String] = ["wet", "thread", "blind", "halo", "yar", "gloom", "prey", "expose"]
+## Old rune ids of saves and --runes (gods-expansion §3.3: Svarog's runes went to Kupala).
+const RENAMED: Dictionary = { "svarog_s": "kupala_s", "svarog_d": "kupala_d", "svarog_f": "kupala_f", "svarog_p": "kupala_p" }
 
 ## Rows of runes.json (id -> row). Injected in tests.
 var table: Dictionary = {}
@@ -23,21 +27,30 @@ var levels: Dictionary = {}
 var passives: Array[String] = []
 var duos: Array[String] = []
 var legends: Array[String] = []
+## Горн Сварога upgrades taken this run (gods-expansion §3.12), in order.
+var forge: Array[String] = []
+## svarog.json "ups" (id -> row). Injected in tests.
+var forge_table: Dictionary = {}
 var _ctx: Dictionary = {}
+var _body_cache: Dictionary = {}
 
 ## A build reading `p_table` (empty = Tune.table("runes")).
 static func make(p_table: Dictionary = {}) -> RunBuild:
 	var b := RunBuild.new()
 	b.table = p_table if not p_table.is_empty() else Tune.table("runes")
+	b.forge_table = Tune.table("svarog").get("ups", {}) if p_table.is_empty() else p_table.get("_forge", {})
 	return b
 
-## Parses the `--runes=` argument: "svarog_s:2,perun_d,duo_storm". Unknown ids
+## Parses the `--runes=` argument: "kupala_s:2,perun_d,duo_storm". Unknown ids
 ## are reported and skipped.
 static func from_arg(arg: String, p_table: Dictionary = {}) -> RunBuild:
 	var b := make(p_table)
 	for part in arg.split(",", false):
 		var bits := part.strip_edges().split(":")
-		var id := bits[0]
+		var id := String(RENAMED.get(bits[0], bits[0]))
+		if b.forge_table.has(id):
+			b.take_forge(id)
+			continue
 		if not b.table.has(id) or id.begins_with("_"):
 			push_error("RunBuild: unknown rune '%s' in --runes" % id)
 			continue
@@ -50,23 +63,28 @@ static func from_arg(arg: String, p_table: Dictionary = {}) -> RunBuild:
 ## Save snapshot (ADR-0003 RunState.build): ids and levels only.
 func to_dict() -> Dictionary:
 	return { "slots": slots.duplicate(), "levels": levels.duplicate(), "passives": Array(passives),
-		"duos": Array(duos), "legends": Array(legends) }
+		"duos": Array(duos), "legends": Array(legends), "forge": Array(forge) }
 
 ## Rebuilds a build from to_dict(). Unknown ids are dropped.
 static func from_dict(d: Dictionary, p_table: Dictionary = {}) -> RunBuild:
 	var b := make(p_table)
 	var s: Dictionary = d.get("slots", {})
 	for k: String in b.slots:
-		var id := String(s.get(k, ""))
+		var id := String(RENAMED.get(String(s.get(k, "")), String(s.get(k, ""))))
 		b.slots[k] = id if b.table.has(id) else ""
-	for id: String in (d.get("levels", {}) as Dictionary):
+	for old_id: String in (d.get("levels", {}) as Dictionary):
+		var id := String(RENAMED.get(old_id, old_id))
 		if b.table.has(id):
-			b.levels[id] = int(d.levels[id])
+			b.levels[id] = int(d.levels[old_id])
 	for key: String in ["passives", "duos", "legends"]:
 		var arr: Array[String] = b.get(key)
-		for id: Variant in (d.get(key, []) as Array):
-			if b.table.has(String(id)):
-				arr.append(String(id))
+		for raw: Variant in (d.get(key, []) as Array):
+			var id := String(RENAMED.get(String(raw), String(raw)))
+			if b.table.has(id):
+				arr.append(id)
+	for id: Variant in (d.get("forge", []) as Array):
+		if b.forge_table.has(String(id)) and not String(id) in b.forge:
+			b.forge.append(String(id))
 	return b
 
 ## Held runes that Сурица can raise (level < MAX_LEVEL), sorted (§3.10).
@@ -219,12 +237,18 @@ func dash_cd(tune: Dictionary, dash_dur: float, legs: float = 0.0, vow: float = 
 ## Damage multipliers for Hit.mods (DamageRules.status_mult). `strike` adds edge.
 func damage_mods(strike: bool) -> Dictionary:
 	var m := {}
-	if has("svarog_p"):
-		m["heat"] = value("svarog_p", "heat", 1.0)
+	if has("kupala_p"):
+		m["heat"] = value("kupala_p", "heat", 1.0)
+	if has("chernobog_p"):
+		m["gloom"] = value("chernobog_p", "gloom_mult", 1.0)
+	if duos.has("duo_white_black"):
+		m["white_black"] = float(row("duo_white_black").get("dmg_mult", 1.5))
 	if has("reaper"):
 		m["reaper"] = value("reaper", "mult", 1.0)
 	if strike and has("edge"):
 		m["edge"] = value("edge", "mult", 1.0)
+	if strike and slot_god("strike") == "chernobog":
+		m["pact"] = slot_value("strike", "dmg", 1.0)
 	return m
 
 ## The status context enemies read (StatusSet.tick, Enemy._discharge): shock
@@ -240,8 +264,12 @@ func ctx(tune: Dictionary) -> Dictionary:
 	if d.has("duo_storm"):
 		need = int((d["duo_storm"] as Dictionary).get("shock_stacks", need))
 		bonus += int((d["duo_storm"] as Dictionary).get("jumps", 1))
+	var share := float(tune.get("thread_share", 0.35)) * value("mokosh_p", "share", 1.0)
 	_ctx = { "shock_need": need, "jumps_bonus": bonus, "root_mult": value("zhiva_p", "root_mult", 1.0),
-		"shield_on_rooted": value("zhiva_p", "shield_on_rooted", 0.0), "duos": d, "mods": damage_mods(false) }
+		"shield_on_rooted": value("zhiva_p", "shield_on_rooted", 0.0), "duos": d, "mods": damage_mods(false),
+		"thread_max": int(value("mokosh_s", "links", float(tune.get("thread_max", 3)))), "thread_share": share,
+		"thread_pass": value("mokosh_p", "pass_r", 0.0), "steam_k": value("kupala_d", "steam_k", 1.0),
+		"gloom_mult": value("chernobog_p", "gloom_mult", 1.0) }
 	return _ctx
 
 ## Statuses the rune in combat `slot` puts on one enemy (§3.5, §3.10), plus the
@@ -259,6 +287,11 @@ func payload(slot: String, power: float, tune: Dictionary, finisher: bool = fals
 		_add_status(p, String(r.get("status", "")), amount, tune)
 		if String(r.get("status", "")) == "discharge":
 			p["extra_jumps"] = int(level_value(r, "jumps", lvl, 0.0))
+		# Костёр на воде (gods-expansion §3.3): a second status, wet.
+		if r.has("wet"):
+			_add_status(p, "wet", level_value(r, "wet", lvl, 0.0), tune)
+		if bool(r.get("ignore_cap", false)):
+			p["ignore_cap"] = true
 	if r.has("boss_burst_min"):
 		p["boss_burst_min"] = int(r["boss_burst_min"])
 	if not nested and not p.is_empty() and has("wrath"):
@@ -294,6 +327,162 @@ static func _add_status(p: Dictionary, st: String, amount: float, tune: Dictiona
 			p["cuts"] = int(p.get("cuts", 0)) + ceili(amount)
 		"discharge":
 			p["discharge"] = true
+		_:
+			if st in TIMER_STATUSES:
+				p[st] = maxf(float(p.get(st, 0.0)), float(tune.get(st + "_time", 3.0)) * amount)
+
+## Value `key` of the rune in combat `slot` at its level (0 / fallback when the
+## slot is empty).
+func slot_value(slot: String, key: String, fallback: float = 0.0) -> float:
+	var id: String = slots.get(slot, "")
+	return value(id, key, fallback) if id != "" else fallback
+
+## Yarilo's rage (gods-expansion §3.7): 1 + k × (1 − hp / hp_max) for the
+## Yarilo rune in `slot`; 1 when the slot holds no Yarilo rune.
+func yar_mult(slot: String, hp: float, hp_max: float) -> float:
+	if slot_god(slot) != "yarilo":
+		return 1.0
+	return 1.0 + slot_value(slot, "k", 0.0) * clampf(1.0 - hp / maxf(hp_max, 1.0), 0.0, 1.0)
+
+## Gods with a held rune of any slot (the Semargl dog, Khors orbit), not Rod.
+func has_god(god: String) -> bool:
+	for id in held():
+		if god_of(id) == god:
+			return true
+	return false
+
+## Chernobog's price of rune `id` ({} = none): hp, hp_per_use, embers, hurt_mult.
+func price(id: String) -> Dictionary:
+	var pr: Variant = row(id).get("price", {})
+	return pr if pr is Dictionary else {}
+
+## Product of the hurt_mult prices of the held runes (Цена крови).
+func hurt_mult() -> float:
+	var m := 1.0
+	for id in held():
+		m *= float(price(id).get("hurt_mult", 1.0))
+	return m
+
+# ---------------- Горн Сварога (gods-expansion §3.12) ----------------
+
+## Family of a main weapon: "stick" for the Дрын, else its body.
+static func family_of(w: Weapon) -> String:
+	if w == null:
+		return ""
+	return "stick" if w.id == "stick" else w.body_id()
+
+func forge_row(id: String) -> Dictionary:
+	var r: Variant = forge_table.get(id, {})
+	return r if r is Dictionary else {}
+
+## Takes upgrade `id` (no levels, never twice).
+func take_forge(id: String) -> void:
+	if forge_table.has(id) and not id in forge:
+		forge.append(id)
+		_body_cache.clear()
+
+## Upgrades working with `family` now ("any" ones always).
+func forge_active(family: String) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for id in forge:
+		var r := forge_row(id)
+		if String(r.get("family", "")) in ["any", family]:
+			out.append(r)
+	return out
+
+## Product of numeric hook `key` over the active upgrades.
+func forge_mult(family: String, key: String) -> float:
+	var m := 1.0
+	for r in forge_active(family):
+		if r.get(key) is float or r.get(key) is int:
+			m *= float(r[key])
+	return m
+
+## The dictionary hook `key` of the last active upgrade having it ({} = none).
+func forge_hook(family: String, key: String) -> Dictionary:
+	var out := {}
+	for r in forge_active(family):
+		if r.get(key) is Dictionary:
+			out = r[key]
+	return out
+
+## Untaken upgrades for a weapon of `family`: {fam: [...], any: [...]}, sorted.
+func forge_pool(family: String) -> Dictionary:
+	var fam: Array[String] = []
+	var any: Array[String] = []
+	for id: String in forge_table:
+		if id in forge:
+			continue
+		var f := String(forge_row(id).get("family", ""))
+		if f == family:
+			fam.append(id)
+		elif f == "any":
+			any.append(id)
+	fam.sort()
+	any.sort()
+	return { "fam": fam, "any": any }
+
+## The strike body `body` of a `family` weapon with the active upgrades applied
+## (swing, damage steps, extra step, reach, lunge, arc, finisher knockback,
+## stun, quake). Cached per family and upgrade count; `floor` = swing_floor.
+func forged_body(body: Dictionary, family: String, floor: float = 0.09) -> Dictionary:
+	var act := forge_active(family)
+	if act.is_empty():
+		return body
+	var key := "%s|%d" % [family, forge.size()]
+	if _body_cache.has(key) and _body_cache[key + "#src"] == body.hash():
+		return _body_cache[key]
+	var b := body.duplicate(true)
+	var times: Array = b.get("times", [0.3])
+	var mult: Array = b.get("mult", [1.0])
+	for r in act:
+		if r.has("times"):
+			times = (r.times as Array).duplicate()
+		if r.has("mult"):
+			mult = (r.mult as Array).duplicate()
+	for r in act:
+		var st: Dictionary = r.get("step_set", {})
+		for k: String in st:
+			var i := int(k) - 1
+			if i >= 0 and i < mult.size():
+				mult[i] = float(st[k])
+		var ex: Dictionary = r.get("extra_step", {})
+		if not ex.is_empty():
+			times.append(float(ex.get("time", 0.3)))
+			mult.append(float(ex.get("mult", 1.5)))
+			if bool(ex.get("both", false)):
+				b["fin_both"] = true
+		if r.has("fin_time") and not times.is_empty():
+			times[-1] = float(times[-1]) * float(r.fin_time)
+		if r.has("fin_mult_set") and not mult.is_empty():
+			mult[-1] = float(r.fin_mult_set)
+	var swing := forge_mult(family, "swing")
+	var dmg := forge_mult(family, "dmg")
+	var step := forge_mult(family, "step_dmg")
+	var fin := forge_mult(family, "fin_dmg")
+	for i in times.size():
+		times[i] = maxf(floor, float(times[i]) / swing)
+	for i in mult.size():
+		mult[i] = float(mult[i]) * dmg * (fin if i == mult.size() - 1 else step)
+	b["times"] = times
+	b["mult"] = mult
+	b["reach"] = float(b.get("reach", 78.0)) * forge_mult(family, "reach")
+	b["lunge"] = float(b.get("lunge", 100.0)) * forge_mult(family, "lunge")
+	for r in act:
+		if r.has("arc_deg"):
+			b["arc_deg"] = float(r.arc_deg)
+		if r.has("stun") and not r.get("stun") is Dictionary:
+			b["fin_stun"] = maxf(float(b.get("fin_stun", 0.0)), float(r.stun))
+	b["fin_kb_x"] = forge_mult(family, "fin_kb")
+	var q: Dictionary = forge_hook(family, "quake")
+	if b.has("quake") and not q.is_empty():
+		var bq: Dictionary = (b.quake as Dictionary).duplicate()
+		bq["r"] = float(bq.get("r", 200)) * float(q.get("r", 1.0))
+		bq["k"] = float(bq.get("k", 0.6)) * float(q.get("k", 1.0))
+		b["quake"] = bq
+	_body_cache[key] = b
+	_body_cache[key + "#src"] = body.hash()
+	return b
 
 ## Knockback multiplier of the rune in `slot` (Stribog), 1 otherwise.
 func kb_mult(slot: String) -> float:

@@ -17,7 +17,7 @@ static func build_offer(god: String, b: RunBuild, rng: RandomNumberGenerator, tu
 	if god != "rod" and bool(opts.get("legend_open", false)) and b.table.has("wrath") \
 			and not b.has("wrath") and b.slot_gods() == 3 and rng.randf() < float(tune.get("legend_chance", 0.35)):
 		out.append("wrath")
-	_fill(out, _pool(b, god), count, rng)
+	_fill(out, _pool(b, god, int(opts.get("embers", 1 << 30))), count, rng)
 	if god != "rod":
 		_fill(out, _pool(b, "rod"), count, rng)
 	while out.size() < count and b.table.has("rest") and not "rest" in out:
@@ -25,14 +25,16 @@ static func build_offer(god: String, b: RunBuild, rng: RandomNumberGenerator, tu
 	return out
 
 ## Untaken slot runes and passives of `god`, sorted (deterministic before shuffle).
-static func _pool(b: RunBuild, god: String) -> Array[String]:
+## `embers` = what the hero can pay: a rune whose price asks more is left out
+## (Затмение, gods-expansion §3.8).
+static func _pool(b: RunBuild, god: String, embers: int = 1 << 30) -> Array[String]:
 	var out: Array[String] = []
 	for id: String in b.table:
 		if id.begins_with("_"):
 			continue
 		var r := b.row(id)
 		if String(r.get("god", "")) == god and String(r.get("slot", "")) in ["strike", "dash", "flare", "passive"] \
-				and not b.has(id):
+				and not b.has(id) and int(b.price(id).get("embers", 0)) <= embers:
 			out.append(id)
 	out.sort()
 	return out

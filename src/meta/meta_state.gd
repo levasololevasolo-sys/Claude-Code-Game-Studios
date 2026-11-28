@@ -40,6 +40,10 @@ var difficulty: String = ""
 ## Artifacts (artifacts-and-secrets): id -> true. All of them arrive on the first
 ## full clear and are never lost (not on death, not by a new run).
 var artifacts: Dictionary = {}
+## Gods the Prophet switched off (gods-expansion §3.13): they never come in a run.
+var gods_off: Array[String] = []
+## Runs in a row without a Горн Сварога door (its pity, §3.12).
+var svarog_dry: int = 0
 var extra: Dictionary = {}
 
 ## Defaults of every field (save keys as in economy-and-meta §3.10).
@@ -49,7 +53,7 @@ static func defaults() -> Dictionary:
 		"weapon": "stick", "sub": "", "weapons": { "stick": true }, "subs": {}, "pity": { "e": 0, "l": 0 },
 		"armor": { "head": 0, "torso": 0, "arms": 0, "legs": 0, "cloak": 0 }, "armor_pick": {},
 		"up": { "reroll": 0, "second": 0, "wide": 0 }, "lanterns": { "ring": true }, "lantern": "ring",
-		"story": story_defaults(), "difficulty": "", "artifacts": {} }
+		"story": story_defaults(), "difficulty": "", "artifacts": {}, "gods_off": [], "svarog_dry": 0 }
 
 ## Empty dialogue memory (living-world §1.4).
 static func story_defaults() -> Dictionary:
@@ -65,7 +69,8 @@ func to_dict() -> Dictionary:
 		"bestRooms": best_rooms, "bosses": bosses.duplicate(), "weapon": weapon, "sub": sub,
 		"weapons": weapons.duplicate(), "subs": subs.duplicate(), "pity": pity.duplicate(),
 		"armor": armor.duplicate(), "armor_pick": armor_pick.duplicate(true), "up": up.duplicate(),
-		"lanterns": lanterns.duplicate(), "lantern": lantern, "story": story.duplicate(true), "difficulty": difficulty, "artifacts": artifacts.duplicate() }, true)
+		"lanterns": lanterns.duplicate(), "lantern": lantern, "story": story.duplicate(true), "difficulty": difficulty, "artifacts": artifacts.duplicate(),
+		"gods_off": Array(gods_off), "svarog_dry": svarog_dry }, true)
 	return d
 
 ## Merges `d` over defaults(): a missing field gets its default.
@@ -123,10 +128,23 @@ static func from_dict(d: Dictionary) -> MetaState:
 		for id: Variant in d.artifacts:
 			if bool(d.artifacts[id]):
 				m.artifacts[String(id)] = true
+	if d.get("gods_off") is Array:
+		for id: Variant in d.gods_off:
+			if not String(id) in m.gods_off:
+				m.gods_off.append(String(id))
+	m.svarog_dry = int(d.get("svarog_dry", 0))
 	for k: String in d:
 		if not base.has(k):
 			m.extra[k] = d[k]
 	return m
+
+## Distinct bosses ever beaten (gods-expansion §3.14 `boss_kinds`).
+func boss_kinds() -> int:
+	var n := 0
+	for k: String in bosses:
+		if int(bosses[k]) > 0:
+			n += 1
+	return n
 
 ## Sum of every boss kill (staged unlocks, room-generation §3.14).
 func bosses_beaten() -> int:

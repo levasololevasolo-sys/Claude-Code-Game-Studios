@@ -13,7 +13,9 @@
 ## fix this order is not written yet; the GDD order is used:
 ##   base → air (strikes) → edge (strikes, clean target) → reaper (not ticks,
 ##   stunned or rooted) → curse → heat (burning) → front shield.
-## Hit.mods keys read here: "edge", "reaper", "heat" (multipliers from RunBuild).
+## Hit.mods keys read here: "edge", "reaper", "heat", "gloom", "white_black",
+## "pact" (multipliers from RunBuild). View keys of gods-expansion: exposed,
+## gloomed, blind.
 class_name DamageRules
 extends RefCounted
 
@@ -41,7 +43,7 @@ static func is_airborne(y: float, ground_y: float, margin: float) -> bool:
 
 ## §3.7 step 3: the target's front shield takes this hit.
 static func shield_blocks(hit: Hit, view: Dictionary) -> bool:
-	if not bool(view.get("shield", false)) or bool(view.get("stunned", false)):
+	if not bool(view.get("shield", false)) or bool(view.get("stunned", false)) or bool(view.get("exposed", false)):
 		return false
 	if hit.pierce or hit.kind == Hit.Kind.FLARE or hit.kind == Hit.Kind.TICK:
 		return false
@@ -93,4 +95,15 @@ static func status_mult(hit: Hit, view: Dictionary, tune: Dictionary) -> float:
 		m *= float(tune.get("curse_mult", 1.0))
 	if hit.mods.has("heat") and bool(view.get("burning", false)):
 		m *= float(hit.mods["heat"])
+	# gods-expansion §3.8, §3.10, §3.11: Цена крови, Святовит's open back,
+	# Белбог и Чернобог (gloom + blind).
+	if hit.mods.has("gloom") and bool(view.get("gloomed", false)):
+		m *= float(hit.mods["gloom"])
+	if hit.mods.has("white_black") and bool(view.get("gloomed", false)) and bool(view.get("blind", false)):
+		m *= float(hit.mods["white_black"])
+	if bool(view.get("exposed", false)) and hit.kind != Hit.Kind.TICK \
+			and int(signf(hit.from_x - float(view.get("x", 0.0)))) == -int(view.get("face", 1)):
+		m *= float(tune.get("expose_back", 1.25))
+	if hit.mods.has("pact") and (hit.kind == Hit.Kind.STRIKE or hit.kind == Hit.Kind.SLAM):
+		m *= float(hit.mods["pact"])
 	return m

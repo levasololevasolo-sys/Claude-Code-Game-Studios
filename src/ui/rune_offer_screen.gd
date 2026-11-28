@@ -22,7 +22,8 @@ var hero: Player
 var ids: Array[String] = []
 ## Door god shown in the title.
 var god: String = ""
-## "take" = take a new rune; "surica" = raise the level of a held rune (§3.10).
+## "take" = take a new rune; "surica" = raise the level of a held rune (§3.10);
+## "forge" = a Горн Сварога upgrade (gods-expansion §3.12, ids of svarog.json).
 var mode: String = "take"
 var selected: int = 0
 ## God voice over the cards (dialogue/gods.md, StoryRules.god_line): who speaks
@@ -85,6 +86,12 @@ func card_rects() -> Array:
 ## Takes card `i`: the rune goes into the build, the screen closes.
 func take(i: int) -> void:
 	var id := ids[i]
+	if mode == "forge":
+		build.take_forge(id)
+		get_tree().paused = false
+		chosen.emit(id)
+		queue_free()
+		return
 	if mode == "surica":
 		build.level_up(id)
 		get_tree().paused = false
@@ -94,6 +101,9 @@ func take(i: int) -> void:
 	var replaced := build.take(id)
 	if id == "rest" and hero:
 		hero.hp = minf(Tune.f("player_hp"), hero.hp + float(build.row(id).get("heal", Tune.f("rest_heal"))))
+	if hero and build.price(id).has("hp"):
+		# Чёрная сделка: the blood price is paid at once, never below 1 hp.
+		hero.hp = maxf(1.0, hero.hp - float(build.price(id).hp))
 	Events.rune_taken.emit(id, build.slot_of(id), replaced)
 	get_tree().paused = false
 	chosen.emit(id)
@@ -101,6 +111,10 @@ func take(i: int) -> void:
 
 ## Text of the "what happens to the slot" line of a card.
 func replace_line(id: String) -> String:
+	if mode == "forge":
+		var fam := String(_row(id).get("family", "any"))
+		var fams: Dictionary = Tune.table("svarog").get("families", {})
+		return "Для любого оружия" if fam == "any" else "Для оружия: %s" % String(fams.get(fam, fam))
 	if mode == "surica":
 		return "Уровень %d → %d" % [build.level(id), build.level(id) + 1]
 	var slot := build.slot_of(id)
@@ -117,10 +131,29 @@ func replace_line(id: String) -> String:
 			return "Новое свойство"
 	return ""
 
+## Chernobog's price in words (gods-expansion §3.8).
+static func price_text(pr: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	if pr.has("hp"):
+		parts.append("%d здоровья сейчас" % int(pr.hp))
+	if pr.has("hp_per_use"):
+		parts.append("%d здоровья за рывок сквозь врагов" % int(pr.hp_per_use))
+	if pr.has("embers"):
+		parts.append("%d углей" % int(pr.embers))
+	if pr.has("hurt_mult"):
+		parts.append("ты получаешь +%d%% урона" % roundi((float(pr.hurt_mult) - 1.0) * 100.0))
+	return ", ".join(parts)
+
 func _god_name(g: String) -> String:
 	return String((Tune.table("gods").get(g, {}) as Dictionary).get("name", g))
 
+## The card's row: a rune, or a forge upgrade in forge mode.
+func _row(id: String) -> Dictionary:
+	return build.forge_row(id) if mode == "forge" else build.row(id)
+
 func _card_god(id: String) -> String:
+	if mode == "forge":
+		return "svarog"
 	var r := build.row(id)
 	if r.has("god"):
 		return String(r.god)
@@ -133,6 +166,8 @@ func _draw() -> void:
 	var title := "Дар бога: %s — выбери руну" % _god_name(god) if god != "" else "Выбери руну"
 	if mode == "surica":
 		title = "Сурица — подними уровень своей руны"
+	if mode == "forge":
+		title = "Горн Сварога — перекуй своё оружие"
 	if voice_text != "":
 		var vc := Enemy.god_colour(voice_god)
 		draw_string(font, Vector2(0, 58), _god_name(voice_god), HORIZONTAL_ALIGNMENT_CENTER, size.x, 24, Color(vc, 0.9))
@@ -146,17 +181,20 @@ func _draw() -> void:
 		_draw_card(font, Rect2(r.position - Vector2(0, 16.0 if i == selected else 0.0), CARD), ids[i], i)
 
 func _draw_card(font: Font, r: Rect2, id: String, i: int) -> void:
-	var row := build.row(id)
+	var row := _row(id)
 	var g := _card_god(id)
 	var col := Enemy.god_colour(g)
-	var slot := build.slot_of(id)
+	var slot := "forge" if mode == "forge" else build.slot_of(id)
 	draw_rect(r, Color(0.07, 0.09, 0.1, 0.96))
 	draw_rect(r, col if i == selected else Color(col, 0.55), false, 6.0 if i == selected else 3.0)
 	draw_rect(Rect2(r.position, Vector2(r.size.x, 48)), Color(col, 0.25))
-	draw_string(font, r.position + Vector2(0, 34), "%d · %s" % [i + 1, RunBuild.SLOT_LABEL.get(slot, slot)], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 26, col)
+	draw_string(font, r.position + Vector2(0, 34), "%d · %s" % [i + 1, "Перековка" if mode == "forge" else RunBuild.SLOT_LABEL.get(slot, slot)], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 26, col)
 	var gr := row.get("gods", [g]) as Array
 	var dy := 0.0
-	if GodGlyph.draw_icon(self, "rune", id, r.position + Vector2(r.size.x / 2.0, 150), 100.0):
+	if mode == "forge":
+		GodGlyph.svarog_icon(self, r.position + Vector2(r.size.x / 2.0, 150), 70.0, col)
+		dy = 10.0
+	elif GodGlyph.draw_icon(self, "rune", id, r.position + Vector2(r.size.x / 2.0, 150), 100.0):
 		dy = 40.0  # the large rune icon carries the god sign(s)
 	else:
 		for k in gr.size():
@@ -166,6 +204,9 @@ func _draw_card(font: Font, r: Rect2, id: String, i: int) -> void:
 	draw_string(font, r.position + Vector2(0, 240 + dy), gods_txt, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 24, Color(col, 0.9))
 	draw_string(font, r.position + Vector2(0, 290 + dy * 0.8), String(row.get("name", id)), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 34, Color("#f4ecd8"))
 	draw_multiline_string(font, r.position + Vector2(24, 345 + dy * 0.6), String(row.get("desc", "")), HORIZONTAL_ALIGNMENT_CENTER, r.size.x - 48, 24, 4, Color(0.85, 0.85, 0.8))
+	var pr := build.price(id) if mode == "take" else {}
+	if not pr.is_empty():
+		draw_string(font, r.position + Vector2(0, r.size.y - 64), "Цена: " + price_text(pr), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 22, Color("#ff6a6a"))
 	var line := replace_line(id)
 	var lc := Color("#ffb070") if line.begins_with("Заменит") or line.begins_with("Уровень") else Color(0.7, 0.8, 0.7)
 	draw_string(font, r.position + Vector2(0, r.size.y - 30), line, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 24, lc)

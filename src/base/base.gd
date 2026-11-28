@@ -58,11 +58,14 @@ func _streak_line() -> void:
 		hero_say("death_streak")
 
 ## True when the station of `row` stands in the yard now: rows with
-## "needs": "boss" (Офеня, characters.md 3.3) come after the first boss win.
+## "needs": "boss" (Офеня, characters.md 3.3) come after the first boss win,
+## "needs": "win" (Пророк, gods-expansion §3.13) after the first clear.
 static func station_open(row: Dictionary, m: MetaState) -> bool:
 	match String(row.get("needs", "")):
 		"boss":
 			return m != null and not m.bosses.is_empty()
+		"win":
+			return m != null and m.wins > 0
 	return true
 
 ## The hero's line after `key` (StoryRules.hero_line), floating over him.
@@ -189,6 +192,15 @@ func _bank() -> String:
 	return "   ".join(parts)
 
 func _open_menu(kind: String) -> void:
+	if kind == "prophet":
+		var ps := ProphetScreen.new()
+		ps.meta = meta
+		ps.min_on = int(Tune.f("gods_min_on"))
+		ps.toggle_fn = func(g: String) -> bool: return ProphetRules.toggle(meta, Tune.table("gods"), g, ps.min_on)
+		ps.changed.connect(_changed)
+		ps.closed.connect(func() -> void: screen = null)
+		_show(ps)
+		return
 	var scr := ShopScreen.new()
 	scr.bank_fn = _bank
 	match kind:

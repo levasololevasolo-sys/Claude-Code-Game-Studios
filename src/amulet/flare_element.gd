@@ -8,7 +8,7 @@ extends RefCounted
 
 ## Element ids known to the code.
 const PURE: String = "pure"
-const GODS: Array[String] = ["svarog", "perun", "stribog", "veles", "zhiva"]
+const GODS: Array[String] = ["kupala", "perun", "stribog", "veles", "zhiva", "mokosh", "dazhbog", "khors", "yarilo", "chernobog", "semargl", "svyatovit"]
 
 ## Puts the element's statuses on `hit` for one touched enemy at power `p`.
 ## Every god but Zhiva also gives the short stun `flare_god_stun`. God statuses

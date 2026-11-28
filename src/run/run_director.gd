@@ -61,6 +61,9 @@ func _on_rune_taken(id: String, slot: String, _replaced: String) -> void:
 	if run == null or build == null:
 		return
 	StoryRules.note_rune(game.meta, run.story_ev, id, build.god_of(id), slot)
+	var cost := int(build.price(id).get("embers", 0))
+	if cost > 0:
+		run.embers = maxi(0, run.embers - cost)
 
 ## The god voice over a rune offer (gods.md §0; StoryRules.god_line): first
 ## offer of the god = its first line, a union card = the partner god answers,
@@ -432,6 +435,8 @@ func _collect() -> void:
 			_offer(String(run.reward.god), func() -> void: _reward_done("god"))
 		"rod":
 			_offer("rod", func() -> void: _reward_done("rod"))
+		"svarog":
+			_forge_offer(func() -> void: _reward_done("svarog"))
 		"surica":
 			var ids := build.raisable()
 			if ids.is_empty():
@@ -484,8 +489,55 @@ func _lair_choice() -> void:
 	_note("lair gods offered: %s" % [gods])
 	_show(scr)
 
+## Горн Сварога (gods-expansion §3.12): 2 untaken upgrades of the weapon's
+## family + 1 for any weapon (topped up from the other group); no card -> loot.
+func _forge_offer(done: Callable) -> void:
+	if run.tier not in run.forge_tiers:
+		run.forge_tiers.append(run.tier)
+	var ids := forge_ids(build, RunBuild.family_of(_hero_weapon()), game.rng.stream("boons"), int(Tune.f("forge_offer")))
+	if ids.is_empty():
+		_give_loot()
+		done.call()
+		return
+	var scr := RuneOfferScreen.new()
+	scr.mode = "forge"
+	scr.build = build
+	scr.hero = world.player
+	scr.god = "svarog"
+	scr.ids.assign(ids)
+	var l := StoryRules.god_line(Tune.table("dialogue").get("god_lines", []), "svarog", { "seen": int((game.meta.story.get("god_seen", {}) as Dictionary).get("svarog", 0)), "recent": game.meta.story.get("god_recent", []), "roll": game.rng.stream("boons").randf() })
+	if not l.is_empty():
+		scr.voice_god = "svarog"
+		scr.voice_text = String(l.get("ru", ""))
+		StoryRules.note_god_line(game.meta, "svarog", l, int(Tune.f("god_line_recent")))
+	scr.chosen.connect(func(id: String) -> void:
+		_note("forge taken: %s (offer %s)" % [id, ids])
+		done.call())
+	_show(scr)
+
+## The forge cards for a `family` weapon: `count` - 1 of the family, 1 any.
+static func forge_ids(b: RunBuild, family: String, rng: RandomNumberGenerator, count: int) -> Array[String]:
+	var pool := b.forge_pool(family)
+	var fam: Array = pool.fam
+	var any: Array = pool.any
+	_shuffle(fam, rng)
+	_shuffle(any, rng)
+	var out: Array[String] = []
+	for id: String in fam.slice(0, maxi(count - 1, 0)):
+		out.append(id)
+	for id: String in any:
+		if out.size() >= count:
+			break
+		out.append(id)
+	for id: String in fam:
+		if out.size() >= count:
+			break
+		if not id in out:
+			out.append(id)
+	return out
+
 func _offer(god: String, done: Callable) -> void:
-	var scr := world.open_rune_offer(god, false, { "duos_open": game.meta.runs >= int(Tune.f("unlock_all_gods_runs")) })
+	var scr := world.open_rune_offer(god, false, { "duos_open": game.meta.runs >= int(Tune.f("unlock_all_gods_runs")), "embers": run.embers if run else 0 })
 	screen = scr
 	god_voice(scr)
 	scr.chosen.connect(func(id: String) -> void:
@@ -826,15 +878,21 @@ func _doors_rng() -> RandomNumberGenerator:
 	return game.rng.stream("doors")
 
 func _ctx() -> Dictionary:
+	var m: MetaState = game.meta
+	var pool := build.forge_pool(RunBuild.family_of(_hero_weapon()))
+	var left := (pool.fam as Array).size() + (pool.any as Array).size()
 	return { "god_time": DoorRules.god_time(run.since_god, run.gap_need), "gods": _unl.gods,
-		"types": _unl.types, "can_surica": not build.raisable().is_empty() }
+		"types": _unl.types, "can_surica": not build.raisable().is_empty(), "held": build.gods_taken(),
+		"svarog_ok": DoorRules.svarog_ok(m.runs >= int(Tune.f("unlock_all_gods_runs")), run.tier, run.forge_tiers, build.forge.size(), left, Tune.data),
+		"svarog_dry": m.svarog_dry }
 
+## Rune gods this save may meet (gods-expansion §3.13-3.14): open by the
+## unlock rows, minus the ones the Prophet switched off (at least gods_min_on).
 func _all_gods() -> Array[String]:
-	var out: Array[String] = []
-	for id: String in Tune.table("gods"):
-		if not id.begins_with("_") and id != "rod":
-			out.append(id)
-	return out
+	var m: MetaState = game.meta
+	var tbl := Tune.table("gods")
+	var open := DoorRules.gods_open(tbl, ProphetRules.stats(m))
+	return DoorRules.enabled_gods(open, m.gods_off, tbl, int(Tune.f("gods_min_on")))
 
 static func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 	for i in range(arr.size() - 1, 0, -1):
@@ -842,3 +900,9 @@ static func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 		var t: Variant = arr[i]
 		arr[i] = arr[j]
 		arr[j] = t
+
+## The hero's main weapon now (world.arm is null while the default sword is held).
+func _hero_weapon() -> Weapon:
+	if world and world.player and world.player.weapon:
+		return world.player.weapon
+	return world.arm if world else null

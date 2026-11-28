@@ -24,6 +24,8 @@ var reflected: bool = false
 var world: World
 ## Enemies a reflected shot can hit; injected in tests, else the "enemies" group.
 var targets: Array = []
+## Enemies a piercing reflected shot already went through (Горн Сварога «отбив»).
+var targets_hit: Array = []
 
 func _physics_process(dt: float) -> void:
 	if world and world.hitstop > 0.0:
@@ -63,9 +65,19 @@ func step(dt: float) -> void:
 		return
 	if p.atk_t > 0.0 and not reflected:
 		var reach: float = p.weapon.reach() if p.weapon else 0.0
-		if absf(position.y - (p.position.y - Tune.f("hero_aim_dy"))) < Tune.f("shot_swat_dy") \
-				and (position.x - p.position.x) * p.face > 0.0 and absf(position.x - p.position.x) < reach + Tune.f("shot_swat_extra"):
-			life = 0.0
+		# Горн Сварога «отбив» (gods-expansion §3.12): the swing sends the shot back.
+		var dfl: Dictionary = p.forge_hook("deflect")
+		var fin := p.combo >= (p._body().get("mult", [1]) as Array).size()
+		if bool(dfl.get("fin_only", false)) and not fin:
+			dfl = {}
+		var extra := float(dfl.get("extra", 0.0))
+		var front := (position.x - p.position.x) * p.face > 0.0 or (bool(dfl.get("both", false)) or p.back_strike())
+		if absf(position.y - (p.position.y - Tune.f("hero_aim_dy"))) < Tune.f("shot_swat_dy") + extra \
+				and front and absf(position.x - p.position.x) < reach + Tune.f("shot_swat_extra") + extra:
+			if dfl.is_empty() or p.powers == null:
+				life = 0.0
+			else:
+				p.powers._reflect(self, float(dfl.get("k", 1.5)), int(dfl.get("pierce", 1)))
 
 ## Turns this shot into the hero's (GDD parry §3.5, P6-P7): new velocity
 ## `v`, no arc, damage `dmg_now` to enemies, owned by `owner`.
@@ -86,12 +98,17 @@ func _hit_enemies() -> void:
 		list = get_tree().get_nodes_in_group("enemies")
 	for n in list:
 		var e := n as Enemy
-		if e == null or e.dead or not is_instance_valid(e):
+		if e == null or e.dead or not is_instance_valid(e) or e in targets_hit:
 			continue
 		if e.hurt_rect().grow(r).has_point(position):
 			var hit := Hit.make(Hit.Kind.PROJECTILE, dmg, position.x - signf(vel.x), Tune.f("parry_reflect_kb"))
 			hit.source = source
 			e.hurt(hit)
+			var left := int(get_meta(&"pierce", 1)) - 1
+			if left > 0:
+				set_meta(&"pierce", left)
+				targets_hit.append(e)
+				continue
 			life = 0.0
 			return
 

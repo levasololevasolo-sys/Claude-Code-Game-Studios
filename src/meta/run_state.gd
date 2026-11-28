@@ -44,10 +44,12 @@ var story_ev: Array = []
 var needle: bool = false
 ## Нить Мокоши tokens spent this run (GDD difficulty F5).
 var revives_used: int = 0
+## Locations (tiers) where a Горн Сварога door already showed this run (§3.12).
+var forge_tiers: Array = []
 
 const FIELDS: Array[String] = ["run_seed", "tier", "room_k", "stage", "hp", "max_hp", "charge", "amulet",
 	"build", "embers", "res", "since_god", "gap_need", "reward", "rooms_cleared", "kills", "bosses",
-	"killed_by", "killer_id", "rng_states", "arm", "sub", "arms_auto", "story_ev", "needle", "revives_used"]
+	"killed_by", "killer_id", "rng_states", "arm", "sub", "arms_auto", "story_ev", "needle", "revives_used", "forge_tiers"]
 
 func to_dict() -> Dictionary:
 	var d := {}

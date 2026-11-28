@@ -8,7 +8,7 @@
 ## the hero's amulet (ring, beam, wave, knot; amulets.json), `--flare-check=<dir>`
 ## for the scripted Flare check (GDD amulet-and-flare). Also owns the world slow
 ## of the Flare "breath" (request_slow, time_mult) and the screen flash.
-## Runes (gods-and-runes): `--runes=svarog_s:2,perun_d,duo_storm` starts with
+## Runes (gods-and-runes): `--runes=kupala_s:2,perun_d,duo_storm` starts with
 ## those runes (id[:level]), `--rune-offer=<god>[:wide]` opens the rune offer
 ## screen at start, `--god-check=<dir>` runs the scripted per-god check.
 ## Weapons (weapons-and-loot): `--weapon=<id>` / `--sub=<id>` pick the hero's

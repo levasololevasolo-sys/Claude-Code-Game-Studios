@@ -239,7 +239,105 @@ def sign_rod():
     return parts
 
 
-SIGNS = {"perun": sign_perun, "veles": sign_veles, "stribog": sign_stribog, "svarog": sign_svarog, "zhiva": sign_zhiva, "rod": sign_rod}
+def sign_kupala():
+    """Fern flower: a five-petal blossom on a fern frond (Купала)."""
+    parts = [("l", "M128 206 C124 180 130 160 128 140", 6)]
+    for k, y in enumerate((196, 178, 160)):
+        for sg in (-1, 1):
+            parts.append(("l", "M128 %g C%g %g %g %g %g %g" % (y, 128 + sg * 18, y - 4, 128 + sg * 34, y - 10, 128 + sg * (44 - k * 8), y - 22), 4))
+    for k in range(5):
+        a = math.radians(-90 + k * 72)
+        x, y = 128 + 30 * math.cos(a), 104 + 30 * math.sin(a)
+        parts.append(("f", circle_d(x, y, 16)))
+    parts.append(("k", circle_d(128, 104, 13)))
+    parts.append(("h", circle_d(128, 104, 8)))
+    return parts
+
+
+def sign_mokosh():
+    """Spindle with a spun thread (Мокошь)."""
+    parts = [("l", "M128 44 L128 212", 5),
+             ("f", "M128 112 C150 118 160 132 160 146 C160 160 150 172 128 178 C106 172 96 160 96 146 C96 132 106 118 128 112Z"),
+             ("f", "M104 196 L152 196 L146 208 L110 208Z"),
+             ("l", "M128 70 C168 74 192 100 190 134 C188 168 160 188 132 190", 3)]
+    for y in (130, 146, 162):
+        parts.append(("k", "M102 %g C118 %g 138 %g 154 %g L154 %g C138 %g 118 %g 102 %gZ" % (y, y - 3, y - 3, y, y + 2, y - 1, y - 1, y + 2)))
+    return parts
+
+
+def sign_dazhbog():
+    """Sun with straight and wavy rays (Дажбог)."""
+    parts = [("f", circle_d(128, 128, 36)), ("h", circle_d(120, 120, 10))]
+    for k in range(12):
+        a = math.radians(k * 30)
+        r0, r1 = 46, 76 if k % 2 == 0 else 64
+        parts.append(("l", "M%.1f %.1f L%.1f %.1f" % (128 + r0 * math.cos(a), 128 + r0 * math.sin(a), 128 + r1 * math.cos(a), 128 + r1 * math.sin(a)), 7 if k % 2 == 0 else 5))
+    return parts
+
+
+def sign_khors():
+    """Sun disk with a turning wheel (Хорс)."""
+    parts = [("l", circle_d(128, 128, 62), 7), ("f", circle_d(128, 128, 18))]
+    for k in range(8):
+        a = math.radians(k * 45)
+        parts.append(("l", "M%.1f %.1f A62 62 0 0 1 %.1f %.1f" % (128 + 20 * math.cos(a), 128 + 20 * math.sin(a), 128 + 62 * math.cos(a + 0.5), 128 + 62 * math.sin(a + 0.5)), 5))
+    return parts
+
+
+def sign_yarilo():
+    """Spring flower with a sprouting ear (Ярило)."""
+    parts = [("l", "M128 208 L128 120", 6)]
+    for sg in (-1, 1):
+        parts.append(("f", "M128 182 C%g 176 %g 160 %g 146 C%g 150 %g 168 128 186Z" % (128 + sg * 22, 128 + sg * 40, 128 + sg * 50, 128 + sg * 36, 128 + sg * 22)))
+    for k in range(6):
+        a = math.radians(-90 + k * 60)
+        parts.append(("f", circle_d(128 + 26 * math.cos(a), 96 + 26 * math.sin(a), 15)))
+    parts.append(("k", circle_d(128, 96, 13)))
+    parts.append(("f", circle_d(128, 96, 8)))
+    return parts
+
+
+def sign_chernobog():
+    """Black crescent over a cut eye (Чернобог)."""
+    return [("f", "M150 52 C104 56 74 92 74 134 C74 176 106 208 150 210 C118 196 98 166 98 132 C98 98 118 68 150 52Z"),
+            ("f", "M120 132 C134 112 168 112 184 132 C168 152 134 152 120 132Z"),
+            ("k", circle_d(152, 132, 9)),
+            ("l", "M112 96 L194 170", 4)]
+
+
+def sign_semargl():
+    """Winged fire-hound wing over a flame (Семаргл)."""
+    parts = [("f", flame(128, 196, 70, 20))]
+    for k in range(4):
+        y = 76 + k * 18
+        parts.append(("f", "M132 %g C%g %g %g %g %g %g C%g %g %g %g 132 %gZ" % (y + 28, 150 + k * 4, y + 6, 180 - k * 6, y - 4, 206 - k * 12, y - 6, 196 - k * 12, y + 14, 160, y + 28, y + 36)))
+        parts.append(("f", "M124 %g C%g %g %g %g %g %g C%g %g %g %g 124 %gZ" % (y + 28, 106 - k * 4, y + 6, 76 + k * 6, y - 4, 50 + k * 12, y - 6, 60 + k * 12, y + 14, 96, y + 28, y + 36)))
+    return parts
+
+
+def sign_svyatovit():
+    """Four faces looking four ways around a pillar (Святовит)."""
+    parts = [("l", poly_d([(128, 52), (204, 128), (128, 204), (52, 128)]), 5)]
+    for dx, dy in ((0, -44), (44, 0), (0, 44), (-44, 0)):
+        x, y = 128 + dx, 128 + dy
+        parts.append(("f", circle_d(x, y, 17)))
+        parts.append(("k", circle_d(x + dx * 0.18, y + dy * 0.18, 5)))
+    parts.append(("f", poly_d([(128, 110), (146, 128), (128, 146), (110, 128)])))
+    return parts
+
+
+def sign_anvil():
+    """Anvil under a hammer with sparks (Горн Сварога)."""
+    parts = [("f", "M62 132 L196 132 C196 146 184 154 166 156 L158 176 L174 194 L82 194 L98 176 L92 156 C76 152 62 146 62 132Z"),
+             ("f", "M104 52 L164 52 L168 74 L100 74Z"), ("l", "M136 74 L152 118", 9)]
+    for x, y in ((82, 108), (180, 104), (198, 82), (66, 86)):
+        parts.append(("f", poly_d([(x, y - 9), (x + 3, y - 3), (x + 9, y), (x + 3, y + 3), (x, y + 9), (x - 3, y + 3), (x - 9, y), (x - 3, y - 3)])))
+    return parts
+
+
+SIGNS = {"perun": sign_perun, "veles": sign_veles, "stribog": sign_stribog, "svarog": sign_anvil, "zhiva": sign_zhiva, "rod": sign_rod,
+         "kupala": sign_kupala, "mokosh": sign_mokosh, "dazhbog": sign_dazhbog, "khors": sign_khors, "yarilo": sign_yarilo,
+         "chernobog": sign_chernobog, "semargl": sign_semargl, "svyatovit": sign_svyatovit}
 
 
 # ---------------------------------------------------------------- medallion (god sign + door icons)
@@ -435,6 +533,51 @@ def p_pouch():
     return [("f", "M100 80 L156 80 L148 98 C188 116 200 160 184 186 C170 206 86 206 72 186 C56 160 68 116 108 98Z"), ("l", "M98 92 C116 100 140 100 158 92", 5), ("k", poly_d([(128, 130), (140, 150), (128, 170), (116, 150)]))]
 
 
+def p_thread():
+    return sign_mokosh()
+
+
+def p_sun():
+    return sign_dazhbog()
+
+
+def p_disk():
+    return [("l", circle_d(128, 132, 46), 9), ("f", circle_d(128, 132, 16)), ("l", "M54 92 A84 84 0 0 1 120 50", 5), ("l", "M202 172 A84 84 0 0 1 136 214", 5)]
+
+
+def p_flower():
+    return sign_yarilo()
+
+
+def p_moon():
+    return sign_chernobog()[:2] + [("k", circle_d(152, 132, 9))]
+
+
+def p_hound():
+    """Running fire-hound in profile: long snout, pricked ear, flame tail."""
+    body = ("M58 150 C70 132 96 124 124 126 L150 122 L160 96 L170 116 L176 112 L206 124 L204 134 L180 138 "
+            "C176 150 168 158 160 162 L170 196 L156 196 L146 168 C128 172 110 170 96 166 L84 196 L70 196 L80 160 C70 158 62 156 58 150Z")
+    return [("f", body), ("k", circle_d(176, 124, 3.5)), ("f", flame(60, 150, 52, 13, -18)),
+            ("l", "M112 140 C124 146 140 146 150 140", 3)]
+
+
+def p_four():
+    return sign_svyatovit()
+
+
+def p_steam():
+    return [("f", "M128 196 C150 196 166 182 166 164 C166 146 150 134 128 120 C106 134 90 146 90 164 C90 182 106 196 128 196Z"),
+            ("l", "M100 104 C88 88 112 80 100 62", 6), ("l", "M128 98 C116 80 140 72 128 52", 6), ("l", "M156 104 C144 88 168 80 156 62", 6)]
+
+
+def p_fern():
+    return sign_kupala()
+
+
+def p_anvil():
+    return sign_anvil()
+
+
 def combine(a, b, sa=0.72, sb=0.72, da=(-26, -14), db=(26, 18)):
     out = []
     for parts, s, (dx, dy) in ((a, sa, da), (b, sb, db)):
@@ -444,10 +587,31 @@ def combine(a, b, sa=0.72, sb=0.72, da=(-26, -14), db=(26, 18)):
     return out
 
 
-STATUS_PICTO = {"burn": p_flame, "shock": p_bolt, "cuts": p_cuts, "curse": p_eye, "root": p_roots, "discharge": p_burst}
+STATUS_PICTO = {"burn": p_flame, "shock": p_bolt, "cuts": p_cuts, "curse": p_eye, "root": p_roots, "discharge": p_burst,
+                "wet": p_drop, "thread": p_thread, "blind": p_sun, "halo": p_disk, "yar": p_flower, "gloom": p_moon, "prey": p_hound, "expose": p_four}
 RUNE_PICTO = {
-    "svarog_f": lambda: combine(p_flame(), p_rings(), 0.75, 0.9, (0, -10), (0, 12)),
-    "svarog_p": p_ember, "svarog_d": lambda: combine(p_steps(), p_flame(), 0.8, 0.6, (-18, 10), (34, -26)),
+    "kupala_s": lambda: combine(p_fern(), p_flame(), 0.7, 0.6, (-20, -14), (30, 20)),
+    "kupala_f": lambda: combine(p_flame(), p_rings(), 0.75, 0.9, (0, -10), (0, 12)),
+    "kupala_p": p_ember, "kupala_d": lambda: combine(p_steps(), p_drop(), 0.8, 0.6, (-18, 10), (34, -26)),
+    "mokosh_p": lambda: combine(p_thread(), p_chain(), 0.7, 0.6, (-20, -10), (24, 24)),
+    "mokosh_d": lambda: combine(p_steps(), p_thread(), 0.8, 0.6, (-18, 10), (34, -26)),
+    "mokosh_f": lambda: combine(p_thread(), p_burst(), 0.75, 0.8, (0, 0), (0, 0)),
+    "dazhbog_p": p_heart, "dazhbog_d": lambda: combine(p_steps(), p_sun(), 0.8, 0.6, (-18, 10), (34, -26)),
+    "dazhbog_f": lambda: combine(p_sun(), p_eye(), 0.9, 0.45, (0, -6), (0, 6)),
+    "khors_p": lambda: combine(p_disk(), p_rings(), 0.7, 0.8, (-10, -10), (10, 14)),
+    "khors_d": lambda: combine(p_steps(), p_disk(), 0.8, 0.6, (-18, 10), (34, -26)),
+    "khors_f": lambda: sign_khors(),
+    "yarilo_p": lambda: combine(p_flower(), p_heart(), 0.75, 0.45, (0, -10), (40, 40)),
+    "yarilo_d": lambda: combine(p_boot(), p_flower(), 0.8, 0.55, (-10, 6), (44, -40)),
+    "yarilo_f": lambda: combine(p_flower(), p_burst(), 0.75, 0.85, (0, 0), (0, 0)),
+    "chernobog_p": lambda: combine(p_moon(), p_drop(), 0.8, 0.45, (-10, -6), (44, 40)),
+    "chernobog_d": lambda: combine(p_steps(), p_moon(), 0.8, 0.6, (-18, 10), (34, -26)),
+    "chernobog_f": lambda: combine(p_moon(), p_sun(), 0.8, 0.8, (-14, 0), (14, 0)),
+    "semargl_p": p_hound, "semargl_d": lambda: combine(p_wings(), p_flame(), 0.85, 0.5, (0, -8), (0, 34)),
+    "semargl_f": lambda: combine(p_hound(), p_hound(), 0.6, 0.6, (-30, -20), (30, 24)),
+    "svyatovit_p": lambda: combine(p_four(), p_eye(), 0.85, 0.4, (0, 0), (0, 0)),
+    "svyatovit_d": lambda: combine(p_steps(), p_four(), 0.8, 0.6, (-18, 10), (34, -26)),
+    "svyatovit_f": lambda: combine(p_four(), p_shield(False), 0.6, 0.9, (0, 0), (0, 0)),
     "perun_d": lambda: combine(p_steps(), p_bolt(), 0.8, 0.62, (-18, 10), (34, -24)), "perun_p": p_chain,
     "stribog_d": p_whirl, "stribog_f": p_gust, "stribog_p": lambda: combine(p_boot(), p_gust(), 0.8, 0.55, (-10, 6), (44, -40)),
     "veles_d": p_steps, "veles_f": lambda: p_eye(130, 1.1), "veles_p": p_wisps,
@@ -463,9 +627,16 @@ RUNE_PICTO = {
 }
 
 
+GOD_PICTO = {"kupala": p_flame, "perun": p_bolt, "stribog": p_gust, "veles": p_eye, "zhiva": p_roots, "mokosh": p_thread,
+             "dazhbog": p_sun, "khors": p_disk, "yarilo": p_flower, "chernobog": p_moon, "semargl": p_hound, "svyatovit": p_four}
+
+
 def rune_picto(rid, row):
     if rid in RUNE_PICTO:
         return RUNE_PICTO[rid]()
+    gs = row.get("gods") or []
+    if len(gs) == 2 and gs[0] in GOD_PICTO and gs[1] in GOD_PICTO:
+        return combine(GOD_PICTO[gs[0]](), GOD_PICTO[gs[1]]())
     return STATUS_PICTO.get(row.get("status", ""), p_flame)()
 
 
@@ -556,7 +727,7 @@ def rune_icon(rid, row, gods):
 
 
 # ---------------------------------------------------------------- door icons
-DOOR_PICTO = {"loot": p_pouch, "heal": p_drop, "arms": p_sword, "surica": p_cup, "lair": p_lair, "haven": p_fire, "next_loc": p_gate, "base": p_house}
+DOOR_PICTO = {"svarog": p_anvil, "loot": p_pouch, "heal": p_drop, "arms": p_sword, "surica": p_cup, "lair": p_lair, "haven": p_fire, "next_loc": p_gate, "base": p_house}
 
 
 def door_icon(t, col):

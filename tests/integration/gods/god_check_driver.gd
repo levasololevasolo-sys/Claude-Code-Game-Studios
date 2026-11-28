@@ -11,7 +11,7 @@ const HERO_X: float = 1200.0
 const STRIKE_DX: float = 60.0
 ## Physics ticks between combo taps (inside combo_window).
 const TAP_GAP: int = 17
-const GODS: Array[String] = ["svarog", "perun", "stribog", "veles", "zhiva"]
+const GODS: Array[String] = ["kupala", "perun", "stribog", "veles", "zhiva", "mokosh", "dazhbog", "khors", "yarilo", "chernobog", "semargl", "svyatovit"]
 
 var out_dir: String = "user://god_check"
 var _main: World
@@ -139,7 +139,7 @@ func _run() -> void:
 	# Rune offer screen with «Широкий выбор».
 	_clear()
 	await _frames(2, {}, [], {})
-	_set_build("svarog_s:2,perun_d")
+	_set_build("kupala_s:2,perun_d")
 	_place_hero(HERO_X)
 	var scr := _main.open_rune_offer("perun", true)
 	for i in 4:
@@ -150,8 +150,106 @@ func _run() -> void:
 	await _shot("rune-offer.png")
 	scr.take(0)
 	_note("took %s -> %s" % [scr.ids[0], _main.build.hud_text()])
+	await _new_powers(summary)
+	await _forge(summary)
+	await _prophet(summary)
+	await _prophet_station(summary)
 	var f := FileAccess.open(out_dir.path_join("god-check-log.txt"), FileAccess.WRITE)
 	f.store_string("\n".join(summary) + "\n")
 	f.close()
 	_note("done")
 	get_tree().quit()
+
+## gods-expansion §3.3-3.11: Khors orbit disks on a dash, Dazhbog's sun, the
+## Semargl dog and Mokosh's thread, all at once on three dummies.
+func _new_powers(summary: PackedStringArray) -> void:
+	_clear()
+	await _frames(2, {}, [], {})
+	_set_build("mokosh_s,khors_d,dazhbog_f,semargl_p")
+	_place_hero(HERO_X)
+	var dums: Array = []
+	for k in 3:
+		dums.append(_main.spawn_enemy(StrawDummy.new(), Vector2(HERO_X + 160.0 + k * 140.0, Tune.f("ground_y")), -1, false, 6 + k))
+	var words := {}
+	await _frames(4, {}, dums, words)
+	await _frames(1, { &"dash": true }, dums, words)
+	await _frames(14, {}, dums, words)
+	_main.player.powers.add_sun(_main.player.position + Vector2(260, -220), 260.0, 4.0)
+	_main.player.powers.dog_now()
+	for s in 3:
+		await _frames(1, { &"strike": true }, dums, words)
+		await _frames(TAP_GAP, {}, dums, words)
+	await _shot("gods-new-powers.png")
+	var pw: GodPowers = _main.player.powers
+	var line := "new powers: orbit %d, suns %d, dog %s, words %s" % [pw._orbit_count(), pw.suns.size(), pw.dog_state, ", ".join(PackedStringArray(words.keys()))]
+	_note(line)
+	summary.append(line)
+
+## Горн Сварога (§3.12): the forge screen for the hero's weapon, then one taken.
+func _forge(summary: PackedStringArray) -> void:
+	_clear()
+	await _frames(2, {}, [], {})
+	_set_build("kupala_s")
+	var fam := RunBuild.family_of(_main.player.weapon)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var scr := RuneOfferScreen.new()
+	scr.mode = "forge"
+	scr.build = _main.build
+	scr.hero = _main.player
+	scr.god = "svarog"
+	scr.ids.assign(RunDirector.forge_ids(_main.build, fam, rng, int(Tune.f("forge_offer"))))
+	_main.show_screen(scr)
+	for i in 6:
+		await get_tree().process_frame
+	await _shot("forge-offer.png")
+	scr.take(0)
+	var line := "forge (%s): offer %s, took -> %s" % [fam, scr.ids, _main.build.forge]
+	_note(line)
+	summary.append(line)
+	for i in 4:
+		await get_tree().process_frame
+
+## The Prophet (§3.13): the god grid after a first win, two gods sent away.
+func _prophet(summary: PackedStringArray) -> void:
+	var m := MetaState.new()
+	m.runs = 6
+	m.wins = 1
+	m.bosses = { "likho": 2, "kikimora": 1 }
+	var ps := ProphetScreen.new()
+	ps.meta = m
+	ps.min_on = int(Tune.f("gods_min_on"))
+	ps.toggle_fn = func(g: String) -> bool: return ProphetRules.toggle(m, Tune.table("gods"), g, ps.min_on)
+	_main.show_screen(ps)
+	for i in 4:
+		await get_tree().process_frame
+	ps.pick(1)
+	ps.pick(9)
+	ps.sel = 4
+	for i in 4:
+		await get_tree().process_frame
+	await _shot("prophet.png")
+	var line := "prophet: gods %s, off %s, called %d" % [ps.ids, m.gods_off, ProphetRules.on_count(m, Tune.table("gods"))]
+	_note(line)
+	summary.append(line)
+	ps.close()
+
+## The Prophet stands in the yard only after the first win (§3.13).
+func _prophet_station(summary: PackedStringArray) -> void:
+	_clear()
+	var m := MetaState.new()
+	m.runs = 6
+	m.wins = 1
+	m.bosses = { "likho": 1 }
+	var b := (load("res://scenes/base/base.tscn") as PackedScene).instantiate() as Base
+	_main.add_child(b)
+	b.setup(_main, m)
+	_place_hero(1900.0)
+	await _frames(30, {}, [], {})
+	var ids: Array = b.stations.map(func(st: Station) -> String: return st.id())
+	await _shot("prophet-station.png")
+	var line := "base after a win: stations %s, prophet art %s, before a win: %s" % [ids, NpcSprite.has_art("prorok"),
+		Base.station_open({ "needs": "win" }, MetaState.new())]
+	_note(line)
+	summary.append(line)
+	b.queue_free()

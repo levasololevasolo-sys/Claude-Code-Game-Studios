@@ -74,5 +74,5 @@ func test_pure_light_stuns_by_power() -> void:
 
 func test_god_element_hook_gives_short_stun() -> void:
 	var h := Hit.make(Hit.Kind.FLARE, 57.0, 0.0, 0.0)
-	FlareElement.apply("svarog", h, 1.5, { "flare_stun": 1.4, "flare_god_stun": 0.4 })
+	FlareElement.apply("kupala", h, 1.5, { "flare_stun": 1.4, "flare_god_stun": 0.4 })
 	assert_float(h.stun).is_equal_approx(0.4, 0.001)

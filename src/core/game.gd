@@ -101,6 +101,8 @@ func end_run(outcome: String) -> Dictionary:
 		for k: String in run.res:
 			meta.res[k] = int(meta.res.get(k, 0)) + int(run.res[k])
 		meta.best_rooms = maxi(meta.best_rooms, run.rooms_cleared)
+		# Горн Сварога pity (gods-expansion §3.12): runs in a row without a forge door.
+		meta.svarog_dry = 0 if not run.forge_tiers.is_empty() else meta.svarog_dry + 1
 	meta.runs += 1
 	# living-world §1.2: the run's fresh events wait for the next base visit.
 	var before_bosses: Dictionary = before.get("bosses", {}) if before.get("bosses") is Dictionary else {}

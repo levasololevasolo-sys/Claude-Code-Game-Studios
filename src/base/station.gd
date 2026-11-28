@@ -119,6 +119,25 @@ func _draw() -> void:
 					draw_line(Vector2(p.x, -h * 0.8), p, Color("#A99C86"), 1.5)
 					draw_circle(p, 9, C_LINE)
 					draw_circle(p, 7, [C_GOLD, Color("#4F8FE0"), Color("#6FBF5A")][k])
+			elif id() == "prorok":
+				# Blindfold, a tall staff with an eye, the gods' colours circling it.
+				draw_line(head + Vector2(-hr, -hr * 0.15), head + Vector2(hr, -hr * 0.15), trim, 5.0)
+				var sx := w + 26.0
+				draw_line(Vector2(sx, 0), Vector2(sx, -h - 20), C_LINE, 7.0)
+				draw_line(Vector2(sx, 0), Vector2(sx, -h - 20), Color("#7A5232"), 4.0)
+				var eye := Vector2(sx, -h - 34)
+				draw_circle(eye, 22, Color(trim, 0.35))
+				draw_circle(eye, 13, C_LINE)
+				draw_circle(eye, 10, C_LINEN)
+				draw_circle(eye, 5, trim)
+				var cols: Array = []
+				for g: String in Tune.table("gods"):
+					var r: Variant = Tune.table("gods")[g]
+					if r is Dictionary and (r as Dictionary).has("colour") and bool((r as Dictionary).get("toggle", true)):
+						cols.append(Color(String((r as Dictionary).colour)))
+				for k in cols.size():
+					var a := _t * 0.8 + k * TAU / maxf(cols.size(), 1.0)
+					draw_circle(eye + Vector2(cos(a) * 48, sin(a) * 18), 5, Color(cols[k], 0.85))
 	var label := String(row.get("name", ""))
 	draw_string(font, Vector2(-200, -h - 70), label, HORIZONTAL_ALIGNMENT_CENTER, 400, 26, C_LINEN)
 	if spark:

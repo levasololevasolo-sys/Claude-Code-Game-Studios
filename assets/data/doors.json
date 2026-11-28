@@ -4,6 +4,10 @@
     "label": "Руна: %s",
     "colour": ""
   },
+  "svarog": {
+    "label": "Горн Сварога: перековка",
+    "colour": "#ff8a3a"
+  },
   "rod": {
     "label": "Руна Рода",
     "colour": "#e0c080"

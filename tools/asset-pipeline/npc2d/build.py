@@ -30,7 +30,7 @@ OUT = os.path.join(REPO, 'assets', 'art', 'sprites', 'npc_drawn')
 EV = os.path.join(REPO, 'production', 'qa', 'evidence')
 FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 NAMES = {'dolya': 'Пряха Доля', 'potap': 'Кузнец Потап', 'sova': 'Ведунья Сова', 'bayun': 'Кот Баюн',
-         'chur': 'Чур', 'ofenya': 'Офеня'}
+         'chur': 'Чур', 'ofenya': 'Офеня', 'prorok': 'Пророк'}
 HERO_WORLD_H = 160.0 / 1.5   # the drawn hero: 160 screen px at camera zoom 1.5
 
 

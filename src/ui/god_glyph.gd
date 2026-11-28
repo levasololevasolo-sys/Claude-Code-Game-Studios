@@ -65,6 +65,27 @@ static func draw(ci: CanvasItem, g: String, c: Vector2, s: float, col: Color) ->
 		_:
 			ci.draw_circle(c, s * 0.3, col)
 
+## The Горн Сварога sign (gods-expansion §3.12): an anvil, a hammer over it,
+## three flame tongues behind, on a hot-iron medallion. Painted icon first.
+static func svarog_icon(ci: CanvasItem, c: Vector2, s: float, col: Color) -> void:
+	if draw_icon(ci, "door", "svarog", c, s * SIGN_SCALE, col.a):
+		return
+	ci.draw_circle(c, s * 1.05, Color(0.25, 0.08, 0.02, 0.9 * col.a))
+	ci.draw_arc(c, s, 0.0, TAU, 48, col, 3.0)
+	ci.draw_arc(c, s * 0.86, 0.0, TAU, 48, Color(1.0, 0.85, 0.4, 0.6 * col.a), 1.5)
+	var fire := Color(1.0, 0.55, 0.15, col.a)
+	for k in 3:
+		var x := (k - 1) * s * 0.32
+		var hgt := s * (0.75 if k == 1 else 0.55)
+		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(x - s * 0.16, s * 0.05), c + Vector2(x, -hgt), c + Vector2(x + s * 0.16, s * 0.05)]), fire)
+		ci.draw_colored_polygon(PackedVector2Array([c + Vector2(x - s * 0.08, s * 0.05), c + Vector2(x, -hgt * 0.6), c + Vector2(x + s * 0.08, s * 0.05)]), Color(1, 0.9, 0.5, col.a))
+	var iron := Color(0.16, 0.14, 0.14, col.a)
+	ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.7, s * 0.05), c + Vector2(s * 0.62, s * 0.05), c + Vector2(s * 0.42, s * 0.28),
+		c + Vector2(s * 0.2, s * 0.3), c + Vector2(s * 0.28, s * 0.62), c + Vector2(-s * 0.36, s * 0.62), c + Vector2(-s * 0.26, s * 0.3), c + Vector2(-s * 0.5, s * 0.22)]), iron)
+	ci.draw_line(c + Vector2(-s * 0.66, s * 0.06), c + Vector2(s * 0.6, s * 0.06), Color(col, 0.9), 2.0)
+	ci.draw_line(c + Vector2(s * 0.1, -s * 0.05), c + Vector2(s * 0.62, -s * 0.62), Color(0.55, 0.36, 0.2, col.a), 5.0)
+	ci.draw_colored_polygon(PackedVector2Array([c + Vector2(s * 0.42, -s * 0.78), c + Vector2(s * 0.78, -s * 0.42), c + Vector2(s * 0.62, -s * 0.28), c + Vector2(s * 0.28, -s * 0.62)]), iron)
+
 ## Icon of a door / reward type (god doors use draw()).
 static func door_icon(ci: CanvasItem, type: String, god: String, c: Vector2, s: float, col: Color) -> void:
 	match type:
@@ -77,6 +98,9 @@ static func door_icon(ci: CanvasItem, type: String, god: String, c: Vector2, s: 
 			draw(ci, "rod", c, s, col)
 			ci.draw_arc(c, s * 0.55, 0.0, TAU, 24, col, 3.0)
 			return
+	if type == "svarog":
+		svarog_icon(ci, c, s, col)
+		return
 	if draw_icon(ci, "door", type, c, s * SIGN_SCALE, col.a):
 		return
 	ci.draw_circle(c, s, Color(col, 0.12))

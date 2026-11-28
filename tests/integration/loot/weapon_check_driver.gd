@@ -185,7 +185,7 @@ func _mech_probes() -> void:
 				perun[0] = true))
 	_ok(perun[0], "Меч Перуна finisher on a target with 1 charge -> discharge")
 	var pike := [0.0, 0]
-	await _probe("thunderpike", "svarog_s,perun_d", func(_p: Player, d: Enemy) -> void:
+	await _probe("thunderpike", "kupala_s,perun_d", func(_p: Player, d: Enemy) -> void:
 		d.damaged.connect(func(e: Enemy, _a: float, _h: Hit) -> void:
 			(func() -> void:
 				pike[0] = maxf(pike[0], e.status.burn)
@@ -271,7 +271,7 @@ func _sub_check() -> void:
 	var ids: Array = ["bow", "bomb", "beartrap", "javelin", "sling", "crossbow", "axes", "spikes", "totem", "boltwand", "windflute", "navbell"]
 	for id: String in ids:
 		_clear()
-		_set_build("svarog_s")
+		_set_build("kupala_s")
 		await _frames(2)
 		var p: Player = _w.player
 		p.equip(Weapon.make(id, Weapon.SUB))

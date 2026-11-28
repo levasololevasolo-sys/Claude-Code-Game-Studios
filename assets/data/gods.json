@@ -1,9 +1,17 @@
 {
-  "_note": "Gods of gods-and-runes §3.1, §3.14. colour = GDD §3.1 (art-bible §4.3 lists slightly different hexes; GDD used, flagged for art-director). glyph = procedural placeholder sign (art-bible §4.3 shapes) drawn by RuneOfferScreen. wrath_status = what Гнев богов (§3.12) adds for this god.",
-  "svarog": { "name": "Сварог", "colour": "#ff8a3a", "word": "ГОРИТ", "glyph": "flames", "wrath_status": "burn" },
-  "perun": { "name": "Перун", "colour": "#8fd3ff", "word": "ЗАРЯД", "glyph": "rosette", "wrath_status": "shock" },
-  "stribog": { "name": "Стрибог", "colour": "#bff0d8", "word": "ПОРЕЗ", "glyph": "wind", "wrath_status": "cuts" },
-  "veles": { "name": "Велес", "colour": "#c08aff", "word": "ПРОКЛЯТ", "glyph": "horns", "wrath_status": "curse" },
-  "zhiva": { "name": "Жива", "colour": "#9ff0b0", "word": "ОПЛЕТЁН", "glyph": "sprout", "wrath_status": "root" },
-  "rod": { "name": "Род", "colour": "#e0c080", "word": "", "glyph": "circle", "wrath_status": "" }
+  "_note": "Gods of gods-and-runes §3.1, §3.14. colour = GDD §3.1 (art-bible §4.3 lists slightly different hexes; GDD used, flagged for art-director). glyph = procedural placeholder sign (art-bible §4.3 shapes) drawn by RuneOfferScreen. wrath_status = what Гнев богов (§3.12) adds for this god. kind: runes | forge (Сварог, gods-expansion §3.12). toggle: the Prophet may switch it off (§3.13). unlock: when it opens (§3.14): {} first run, runs/bosses/boss_kinds/wins minimums. tip: one line for the Prophet screen.",
+  "kupala": { "name": "Купала", "colour": "#ff5e4d", "word": "ГОРИТ", "glyph": "fern", "wrath_status": "burn", "kind": "runes", "toggle": true, "unlock": { }, "tip": "Огонь и роса: мокрый горящий враг взрывается паром." },
+  "perun": { "name": "Перун", "colour": "#8fd3ff", "word": "ЗАРЯД", "glyph": "rosette", "wrath_status": "shock", "kind": "runes", "toggle": true, "unlock": { "runs": 1 }, "tip": "Заряды и молния, что скачет по врагам." },
+  "stribog": { "name": "Стрибог", "colour": "#bff0d8", "word": "ПОРЕЗ", "glyph": "wind", "wrath_status": "cuts", "kind": "runes", "toggle": true, "unlock": { "runs": 1 }, "tip": "Ветер режет и швыряет врагов о стены." },
+  "veles": { "name": "Велес", "colour": "#c08aff", "word": "ПРОКЛЯТ", "glyph": "horns", "wrath_status": "curse", "kind": "runes", "toggle": true, "unlock": { "runs": 1 }, "tip": "Проклятие: враг получает больше урона." },
+  "zhiva": { "name": "Жива", "colour": "#9ff0b0", "word": "ОПЛЕТЁН", "glyph": "sprout", "wrath_status": "root", "kind": "runes", "toggle": true, "unlock": { "runs": 1 }, "tip": "Корни держат врага, щит держит тебя." },
+  "mokosh": { "name": "Мокошь", "colour": "#f08cc0", "word": "НИТЬ", "glyph": "spindle", "wrath_status": "thread", "kind": "runes", "toggle": true, "unlock": { "bosses": 1 }, "tip": "Нить связывает врагов: удар по одному ранит всех." },
+  "dazhbog": { "name": "Дажбог", "colour": "#fff06a", "word": "СЛЕП", "glyph": "sun", "wrath_status": "blind", "kind": "runes", "toggle": true, "unlock": { "bosses": 1 }, "tip": "Ослепляет: враги медленнее и бьют слабее." },
+  "khors": { "name": "Хорс", "colour": "#ffc46b", "word": "ОБОД", "glyph": "disk", "wrath_status": "halo", "kind": "runes", "toggle": true, "unlock": { "boss_kinds": 2 }, "tip": "Солнечные диски кружат и летят бумерангом." },
+  "yarilo": { "name": "Ярило", "colour": "#c8f046", "word": "ЯРЬ", "glyph": "flower", "wrath_status": "yar", "kind": "runes", "toggle": true, "unlock": { "bosses": 1 }, "tip": "Чем меньше здоровья, тем сильнее удар." },
+  "chernobog": { "name": "Чернобог", "colour": "#a8a8b8", "word": "МРАК", "glyph": "black_moon", "wrath_status": "gloom", "kind": "runes", "toggle": true, "unlock": { "wins": 1 }, "tip": "Сила за цену; враги во мраке взрываются." },
+  "semargl": { "name": "Семаргл", "colour": "#f8f0ff", "word": "ДОБЫЧА", "glyph": "wing", "wrath_status": "prey", "kind": "runes", "toggle": true, "unlock": { "boss_kinds": 2 }, "tip": "Огненный пёс кусает помеченных врагов." },
+  "svyatovit": { "name": "Святовит", "colour": "#7fe0e0", "word": "ОТКРЫТ", "glyph": "four_faces", "wrath_status": "expose", "kind": "runes", "toggle": true, "unlock": { "wins": 1 }, "tip": "Бьёт во все стороны; открытый враг без защиты." },
+  "rod": { "name": "Род", "colour": "#e0c080", "word": "", "glyph": "circle", "wrath_status": "", "kind": "runes", "toggle": false, "unlock": { "runs": 1 }, "tip": "Чистая сила без бога." },
+  "svarog": { "name": "Сварог", "colour": "#ff8a3a", "word": "", "glyph": "anvil", "wrath_status": "", "kind": "forge", "toggle": false, "unlock": { "runs": 1 }, "tip": "Горн: перековка твоего оружия. Приходит сам и редко." }
 }

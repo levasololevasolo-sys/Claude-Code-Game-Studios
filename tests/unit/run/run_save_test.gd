@@ -58,7 +58,7 @@ func test_run_build_snapshot_round_trip() -> void:
 	var c := RunBuild.from_dict(JSON.parse_string(JSON.stringify(b.to_dict())))
 	assert_dict(c.to_dict()).is_equal(b.to_dict())
 	assert_int(c.level("edge")).is_equal(3)
-	assert_array(c.raisable()).is_equal(["perun_d", "svarog_s"])
+	assert_array(c.raisable()).is_equal(["kupala_s", "perun_d"])
 
 func test_rng_states_continue_the_same_sequence() -> void:
 	var a := RunRng.new(99)

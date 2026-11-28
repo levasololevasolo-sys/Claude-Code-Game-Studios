@@ -247,6 +247,9 @@ func dmg_mult() -> float:
 	var m := tier_mult(tier, Tune.f("tier_dmg")) * Difficulty.f("enemy_dmg")
 	if ice_copy:
 		m *= Tune.f("ice_copy_dmg")
+	if status.blinded():
+		# Dazhbog (gods-expansion §3.5): a blind enemy hits weaker.
+		m *= Tune.f("blind_boss_dmg") if boss else Tune.f("blind_dmg")
 	return m * Tune.f("elite_dmg") if mark != "" else m
 
 ## Centre of the hit box.
@@ -325,6 +328,7 @@ func hit_view() -> Dictionary:
 		"burning": status.burning(), "cursed": status.cursed(), "rooted": status.rooted(),
 		"clean": not status.has_god_status(),
 		"block": float(stats.get("shield_block", Tune.f("sentry_block"))),
+		"exposed": status.expose > StatusSet.EPS, "gloomed": status.gloom > StatusSet.EPS, "blind": status.blinded(),
 	}
 
 ## The ONLY way to damage an enemy (GDD §3.7 order). Returns the damage taken.
@@ -371,6 +375,8 @@ func hurt(hit: Hit) -> float:
 	if hit.stun > 0.0:
 		stun = maxf(stun, hit.stun * (Tune.f("boss_stun_mult") if boss else 1.0))
 	damaged.emit(self, dmg, hit)
+	if dmg > 0.0 and status.thread > StatusSet.EPS and hit.kind != Hit.Kind.TICK and hit.kind != Hit.Kind.SHARE:
+		_share_thread(dmg, ctx)
 	if limb != "":
 		_cut(limb, hit.from_x)
 	elif nick > 0:
@@ -628,6 +634,9 @@ func _physics_process(dt: float) -> void:
 			vel.y *= k
 	elif mark != "" and _mark_tick(dt):
 		pass
+	elif status.blinded():
+		# Blind (gods-expansion §3.5): wind-ups and steps run slower.
+		_behave(dt * (Tune.f("blind_boss_slow") if boss else Tune.f("blind_slow")))
 	else:
 		_behave(dt)
 	if status.rooted():
@@ -817,7 +826,7 @@ func _status_hit(kind: Hit.Kind, dmg: float, ctx: Dictionary) -> Hit:
 func _apply_statuses(hit: Hit, ctx: Dictionary) -> void:
 	var duos: Dictionary = ctx.get("duos", {})
 	if status.add_burn(hit.burn) or hit.burn > 0.0:
-		_say("ГОРИТ", "svarog")
+		_say("ГОРИТ", "kupala")
 	if hit.curse > 0.0:
 		status.add_curse(hit.curse)
 		_say("ПРОКЛЯТ", "veles")
@@ -844,6 +853,84 @@ func _apply_statuses(hit: Hit, ctx: Dictionary) -> void:
 			discharge(false, hit.extra_jumps)
 	if hit.discharge and not dead:
 		discharge(false, hit.extra_jumps)
+	_apply_timers(hit, ctx)
+
+## The timer statuses of gods-expansion §3.2 (wet, thread, blind, halo, yar,
+## gloom, prey, expose), then Kupala's steam and the thread duos.
+func _apply_timers(hit: Hit, ctx: Dictionary) -> void:
+	var duos: Dictionary = ctx.get("duos", {})
+	for st: String in hit.timers:
+		var dur := float(hit.timers[st])
+		if st == "thread" and status.thread <= StatusSet.EPS:
+			_make_thread_room(int(Tune.f("thread_cap")) if hit.ignore_cap else int(ctx.get("thread_max", Tune.f("thread_max"))))
+		if status.add_timer(st, dur):
+			var g := TIMER_GOD.get(st, "") as String
+			_say(String((Tune.table("gods").get(g, {}) as Dictionary).get("word", st.to_upper())), g)
+	if status.wet > StatusSet.EPS and status.burning() and status.steam_cd <= StatusSet.EPS and not dead:
+		steam(ctx)
+	if hit.kind != Hit.Kind.SHARE and status.thread > StatusSet.EPS and not hit.nested:
+		var others := _linked()
+		if duos.has("duo_fate_fire") and hit.burn > 0.0:
+			for o in others:
+				o.status.add_burn(Tune.f("burn_time") * float((duos["duo_fate_fire"] as Dictionary).get("burn", 0.5)))
+		if duos.has("duo_fate_navi") and hit.curse > 0.0:
+			for o in others:
+				o.status.add_curse(Tune.f("curse_time") * float((duos["duo_fate_navi"] as Dictionary).get("curse", 0.5)))
+
+## God of each timer status (the word and its colour).
+const TIMER_GOD: Dictionary = { "wet": "kupala", "thread": "mokosh", "blind": "dazhbog", "halo": "khors",
+	"yar": "yarilo", "gloom": "chernobog", "prey": "semargl", "expose": "svyatovit" }
+
+## Kupala's steam (gods-expansion §3.3): wet comes off, every enemy within
+## steam_r (this one too) takes steam_dmg × k_steam, no knockback, no chains.
+func steam(ctx: Dictionary) -> void:
+	status.wet = 0.0
+	status.steam_cd = Tune.f("steam_cd")
+	var k := float(ctx.get("steam_k", 1.0)) * _night_k(ctx, "steam")
+	status.add_fx("steam", Tune.f("status_fx_time") * 1.4)
+	_say("ПАР", "kupala", true)
+	var targets: Array[Enemy] = [self]
+	targets.append_array(_around(Tune.f("steam_r")))
+	for o in targets:
+		var h := _status_hit(Hit.Kind.STATUS, Tune.f("steam_dmg") * k, ctx)
+		o.hurt(h)
+
+## Купальская ночь (duo_kupala_night): × its `key` when the hero is below half health.
+func _night_k(ctx: Dictionary, key: String) -> float:
+	var row: Dictionary = (ctx.get("duos", {}) as Dictionary).get("duo_kupala_night", {})
+	var p := hero()
+	if row.is_empty() or p == null or p.hp >= Tune.f("player_hp") * float(row.get("below", 0.5)):
+		return 1.0
+	return float(row.get(key, 1.5))
+
+## Other living enemies on a thread (Mokosh).
+func _linked() -> Array[Enemy]:
+	var out: Array[Enemy] = []
+	if not is_inside_tree():
+		return out
+	for n in get_tree().get_nodes_in_group("enemies"):
+		var o := n as Enemy
+		if o and o != self and not o.dead and o.status.thread > StatusSet.EPS:
+			out.append(o)
+	return out
+
+## Keeps at most `cap` - 1 other threads so this one fits: the thread that ends
+## soonest goes first (gods-expansion §3.4).
+func _make_thread_room(cap: int) -> void:
+	var others := _linked()
+	others.sort_custom(func(a: Enemy, b: Enemy) -> bool: return a.status.thread < b.status.thread)
+	while others.size() >= maxi(cap, 1):
+		others[0].status.thread = 0.0
+		others.remove_at(0)
+
+## Shared damage along the threads: every other linked enemy takes dmg × share.
+func _share_thread(dmg: float, ctx: Dictionary) -> void:
+	var share := float(ctx.get("thread_share", Tune.f("thread_share")))
+	for o in _linked():
+		var h := _status_hit(Hit.Kind.SHARE, dmg * share, ctx)
+		h.mods = {}
+		o.status.add_fx("thread", Tune.f("status_fx_time"), center())
+		o.hurt(h)
 
 ## Perun's discharge (§3.8, F3). `fed` = the last charge came from the
 ## Огненная гроза feed: no jumps, only this enemy is set on fire (loop cap).
@@ -875,6 +962,8 @@ func discharge(fed: bool, extra: int = 0) -> void:
 			h.curse = Tune.f("curse_time") * float((duos["duo_black"] as Dictionary).get("curse", 0.6))
 		if duos.has("duo_lifebolt"):
 			h.root = Tune.f("root_time") * float((duos["duo_lifebolt"] as Dictionary).get("root", 0.5))
+		if duos.has("duo_blindbolt"):
+			h.timers["blind"] = Tune.f("blind_time") * float((duos["duo_blindbolt"] as Dictionary).get("blind", 0.5))
 		e.status.add_fx("bolt", Tune.f("status_fx_time"), prev)
 		e._say("РАЗРЯД", "perun", true)
 		prev = e.center()
@@ -933,11 +1022,38 @@ func _status_death(ctx: Dictionary) -> void:
 			o.hurt(_status_hit(Hit.Kind.STATUS, dmg, ctx))
 	if duos.has("duo_cleanse") and status.rooted() and status.burning():
 		_burn_around(float((duos["duo_cleanse"] as Dictionary).get("r", 150.0)), Tune.f("burn_time"), ctx)
+	var gd := int(get_meta(&"gloom_depth", 0))
+	if status.gloom > StatusSet.EPS and not boss and gd < int(Tune.f("gloom_depth")):
+		_gloom_burst(ctx, gd)
+	if status.thread > StatusSet.EPS and float(ctx.get("thread_pass", 0.0)) > 0.0:
+		for o in _around(float(ctx.thread_pass)):
+			if o.status.thread <= StatusSet.EPS:
+				o.status.thread = status.thread
+				o._say("НИТЬ", "mokosh")
+				break
 	if duos.has("duo_cycle") and status.cursed():
 		for o in _around(float((duos["duo_cycle"] as Dictionary).get("r", 200.0))):
 			var h := _status_hit(Hit.Kind.TICK, 0.0, ctx)
 			h.root = Tune.f("root_time")
 			o.hurt(h)
+
+## Chernobog's burst (gods-expansion §3.8): every enemy within gloom_r takes
+## gloom_frac × this one's max hp (≤ gloom_cap); a gloomed enemy it kills bursts
+## too, `depth` deep at most gloom_depth. Bosses take it but never burst.
+func _gloom_burst(ctx: Dictionary, depth: int) -> void:
+	var duos: Dictionary = ctx.get("duos", {})
+	var dn: Dictionary = duos.get("duo_dark_navi", {})
+	var r := Tune.f("gloom_r") * float(dn.get("r_mult", 1.0))
+	var dmg := minf(Tune.f("gloom_cap"), Tune.f("gloom_frac") * max_hp) * float(ctx.get("gloom_mult", 1.0))
+	status.add_fx("gloom", Tune.f("status_fx_time") * 1.6)
+	if world:
+		world.add_ring(center(), r)
+	for o in _around(r):
+		var h := _status_hit(Hit.Kind.STATUS, dmg, ctx)
+		if not dn.is_empty():
+			h.curse = Tune.f("curse_time") * float(dn.get("curse", 0.6))
+		o.set_meta(&"gloom_depth", depth + 1)
+		o.hurt(h)
 
 ## movement-and-combat §3.8 F10/F11: wall slam and enemy-into-enemy ("кегли").
 ## Both open Stribog cuts (gods-and-runes §3.9). Bosses and the dummy take no part.
@@ -1004,7 +1120,7 @@ func _draw_status(font: Font) -> void:
 		for i in 3:
 			draw_arc(c, maxf(w, h) * 0.55 + i * 6.0, -PI * 0.9 + anim * 1.5 + i, -PI * 0.3 + anim * 1.5 + i, 10, Color(vc, 0.8), 2.0)
 	if status.burning():
-		var fc := god_colour("svarog")
+		var fc := god_colour("kupala")
 		for i in 4:
 			var x := -w * 0.4 + w * 0.8 * float(i) / 3.0
 			var fh := 14.0 + 6.0 * sin(anim * 14.0 + i * 1.7)
@@ -1028,8 +1144,21 @@ func _draw_status(font: Font) -> void:
 		for i in 5:
 			var x := -w * 0.45 + w * 0.9 * float(i) / 4.0
 			draw_polyline(PackedVector2Array([Vector2(x, 0), Vector2(x + 5 * sin(i + anim), top * 0.25), Vector2(x - 3, top * 0.5)]), gc, 3.0)
+	_draw_new_status(c, top)
 	for f: Dictionary in status.fx:
 		match String(f.kind):
+			"steam":
+				var k3 := 1.0 - float(f.t) / (Tune.f("status_fx_time") * 1.4)
+				for j in 7:
+					var a3 := j * TAU / 7.0 + k3 * 1.5
+					draw_circle(c + Vector2(cos(a3), sin(a3) * 0.6) * (16.0 + 60.0 * k3) + Vector2(0, -30.0 * k3), 12.0 + 14.0 * k3, Color(0.95, 0.97, 1.0, 0.55 * (1.0 - k3)))
+			"thread":
+				var from2: Vector2 = (f.to as Vector2) - position
+				draw_line(from2, c, Color(god_colour("mokosh"), clampf(float(f.t) * 5.0, 0.0, 1.0)), 3.0)
+			"gloom":
+				var k4 := 1.0 - float(f.t) / (Tune.f("status_fx_time") * 1.6)
+				draw_circle(c, 14.0 + 110.0 * k4, Color(0.05, 0.04, 0.08, 0.7 * (1.0 - k4)))
+				draw_arc(c, 14.0 + 110.0 * k4, 0.0, TAU, 32, Color(god_colour("chernobog"), 1.0 - k4), 3.0)
 			"bolt":
 				var from: Vector2 = (f.to as Vector2) - position
 				var pts := PackedVector2Array([from])
@@ -1054,6 +1183,54 @@ func _draw_status(font: Font) -> void:
 		draw_string_outline(font, Vector2(-110, y0), String(wd.text), HORIZONTAL_ALIGNMENT_CENTER, 220, 22, 5, Color(0, 0, 0, col.a))
 		draw_string(font, Vector2(-110, y0), String(wd.text), HORIZONTAL_ALIGNMENT_CENTER, 220, 22, col)
 		y0 -= 24.0
+
+## Looks of the gods-expansion statuses (§3.3-3.10): wet drops, Mokosh's
+## spindle mark, a blind halo over the eyes, Khors's ring, Yarilo's sparks,
+## gloom smoke, Semargl's prey flame, Svyatovit's four-point cross.
+func _draw_new_status(c: Vector2, top: float) -> void:
+	var st := status
+	var rr := maxf(w, h)
+	if st.wet > StatusSet.EPS:
+		for i in 3:
+			var x := -w * 0.3 + w * 0.3 * i
+			var y := top * 0.6 + fmod(anim * 50.0 + i * 13.0, 26.0)
+			draw_circle(Vector2(x, y), 3.5, Color("#6fc8ff"))
+	if st.thread > StatusSet.EPS:
+		var mc := god_colour("mokosh")
+		var p := Vector2(0, top - 18)
+		draw_circle(p, 7.0, Color(mc, 0.35))
+		draw_line(p + Vector2(0, -8), p + Vector2(0, 8), mc, 2.0)
+		draw_arc(p, 5.0, anim * 3.0, anim * 3.0 + PI * 1.3, 8, mc, 2.0)
+	if st.blinded():
+		var dc := god_colour("dazhbog")
+		draw_arc(Vector2(0, top * 0.82), w * 0.45, PI * 1.1, PI * 1.9, 14, Color(dc, 0.9), 4.0)
+		for i in 5:
+			var a := PI * 1.1 + i * PI * 0.2
+			draw_line(Vector2(0, top * 0.82) + Vector2(cos(a), sin(a)) * w * 0.5, Vector2(0, top * 0.82) + Vector2(cos(a), sin(a)) * (w * 0.5 + 8.0), Color(dc, 0.8), 2.0)
+	elif st.blind_immune > StatusSet.EPS:
+		draw_arc(Vector2(0, top * 0.82), w * 0.45, PI * 1.1, PI * 1.9, 14, Color(0.6, 0.6, 0.6, 0.5), 2.0)
+	if st.halo > StatusSet.EPS:
+		var hc := god_colour("khors")
+		draw_arc(Vector2(0, top - 8), w * 0.38, 0.0, TAU, 20, hc, 3.0)
+		draw_arc(Vector2(0, top - 8), w * 0.38 + 5.0, anim * 4.0, anim * 4.0 + 1.0, 6, Color(1, 1, 1, 0.8), 2.0)
+	if st.yar > StatusSet.EPS:
+		var yc := god_colour("yarilo")
+		for i in 4:
+			var a := anim * 5.0 + i * TAU / 4.0
+			draw_circle(c + Vector2(cos(a), sin(a)) * rr * 0.5, 3.0, yc)
+	if st.gloom > StatusSet.EPS:
+		for i in 5:
+			var a := anim * 1.3 + i * TAU / 5.0
+			draw_circle(c + Vector2(cos(a) * w * 0.4, sin(a) * h * 0.3 - h * 0.1), 9.0, Color(0.06, 0.05, 0.1, 0.45))
+	if st.prey > StatusSet.EPS:
+		var pc := god_colour("semargl")
+		var q := Vector2(w * 0.35, top - 6)
+		draw_colored_polygon(PackedVector2Array([q + Vector2(-6, 6), q + Vector2(0, -12 - 3.0 * sin(anim * 12.0)), q + Vector2(6, 6)]), Color(pc, 0.9))
+	if st.expose > StatusSet.EPS:
+		var ec := god_colour("svyatovit")
+		for i in 4:
+			var a := i * TAU / 4.0 + anim
+			draw_circle(c + Vector2(cos(a), sin(a)) * rr * 0.62, 3.5, ec)
 
 # ---------------- elite marks (enemies-and-elites §3.6) ----------------
 

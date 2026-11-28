@@ -22,6 +22,18 @@ var curse: float = 0.0
 ## Seconds of roots left; seconds of root immunity left (starts when roots end).
 var root: float = 0.0
 var immune: float = 0.0
+## Gods-expansion statuses (§3.2): seconds left of each; blind_immune starts
+## when blind ends; steam_cd is Kupala's per-enemy steam cooldown.
+var wet: float = 0.0
+var thread: float = 0.0
+var blind: float = 0.0
+var blind_immune: float = 0.0
+var halo: float = 0.0
+var yar: float = 0.0
+var gloom: float = 0.0
+var prey: float = 0.0
+var expose: float = 0.0
+var steam_cd: float = 0.0
 ## Firestorm feed and firewind timers (seconds of burning since last trigger).
 var feed_t: float = 0.0
 var firewind_t: float = 0.0
@@ -50,7 +62,21 @@ func rooted() -> bool:
 
 ## Any god status (for «Заточенный край», §3.6). Stun is not a god status.
 func has_god_status() -> bool:
-	return burning() or shock > 0 or cuts > 0 or cursed() or rooted()
+	return burning() or shock > 0 or cuts > 0 or cursed() or rooted() or wet > EPS or thread > EPS \
+		or blind > EPS or halo > EPS or yar > EPS or gloom > EPS or prey > EPS or expose > EPS
+
+func blinded() -> bool:
+	return blind > EPS
+
+## Sets one of the timer statuses of gods-expansion §3.2 to the longer of the
+## old and `dur` (blind: nothing lands during its immunity). True if it landed.
+func add_timer(st: String, dur: float) -> bool:
+	if dur <= 0.0:
+		return false
+	if st == "blind" and blind_immune > EPS and blind <= EPS:
+		return false
+	set(st, maxf(float(get(st)), dur))
+	return true
 
 # ---------------- applying (§3.7 "Повторное наложение") ----------------
 
@@ -132,6 +158,16 @@ func tick(dt: float, tune: Dictionary, ctx: Dictionary) -> Dictionary:
 		burn = 0.0
 		burn_tick = 0.0
 	curse = maxf(0.0, curse - dt)
+	for k: String in ["wet", "thread", "halo", "yar", "gloom", "prey", "expose"]:
+		set(k, maxf(0.0, float(get(k)) - dt))
+	steam_cd = maxf(0.0, steam_cd - dt)
+	if blind > EPS:
+		blind -= dt
+		if blind <= EPS:
+			blind = 0.0
+			blind_immune = float(tune.get("blind_immune", 3.0))
+	else:
+		blind_immune = maxf(0.0, blind_immune - dt)
 	if rooted():
 		root -= dt
 		if root <= EPS:

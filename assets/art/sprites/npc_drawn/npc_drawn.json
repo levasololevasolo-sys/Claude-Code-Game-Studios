@@ -253,6 +253,48 @@
     "warm": "ofenya/ofenya_portrait_warm.png"
    },
    "height_world": 117.6
+  },
+  "prorok": {
+   "cell": [
+    187,
+    307
+   ],
+   "origin": [
+    91.2,
+    292.8
+   ],
+   "flip": true,
+   "anims": {
+    "idle": {
+     "sheet": "prorok/prorok_idle.png",
+     "frames": 16,
+     "fps": 8,
+     "loop": true,
+     "cols": 8,
+     "rows": 2
+    },
+    "talk": {
+     "sheet": "prorok/prorok_talk.png",
+     "frames": 8,
+     "fps": 10,
+     "loop": true,
+     "cols": 8,
+     "rows": 1
+    },
+    "react": {
+     "sheet": "prorok/prorok_react.png",
+     "frames": 10,
+     "fps": 10,
+     "loop": false,
+     "cols": 8,
+     "rows": 2
+    }
+   },
+   "portraits": {
+    "calm": "prorok/prorok_portrait_calm.png",
+    "warm": "prorok/prorok_portrait_warm.png"
+   },
+   "height_world": 135.4
   }
  }
 }

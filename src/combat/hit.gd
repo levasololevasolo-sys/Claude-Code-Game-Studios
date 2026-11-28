@@ -7,7 +7,9 @@ extends RefCounted
 ## STATUS = a status discharge or burst (Perun lightning, Stribog cut burst):
 ## no knockback, cut by a front shield (gods-and-runes §5), not a tick.
 ## DASH = a rune dash passing through an enemy (gods-and-runes §3.5).
-enum Kind { STRIKE, SLAM, PROJECTILE, FLARE, TICK, WALL, CONTACT, STATUS, DASH }
+## SHARE = Mokosh's shared damage along a thread (gods-expansion §3.4): no
+## knockback, no statuses, never shared again.
+enum Kind { STRIKE, SLAM, PROJECTILE, FLARE, TICK, WALL, CONTACT, STATUS, DASH, SHARE }
 
 ## Kind of hit.
 var kind: Kind = Kind.STRIKE
@@ -29,6 +31,11 @@ var curse: float = 0.0
 var root: float = 0.0
 var shock: int = 0
 var cuts: int = 0
+## Gods-expansion timer statuses (§3.2), seconds: Kupala wet, Mokosh thread,
+## Dazhbog blind, Khors halo, Yarilo yar, Chernobog gloom, Semargl prey,
+## Svyatovit expose. `ignore_cap` = Узел судьбы links past thread_max.
+var timers: Dictionary = {}
+var ignore_cap: bool = false
 ## Discharge the target right away (Perun Flare), with this many extra jumps.
 var discharge: bool = false
 var extra_jumps: int = 0
@@ -67,7 +74,15 @@ func add_payload(p: Dictionary) -> void:
 		discharge = true
 		extra_jumps = maxi(extra_jumps, int(p.get("extra_jumps", 0)))
 	boss_burst_min = maxi(boss_burst_min, int(p.get("boss_burst_min", 0)))
+	for k: String in RunBuild.TIMER_STATUSES:
+		if p.has(k):
+			timers[k] = maxf(float(timers.get(k, 0.0)), float(p[k]))
+	ignore_cap = ignore_cap or bool(p.get("ignore_cap", false))
 
 ## True when the hit carries any god status.
 func has_status() -> bool:
-	return burn > 0.0 or curse > 0.0 or root > 0.0 or shock > 0 or cuts > 0 or discharge
+	return burn > 0.0 or curse > 0.0 or root > 0.0 or shock > 0 or cuts > 0 or discharge or not timers.is_empty()
+
+## Timer status `st` this hit carries, seconds (0 = none).
+func timer(st: String) -> float:
+	return float(timers.get(st, 0.0))

@@ -6,7 +6,7 @@ class_name DoorRules
 extends RefCounted
 
 ## Rewards that reset sinceGod.
-const GOD_TYPES: Array[String] = ["god", "rod", "surica"]
+const GOD_TYPES: Array[String] = ["god", "rod", "surica", "svarog"]
 ## Ordinary door types implemented now, with their tuning weight keys.
 const ORDINARY: Array[String] = ["arms", "loot", "heal"]
 
@@ -34,7 +34,7 @@ static func unlocks(runs_done: int, bosses: int, all_gods: Array[String], t: Dic
 	var gods: Array[String] = []
 	var types: Array[String] = ["god", "loot", "heal"]
 	if runs_done < int(t.get("unlock_all_gods_runs", 1)):
-		gods.append(String(t.get("first_run_god", "svarog")))
+		gods.append(String(t.get("first_run_god", "kupala")))
 	else:
 		gods.assign(all_gods)
 		types.append_array(["rod", "arms"])
@@ -44,16 +44,20 @@ static func unlocks(runs_done: int, bosses: int, all_gods: Array[String], t: Dic
 
 ## Builds a fork. ctx: god_time (bool), gods (open gods), types (open types),
 ## can_surica (the hero holds a rune below max level).
+## ctx also: held (gods the hero holds: their doors are god_held_w times more
+## likely, gods-expansion §3.6 balance note), svarog_ok (the forge may show).
 static func make_fork(rng: RandomNumberGenerator, ctx: Dictionary, t: Dictionary) -> Array[Dictionary]:
 	var n := 3 if rng.randf() < float(t.get("fork_three", 0.45)) else 2
 	var doors: Array[Dictionary] = []
 	var types: Array = ctx.get("types", [])
 	var gods: Array = ctx.get("gods", [])
+	var held: Array = ctx.get("held", [])
+	var hw := float(t.get("god_held_w", 1.0))
 	if bool(ctx.get("god_time", false)) and "god" in types and not gods.is_empty():
-		doors.append(_god_door(rng, gods, doors))
+		doors.append(_god_door(rng, gods, doors, held, hw))
 		while doors.size() < n:
 			if _free_gods(gods, doors).size() > 0 and rng.randf() < float(t.get("god_other_chance", 0.5)):
-				doors.append(_god_door(rng, gods, doors))
+				doors.append(_god_door(rng, gods, doors, held, hw))
 			elif "surica" in types and bool(ctx.get("can_surica", false)) and not _has(doors, "surica") \
 					and rng.randf() < float(t.get("surica_chance", 0.35)):
 				doors.append({ "type": "surica", "god": "" })
@@ -64,7 +68,60 @@ static func make_fork(rng: RandomNumberGenerator, ctx: Dictionary, t: Dictionary
 	else:
 		while doors.size() < n:
 			doors.append(ordinary(rng, doors, types, t))
+	if bool(ctx.get("svarog_ok", false)) and svarog_roll(rng, int(ctx.get("svarog_dry", 0)), t):
+		var at := doors.size() - 1
+		for i in range(doors.size() - 1, -1, -1):
+			if doors[i].type != "god":
+				at = i
+				break
+		doors[at] = { "type": "svarog", "god": "svarog" }
 	return doors
+
+## Горн Сварога roll (gods-expansion §3.12, F): svarog_chance, × svarog_dry_mult
+## after svarog_dry_runs runs in a row without one.
+static func svarog_roll(rng: RandomNumberGenerator, dry: int, t: Dictionary) -> bool:
+	var c := float(t.get("svarog_chance", 0.05))
+	if dry >= int(t.get("svarog_dry_runs", 3)):
+		c *= float(t.get("svarog_dry_mult", 2.0))
+	return rng.randf() < c
+
+## May a forge door show now: open, location ≥ svarog_min_loc, none yet in this
+## location, fewer than svarog_per_run upgrades, and something left to offer.
+static func svarog_ok(open: bool, tier: int, tiers_seen: Array, taken: int, offer_left: int, t: Dictionary) -> bool:
+	return open and tier >= int(t.get("svarog_min_loc", 2)) and not tier in tiers_seen \
+		and taken < int(t.get("svarog_per_run", 2)) and offer_left > 0
+
+## Rune gods open for these stats (gods-expansion §3.14): rows of `gods_tbl`
+## of kind "runes" (not Rod) whose `unlock` minimums are all met. stats: runs,
+## bosses, boss_kinds, wins. Sorted.
+static func gods_open(gods_tbl: Dictionary, stats: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for id: String in gods_tbl:
+		var r: Variant = gods_tbl[id]
+		if id.begins_with("_") or not r is Dictionary or id == "rod":
+			continue
+		if String((r as Dictionary).get("kind", "runes")) != "runes":
+			continue
+		var need: Dictionary = (r as Dictionary).get("unlock", {})
+		var ok := true
+		for k: String in need:
+			ok = ok and int(stats.get(k, 0)) >= int(need[k])
+		if ok:
+			out.append(id)
+	out.sort()
+	return out
+
+## The Prophet's choice (§3.13): `open` minus `off` (only gods with toggle);
+## fewer than `min_on` left -> every open god.
+static func enabled_gods(open: Array[String], off: Array[String], gods_tbl: Dictionary, min_on: int) -> Array[String]:
+	var out: Array[String] = []
+	for g in open:
+		var tog := bool((gods_tbl.get(g, {}) as Dictionary).get("toggle", true))
+		if not tog or not g in off:
+			out.append(g)
+	if out.size() < mini(min_on, open.size()):
+		return open.duplicate()
+	return out
 
 ## F4.6: weighted ordinary door not yet in the fork; empty pool -> loot (edge 2).
 static func ordinary(rng: RandomNumberGenerator, doors: Array[Dictionary], types: Array, t: Dictionary) -> Dictionary:
@@ -109,9 +166,19 @@ static func lair_gods(rng: RandomNumberGenerator, open_gods: Array, held: Array,
 		out[out.size() - 1] = fresh[rng.randi_range(0, fresh.size() - 1)]
 	return out
 
-static func _god_door(rng: RandomNumberGenerator, gods: Array, doors: Array) -> Dictionary:
+static func _god_door(rng: RandomNumberGenerator, gods: Array, doors: Array, held: Array = [], hw: float = 1.0) -> Dictionary:
 	var free := _free_gods(gods, doors)
-	return { "type": "god", "god": free[rng.randi_range(0, free.size() - 1)] }
+	if held.is_empty() or hw == 1.0:
+		return { "type": "god", "god": free[rng.randi_range(0, free.size() - 1)] }
+	var total := 0.0
+	for g in free:
+		total += hw if g in held else 1.0
+	var roll := rng.randf() * total
+	for g in free:
+		roll -= hw if g in held else 1.0
+		if roll < 0.0:
+			return { "type": "god", "god": g }
+	return { "type": "god", "god": free[-1] }
 
 static func _free_gods(gods: Array, doors: Array) -> Array[String]:
 	var out: Array[String] = []

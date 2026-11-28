@@ -2,7 +2,7 @@
 ## edge cases 2, 3; AC 9, 10, 14). Reads the shipped tuning for the weights.
 extends GdUnitTestSuite
 
-const GODS: Array[String] = ["svarog", "perun", "stribog", "veles", "zhiva"]
+const GODS: Array[String] = ["kupala", "perun", "stribog", "veles", "zhiva"]
 const ALL_TYPES: Array[String] = ["god", "loot", "heal", "rod", "arms", "surica"]
 
 func _t() -> Dictionary:
@@ -89,14 +89,14 @@ func test_ordinary_weights_follow_f46() -> void:
 func test_first_run_opens_one_god_loot_and_heal_only() -> void:
 	var t := _t()
 	var u := DoorRules.unlocks(0, 0, GODS, t)
-	assert_array(u.gods).is_equal(["svarog"])
+	assert_array(u.gods).is_equal(["kupala"])
 	assert_array(u.types).contains_exactly_in_any_order(["god", "loot", "heal"])
 	var r := _rng(3)
 	for i in 500:
 		for d in DoorRules.make_fork(r, { "god_time": i % 2 == 0, "gods": u.gods, "types": u.types, "can_surica": true }, t):
 			assert_bool(String(d.type) in ["god", "loot", "heal"]).is_true()
 			if d.type == "god":
-				assert_str(String(d.god)).is_equal("svarog")
+				assert_str(String(d.god)).is_equal("kupala")
 
 func test_second_run_opens_all_gods_rod_arms_and_surica_after_a_boss() -> void:
 	var t := _t()
@@ -110,7 +110,7 @@ func test_lair_offers_three_different_gods_with_a_new_one() -> void:
 	var r := _rng(31)
 	var count := {}
 	for i in 1000:
-		var g := DoorRules.lair_gods(r, GODS, ["svarog", "perun", "stribog", "veles"], 3)
+		var g := DoorRules.lair_gods(r, GODS, ["kupala", "perun", "stribog", "veles"], 3)
 		assert_int(g.size()).is_equal(3)
 		var seen := {}
 		for x in g:
@@ -118,7 +118,7 @@ func test_lair_offers_three_different_gods_with_a_new_one() -> void:
 			count[x] = int(count.get(x, 0)) + 1
 		assert_int(seen.size()).is_equal(3)
 		assert_bool("zhiva" in g).is_true()
-	assert_int(int(count.get("svarog", 0))).is_between(300, 800)
+	assert_int(int(count.get("kupala", 0))).is_between(300, 800)
 
 func test_lair_every_god_appears_in_50_to_70_percent_when_hero_has_none() -> void:
 	var r := _rng(37)

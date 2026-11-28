@@ -8,7 +8,7 @@ class_name LootRoller
 extends RefCounted
 
 const RARITIES: Array[String] = ["c", "r", "e", "l"]
-const GODS: Array[String] = ["svarog", "perun", "stribog", "veles", "zhiva"]
+const GODS: Array[String] = ["kupala", "perun", "stribog", "veles", "zhiva"]
 
 ## 4.1: true = main weapon. `kind` "arm"/"sub" forces the slot (Yaga: "arm").
 static func roll_is_main(u: float, kind: String, t: Dictionary) -> bool:

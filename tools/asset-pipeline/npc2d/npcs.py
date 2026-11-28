@@ -12,6 +12,9 @@ Looks after the character profiles and the art bible (§3 shapes, §4 palette,
     chur    Чур: carved post from the bridge's first beam, crack across the face,
             ember eyes, warm glow under the roots, the Капище fire
     ofenya  Офеня: thin peddler, korob on his back, felt hat, pale (he is dead), tosses a coin
+    prorok  Пророк: tall blind old seer, linen robe, violet sash, cloth over the eyes, long
+            white beard, a staff topped by a carved eye; small lights in the gods' colours
+            circle the staff (he calls or sends away the gods, gods-expansion §3.13)
 Each has idle (loop, signature gesture), talk (loop) and react (one-shot nod / laugh).
 """
 import numpy as np
@@ -970,4 +973,145 @@ class Ofenya(Npc):
                       'warm': dict(happy=True, mouth=0.7, smile=1.0, tilt=-0.1, hn=(0.8, -3.0), coin=(0.88, -3.02))}
 
 
-NPCS = {'dolya': Dolya, 'potap': Potap, 'sova': Sova, 'bayun': Bayun, 'chur': Chur, 'ofenya': Ofenya}
+GOD_LIGHTS = [hexc(h) for h in ('FF5E4D', '8FD3FF', 'BFF0D8', 'C08AFF', '7FD67A', 'F08CC0', 'FFF06A', 'FFC46B',
+                                 'C8F046', 'A8A8B8', 'F8F0FF', '7FE0E0')]
+
+
+class Prorok(Npc):
+    BOUNDS = (-1.9, 2.0, -6.1, 0.3)
+    PORTRAIT = (0.05, -4.05, 0.95)
+    SKIN = hexc('D9C2A6')
+    ROBE = hexc('D8D0C0')
+    SASH = hexc('5A4A8A')
+    BEARD = hexc('EDE8E0')
+    STAFF = hexc('6B4A2E')
+    BASE = dict(breath=0.0, tilt=0.0, mouth=0.0, smile=0.3, lean=0.0, hn=(0.78, -3.0), hf=(-0.2, -2.3),
+                spin=0.0, glow=0.5, brow=0.0)
+
+    def setup(self):
+        p = self.p
+        b = p['breath']
+        ln = p['lean']
+        self.neck = V(0.02 - ln * 0.8, -3.78 - b * 0.03)
+        self.sh_n = V(0.24 - ln * 0.7, -3.52 - b * 0.03)
+        self.sh_f = V(-0.3 - ln * 0.7, -3.54 - b * 0.03)
+        self.staff_x = 0.95
+
+    def layers(self):
+        return [self.far_arm, self.robe, self.staff, self.head, self.near_arm, self.lights]
+
+    def far_arm(self):
+        cv = self.cv
+        d, el, h = self.limb(self.sh_f, self.p['hf'], 0.7, 0.62, 0.15, 0.11, (-0.4, 1))
+        self.P(d, self.ROBE, R=0.12, dim=0.75)
+        self.P(hand(cv, h, 0.085), self.SKIN, R=0.05, dim=0.82)
+
+    def robe(self):
+        cv, p = self.cv, self.p
+        ln = p['lean']
+        n = self.neck
+        d = cv.poly([n + (-0.46, 0.12), n + (0.4, 0.1), (0.78 - ln * 0.3, -0.02), (-0.8 - ln * 0.3, 0.0)], 0.08)
+        folds = 1 - 0.14 * np.clip(np.sin(cv.X * 9 + cv.Y * 0.8 + cv.n_mid * 2), 0, 1)
+        self.P(d, self.ROBE, R=0.45, pattern=folds)
+        # embroidered hem: a violet band with gold rhombi
+        hem = cv.inter(d - 0.01, np.abs(cv.Y + 0.22) - 0.12)
+        self.deco(hem, self.SASH, line=0.4)
+        for k in range(7):
+            x = -0.62 + k * 0.21 - ln * 0.3
+            self.P(cv.poly([(x, -0.32), (x + 0.07, -0.22), (x, -0.12), (x - 0.07, -0.22)]), GOLDL, R=0.02, line=0.3, cast=False)
+        cv.ink(cv.inter(cv.path([n + (0.1, 0.2), (0.12 - ln * 0.3, -2.4), (0.08 - ln * 0.3, -0.34)], 0.01), d), alpha=0.5)
+        sash = cv.inter(d - 0.01, np.abs(cv.Y + 2.45 + cv.X * 0.06) - 0.1)
+        self.P(sash, self.SASH, R=0.06, line=0.5, cast=False)
+        for dx, ln2 in ((-0.38, 0.9), (-0.24, 0.75)):
+            self.P(cv.path([(dx - ln * 0.3, -2.42), (dx - 0.06 - ln * 0.3, -2.42 + ln2 * 0.7), (dx - 0.02 - ln * 0.3, -2.42 + ln2)], 0.045, 0.03),
+                   self.SASH * 0.9, R=0.04, line=0.5, cast=False)
+        # a mantle over the shoulders
+        mant = cv.poly([n + (-0.55, 0.05), n + (0.48, 0.05), n + (0.42, 0.75), n + (-0.6, 0.8)], 0.1)
+        self.P(mant, hexc('8A7F95'), R=0.2, pattern=1 - 0.1 * np.clip(np.sin(cv.X * 30), 0.5, 1))
+
+    def staff(self):
+        cv, p = self.cv, self.p
+        x = self.staff_x - p['lean'] * 0.3
+        top = V(x, -5.2)
+        self.P(cv.path([(x - 0.02, 0.0), (x + 0.02, -2.6), top + (0, 0.2)], 0.055, 0.045), self.STAFF, R=0.05,
+               pattern=1 - 0.2 * np.clip(np.sin(cv.Y * 30), 0.6, 1))
+        ring = cv.circle(top + (0, -0.12), 0.26)
+        self.P(cv.inter(ring, -(cv.circle(top + (0, -0.12), 0.17))), self.STAFF * 1.1, R=0.05, line=0.8)
+        g = 0.5 + 0.5 * p['glow']
+        self.cv.paint(cv.ellipse(top + (0, -0.12), 0.15, 0.1), LINEN, R=0.03, line=0.6, cast=False, union=False,
+                      hl=1.2, glow=(self.SASH * 1.4, 0.05, 0.25 * g))
+        self.P(cv.circle(top + (0, -0.12), 0.055), self.SASH * 0.8, R=0.02, line=0.3, cast=False, rim=False)
+
+    def head(self):
+        cv, p = self.cv, self.p
+        with Frame(cv, self.neck, p['tilt']):
+            hc = V(0.06, -0.44)
+            self.P(cv.ellipse(hc + (-0.14, -0.02), 0.3, 0.34), self.BEARD * 0.93, R=0.2)  # hair at the back
+            face = cv.smin(cv.ellipse(hc + (0.04, 0.0), 0.29, 0.36), cv.ellipse(hc + (0.1, 0.2), 0.2, 0.18), 0.08)
+            self.P(face, self.SKIN, R=0.25)
+            # the long beard
+            br = cv.poly([hc + (-0.12, 0.18), hc + (0.32, 0.2), hc + (0.26, 0.95), hc + (0.08, 1.25), hc + (-0.04, 0.9)], 0.06)
+            self.P(br, self.BEARD, R=0.15, pattern=1 - 0.18 * np.clip(np.sin(cv.X * 55 + cv.Y * 6), 0.3, 1))
+            self.P(cv.path([hc + (0.0, 0.18), hc + (0.18, 0.14), hc + (0.34, 0.2)], 0.035, 0.022), self.BEARD, R=0.03,
+                   line=0.5, cast=False)
+            # cloth over the eyes, the knot behind
+            band = cv.inter(face + 0.03, np.abs(cv.Y - hc[1] + 0.06) - 0.075)
+            self.P(band, self.SASH * 1.05, R=0.06, line=0.6, cast=False)
+            self.P(cv.path([hc + (-0.27, -0.06), hc + (-0.42, 0.1), hc + (-0.38, 0.26)], 0.035, 0.02), self.SASH, R=0.03,
+                   line=0.5, cast=False)
+            bu = p['brow'] * 0.04
+            for c in (hc + (0.2, -0.17 - bu), hc + (0.0, -0.18 - bu)):
+                self.P(cv.path([c + (-0.06, 0.0), c + (0.0, -0.025), c + (0.06, 0.0)], 0.02, 0.014), self.BEARD, R=0.02,
+                       line=0.3, cast=False, rim=False)
+            self.P(cv.cone(hc + (0.28, -0.02), hc + (0.34, 0.12), 0.03, 0.05), self.SKIN, R=0.04, line=0.5)
+            self.mouth(hc + (0.2, 0.28), 0.06, p['mouth'], p['smile'])
+            # a simple linen hood
+            hood = cv.poly([hc + (-0.36, 0.1), hc + (-0.3, -0.36), hc + (0.06, -0.5), hc + (0.3, -0.36), hc + (0.28, -0.22),
+                            hc + (-0.1, -0.3), hc + (-0.2, 0.2)], 0.08)
+            self.P(hood, hexc('8A7F95'), R=0.25, pattern=1 - 0.1 * np.clip(cv.n_hi * 5, 0, 1))
+
+    def near_arm(self):
+        cv = self.cv
+        d, el, h = self.limb(self.sh_n, self.p['hn'], 0.66, 0.6, 0.15, 0.11, (0.1, 1))
+        self.P(d, self.ROBE * 1.04, R=0.12)
+        self.P(cv.inter(d, cv.circle(h, 0.22)), self.ROBE * 0.82, R=0.05, line=0.6, cast=False)
+        self.P(hand(cv, h + (0.04, -0.02), 0.09), self.SKIN, R=0.05)
+
+    def lights(self):
+        cv, p = self.cv, self.p
+        c = V(self.staff_x - p['lean'] * 0.3, -5.32)
+        n = len(GOD_LIGHTS)
+        for k, col in enumerate(GOD_LIGHTS):
+            a = p['spin'] * TAU + k * TAU / n
+            depth = np.sin(a)
+            pos = c + (np.cos(a) * 0.62, depth * 0.2)
+            r = 0.05 + 0.015 * depth
+            self.cv.paint(cv.circle(pos, r), col, R=0.02, line=0.4, cast=False, union=False, hl=1.4,
+                          glow=(col, 0.02, 0.12))
+
+    @staticmethod
+    def anims():
+        def idle(t):
+            ph = t * TAU
+            return dict(breath=np.sin(ph), spin=t, glow=0.5 + 0.5 * np.sin(ph), tilt=0.05 * np.sin(ph),
+                        hf=(-0.2, -2.3 + 0.04 * np.sin(ph)))
+
+        def talk(t):
+            ph = t * TAU
+            return dict(breath=np.sin(ph), spin=t * 2, glow=0.8 + 0.2 * np.sin(ph * 2),
+                        hf=(0.35 + 0.1 * np.cos(ph * 2), -2.75 + 0.18 * np.cos(ph * 2)), tilt=0.05 * np.sin(ph * 2),
+                        brow=0.5 + 0.5 * np.sin(ph * 2),
+                        mouth=[0.0, 0.5, 0.25, 0.6, 0.15, 0.55, 0.35, 0.1][int(round(t * 8)) % 8])
+
+        def react(t):
+            n = bump(t, 0.05, 0.95)
+            return dict(lean=-0.08 * n, tilt=-0.18 * n, spin=t * 1.5, glow=0.5 + 0.5 * n, smile=0.3 + 0.6 * n,
+                        mouth=0.3 * n, hf=(0.1, -2.6 - 0.4 * n))
+        return {'idle': (cyc(16, idle), 8, True), 'talk': (cyc(8, talk), 10, True),
+                'react': (seq(10, react), 10, False)}
+
+    PORTRAIT_POSES = {'calm': dict(brow=0.3, glow=0.7, spin=0.1),
+                      'warm': dict(smile=1.0, mouth=0.5, tilt=-0.1, glow=1.0, spin=0.3)}
+
+
+NPCS = {'dolya': Dolya, 'potap': Potap, 'sova': Sova, 'bayun': Bayun, 'chur': Chur, 'ofenya': Ofenya, 'prorok': Prorok}
