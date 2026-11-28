@@ -136,6 +136,11 @@ func _ready() -> void:
 		push_error("World: unknown amulet '%s', using ring" % amulet_id)
 		amulet_id = "ring"
 	RenderingServer.set_default_clear_color(Color("#0c1418"))
+	var fps_layer := CanvasLayer.new()
+	fps_layer.layer = 100
+	fps_layer.name = "FpsLayer"
+	fps_layer.add_child(FpsLabel.new())
+	add_child(fps_layer)
 	var legacy := false
 	for a in OS.get_cmdline_user_args():
 		for f in LEGACY_FLAGS:
@@ -145,26 +150,14 @@ func _ready() -> void:
 		_base_view()
 	elif legacy:
 		start_room()
+	elif wants_main_menu(OS.get_cmdline_user_args(), bool(get_node("/root/Game").get("save_from_args"))):
+		var mm := MainMenu.new()
+		mm.start.connect(func(slot: int, new_game: bool) -> void:
+			get_node("/root/Game").call("use_slot", slot, new_game)
+			_launch())
+		show_screen.call_deferred(mm, 40)
 	else:
-		director = RunDirector.new()
-		director.world = self
-		director.game = get_node("/root/Game")
-		add_child(director)
-		var args := OS.get_cmdline_user_args()
-		var has_run: bool = director.game.run != null
-		var go := func() -> void:
-			if wants_prologue(args, director.game.meta, has_run):
-				start_prologue()
-			else:
-				director.begin.call_deferred()
-		if wants_difficulty_choice(args, director.game.meta, has_run):
-			var dc := DifficultyChoiceScreen.new()
-			dc.chosen.connect(func(id: String) -> void:
-				director.game.set_difficulty(id)
-				go.call())
-			show_screen.call_deferred(dc, 40)
-		else:
-			go.call()
+		_launch()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--demo="):
 			var d: Node = (load("res://tests/integration/core/demo_driver.gd") as GDScript).new()
@@ -245,10 +238,53 @@ func _ready() -> void:
 			var vxc: Node = (load("res://tests/integration/vfx/vfx_check_driver.gd") as GDScript).new()
 			vxc.set("out_dir", a.trim_prefix("--vfx-check="))
 			add_child(vxc)
+		elif a.begins_with("--perf-check="):
+			var pfc: Node = (load("res://tests/integration/perf/perf_check_driver.gd") as GDScript).new()
+			pfc.set("out_dir", a.trim_prefix("--perf-check="))
+			add_child(pfc)
+		elif a.begins_with("--menu-check="):
+			var mc: Node = (load("res://tests/integration/core/menu_check_driver.gd") as GDScript).new()
+			mc.set("out_dir", a.trim_prefix("--menu-check="))
+			add_child(mc)
 		elif a.begins_with("--settings-check="):
 			var stc: Node = (load("res://tests/integration/core/settings_check_driver.gd") as GDScript).new()
 			stc.set("out_dir", a.trim_prefix("--settings-check="))
 			add_child(stc)
+
+## Starts the game proper: the run director, then (new save) the difficulty
+## choice and the prologue, then RunDirector.begin (the base, or a run under a check).
+func _launch() -> void:
+	director = RunDirector.new()
+	director.world = self
+	director.game = get_node("/root/Game")
+	add_child(director)
+	var args := OS.get_cmdline_user_args()
+	var has_run: bool = director.game.run != null
+	var go := func() -> void:
+		if wants_prologue(args, director.game.meta, has_run):
+			start_prologue()
+		else:
+			director.begin.call_deferred()
+	if wants_difficulty_choice(args, director.game.meta, has_run):
+		var dc := DifficultyChoiceScreen.new()
+		dc.chosen.connect(func(id: String) -> void:
+			director.game.set_difficulty(id)
+			go.call())
+		show_screen.call_deferred(dc, 40)
+	else:
+		go.call()
+
+## True when a launch opens the main menu first: a normal start (no --save=,
+## no check, demo or --skip-menu flag). Pure (tested).
+static func wants_main_menu(args: PackedStringArray, save_from_args: bool) -> bool:
+	if save_from_args and not args.has("--menu-slots"):
+		return false
+	for a in args:
+		if a.begins_with("--menu-check="):
+			continue
+		if a.contains("-check=") or a.begins_with("--demo=") or a == "--skip-menu":
+			return false
+	return true
 
 ## `--base-view`: the base yard «Застава» alone (stations, no run, no save
 ## written), for art screenshots (production/qa/evidence/art3d-pipeline.md).
@@ -266,7 +302,7 @@ static func wants_prologue(args: PackedStringArray, meta: MetaState, has_run: bo
 	for a in args:
 		if a.begins_with("--story-check="):
 			return true
-		if a.contains("-check="):
+		if a.contains("-check=") and not a.begins_with("--menu-check="):
 			return false
 	return not meta.story.flags.has("prologue_seen") and meta.runs == 0 and not has_run
 
@@ -275,7 +311,7 @@ static func wants_prologue(args: PackedStringArray, meta: MetaState, has_run: bo
 ## check or demo flag. Checks keep «Былина».
 static func wants_difficulty_choice(args: PackedStringArray, meta: MetaState, has_run: bool) -> bool:
 	for a in args:
-		if a.contains("-check=") or a.begins_with("--demo="):
+		if (a.contains("-check=") and not a.begins_with("--menu-check=")) or a.begins_with("--demo="):
 			return false
 	return meta.difficulty == "" and meta.runs == 0 and not has_run
 
@@ -438,6 +474,8 @@ func _add_hero(loc: Dictionary, vis: Dictionary, at: Vector2, lim: Rect2i) -> vo
 ## Frees everything of the current room (room, hero, enemies, props, HUD layers).
 func _clear_room() -> void:
 	for c in get_children():
+		if c.name == "FpsLayer":
+			continue
 		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
 				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot \
 				or c is Chest or c is Trap or c is FireTrail or c is KnightReward or c is Atmosphere or c is ArtSlice \

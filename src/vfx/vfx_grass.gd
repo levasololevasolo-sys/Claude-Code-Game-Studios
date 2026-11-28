@@ -42,13 +42,19 @@ func build(layout: Dictionary, ground: float) -> void:
 	var w := float(layout.get("w", 2000.0))
 	var spans: Array = []
 	var cuts: Array = []
-	for r: Rect2 in layout.get("solids", []):
+	if layout.has("surfaces"):
+		# A whole level (LevelRoom): only the open floor tops, no ground line.
+		for sf: Vector3 in layout.surfaces:
+			spans.append(Vector3(sf.x + 4.0, sf.y - 4.0, sf.z))
+		ground = -1e9
+	for r: Rect2 in ([] if layout.has("surfaces") else layout.get("solids", [])):
 		if r.end.y >= ground - 1.0 and r.position.y < ground:
 			cuts.append(Vector2(r.position.x, r.end.x))
 		spans.append(Vector3(r.position.x + 4.0, r.end.x - 4.0, r.position.y))
-	for p: Vector3 in layout.get("plats", []):
+	for p: Vector3 in ([] if layout.has("surfaces") else layout.get("plats", [])):
 		spans.append(Vector3(p.x + 6.0, p.x + p.z - 6.0, p.y))
-	spans.push_front(Vector3(0.0, w, ground))
+	if not layout.has("surfaces"):
+		spans.push_front(Vector3(0.0, w, ground))
 	var ev: Array = spec.get("every", [20, 40])
 	var hh: Array = spec.get("h", [12, 28])
 	var bl: Array = spec.get("blades", [3, 5])
@@ -96,11 +102,9 @@ func _tick(dt: float) -> void:
 	var damp := float(spec.get("damp", 5.0))
 	var push := float(spec.get("push", 0.9))
 	var wind := float(spec.get("wind", 0.05))
-	var x0 := view.position.x
-	var x1 := view.end.x
 	for i in x.size():
 		var tx := x[i]
-		if tx < x0 or tx > x1:
+		if not view.has_point(Vector2(tx, y[i])):
 			continue
 		var target := wind * sin(_t * 1.7 + tx * 0.013) + gust * (0.75 + 0.25 * sin(_t * 9.0 + tx * 0.05))
 		for ac: Array in actors:
@@ -131,16 +135,22 @@ func _draw_tufts(fr: bool, on: CanvasItem) -> void:
 	var head_s := String(spec.get("head", ""))
 	var head := Color(head_s) if head_s != "" else Color.TRANSPARENT
 	var head_p := float(spec.get("head_chance", 0.0))
-	var x0 := view.position.x
-	var x1 := view.end.x
+	# Every blade of the set goes into two batched multilines (lower and upper
+	# halves), not one draw call per segment: a whole level holds thousands of
+	# blades (BUG: 15 FPS, 22 000 draw calls).
+	var pts := PackedVector2Array()
+	var pcs := PackedColorArray()
+	var idx := PackedInt32Array()
+	var heads: Array = []
 	for i in x.size():
-		if (front[i] == 1) != fr or x[i] < x0 or x[i] > x1:
+		if (front[i] == 1) != fr or not view.has_point(Vector2(x[i], y[i])):
 			continue
 		var n := nb[i]
 		var sk := seed_k[i]
 		var base_c := c0.lerp(c1, sk)
 		if fr:
 			base_c = base_c.darkened(0.35)
+		var top_c := base_c.lerp(tip, 0.55)
 		for b in n:
 			var hb := Room._h(i * 7 + b, 21)
 			var bx := x[i] + (b - (n - 1) * 0.5) * 3.0
@@ -149,9 +159,28 @@ func _draw_tufts(fr: bool, on: CanvasItem) -> void:
 			var root := Vector2(bx, y[i])
 			var mid := root + Vector2(sin(lean * 0.4), -cos(lean * 0.4)) * bh * 0.5
 			var top := mid + Vector2(sin(lean), -cos(lean)) * bh * 0.5
-			on.draw_line(root, mid, base_c, 2.2, false)
-			on.draw_line(mid, top, base_c.lerp(tip, 0.55), 1.5, false)
+			_quad(pts, pcs, idx, root, mid, 2.2, base_c)
+			_quad(pts, pcs, idx, mid, top, 1.5, top_c)
 			if head.a > 0.0 and b == 0 and sk < head_p:
-				on.draw_set_transform(top, lean, Vector2(0.45, 1.0))
-				on.draw_circle(Vector2.ZERO, 4.0, head)
-				on.draw_set_transform(Vector2.ZERO)
+				heads.append([top, lean])
+	if idx.size() > 0:
+		# one triangle soup for the whole set: a single draw command
+		RenderingServer.canvas_item_add_triangle_array(on.get_canvas_item(), idx, pts, pcs)
+	for hd: Array in heads:
+		on.draw_set_transform(hd[0], hd[1], Vector2(0.45, 1.0))
+		on.draw_circle(Vector2.ZERO, 4.0, head)
+	if not heads.is_empty():
+		on.draw_set_transform(Vector2.ZERO)
+
+## Appends the quad of segment a-b, `w` px wide, to a triangle soup.
+static func _quad(pts: PackedVector2Array, pcs: PackedColorArray, idx: PackedInt32Array, a: Vector2, b: Vector2, w: float, c: Color) -> void:
+	var d := b - a
+	var n := Vector2(-d.y, d.x).normalized() * (w * 0.5) if d.length_squared() > 0.0001 else Vector2(w * 0.5, 0.0)
+	var k := pts.size()
+	pts.append(a + n)
+	pts.append(a - n)
+	pts.append(b - n)
+	pts.append(b + n)
+	for i in 4:
+		pcs.append(c)
+	idx.append_array([k, k + 1, k + 2, k, k + 2, k + 3])

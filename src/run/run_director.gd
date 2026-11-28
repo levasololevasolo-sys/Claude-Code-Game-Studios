@@ -104,8 +104,20 @@ func begin() -> void:
 			_start_weapons()
 		_note("resume run seed %d at haven of tier %d" % [run.run_seed, run.tier])
 		enter_room()
+	elif starts_at_base(OS.get_cmdline_user_args()):
+		# A normal launch begins in the base «Застава»; its gate starts the run.
+		game.run = null
+		enter_base()
 	else:
 		new_run()
+
+## True when a launch begins in the base, not straight in a run: every normal
+## start. Scripted checks and the demo (and --run-now) keep starting a run. Pure (tested).
+static func starts_at_base(args: PackedStringArray) -> bool:
+	for a in args:
+		if (a.contains("-check=") and not a.begins_with("--menu-check=")) or a.begins_with("--demo=") or a == "--run-now" or a.begins_with("--seed="):
+			return false
+	return true
 
 ## A new run on `run_seed` (-1 = --seed= or a fresh random seed).
 func new_run(run_seed: int = -1) -> void:

@@ -1,0 +1,20 @@
+OK   a normal launch opens the main menu
+OK   no run and no level behind the menu
+OK   no save: no «Продолжить», «Новая игра» is there
+screenshot menu-main-empty.png
+OK   «Новая игра» lists 5 slots
+screenshot menu-slots.png
+OK   a new slot asks for the difficulty
+screenshot menu-difficulty.png
+OK   then the prologue plays
+screenshot menu-prologue.png
+OK   after the prologue the hero is in the base «Застава», not in location 1
+OK   no run is going on in the base
+screenshot menu-base.png
+OK   slot 1 is saved
+OK   slot 1 is remembered as the last one
+OK   with a save the menu offers «Продолжить»
+screenshot menu-main-continue.png
+OK   the base gate starts a run
+screenshot menu-run.png
+DONE: 0 failed checks

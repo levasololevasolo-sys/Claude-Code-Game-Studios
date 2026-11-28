@@ -1,5 +1,5 @@
 ## Game autoload (ADR-0003 § Owner): holds MetaState, the current RunState (or
-## null) and its RunRng; loads and writes user://save.json. Systems do not read
+## null) and its RunRng; loads and writes the current slot file (user://slot_N.json). Systems do not read
 ## this autoload: the run scene (World + RunDirector) passes state and streams
 ## to its children. `--fresh` skips reading the save; `--save=<path>` points the
 ## file elsewhere (checks use it so they never touch the player's save).
@@ -9,6 +9,8 @@ extends Node
 signal saved(path: String, ok: bool)
 
 var save_path: String = "user://save.json"
+## True when --save= named the file (checks): no slots, no main menu.
+var save_from_args: bool = false
 var meta: MetaState = MetaState.new()
 var run: RunState = null
 var rng: RunRng = null
@@ -22,9 +24,27 @@ func _ready() -> void:
 			fresh = true
 		elif a.begins_with("--save="):
 			save_path = a.trim_prefix("--save=")
+			save_from_args = true
+	if not save_from_args:
+		SaveSlots.migrate_old_save()
+		save_path = SaveSlots.slot_path(maxi(1, SaveSlots.last_slot()))
 	if not fresh:
 		load_save()
 	_sync_difficulty()
+
+## Plays slot `i`: a new game wipes it (fresh meta, no run), otherwise its save
+## is read. Remembers it as the last slot.
+func use_slot(i: int, new_game: bool) -> void:
+	save_path = SaveSlots.slot_path(i)
+	SaveSlots.remember(i)
+	if new_game:
+		meta = MetaState.new()
+		run = null
+		rng = null
+		meta_before = {}
+		_sync_difficulty()
+	else:
+		load_save()
 
 ## Reads the save file into meta and run (missing/broken -> defaults).
 func load_save() -> void:

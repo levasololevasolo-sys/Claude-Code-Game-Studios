@@ -39,7 +39,7 @@ func build_level(l: Dictionary) -> void:
 				plats.append(Vector3(x0 * cell, y * cell, (x - x0) * cell))
 			else:
 				x += 1
-	layout = { "w": cols * cell, "h": rows * cell, "plats": plats, "packs": [], "solids": solids, "top": 0.0, "portal": false, "level": true }
+	layout = { "w": cols * cell, "h": rows * cell, "plats": plats, "packs": [], "solids": solids, "top": 0.0, "portal": false, "level": true, "surfaces": surfaces(grid) }
 	var body := StaticBody2D.new()
 	body.collision_layer = 1
 	for r: Rect2 in solids:
@@ -114,6 +114,30 @@ func merged_rects(chars: String) -> Array:
 				nxt[k] = y
 		open = nxt
 	return out
+
+## Floor tops a thing can stand on and see the sky from: Vector3(x0, x1, y) in
+## world px for each run of `#` or one-way cells whose cell above is open air
+## (not solid, not a platform, not bog water or thorns). The VFX grass and lamps
+## stand only on these, so they never float or sit inside rock. Pure (tested).
+static func surfaces(g: PackedStringArray, c: float = 40.0) -> Array:
+	var out: Array = []
+	for y in range(1, g.size()):
+		var line := g[y]
+		var up := g[y - 1]
+		var x := 0
+		var n := mini(line.length(), up.length())
+		while x < n:
+			if _floor_cell(line[x], up[x]):
+				var x0 := x
+				while x < n and _floor_cell(line[x], up[x]):
+					x += 1
+				out.append(Vector3(x0 * c, x * c, y * c))
+			else:
+				x += 1
+	return out
+
+static func _floor_cell(ch: String, above: String) -> bool:
+	return (ch == "#" or _oneway(ch)) and not (above == "#" or _oneway(above) or above == "~" or above == "^")
 
 static func _oneway(ch: String) -> bool:
 	return ch == "=" or ch == "B"

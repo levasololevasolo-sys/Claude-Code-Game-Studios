@@ -1102,18 +1102,27 @@ const PARRY_BLADE: Dictionary = {
 	"staff": [-1.05, -1.3, 0.4], "sickles": [-1.0, -1.3, 0.4],
 }
 
+## Rest angle of the weapon per body, radians (0 = forward, +down, -up).
+const IDLE_ANGLE: Dictionary = { "spear": -1.3, "staff": -1.25, "hammer": -1.0 }
+
 func _blade_angle() -> float:
 	var pp := parry_pose()
 	if pp != "":
 		var row: Array = PARRY_BLADE.get(weapon.body_id(), PARRY_BLADE.blade)
 		return float(row[["parry", "parry_hit", "parry_open"].find(pp)])
 	if atk_t <= 0.0:
-		return 2.2 if dash_t > 0.0 and rolling else 0.9
+		if dash_t > 0.0 and rolling:
+			return 2.2
+		# At rest: short weapons hang down-forward; long ones stand up from the
+		# fist, so their tip never sinks into the floor.
+		return IDLE_ANGLE.get(weapon.body_id(), 0.9) if weapon else 0.9
+	# Linear progress, like the drawn sheet's frames (HeroVisual.choose): an
+	# eased angle ran ahead of the arm, so the blade left the fist mid-swing.
 	var k := clampf(1.0 - atk_t / atk_dur, 0.0, 1.0)
-	k = 1.0 - pow(1.0 - k, 3.0)
 	match atk_dir:
-		"up": return lerpf(0.4, -2.6, k)
-		"down": return lerpf(-0.6, 2.4, k)
+		# up ends pointing up, down ends pointing down (they pointed backwards)
+		"up": return lerpf(0.2, -1.7, k)
+		"down": return lerpf(-0.2, 1.65, k)
 	match weapon.body_id():
 		"spear":
 			return lerpf(-0.15, 0.1, k)
