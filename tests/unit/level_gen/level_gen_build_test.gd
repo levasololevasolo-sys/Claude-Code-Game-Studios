@@ -19,9 +19,13 @@ func _build(s: int, opts: Dictionary = {}) -> Dictionary:
 func test_library_has_12_to_20_templates_of_every_kind() -> void:
 	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/room_templates_swamp.json"))
 	var kinds := {}
+	var core := 0
 	for tp: Dictionary in raw.templates:
 		kinds[tp.kind] = true
-	assert_int((raw.templates as Array).size()).is_between(12, 20)
+		# Seal rooms (artifacts-and-secrets §3.3) come on top: one per seal kind.
+		if String(tp.kind) != "seal":
+			core += 1
+	assert_int(core).is_between(12, 20)
 	for k in ["entry", "corr", "bridge", "arena", "hall", "shaft", "climb", "nook", "secret", "gauntlet", "fork", "altar", "junction", "lairgate"]:
 		assert_bool(kinds.has(k)).override_failure_message("missing kind " + k).is_true()
 	assert_bool(raw.has("legend")).is_true()

@@ -50,6 +50,8 @@ func use_slot(i: int, new_game: bool) -> void:
 func load_save() -> void:
 	var d := SaveFile.read(save_path)
 	meta = MetaState.from_dict(d.get("meta", {}) if d.get("meta") is Dictionary else {})
+	# A save that won before artifacts existed gets them now (artifacts-and-secrets).
+	Artifacts.grant_if_cleared(meta, Tune.table("artifacts"))
 	run = null
 	rng = null
 	if d.get("run") is Dictionary:
@@ -104,6 +106,8 @@ func end_run(outcome: String) -> Dictionary:
 	var before_bosses: Dictionary = before.get("bosses", {}) if before.get("bosses") is Dictionary else {}
 	DialogueRules.record_run(meta, outcome, summary.run, before_bosses, Tune.table("dialogue"))
 	StoryRules.record_run(meta, outcome, summary.run, int(Tune.f("story_history_max")))
+	# The first full clear grants every artifact (artifacts-and-secrets).
+	summary["artifacts_new"] = Artifacts.grant_if_cleared(meta, Tune.table("artifacts"))
 	run = null
 	rng = null
 	summary["bank_after"] = meta.to_dict()

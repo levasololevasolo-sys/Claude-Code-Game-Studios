@@ -246,6 +246,10 @@ func _ready() -> void:
 			var bgc: Node = (load("res://tests/integration/visual/bg_check_driver.gd") as GDScript).new()
 			bgc.set("out_dir", a.trim_prefix("--bg-check="))
 			add_child(bgc)
+		elif a.begins_with("--seal-check="):
+			var slc: Node = (load("res://tests/integration/visual/seal_check_driver.gd") as GDScript).new()
+			slc.set("out_dir", a.trim_prefix("--seal-check="))
+			add_child(slc)
 		elif a.begins_with("--menu-check="):
 			var mc: Node = (load("res://tests/integration/core/menu_check_driver.gd") as GDScript).new()
 			mc.set("out_dir", a.trim_prefix("--menu-check="))
@@ -483,7 +487,7 @@ func _clear_room() -> void:
 		if c is Room or c is Player or c is Enemy or c is EnemyShot or c is Camera2D or c is CanvasLayer \
 				or c is Flare or c is Darkness or c is Door or c is RewardOrb or c is WeaponDrop or c is HeroShot \
 				or c is Chest or c is Trap or c is FireTrail or c is KnightReward or c is Atmosphere or c is ArtSlice \
-				or c is LevelFlow:
+				or c is LevelFlow or c is Seal or c is BreakableWall:
 			if c is Enemy:
 				c.remove_from_group("enemies")
 			c.queue_free()
@@ -671,6 +675,9 @@ func start_level(level: Dictionary, rng: RandomNumberGenerator) -> void:
 		var ch := Chest.new()
 		ch.world = self
 		ch.rich = bool(c.rich)
+		ch.vault = bool(c.get("vault", false))
+		if ch.vault:
+			ch.seal = String((level.rooms[int(c.room)] as Dictionary).get("seal", ""))
 		ch.position = lr.cell_floor(c.c)
 		add_child(ch)
 	for wl: Dictionary in level.walls:
@@ -683,6 +690,26 @@ func start_level(level: Dictionary, rng: RandomNumberGenerator) -> void:
 		bw.position = Vector2((c0.x + 0.5) * lr.cell, (c1.y + 1) * lr.cell)
 		bw.rng = RandomNumberGenerator.new()
 		add_child(bw)
+	var atbl := Tune.table("artifacts")
+	var meta: MetaState = director.game.meta if director and director.game else null
+	for sl: Dictionary in level.get("seals", []):
+		var z: Vector2i = sl.z
+		if z.x < 0:
+			continue
+		var se := Seal.new()
+		se.world = self
+		se.meta = meta
+		se.tbl = atbl
+		se.kind = String(sl.kind)
+		se.cell = lr.cell
+		se.position = lr.cell_floor(z)
+		se.x_cells = sl.x
+		se.w_cells = sl.wc
+		var o: Vector2i = sl.o
+		if o.x >= 0:
+			se.hook = Vector2((o.x + 0.5) * lr.cell, (o.y + 0.5) * lr.cell)
+			se.land = lr.cell_floor(lr.stand_near(o, int(sl.room)))
+		add_child(se)
 	var nt := 0
 	for r: Rect2 in lr.merged_rects("^"):
 		var trap := Trap.new()

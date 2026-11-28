@@ -117,6 +117,8 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				if not summon_queue.is_empty():
 					st = "summon_w"
 					t = windup(stat("summon_wind"), fast(), mw)
+				elif ng_pick(hp_pos):
+					pass
 				else:
 					var names: Array = stats.get("attacks", [])
 					var rows: Array = stats.get("weights", [])
@@ -150,15 +152,19 @@ func think(dt: float, hp_pos: Vector2) -> void:
 			gaze_ang = (hc - eye_pos()).angle()
 			if t <= 0.0:
 				st = "gaze"
-				t = per_phase("gaze_time")
+				t = ngv("time", 1.8) if ng_gaze else per_phase("gaze_time")
 		"gaze":
 			vel.x = 0.0
-			gaze_ang = turn_toward(gaze_ang, (hc - eye_pos()).angle(), per_phase("gaze_turn") * dt)
+			var turn := ngv("turn", 1.1) if ng_gaze else per_phase("gaze_turn")
+			gaze_ang = turn_toward(gaze_ang, (hc - eye_pos()).angle(), turn * dt)
 			face = 1 if cos(gaze_ang) >= 0.0 else -1
-			if gaze_cd <= 0.0 and ray_dist(eye_pos(), gaze_ang, stat("gaze_len"), hc) < stat("gaze_w") / 2.0 + Player.W / 2.0 and _hero_open():
-				gaze_cd = stat("gaze_hit_cd")
-				hurt_hero(stat("dmg") * stat("gaze_dmg_mult"), Hit.Kind.PROJECTILE)
+			var glen := ngv("len", 1500.0) if ng_gaze else stat("gaze_len")
+			var gw := ngv("w", 34.0) if ng_gaze else stat("gaze_w")
+			if gaze_cd <= 0.0 and ray_dist(eye_pos(), gaze_ang, glen, hc) < gw / 2.0 + Player.W / 2.0 and _hero_open():
+				gaze_cd = ngv("hit_cd", 0.5) if ng_gaze else stat("gaze_hit_cd")
+				hurt_hero(stat("dmg") * (ngv("dmg", 0.55) if ng_gaze else stat("gaze_dmg_mult")), Hit.Kind.PROJECTILE)
 			if t <= 0.0:
+				ng_gaze = false
 				_rest(stat("gaze_rest_add"))
 		"lunge_w":
 			vel.x = 0.0
@@ -189,12 +195,84 @@ func think(dt: float, hp_pos: Vector2) -> void:
 			vel.x = 0.0
 			if t <= 0.0:
 				_rest(0.0)
+	if st.begins_with("ng_"):
+		_ng_tick(dt, hp_pos)
 	_tick_dark(dt)
 	_tick_hazards(dt, hp_pos)
 
+# ---------------- NG+ moves (artifacts-and-secrets §3.7) ----------------
+
+## The NG+ gaze (Взгляд из темноты) uses boss_ng.json numbers.
+var ng_gaze: bool = false
+var _leap_k: float = 1.0
+var _land_hit: bool = false
+
+func _start_leap(hp_pos: Vector2, up_k: float) -> void:
+	leap_x = hp_pos.x if room_w <= 0.0 else clampf(hp_pos.x, w, room_w - w)
+	_leap_k = up_k
+	var up := stat("leap_up") * up_k
+	var air := 2.0 * up / maxf(Tune.f("gravity"), 1.0)
+	vel.y = -up
+	vel.x = (leap_x - position.x) / air
+	t = air
+	st = "ng_leap"
+
+func _ng_fire(id: String, hp_pos: Vector2) -> void:
+	match id:
+		"likho_double_leap":
+			ng_n = 2
+			_start_leap(hp_pos, 1.0)
+		"likho_blind_gaze":
+			dark_state = "dark"
+			dark_left = ngv("dark", 3.0)
+			ng_gaze = true
+			st = "gaze_w"
+			t = ngv("pre", 0.3)
+		"likho_woe_cage":
+			var sw := ngv("w", 110.0)
+			for d: int in [-1, 1]:
+				var x := hp_pos.x + d * ngv("side_dx", 230.0)
+				if room_w > 0.0:
+					x = clampf(x, stat("woe_edge"), room_w - stat("woe_edge"))
+				hazards.append({ "kind": "woe", "x": x, "t": 0.0, "hit": false, "warn": ngv("warn", 1.0), "act": ngv("act", 0.45), "w": sw, "dmgk": ngv("dmg", 1.0) })
+			hazards.append({ "kind": "woe", "x": hp_pos.x, "t": -(ngv("warn", 1.0) + ngv("mid_delay", 0.5)), "hit": false,
+				"warn": ngv("mid_warn", 0.6), "act": ngv("act", 0.45), "w": sw, "dmgk": ngv("dmg", 1.0) })
+			_rest(stat("woe_rest_add"))
+		_:
+			_rest(0.0)
+
+func _ng_tick(dt: float, hp_pos: Vector2) -> void:
+	match st:
+		"ng_w":
+			vel.x = 0.0
+			if t <= 0.0:
+				_ng_fire(String(ng_row.get("id", "")), hp_pos)
+		"ng_leap":
+			var air := 2.0 * stat("leap_up") * _leap_k / maxf(Tune.f("gravity"), 1.0)
+			if (on_ground() and vel.y >= 0.0 and t < air - stat("leap_land")) or t < -stat("leap_land"):
+				vel = Vector2.ZERO
+				var second := ng_n <= 1
+				var v := per_phase("wave_speed") + (ngv("wave_add", 80.0) if second else 0.0)
+				for d: int in [-1, 1]:
+					hazards.append({ "kind": "wave", "x": position.x + d * w * 0.5, "dir": d, "t": stat("wave_life"), "hit": false, "v": v, "dmgk": ngv("dmg_wave", 0.7) })
+				if absf(hp_pos.x - position.x) < w * 0.7 and _hero_open():
+					hurt_hero(stat("dmg") * ngv("dmg_land", 1.3), Hit.Kind.STRIKE)
+				if world:
+					world.add_shake(stat("leap_shake"))
+				ng_n -= 1
+				if ng_n > 0:
+					st = "ng_gap"
+					t = ngv("gap", 0.35)
+				else:
+					_rest(0.0)
+		"ng_gap":
+			vel.x = 0.0
+			if t <= 0.0:
+				_start_leap(hp_pos, ngv("up_k", 0.8))
+
 ## Phase 2 «гаснет свет»: off -> blink (telegraph) -> dark -> off, every dark_every s.
 func _tick_dark(dt: float) -> void:
-	if phase < 2 or dead:
+	if (phase < 2 and dark_state != "dark") or dead:
 		dark_state = ""
 		return
 	match dark_state:
@@ -227,19 +305,20 @@ func _tick_hazards(dt: float, hp_pos: Vector2) -> void:
 				if not hz.hit and absf(hp_pos.x - float(hz.x)) < stat("wave_w") \
 						and hp_pos.y > ground - stat("wave_h") and _hero_open():
 					hz.hit = true
-					hurt_hero(dmg * stat("wave_dmg_mult"), Hit.Kind.PROJECTILE)
+					hurt_hero(dmg * float(hz.get("dmgk", stat("wave_dmg_mult"))), Hit.Kind.PROJECTILE)
 			"woe":
 				hz.t += dt
-				var warn := stat("woe_warn")
-				if not hz.hit and hz.t > warn and hz.t < warn + stat("woe_act") \
-						and absf(hp_pos.x - float(hz.x)) < stat("woe_w") / 2.0 + Player.W / 2.0 and _hero_open():
+				var warn := float(hz.get("warn", stat("woe_warn")))
+				if not hz.hit and hz.t > warn and hz.t < warn + float(hz.get("act", stat("woe_act"))) \
+						and absf(hp_pos.x - float(hz.x)) < float(hz.get("w", stat("woe_w"))) / 2.0 + Player.W / 2.0 and _hero_open():
 					hz.hit = true
-					hurt_hero(dmg * stat("woe_dmg_mult"), Hit.Kind.PROJECTILE)
+					hurt_hero(dmg * float(hz.get("dmgk", stat("woe_dmg_mult"))), Hit.Kind.PROJECTILE)
 				if absf(hz.t - warn) < dt and world:
 					world.add_shake(5.0)
-	var woe_end := stat("woe_warn") + stat("woe_act") + 0.25
 	hazards.assign(hazards.filter(func(hz: Dictionary) -> bool:
-		return float(hz.t) < woe_end if hz.kind == "woe" else float(hz.t) > 0.0))
+		if hz.kind == "woe":
+			return float(hz.t) < float(hz.get("warn", stat("woe_warn"))) + float(hz.get("act", stat("woe_act"))) + 0.25
+		return float(hz.t) > 0.0))
 
 # ---------------- light and drawing ----------------
 
@@ -364,9 +443,11 @@ func _draw_fx() -> void:
 					Vector2(wx + stat("wave_w") * 0.6 * d, ground)]), Color(eye, 0.9), 3.0)
 			"woe":
 				var px := float(hz.x)
-				var hw := stat("woe_w") / 2.0
-				var warn := stat("woe_warn")
+				var hw := float(hz.get("w", stat("woe_w"))) / 2.0
+				var warn := float(hz.get("warn", stat("woe_warn")))
 				var tt := float(hz.t)
+				if tt < 0.0:
+					continue
 				if tt < warn:
 					var k := tt / warn
 					_fx.draw_rect(Rect2(px - hw, ground - 8.0, hw * 2.0, 8.0), Color(eye, 0.2 + 0.4 * k))
@@ -374,7 +455,7 @@ func _draw_fx() -> void:
 					_fx.draw_circle(Vector2(px, ground - 14.0), 5.0 + 3.0 * k, Color(0.05, 0.03, 0.02, 0.9))
 					_fx.draw_line(Vector2(px, stat("woe_top")), Vector2(px, ground - 30.0), Color(eye, 0.1 + 0.25 * k), 2.0)
 				else:
-					var k2 := clampf((tt - warn) / stat("woe_act"), 0.0, 1.0)
+					var k2 := clampf((tt - warn) / float(hz.get("act", stat("woe_act"))), 0.0, 1.0)
 					var by := lerpf(stat("woe_top"), ground - 26.0, minf(k2 * 2.0, 1.0))
 					var bark := Color(String(stats.bark))
 					_fx.draw_line(Vector2(px - hw, by - 10.0), Vector2(px + hw, by + 6.0), bark, 12.0)

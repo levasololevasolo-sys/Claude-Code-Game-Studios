@@ -179,7 +179,7 @@ func span_at(p: Vector2) -> Dictionary:
 	var wall_l := false
 	while true:
 		var n := Vector2i(l - 1, c.y)
-		if solid(n) or at(n) == "S":
+		if solid(n) or at(n) == "S" or at(n) == "A":
 			wall_l = true
 			break
 		if not floor_cell(Vector2i(l - 1, fy)) or at(n) == "^":
@@ -189,7 +189,7 @@ func span_at(p: Vector2) -> Dictionary:
 	var wall_r := false
 	while true:
 		var n := Vector2i(r + 1, c.y)
-		if solid(n) or at(n) == "S":
+		if solid(n) or at(n) == "S" or at(n) == "A":
 			wall_r = true
 			break
 		if not floor_cell(Vector2i(r + 1, fy)) or at(n) == "^":
@@ -218,6 +218,23 @@ func cell_floor(c: Vector2i) -> Vector2:
 ## True when the feet at `p` stand on a one-way platform (drop-through).
 func oneway_under(p: Vector2) -> bool:
 	return _oneway(at(cell_of(p + Vector2(0, 4))))
+
+## The standing cell of room `ri` nearest to cell `o` (an empty cell with an
+## empty cell above and a floor below): where the hook pulls the hero.
+func stand_near(o: Vector2i, ri: int) -> Vector2i:
+	var rc := room_rect(ri)
+	var best := o
+	var best_d := INF
+	for y in range(int(rc.position.y / cell), int(rc.end.y / cell)):
+		for x in range(int(rc.position.x / cell), int(rc.end.x / cell)):
+			var c := Vector2i(x, y)
+			if solid(c) or solid(c + Vector2i(0, -1)) or not floor_cell(c + Vector2i(0, 1)) or floor_cell(c):
+				continue
+			var d := Vector2(c).distance_to(Vector2(o))
+			if d < best_d:
+				best_d = d
+				best = c
+	return best
 
 ## Fits an enemy to the level before it enters the tree: a walker gets its own
 ## floor height and the floor span it may walk (never off a ledge), a flyer the

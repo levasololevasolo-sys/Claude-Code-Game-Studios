@@ -1,0 +1,176 @@
+{
+ "_note": "Boss moves added per full clear, design/gdd/artifacts-and-secrets.md §3.7, F1-F3. ng = meta.wins at lair entry. Move added when clear <= ng; weights = [phase1, phase2]. dmg_* = multiplier of the boss dmg. Times in s, distances px, speeds px/s, angles rad.",
+ "step": {
+  "from_clear": 4,
+  "hp_per_clear": 0.06,
+  "hp_cap": 0.3,
+  "wind_per_clear": 0.04,
+  "wind_cap": 0.2
+ },
+ "kikimora": [
+  {
+   "clear": 1,
+   "id": "kik_tide",
+   "name": "Прилив",
+   "weights": [
+    10,
+    14
+   ],
+   "wind": 0.9,
+   "water_h": 150,
+   "rise": 1.0,
+   "hold": 4.0,
+   "drain": 1.5,
+   "volleys": 2,
+   "volley_n": 3,
+   "volley_gap": 1.2,
+   "dmg_clod": 0.8,
+   "line": "Тина всё помнит. И ты тони."
+  },
+  {
+   "clear": 2,
+   "id": "kik_kudel",
+   "name": "Кудель",
+   "weights": [
+    8,
+    14
+   ],
+   "wind": 0.7,
+   "n": 7,
+   "gap": 260,
+   "step_t": 0.2,
+   "warn": 0.7,
+   "act": 0.5,
+   "w": 90,
+   "dmg": 0.9,
+   "line": "Пряду, пряду, всё не допряду."
+  },
+  {
+   "clear": 3,
+   "id": "kik_otkat",
+   "name": "Откат",
+   "weights": [
+    6,
+    14
+   ],
+   "wind": 0.8,
+   "edge_speed": 380,
+   "back_delay": 1.2,
+   "back_speed": 460,
+   "h": 46,
+   "w": 30,
+   "dmg": 0.7,
+   "line": "Вода уходит и приходит."
+  }
+ ],
+ "likho": [
+  {
+   "clear": 1,
+   "id": "likho_double_leap",
+   "name": "Двойной скок",
+   "weights": [
+    12,
+    12
+   ],
+   "wind": 0.75,
+   "gap": 0.35,
+   "up_k": 0.8,
+   "wave_add": 80,
+   "dmg_land": 1.3,
+   "dmg_wave": 0.7,
+   "line": "Не убежишь. Я рядом."
+  },
+  {
+   "clear": 2,
+   "id": "likho_blind_gaze",
+   "name": "Взгляд из темноты",
+   "weights": [
+    0,
+    16
+   ],
+   "wind": 1.0,
+   "dark": 3.0,
+   "turn": 1.1,
+   "time": 1.8,
+   "pre": 0.3,
+   "len": 1500,
+   "w": 34,
+   "dmg": 0.55,
+   "hit_cd": 0.5,
+   "line": "Темно. А я вижу."
+  },
+  {
+   "clear": 3,
+   "id": "likho_woe_cage",
+   "name": "Клеть горя",
+   "weights": [
+    8,
+    14
+   ],
+   "wind": 0.8,
+   "side_dx": 230,
+   "warn": 1.0,
+   "act": 0.45,
+   "mid_delay": 0.5,
+   "mid_warn": 0.6,
+   "w": 110,
+   "dmg": 1.0,
+   "line": "Горе со всех сторон."
+  }
+ ],
+ "morena": [
+  {
+   "clear": 1,
+   "id": "morena_ice_path",
+   "name": "Ледяная стезя",
+   "weights": [
+    12,
+    12
+   ],
+   "wind": 0.7,
+   "n": 8,
+   "gap": 120,
+   "step_t": 0.12,
+   "warn": 0.6,
+   "act": 0.3,
+   "w": 60,
+   "dmg": 0.9,
+   "line": "Лёд знает дорогу к тебе."
+  },
+  {
+   "clear": 2,
+   "id": "morena_twin_scythe",
+   "name": "Две косы",
+   "weights": [
+    0,
+    16
+   ],
+   "wind": 1.0,
+   "dx": 230,
+   "glide": 520,
+   "r": 250,
+   "clone_r": 200,
+   "dmg": 1.1,
+   "dmg_clone": 0.9,
+   "line": "Нас двое. Как на мосту."
+  },
+  {
+   "clear": 3,
+   "id": "morena_blizzard",
+   "name": "Пурга",
+   "weights": [
+    8,
+    12
+   ],
+   "wind": 0.95,
+   "rise": 300,
+   "sweep_t": 1.6,
+   "len": 520,
+   "half": 0.34,
+   "dmg_breath": 0.5,
+   "hit_cd": 0.45,
+   "dmg_dive": 1.3,
+   "line": "Укрою. Всех укрою."
+  }
+ ]
+}

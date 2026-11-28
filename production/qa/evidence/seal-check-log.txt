@@ -1,0 +1,7 @@
+tier 1: 1 seals ["still_water"]
+  still_water (vanish): OK — barrier gone
+tier 2: 1 seals ["watcher"]
+  watcher (vanish): OK — barrier gone
+tier 3: 1 seals ["moroc"]
+  moroc (fade): OK — barrier gone
+fails: 0

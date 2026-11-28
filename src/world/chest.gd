@@ -8,6 +8,9 @@ signal opened(chest: Chest)
 
 var world: World
 var rich: bool = false
+## A seal vault (artifacts-and-secrets §3.5) and its seal kind (for the lore line).
+var vault: bool = false
+var seal: String = ""
 var is_open: bool = false
 var near: bool = false
 
@@ -29,7 +32,7 @@ func open() -> void:
 	opened.emit(self)
 
 func _draw() -> void:
-	var gold := Color("#e8c060") if rich else Color("#b08a4a")
+	var gold := Color("#9fe0ff") if vault else (Color("#e8c060") if rich else Color("#b08a4a"))
 	draw_rect(Rect2(-26, -30, 52, 30), Color("#5b3a1e"))
 	draw_rect(Rect2(-26, -30, 52, 30), gold, false, 3.0)
 	if is_open:

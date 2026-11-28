@@ -202,9 +202,10 @@ func _enter_level(rng: RandomNumberGenerator) -> void:
 	var types: Array = _unl.get("types", [])
 	var opts := { "knight": knight_tier != run.tier, "secret_ok": "cache" in types,
 		"elites_ok": run.tier >= int(Tune.f("elite_from_tier")) and game.meta.bosses_beaten() > 0 }
-	var lib := LevelGen.library(String(_loc().get("lib", "swamp")))
+	var lib_id := String(_loc().get("lib", "swamp"))
+	var lib := LevelGen.library(lib_id)
 	var lseed := level_seed_override if level_seed_override >= 0 else LevelGen.level_seed(run.run_seed, run.tier)
-	level = LevelGen.build(lseed, run.tier, lib, LevelGen.tuning_for(Tune.data), opts)
+	level = LevelGen.build(lseed, run.tier, lib, LevelGen.with_seals(LevelGen.tuning_for(Tune.data), Tune.table("artifacts"), run.tier), opts)
 	if not (level.get("knight", {}) as Dictionary).is_empty():
 		knight_tier = run.tier
 	world.start_level(level, rng)
@@ -328,6 +329,9 @@ func room_opts() -> Dictionary:
 func open_chest(c: Chest) -> void:
 	var res_id := String(_loc().get("res", "gears"))
 	var at := c.position + Vector2(0, 0)
+	if c.vault:
+		_open_vault(c)
+		return
 	if c.rich:
 		var e := roundi(Tune.f("cache_embers") * Difficulty.embers_mult())
 		run.embers += e
@@ -346,6 +350,30 @@ func open_chest(c: Chest) -> void:
 		var it := drop_from("chest", at)
 		_say("Сундук: +%d углей" % e)
 		_note("chest opened: +%d embers, weapon %s" % [e, it.id if it else "-"])
+
+## A seal vault (artifacts-and-secrets §3.5): embers × M and resources by tier
+## from artifacts.json vault, a core by chance, and the seal's lore line once per save.
+func _open_vault(c: Chest) -> void:
+	var tbl := Tune.table("artifacts")
+	var row: Dictionary = (tbl.get("vault", {}) as Dictionary).get(str(run.tier), {})
+	var e := roundi(float(row.get("embers", 45)) * Difficulty.embers_mult())
+	run.embers += e
+	var parts: PackedStringArray = ["+%d углей" % e]
+	var res: Dictionary = row.get("res", {})
+	for k: String in res:
+		run.add_res(k, int(res[k]))
+		parts.append("+%d %s" % [int(res[k]), res_name(k)])
+	if game.rng.stream("loot").randf() < float(row.get("core", 0.0)):
+		run.add_res("cores", 1)
+		parts.append("+1 %s" % res_name("cores"))
+	var msg := "Закрома: " + ", ".join(parts)
+	var flag := "seal_lore_" + c.seal
+	var lore := String(((tbl.get("seals", {}) as Dictionary).get(c.seal, {}) as Dictionary).get("lore", ""))
+	if c.seal != "" and lore != "" and not game.meta.story.flags.has(flag):
+		game.meta.story.flags[flag] = true
+		msg += "\n" + lore
+	_say(msg)
+	_note("vault (%s) opened: %s" % [c.seal, ", ".join(parts)])
 
 ## The knight's stone i was taken (enemies-and-elites §3.7): 0 Род rune offer,
 ## 1 weapon (drop_from "knight", quality +1), 2 rich chest (knight_chest_*).
@@ -665,11 +693,25 @@ func finish(outcome: String) -> void:
 	_save_build()
 	var b := build
 	var summary: Dictionary = game.end_run(outcome)
+	var fresh: Array = summary.get("artifacts_new", [])
+	if not fresh.is_empty():
+		# The first full clear: every artifact at once (artifacts-and-secrets).
+		var aw := ArtifactAwardScreen.new()
+		var tbl := Tune.table("artifacts")
+		for id: String in fresh:
+			aw.rows.append(Artifacts.row(tbl, id))
+		aw.closed.connect(func() -> void: _show_summary(summary, b))
+		_note("artifacts granted: %s" % ", ".join(PackedStringArray(fresh)))
+		_show(aw, 30)
+		return
+	_show_summary(summary, b)
+
+func _show_summary(summary: Dictionary, b: RunBuild) -> void:
 	var scr := RunSummaryScreen.new()
 	scr.summary = summary
 	scr.build = b
 	scr.closed.connect(func() -> void: enter_base.call_deferred())
-	_note("run ended (%s): %s" % [outcome, " | ".join(scr.lines())])
+	_note("run ended (%s): %s" % [String(summary.get("outcome", "")), " | ".join(scr.lines())])
 	_show(scr, 30)
 
 ## The base between runs (economy-and-meta §3.6): the yard is a room without

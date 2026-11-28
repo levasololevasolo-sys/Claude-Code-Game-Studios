@@ -46,6 +46,12 @@ var ldir: int = 1
 var attack_log: Array[String] = []
 ## How many times this boss was beaten before this fight (picks the lines).
 var beaten_before: int = -1
+## Full clears of the game (artifacts-and-secrets NG+): -1 = read from the save.
+var clears: int = -1
+## Extra moves unlocked by the clears (boss_ng.json rows with clear <= clears).
+var ng_moves: Array = []
+## The NG+ move being played (its boss_ng.json row).
+var ng_row: Dictionary = {}
 var _water_tick: float = 0.0
 var _death_done: bool = false
 var _linger: float = 0.0
@@ -160,6 +166,10 @@ func _load_stats() -> void:
 	stats["name"] = title
 	if beaten_before < 0:
 		beaten_before = _beaten()
+	if clears < 0:
+		var m := _meta()
+		clears = Artifacts.clears(m) if m else 0
+	apply_ng(Tune.table("boss_ng"))
 	st = "idle"
 
 func _ready() -> void:
@@ -236,7 +246,7 @@ func say(text: String, time: float = -1.0) -> void:
 
 ## Timer speed-up of the current phase (§3.8: ×1.3 in phase 2).
 func fast() -> float:
-	return stat("phase_fast") if phase >= 2 else 1.0
+	return (stat("phase_fast") if phase >= 2 else 1.0) / maxf(ng_wind, 0.1)
 
 ## One tick of the state machine and the hazards; reads no nodes except through
 ## hurt_hero() (a no-op without a hero), so tests drive it directly.
@@ -256,6 +266,8 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				if not summon_queue.is_empty():
 					st = "summon_w"
 					t = windup(stat("summon_wind"), fast(), mw)
+				elif ng_pick(hp_pos):
+					pass
 				else:
 					var rows: Array = stats.get("weights", [])
 					var a := ATTACKS[pick_attack(rng.randf(), rows[mini(phase, rows.size()) - 1])]
@@ -301,6 +313,8 @@ func think(dt: float, hp_pos: Vector2) -> void:
 			vel.x = 0.0
 			if t <= 0.0:
 				_rest(0.0)
+	if st.begins_with("ng_"):
+		_ng_tick(dt, hp_pos)
 	_tick_water(dt)
 	_tick_hazards(dt, hp_pos)
 
@@ -359,10 +373,22 @@ func _summon(i: int) -> void:
 
 ## Target water level: water_h in phase 2 unless drained after a summon.
 func water_target() -> float:
+	if tide_t > 0.0:
+		return ngv("water_h", stat("water_h")) if ng_row.get("id") == "kik_tide" else stat("water_h")
 	return stat("water_h") if phase >= 2 and drain_t <= 0.0 else 0.0
+
+## NG+ «Прилив»: seconds of the tide left (rise + hold), then it drains.
+var tide_t: float = 0.0
+var tide_drain: float = 0.0
 
 func _tick_water(dt: float) -> void:
 	var rate := stat("water_h") / maxf(stat("water_rise"), 0.01)
+	if tide_t > 0.0:
+		tide_t -= dt
+		rate = ngv("water_h", 150.0) / maxf(ngv("rise", 1.0), 0.01)
+	elif tide_drain > 0.0:
+		tide_drain -= dt
+		rate = ngv("water_h", 150.0) / maxf(ngv("drain", 1.5), 0.01)
 	water = move_toward(water, water_target(), rate * dt)
 
 ## Bog water on the hero: ×water_slow of his own move (undone after his tick,
@@ -412,29 +438,34 @@ func _tick_hazards(dt: float, hp_pos: Vector2) -> void:
 				if room_w > 0.0 and (p.x < 0.0 or p.x > room_w):
 					hz.t = 0.0
 				if hz.t > 0.0 and p.distance_to(hc) < r + Tune.f("shot_hit_r") and _hero_open():
-					hurt_hero(dmg * stat("throw_dmg_mult"), Hit.Kind.PROJECTILE)
+					hurt_hero(dmg * float(hz.get("dmgk", stat("throw_dmg_mult"))), Hit.Kind.PROJECTILE)
 					hz.t = 0.0
 			"pend":
 				hz.t += dt
-				var warn := stat("pend_warn")
-				if not hz.hit and hz.t > warn and hz.t < warn + stat("pend_act") \
-						and absf(hp_pos.x - float(hz.x)) < stat("pend_w") / 2.0 + Player.W / 2.0 and _hero_open():
+				var warn := float(hz.get("warn", stat("pend_warn")))
+				if not hz.hit and hz.t > warn and hz.t < warn + float(hz.get("act", stat("pend_act"))) \
+						and absf(hp_pos.x - float(hz.x)) < float(hz.get("w", stat("pend_w"))) / 2.0 + Player.W / 2.0 and _hero_open():
 					hz.hit = true
-					hurt_hero(dmg * stat("pend_dmg_mult"), Hit.Kind.PROJECTILE)
+					hurt_hero(dmg * float(hz.get("dmgk", stat("pend_dmg_mult"))), Hit.Kind.PROJECTILE)
 				if absf(hz.t - warn) < dt and world:
 					world.add_shake(6.0)
 			"wave":
+				if float(hz.get("wait", 0.0)) > 0.0:
+					hz.wait = float(hz.wait) - dt
+					continue
 				hz.t -= dt
-				hz.x = float(hz.x) + int(hz.dir) * stat("wave_speed") * dt
+				hz.x = float(hz.x) + int(hz.dir) * float(hz.get("v", stat("wave_speed"))) * dt
 				if room_w > 0.0 and (hz.x < 0.0 or hz.x > room_w):
 					hz.t = 0.0
-				if not hz.hit and absf(hp_pos.x - float(hz.x)) < stat("wave_w") \
-						and hp_pos.y > ground - stat("wave_h") and _hero_open():
+				if not hz.hit and absf(hp_pos.x - float(hz.x)) < float(hz.get("w", stat("wave_w"))) \
+						and hp_pos.y > ground - float(hz.get("h", stat("wave_h"))) and _hero_open():
 					hz.hit = true
-					hurt_hero(dmg * stat("wave_dmg_mult"), Hit.Kind.PROJECTILE)
+					hurt_hero(dmg * float(hz.get("dmgk", stat("wave_dmg_mult"))), Hit.Kind.PROJECTILE)
 	var pend_end := stat("pend_warn") + stat("pend_act") + 0.2
 	hazards.assign(hazards.filter(func(hz: Dictionary) -> bool:
-		return float(hz.t) < pend_end if hz.kind == "pend" else float(hz.t) > 0.0))
+		if hz.kind == "pend":
+			return float(hz.t) < float(hz.get("warn", stat("pend_warn"))) + float(hz.get("act", stat("pend_act"))) + 0.2
+		return float(hz.t) > 0.0))
 
 ## True when the hero can be hit right now (no hero in tests counts as open).
 func _hero_open() -> bool:
@@ -526,20 +557,26 @@ func _draw_fx() -> void:
 			"pend":
 				var px := float(hz.x)
 				var top := stat("pend_top")
-				var hw := stat("pend_w") / 2.0
+				var hw := float(hz.get("w", stat("pend_w"))) / 2.0
+				warn = float(hz.get("warn", stat("pend_warn")))
+				if float(hz.t) < 0.0:
+					continue
 				if float(hz.t) < warn:
 					var k := float(hz.t) / warn
 					_fx.draw_rect(Rect2(px - hw, top, hw * 2.0, ground - top), Color(eye, 0.08 + 0.17 * k))
 					_fx.draw_line(Vector2(px, top), Vector2(px, ground), Color(eye, 0.4 + 0.5 * k), 2.0)
 					_fx.draw_circle(Vector2(px, ground - 6.0), 10.0 + 8.0 * k, Color(eye, 0.5))
 				else:
-					var k2 := clampf((float(hz.t) - warn) / stat("pend_act"), 0.0, 1.0)
+					var k2 := clampf((float(hz.t) - warn) / float(hz.get("act", stat("pend_act"))), 0.0, 1.0)
 					var by := lerpf(top, ground - 30.0, minf(k2 * 2.0, 1.0))
 					_fx.draw_line(Vector2(px, top), Vector2(px, by), Color("#5a4a35"), 4.0)
 					_fx.draw_colored_polygon(PackedVector2Array([Vector2(px - hw, by), Vector2(px + hw, by), Vector2(px, by + 34.0)]), Color("#b9c7a8"))
 			"wave":
 				var wx := float(hz.x)
-				var wh := stat("wave_h")
+				var wh := float(hz.get("h", stat("wave_h")))
+				if float(hz.get("wait", 0.0)) > 0.0:
+					_fx.draw_circle(Vector2(wx, ground - 8.0), 8.0, Color(eye, 0.5))
+					continue
 				_fx.draw_colored_polygon(PackedVector2Array([Vector2(wx - stat("wave_w") * int(hz.dir), ground), Vector2(wx, ground - wh),
 					Vector2(wx + stat("wave_w") * 0.6 * int(hz.dir), ground)]), Color(0.3, 0.5, 0.3, 0.9))
 				_fx.draw_circle(Vector2(wx, ground - wh), 6.0, Color(eye, 0.8))
@@ -568,6 +605,151 @@ func _draw_ui() -> void:
 func _location_boss() -> String:
 	var row: Dictionary = Tune.table("locations").get(str(tier), {})
 	return String(row.get("boss", FALLBACK_ID))
+
+## NG+ (artifacts-and-secrets §3.7, F1-F3): the boss_ng.json moves of `id`
+## with clear <= `n_clears` (a boss without rows uses kikimora's). Pure (tested).
+static func ng_moves_for(tbl: Dictionary, id: String, n_clears: int) -> Array:
+	var out: Array = []
+	var rows: Array = tbl.get(id) if tbl.get(id) is Array else (tbl.get(FALLBACK_ID) if tbl.get(FALLBACK_ID) is Array else [])
+	for r: Dictionary in rows:
+		if int(r.get("clear", 99)) <= n_clears:
+			out.append(r)
+	return out
+
+## The step past the last new move: [hp multiplier, wind-up multiplier]. Pure (tested).
+static func ng_step(tbl: Dictionary, n_clears: int) -> Vector2:
+	var st_t: Dictionary = tbl.get("step", {})
+	var n := maxi(n_clears - int(st_t.get("from_clear", 4)) + 1, 0)
+	var hp_k := 1.0 + minf(float(st_t.get("hp_per_clear", 0.06)) * n, float(st_t.get("hp_cap", 0.3)))
+	var wind_k := 1.0 - minf(float(st_t.get("wind_per_clear", 0.04)) * n, float(st_t.get("wind_cap", 0.2)))
+	return Vector2(hp_k, wind_k)
+
+## Wind-up multiplier from the NG+ step (1 = none).
+var ng_wind: float = 1.0
+## NG+ moves already announced in this fight (the boss says its line once).
+var ng_said: Dictionary = {}
+
+func apply_ng(tbl: Dictionary) -> void:
+	ng_moves = ng_moves_for(tbl, boss_id, clears)
+	var k := ng_step(tbl, clears)
+	max_hp *= k.x
+	hp = max_hp
+	ng_wind = k.y
+
+## Regular attack weights of the current phase (sum), for ng_pick.
+func _regular_weight() -> float:
+	var rows: Array = stats.get("weights", [])
+	if rows.is_empty():
+		return 1.0
+	var sum := 0.0
+	for v: Variant in rows[mini(phase, rows.size()) - 1]:
+		sum += float(v)
+	return sum
+
+## Picks an NG+ move by weight against the regular attacks of this phase
+## (boss_ng.json weights [phase 1, phase 2]). True when one started.
+func ng_pick(hp_pos: Vector2) -> bool:
+	if ng_moves.is_empty():
+		return false
+	var ws: Array = []
+	var total := 0.0
+	for r: Dictionary in ng_moves:
+		var w: Array = r.get("weights", [10, 10])
+		var v := float(w[mini(phase, w.size()) - 1])
+		ws.append(v)
+		total += v
+	if total <= 0.0:
+		return false
+	var roll := rng.randf() * (total + _regular_weight())
+	if roll >= total:
+		return false
+	var pick: Dictionary = ng_moves[0]
+	for i in ng_moves.size():
+		roll -= float(ws[i])
+		if roll < 0.0:
+			pick = ng_moves[i]
+			break
+	ng_row = pick
+	var id := String(pick.id)
+	attack_log.append(id)
+	if not ng_said.has(id):
+		ng_said[id] = true
+		say(String(pick.get("line", "")))
+	st = "ng_w"
+	t = windup(float(pick.get("wind", 0.8)), fast(), stat("min_windup"))
+	_ng_begin(id, hp_pos)
+	return true
+
+## Subclass hooks for its NG+ moves: begin (at the wind-up start), fire (when the
+## wind-up ends) and tick (states starting with "ng_" other than "ng_w").
+func _ng_begin(_id: String, _hp_pos: Vector2) -> void:
+	pass
+
+func _ng_fire(id: String, hp_pos: Vector2) -> void:
+	var dmg_wave := ngv("dmg", 0.7)
+	match id:
+		"kik_tide":
+			tide_t = ngv("rise", 1.0) + ngv("hold", 4.0)
+			tide_drain = ngv("drain", 1.5)
+			ng_n = int(ngv("volleys", 2))
+			st = "ng_tide"
+			t = ngv("rise", 1.0)
+		"kik_kudel":
+			# From the wall far from the hero toward the near one.
+			var n := int(ngv("n", 7))
+			var gap := ngv("gap", 260.0)
+			var dir := 1.0 if hp_pos.x > room_w * 0.5 or room_w <= 0.0 else -1.0
+			var x0 := stat("pend_edge") if dir > 0.0 else room_w - stat("pend_edge")
+			for i in n:
+				var x := x0 + dir * gap * i
+				if room_w > 0.0 and (x < stat("pend_edge") or x > room_w - stat("pend_edge")):
+					continue
+				hazards.append({ "kind": "pend", "x": x, "t": -ngv("step_t", 0.2) * i, "hit": false,
+					"warn": ngv("warn", 0.7), "act": ngv("act", 0.5), "w": ngv("w", 90.0), "dmgk": ngv("dmg", 0.9) })
+			_rest(0.0)
+		"kik_otkat":
+			var life := (room_w if room_w > 0.0 else 1600.0) / maxf(ngv("edge_speed", 380.0), 1.0)
+			for d: int in [1, -1]:
+				var x := 10.0 if d > 0 else (room_w - 10.0 if room_w > 0.0 else position.x + 800.0)
+				hazards.append({ "kind": "wave", "x": x, "dir": d, "t": life * 0.55, "hit": false, "v": ngv("edge_speed", 380.0),
+					"h": ngv("h", 46.0), "w": ngv("w", 30.0), "dmgk": dmg_wave })
+			for d: int in [-1, 1]:
+				hazards.append({ "kind": "wave", "x": position.x + d * w * 0.5, "dir": d, "t": stat("wave_life"), "hit": false,
+					"v": ngv("back_speed", 460.0), "h": ngv("h", 46.0), "w": ngv("w", 30.0), "dmgk": dmg_wave, "wait": ngv("back_delay", 1.2) })
+			_rest(ngv("back_delay", 1.2) * 0.5)
+		_:
+			_rest(0.0)
+
+## Count left of the current NG+ move (volleys, leaps).
+var ng_n: int = 0
+
+func _ng_tick(dt: float, hp_pos: Vector2) -> void:
+	match st:
+		"ng_w":
+			vel.x = 0.0
+			if t <= 0.0:
+				_ng_fire(String(ng_row.get("id", "")), hp_pos)
+		"ng_tide":
+			vel.x = 0.0
+			if t <= 0.0:
+				if ng_n > 0:
+					ng_n -= 1
+					var keep: Variant = stats.get("throw_n")
+					stats["throw_n"] = [int(ngv("volley_n", 3))]
+					var before := hazards.size()
+					_throw(hp_pos)
+					stats["throw_n"] = keep
+					for i in range(before, hazards.size()):
+						hazards[i]["dmgk"] = ngv("dmg_clod", 0.8)
+					t = ngv("volley_gap", 1.2)
+				elif tide_t <= 0.0:
+					_rest(0.0)
+				else:
+					t = 0.1
+
+## A number of the current NG+ move.
+func ngv(key: String, def: float = 0.0) -> float:
+	return float(ng_row.get(key, def))
 
 func _meta() -> MetaState:
 	var tree := Engine.get_main_loop() as SceneTree

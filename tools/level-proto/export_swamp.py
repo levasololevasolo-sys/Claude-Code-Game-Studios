@@ -108,7 +108,16 @@ def main():
         print(t["id"], " ".join(f"{i['side']}{i['module']}->{','.join(i['reaches']) or '-'}" for i in info),
               ("UNREACHABLE " + ",".join(bad)) if bad else "")
         bad_any = bad_any or bool(bad)
-    with open(os.path.join(repo, "assets/data/room_templates_swamp.json"), "w", encoding="utf-8") as f:
+    # Seal rooms (artifacts-and-secrets) are hand-written in the JSON, not in
+    # gen_map.py: keep them and their legend letters (Z seal, X barrier, W bridge, O hook, V vault).
+    path = os.path.join(repo, "assets/data/room_templates_swamp.json")
+    if os.path.exists(path):
+        old = json.load(open(path, encoding="utf-8"))
+        out["templates"] += [t for t in old.get("templates", []) if t.get("kind") == "seal"]
+        for k in ("Z", "X", "W", "O", "V"):
+            if k in old.get("legend", {}):
+                out["legend"][k] = old["legend"][k]
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
         f.write("\n")
     print(len(gm.T), "templates", "WITH UNREACHABLE MARKERS" if bad_any else "ok")

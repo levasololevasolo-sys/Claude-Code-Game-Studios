@@ -1,0 +1,259 @@
+{
+ "_note": "Key items, design/gdd/artifacts-and-secrets.md §3.1-3.4. All granted on the first full clear (meta.wins 0 -> 1), kept forever in meta.artifacts. seal = seal kind id; open = fade|vanish|door|pull|build. seal_sets = seal kinds a tier's levels may place. seals: per seal kind the placeholder look (shape: rock|threads|water|stone|thorn|eye|chain|ice|door|hook|gap|wall), verb (prompt word), lore (first vault line, once per save). vault: rewards of a seal vault by tier (embers × M).",
+ "artifacts": [
+  {
+   "id": "vereteno_doli",
+   "name": "Веретено Доли",
+   "desc": "Пряха отдала запасное веретено. На нём видно, где Навь врёт.",
+   "hint": "Стена дышит. Тому, кто видит нить, она не стена.",
+   "icon": "spindle",
+   "seal": "moroc",
+   "open": "fade",
+   "color": "#d8e4ff"
+  },
+  {
+   "id": "arkan",
+   "name": "Пеньковый аркан",
+   "desc": "Аркан пастуха из-под Топи. Кинь на крюк, и он вытянет.",
+   "hint": "Высоко торчит крюк. Рукой не достать, прыжком тоже.",
+   "icon": "loop",
+   "seal": "hook",
+   "open": "pull",
+   "color": "#c9a46a"
+  },
+  {
+   "id": "svarogov_molot",
+   "name": "Сварогов молот",
+   "desc": "Молот кузнеца, что ковал цепь моста. Горн узнаёт его удар.",
+   "hint": "Остывший горн. Ему нужен удар, а не огонь.",
+   "icon": "hammer",
+   "seal": "forge_horn",
+   "open": "door",
+   "color": "#ff8a3a"
+  },
+  {
+   "id": "razryv_trava",
+   "name": "Разрыв-трава",
+   "desc": "Цветёт в купальскую ночь. От неё лопается любое железо.",
+   "hint": "Цепь без замка. Её рвёт то, что растёт одну ночь в году.",
+   "icon": "flower",
+   "seal": "chain_lock",
+   "open": "vanish",
+   "color": "#9be36b"
+  },
+  {
+   "id": "zhaleyka",
+   "name": "Жалейка",
+   "desc": "Дудка утопленницы. Под её песню вода ложится спать.",
+   "hint": "Вода стоит стеной и слушает. Она ждёт песни.",
+   "icon": "pipe",
+   "seal": "still_water",
+   "open": "vanish",
+   "color": "#6fc6d8"
+  },
+  {
+   "id": "gromovaya_strelka",
+   "name": "Громовая стрелка",
+   "desc": "Упала с неба вместе с громом. Колет заклятое.",
+   "hint": "Камень заклят. Его возьмёт только то, что падает с неба.",
+   "icon": "bolt",
+   "seal": "curse_stone",
+   "open": "vanish",
+   "color": "#f5e27a"
+  },
+  {
+   "id": "kresalo",
+   "name": "Кресало",
+   "desc": "Кресало углежога. Искра от него не гаснет в Нави.",
+   "hint": "Сухой терн. Он помнит, как горел лес.",
+   "icon": "flint",
+   "seal": "bramble",
+   "open": "vanish",
+   "color": "#ff6a3a"
+  },
+  {
+   "id": "son_trava",
+   "name": "Сон-трава",
+   "desc": "Пучок с подушки старой няньки. Усыпит и того, кто не спит.",
+   "hint": "Око не спит. Мимо не пройти, пока оно не уснёт.",
+   "icon": "bud",
+   "seal": "watcher",
+   "open": "vanish",
+   "color": "#b48cff"
+  },
+  {
+   "id": "pero_zhar_ptitsy",
+   "name": "Перо Жар-птицы",
+   "desc": "Тёплое, как печь. Лёд Морены от него плачет.",
+   "hint": "Наледь толще руки. Под ней тепло, но не дотянуться.",
+   "icon": "feather",
+   "seal": "ice_crust",
+   "open": "vanish",
+   "color": "#ffb347"
+  },
+  {
+   "id": "klubok",
+   "name": "Путеводный клубок",
+   "desc": "Клубок красной нити. Катится туда, где ждут.",
+   "hint": "Обрыв. На том краю кто-то ждёт нитку.",
+   "icon": "ball",
+   "seal": "thread_bridge",
+   "open": "build",
+   "color": "#e0303a"
+  },
+  {
+   "id": "greben",
+   "name": "Гребень",
+   "desc": "Брось гребень, вырастет лес. Даже из камня.",
+   "hint": "Голая стена. Здесь мог бы стоять лес.",
+   "icon": "comb",
+   "seal": "bare_wall",
+   "open": "build",
+   "color": "#8fbf6a"
+  }
+ ],
+ "seal_sets": {
+  "1": [
+   "moroc",
+   "hook",
+   "still_water",
+   "curse_stone"
+  ],
+  "2": [
+   "moroc",
+   "bramble",
+   "watcher",
+   "chain_lock",
+   "bare_wall"
+  ],
+  "3": [
+   "moroc",
+   "hook",
+   "forge_horn",
+   "ice_crust",
+   "thread_bridge"
+  ],
+  "4": [
+   "moroc",
+   "hook",
+   "still_water",
+   "curse_stone"
+  ],
+  "5": [
+   "moroc",
+   "hook",
+   "still_water",
+   "curse_stone"
+  ]
+ },
+ "seals": {
+  "moroc": {
+   "shape": "rock",
+   "verb": "развеять морок",
+   "lore": "За мороком всегда то, что Навь хотела оставить себе. Теперь не оставит."
+  },
+  "hook": {
+   "shape": "hook",
+   "verb": "закинуть аркан",
+   "lore": "Крюк вбил живой. Значит, кто-то тут лазил и вернулся."
+  },
+  "still_water": {
+   "shape": "water",
+   "verb": "сыграть на жалейке",
+   "lore": "Вода легла. На дне чья-то прялка, вся в тине."
+  },
+  "curse_stone": {
+   "shape": "stone",
+   "verb": "расколоть камень",
+   "lore": "Камень держал не дверь. Он держал того, кто под ним плакал."
+  },
+  "bramble": {
+   "shape": "thorn",
+   "verb": "высечь искру",
+   "lore": "Терн рос из одного семечка. Его посадили, чтобы спрятать."
+  },
+  "watcher": {
+   "shape": "eye",
+   "verb": "усыпить око",
+   "lore": "Око уснуло. Ему тоже давно хотелось."
+  },
+  "chain_lock": {
+   "shape": "chain",
+   "verb": "порвать цепь",
+   "lore": "Звенья с клеймом Потапа. Он ковал не только для моста."
+  },
+  "bare_wall": {
+   "shape": "wall",
+   "verb": "бросить гребень",
+   "lore": "Лес вырос и сразу стал старым. В Нави всё так."
+  },
+  "forge_horn": {
+   "shape": "door",
+   "verb": "ударить в горн",
+   "lore": "Горн тёплый. Тут грели руки те, кто ждал моста."
+  },
+  "ice_crust": {
+   "shape": "ice",
+   "verb": "растопить наледь",
+   "lore": "Подо льдом лежали чьи-то варежки. Две пары, большая и малая."
+  },
+  "thread_bridge": {
+   "shape": "gap",
+   "verb": "пустить клубок",
+   "lore": "Клубок докатился и лёг. Будто дома."
+  }
+ },
+ "vault": {
+  "1": {
+   "embers": 45,
+   "res": {
+    "gears": 6
+   },
+   "core": 0.0
+  },
+  "2": {
+   "embers": 65,
+   "res": {
+    "bronze": 9,
+    "gears": 3
+   },
+   "core": 0.0
+  },
+  "3": {
+   "embers": 85,
+   "res": {
+    "pearls": 12,
+    "bronze": 3
+   },
+   "core": 0.2
+  },
+  "4": {
+   "embers": 105,
+   "res": {
+    "pearls": 14,
+    "bronze": 3
+   },
+   "core": 0.25
+  },
+  "5": {
+   "embers": 125,
+   "res": {
+    "pearls": 16,
+    "bronze": 3
+   },
+   "core": 0.3
+  }
+ },
+ "seal_min": 1,
+ "seal_max": 2,
+ "times": {
+  "fade": 0.6,
+  "vanish": 0.5,
+  "door": 0.8,
+  "pull_rope": 0.2,
+  "pull": 0.5,
+  "build_cell": 0.05,
+  "hint": 2.4,
+  "reach": 60
+ }
+}

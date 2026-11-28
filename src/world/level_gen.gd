@@ -21,7 +21,7 @@ const STEP: Dictionary = { "L": Vector2i(-1, 0), "R": Vector2i(1, 0), "T": Vecto
 ## Kinds that may repeat inside one section (§3.4 step 2).
 const REPEATABLE: Array[String] = ["shaft", "climb"]
 ## Marker characters a template grid may hold; they become "." in the composed grid.
-const MARKS: String = "EFCHPGLKI"
+const MARKS: String = "EFCHPGLKIZOV"
 
 static var _libs: Dictionary = {}
 
@@ -112,6 +112,8 @@ static func prepare(raw: Dictionary) -> Dictionary:
 		var tp := { "id": String(src.id), "base": String(src.id), "name": String(src.get("name", "")), "kind": String(src.kind),
 			"w": int(src.w), "h": int(src.h), "weight": float(src.get("weight", 1.0)), "tier_min": int(src.get("tier_min", 1)),
 			"socks": [], "reach": {}, "grid": PackedStringArray(src.grid), "mirrored": false }
+		if src.has("seal"):
+			tp["seal"] = String(src.seal)
 		for s: Dictionary in src.get("sockets", []):
 			(tp.socks as Array).append("%s%d" % [s.side, int(s.module)])
 		for k: String in src.get("reach", {}):
@@ -196,6 +198,15 @@ static func tuning_for(data: Dictionary) -> Dictionary:
 		if data.has(k) and not t.has(k):
 			t[k] = data[k]
 	return t
+
+## `t` plus the seal rooms of tier `tier` (artifacts-and-secrets §3.2): the
+## seal kinds of artifacts.json seal_sets and seal_min / seal_max.
+static func with_seals(t: Dictionary, arts: Dictionary, tier: int) -> Dictionary:
+	var out := t.duplicate()
+	out["seal_kinds"] = (arts.get("seal_sets", {}) as Dictionary).get(str(tier), [])
+	out["seal_min"] = int(arts.get("seal_min", 1))
+	out["seal_max"] = int(arts.get("seal_max", 2))
+	return out
 
 static func _lib_for(lib: Dictionary, tier: int) -> Array:
 	var out: Array = []
@@ -563,7 +574,65 @@ static func _build(st: St, tier: int) -> bool:
 				if not _grow_branch(st, h, s, kinds, sec).is_empty():
 					done += 1
 					break
+	_add_vaults(st, stages)
 	return true
+
+## Seal rooms (artifacts-and-secrets §3.3): seal_min..seal_max dead-end side
+## rooms of kind "seal", never in section 0, each of a different seal kind from
+## the location's set (st.t.seal_kinds). Uses its own random stream so levels
+## without seal templates are exactly as before.
+static func _add_vaults(st: St, stages: int) -> void:
+	var kinds_all: Array = st.t.get("seal_kinds", [])
+	var lo := int(st.t.get("seal_min", 1))
+	var hi := int(st.t.get("seal_max", 2))
+	if hi <= 0 or kinds_all.is_empty() or _by_kind(st, ["seal"]).is_empty():
+		return
+	var keep := st.rng
+	var keep_lib := st.lib
+	var vr := RandomNumberGenerator.new()
+	vr.seed = keep.seed * 13 + 5
+	st.rng = vr
+	var want := vr.randi_range(lo, hi)
+	var kinds := kinds_all.duplicate()
+	shuffle(kinds, vr)
+	var secs: Array = range(1, stages + 1) if stages >= 1 else [0]
+	shuffle(secs, vr)
+	var done := 0
+	var used_secs := {}
+	for kind: Variant in kinds:
+		if done >= want:
+			break
+		var lib_k: Array = []
+		for tp: Dictionary in keep_lib:
+			if String(tp.kind) != "seal" or String(tp.get("seal", "")) == String(kind):
+				lib_k.append(tp)
+		st.lib = lib_k
+		if _by_kind(st, ["seal"]).is_empty():
+			continue
+		var placed := false
+		for sec: int in secs:
+			if placed or used_secs.has(sec):
+				continue
+			var hosts: Array = []
+			for r in st.rooms:
+				if r.sec == sec and r.path == "main" and not r.role in ["fork", "junction", "lairgate", "link"]:
+					hosts.append(r)
+			shuffle(hosts, vr)
+			for h: R in hosts:
+				if placed:
+					break
+				for sk: String in h.free_socks():
+					if not sk[0] in ["L", "R"]:
+						continue
+					if h.entry != "" and not exit_ok(h.t, h.entry, sk):
+						continue
+					if not _grow_branch(st, h, sk, [["seal"]], sec).is_empty():
+						placed = true
+						used_secs[sec] = true
+						done += 1
+						break
+	st.lib = keep_lib
+	st.rng = keep
 
 ## Junction below all `trails` (§3.4 step 4, F7): the cheapest place where every
 ## trail's shrine reaches its own top hole through at most `link_max` free
@@ -823,7 +892,7 @@ static func _export(st: St, lib: Dictionary, tier: int, t: Dictionary, opts: Dic
 		for s: String in r.t.socks:
 			if not r.used.has(s):
 				sealed.append(s)
-		rooms.append({ "i": r.i, "id": String(r.t.id), "name": String(r.t.get("name", "")), "kind": String(r.t.kind),
+		rooms.append({ "i": r.i, "id": String(r.t.id), "name": String(r.t.get("name", "")), "kind": String(r.t.kind), "seal": String(r.t.get("seal", "")),
 			"x": r.x + ox, "y": r.y + oy, "w": int(r.t.w), "h": int(r.t.h), "role": r.role, "sec": r.sec, "path": r.path,
 			"band": band_of(r.sec, r.path), "used": r.used.keys(), "entry": r.entry, "trail": r.trail.duplicate(), "sealed": sealed })
 	var out_grid := PackedStringArray()
@@ -907,6 +976,8 @@ static func _fill(st: St, out: Dictionary, tier: int, t: Dictionary, opts: Dicti
 							if elites.size() < int(t.get("elite_max", 2)) and rng.randf() < float(t.get("elite_chance", 0.18)) * 0.5:
 								elites.append(j)
 					packs.append({ "room": ri, "c": m.c, "size": size, "k": k, "trail": room.trail, "elites": elites })
+				"V":
+					chests.append({ "c": m.c, "rich": true, "room": ri, "vault": true })
 				"C":
 					var rich := String(room.kind) == "secret"
 					if rich or String(room.kind) == "nook" or rng.randf() < float(t.get("chest_chance", 0.5)):
@@ -928,6 +999,30 @@ static func _fill(st: St, out: Dictionary, tier: int, t: Dictionary, opts: Dicti
 					seen[Vector2i(x, yy)] = true
 				walls.append({ "c0": c, "c1": Vector2i(x, y1), "room": _room_at(out, c) })
 			x = line.find("S", x + 1)
+	# Seals (artifacts-and-secrets §3.3): one per seal room: Z (where the hero
+	# stands), X barrier cells, W future-bridge cells, O hook point.
+	var seals: Array = []
+	for room: Dictionary in out.rooms:
+		if String(room.kind) != "seal":
+			continue
+		var ri := int(room.i)
+		var sl := { "room": ri, "kind": String(room.get("seal", "")), "z": Vector2i(-1, -1), "o": Vector2i(-1, -1), "x": [], "wc": [] }
+		for m: Dictionary in by_room.get(ri, []):
+			match String(m.ch):
+				"Z":
+					sl.z = m.c
+				"O":
+					sl.o = m.c
+		var x0 := int(room.x) * int(out.module_w)
+		var y0 := int(room.y) * int(out.module_h)
+		for y in range(y0, y0 + int(room.h) * int(out.module_h)):
+			for x in range(x0, x0 + int(room.w) * int(out.module_w)):
+				var ch := grid[y][x]
+				if ch == "X":
+					(sl.x as Array).append(Vector2i(x, y))
+				elif ch == "W":
+					(sl.wc as Array).append(Vector2i(x, y))
+		seals.append(sl)
 	# Knight (room-generation §3.6, level-structure §3.1): one per location, on the K
 	# of a trail arena (else on a trail pack spot) of fork f, rolled f = 1..n with
 	# knight_door, surely on the last fork.
@@ -952,6 +1047,7 @@ static func _fill(st: St, out: Dictionary, tier: int, t: Dictionary, opts: Dicti
 	out.packs = packs
 	out.chests = chests
 	out.walls = walls
+	out.seals = seals
 	out.knight = knight
 
 ## Index of the room holding level cell `c`, -1 when none.

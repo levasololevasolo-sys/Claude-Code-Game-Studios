@@ -134,6 +134,8 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				if not summon_queue.is_empty():
 					st = "summon_w"
 					t = windup(stat("summon_wind"), fast(), mw)
+				elif ng_pick(hp_pos):
+					pass
 				else:
 					var names: Array = stats.get("attacks", [])
 					var rows: Array = stats.get("weights", [])
@@ -157,12 +159,26 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				t = per_phase("breath_time")
 		"breath":
 			vel.x = 0.0
-			if breath_cd <= 0.0 and in_cone(mouth(), breath_ang, stat("breath_len"), stat("breath_half"), hc) \
+			var blen := stat("breath_len")
+			var bhalf := stat("breath_half")
+			if ng_bliz:
+				var k := 1.0 - clampf(t / maxf(ngv("sweep_t", 1.6), 0.01), 0.0, 1.0)
+				breath_ang = lerp_angle(bliz_a0, bliz_a1, k)
+				blen = ngv("len", 520.0)
+				bhalf = ngv("half", 0.34)
+			if breath_cd <= 0.0 and in_cone(mouth(), breath_ang, blen, bhalf, hc) \
 					and not pillar_between(pillars, mouth().x, hp_pos.x) and _hero_open():
-				breath_cd = stat("breath_hit_cd")
-				hurt_hero(stat("dmg") * stat("breath_dmg_mult"), Hit.Kind.PROJECTILE)
+				breath_cd = ngv("hit_cd", 0.45) if ng_bliz else stat("breath_hit_cd")
+				hurt_hero(stat("dmg") * (ngv("dmg_breath", 0.5) if ng_bliz else stat("breath_dmg_mult")), Hit.Kind.PROJECTILE)
 			if t <= 0.0:
-				_rest(stat("breath_rest_add"))
+				if ng_bliz:
+					ng_bliz = false
+					dive_x = hp_pos.x if room_w <= 0.0 else clampf(hp_pos.x, w, room_w - w)
+					st = "dive"
+					t = stat("dive_time")
+					face = 1 if dive_x >= position.x else -1
+				else:
+					_rest(stat("breath_rest_add"))
 		"spears_w":
 			vel.x = 0.0
 			if t <= 0.0:
@@ -172,14 +188,17 @@ func think(dt: float, hp_pos: Vector2) -> void:
 				_rest(stat("spears_rest_add"))
 		"scythe_w":
 			var goal := hp_pos.x - face * stat("scythe_reach")
-			vel.x = clampf((goal - position.x) / maxf(t, 0.05), -stat("scythe_glide"), stat("scythe_glide"))
+			var glide := ngv("glide", 520.0) if ng_twin else stat("scythe_glide")
+			vel.x = clampf((goal - position.x) / maxf(t, 0.05), -glide, glide)
 			position.y = move_toward(position.y, hover_y(), rise)
 			if t <= 0.0:
 				vel.x = 0.0
 				st = "scythe"
 				t = stat("scythe_time")
-				if _sweep_hits(position + Vector2(0, -h * 0.5), face, stat("scythe_r"), hc) and _hero_open():
-					hurt_hero(stat("dmg") * stat("scythe_dmg_mult"), Hit.Kind.STRIKE)
+				var sr := ngv("r", 250.0) if ng_twin else stat("scythe_r")
+				if _sweep_hits(position + Vector2(0, -h * 0.5), face, sr, hc) and _hero_open():
+					hurt_hero(stat("dmg") * (ngv("dmg", 1.1) if ng_twin else stat("scythe_dmg_mult")), Hit.Kind.STRIKE)
+				ng_twin = false
 		"scythe":
 			vel.x = 0.0
 			if t <= 0.0:
@@ -224,7 +243,59 @@ func think(dt: float, hp_pos: Vector2) -> void:
 			vel.x = 0.0
 			if t <= 0.0:
 				_rest(0.0)
+	if st.begins_with("ng_"):
+		_ng_tick(dt, hp_pos)
 	_tick_hazards(dt, hp_pos)
+
+# ---------------- NG+ moves (artifacts-and-secrets §3.7) ----------------
+
+var ng_twin: bool = false
+var ng_bliz: bool = false
+var bliz_a0: float = 0.0
+var bliz_a1: float = 0.0
+
+func _ng_begin(id: String, _hp_pos: Vector2) -> void:
+	if id == "morena_blizzard":
+		position.y = maxf(position.y - ngv("rise", 300.0), stat("dive_top"))
+
+func _ng_fire(id: String, hp_pos: Vector2) -> void:
+	match id:
+		"morena_ice_path":
+			var n := int(ngv("n", 8))
+			var dir := 1.0 if hp_pos.x >= position.x else -1.0
+			for i in n:
+				var x := position.x + dir * ngv("gap", 120.0) * (i + 1)
+				if room_w > 0.0 and (x < stat("spear_edge") or x > room_w - stat("spear_edge")):
+					continue
+				hazards.append({ "kind": "spear", "x": x, "t": -ngv("step_t", 0.12) * i, "hit": false, "done": false,
+					"warn": ngv("warn", 0.6), "act": ngv("act", 0.3), "w": ngv("w", 60.0), "dmgk": ngv("dmg", 0.9), "pillar_ok": i == n - 1 })
+			_rest(stat("spears_rest_add"))
+		"morena_twin_scythe":
+			var side := 1.0 if position.x < hp_pos.x else -1.0
+			var cx := hp_pos.x + side * ngv("dx", 230.0)
+			if room_w > 0.0:
+				cx = clampf(cx, stat("spear_edge"), room_w - stat("spear_edge"))
+			var glide_t := clampf(absf(hp_pos.x - position.x) / maxf(ngv("glide", 520.0), 1.0), 0.3, 1.0)
+			hazards.append({ "kind": "clone", "x": cx, "y": hover_y(), "t": 0.0, "hit": false, "warn": glide_t,
+				"r": ngv("clone_r", 200.0), "dmgk": ngv("dmg_clone", 0.9) })
+			ng_twin = true
+			face = int(signf(hp_pos.x - position.x)) if hp_pos.x != position.x else face
+			st = "scythe_w"
+			t = glide_t
+		"morena_blizzard":
+			ng_bliz = true
+			var m := mouth()
+			var g := ground()
+			var lx := 40.0
+			var rx := room_w - 40.0 if room_w > 0.0 else m.x + 900.0
+			var from_left := hp_pos.x > m.x
+			bliz_a0 = (Vector2(lx if from_left else rx, g) - m).angle()
+			bliz_a1 = (Vector2(rx if from_left else lx, g) - m).angle()
+			breath_ang = bliz_a0
+			st = "breath"
+			t = ngv("sweep_t", 1.6)
+		_:
+			_rest(0.0)
 
 func _land() -> void:
 	var i := pillar_near(pillars, position.x, stat("pillar_hit_r"))
@@ -254,15 +325,16 @@ func _tick_hazards(dt: float, hp_pos: Vector2) -> void:
 		hz.t = float(hz.t) + dt
 		match String(hz.kind):
 			"spear":
-				if not hz.hit and hz.t > warn and hz.t < warn + stat("spear_act") \
-						and absf(hp_pos.x - float(hz.x)) < stat("spear_w") / 2.0 + Player.W / 2.0 and _hero_open():
+				var sw := float(hz.get("warn", warn))
+				if not hz.hit and hz.t > sw and hz.t < sw + float(hz.get("act", stat("spear_act"))) \
+						and absf(hp_pos.x - float(hz.x)) < float(hz.get("w", stat("spear_w"))) / 2.0 + Player.W / 2.0 and _hero_open():
 					hz.hit = true
-					hurt_hero(dmg * stat("spear_dmg_mult"), Hit.Kind.PROJECTILE)
-				if not hz.done and hz.t >= warn:
+					hurt_hero(dmg * float(hz.get("dmgk", stat("spear_dmg_mult"))), Hit.Kind.PROJECTILE)
+				if not hz.done and hz.t >= sw:
 					hz.done = true
 					if world:
 						world.add_shake(4.0)
-					if pillars.size() < int(stat("pillar_max")) and pillar_near(pillars, float(hz.x), stat("pillar_w")) < 0 \
+					if bool(hz.get("pillar_ok", true)) and pillars.size() < int(stat("pillar_max")) and pillar_near(pillars, float(hz.x), stat("pillar_w")) < 0 \
 							and rng.randf() < stat("pillar_chance"):
 						pillars.append(float(hz.x))
 			"clone":
@@ -270,12 +342,12 @@ func _tick_hazards(dt: float, hp_pos: Vector2) -> void:
 					hz.hit = true
 					var c := Vector2(float(hz.x), float(hz.y) - h * 0.5)
 					var dir := 1 if hp_pos.x >= float(hz.x) else -1
-					if _sweep_hits(c, dir, stat("scythe_r") * stat("mirror_r_k"), hc) and _hero_open():
-						hurt_hero(dmg * stat("mirror_dmg_mult"), Hit.Kind.STRIKE)
+					if _sweep_hits(c, dir, float(hz.get("r", stat("scythe_r") * stat("mirror_r_k"))), hc) and _hero_open():
+						hurt_hero(dmg * float(hz.get("dmgk", stat("mirror_dmg_mult"))), Hit.Kind.STRIKE)
 	var spear_end := warn + stat("spear_act") + 0.25
 	hazards.assign(hazards.filter(func(hz: Dictionary) -> bool:
 		if hz.kind == "spear":
-			return float(hz.t) < spear_end
+			return float(hz.t) < float(hz.get("warn", warn)) + float(hz.get("act", stat("spear_act"))) + 0.25
 		return float(hz.t) < float(hz.get("warn", 0.0)) + stat("mirror_act")))
 
 # ---------------- light and drawing ----------------
@@ -407,14 +479,17 @@ func _draw_fx() -> void:
 			"spear":
 				var tt := float(hz.t)
 				var top := stat("spear_top")
-				var sw := stat("spear_w") / 2.0
+				var sw := float(hz.get("w", stat("spear_w"))) / 2.0
+				warn = float(hz.get("warn", stat("spear_warn")))
+				if tt < 0.0:
+					continue
 				if tt < warn:
 					var k3 := tt / warn
 					_fx.draw_colored_polygon(Room._oval(Vector2(hx, ground - 2.0), sw * (0.5 + 0.6 * k3), 7.0), Color(threat, 0.25 + 0.55 * k3))
 					_fx.draw_colored_polygon(PackedVector2Array([Vector2(hx - 10.0, top), Vector2(hx, top + 46.0), Vector2(hx + 10.0, top)]), Color(ice, 0.5 + 0.5 * k3))
 					_fx.draw_line(Vector2(hx, top + 50.0), Vector2(hx, ground), Color(threat, 0.12 + 0.2 * k3), 2.0)
 				else:
-					var k4 := clampf((tt - warn) / stat("spear_act"), 0.0, 1.0)
+					var k4 := clampf((tt - warn) / float(hz.get("act", stat("spear_act"))), 0.0, 1.0)
 					var tip := lerpf(top + 46.0, ground, minf(k4 * 2.5, 1.0))
 					_fx.draw_colored_polygon(PackedVector2Array([Vector2(hx - sw * 0.4, tip - 90.0), Vector2(hx, tip), Vector2(hx + sw * 0.4, tip - 90.0)]), Color("#e8f6ff"))
 					_fx.draw_polyline(PackedVector2Array([Vector2(hx - sw * 0.4, tip - 90.0), Vector2(hx, tip), Vector2(hx + sw * 0.4, tip - 90.0)]), ice, 2.0)
