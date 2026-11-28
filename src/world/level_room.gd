@@ -82,6 +82,12 @@ func build_level(l: Dictionary) -> void:
 		a.room = room
 		a.mode = "room"
 		add_child(a)
+		if bspec.has("dress"):
+			var dec := LevelDecor.new()
+			dec.lr = self
+			dec.room = room
+			dec.spec = bspec
+			add_child(dec)
 
 ## Rectangles (world px) covering every cell of `chars`, rows merged vertically.
 func merged_rects(chars: String) -> Array:

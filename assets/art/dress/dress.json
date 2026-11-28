@@ -1,0 +1,1022 @@
+{
+ "swamp": {
+  "surface": [
+   {
+    "file": "res://assets/art/dress/swamp/surface_00.webp",
+    "w": 303,
+    "h": 281
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_01.webp",
+    "w": 360,
+    "h": 238
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_02.webp",
+    "w": 360,
+    "h": 185
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_03.webp",
+    "w": 219,
+    "h": 357
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_04.webp",
+    "w": 145,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_05.webp",
+    "w": 360,
+    "h": 186
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_06.webp",
+    "w": 203,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_07.webp",
+    "w": 333,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_08.webp",
+    "w": 360,
+    "h": 271
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_09.webp",
+    "w": 299,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_10.webp",
+    "w": 346,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_11.webp",
+    "w": 163,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_12.webp",
+    "w": 327,
+    "h": 257
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_13.webp",
+    "w": 360,
+    "h": 226
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_14.webp",
+    "w": 310,
+    "h": 250
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_15.webp",
+    "w": 143,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_16.webp",
+    "w": 345,
+    "h": 331
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_17.webp",
+    "w": 258,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_18.webp",
+    "w": 360,
+    "h": 322
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_19.webp",
+    "w": 232,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_20.webp",
+    "w": 360,
+    "h": 221
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_21.webp",
+    "w": 234,
+    "h": 142
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_22.webp",
+    "w": 112,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_23.webp",
+    "w": 360,
+    "h": 188
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_24.webp",
+    "w": 360,
+    "h": 179
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_25.webp",
+    "w": 360,
+    "h": 122
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_26.webp",
+    "w": 360,
+    "h": 159
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_27.webp",
+    "w": 360,
+    "h": 144
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_28.webp",
+    "w": 301,
+    "h": 330
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_29.webp",
+    "w": 179,
+    "h": 233
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_30.webp",
+    "w": 360,
+    "h": 202
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_31.webp",
+    "w": 324,
+    "h": 324
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_32.webp",
+    "w": 333,
+    "h": 198
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_33.webp",
+    "w": 267,
+    "h": 143
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_34.webp",
+    "w": 232,
+    "h": 209
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_35.webp",
+    "w": 360,
+    "h": 285
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_36.webp",
+    "w": 360,
+    "h": 213
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_37.webp",
+    "w": 302,
+    "h": 355
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_38.webp",
+    "w": 326,
+    "h": 230
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_39.webp",
+    "w": 360,
+    "h": 166
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_40.webp",
+    "w": 360,
+    "h": 175
+   },
+   {
+    "file": "res://assets/art/dress/swamp/surface_41.webp",
+    "w": 186,
+    "h": 93
+   }
+  ],
+  "cave": [
+   {
+    "file": "res://assets/art/dress/swamp/cave_00.webp",
+    "w": 360,
+    "h": 145
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_01.webp",
+    "w": 351,
+    "h": 335
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_02.webp",
+    "w": 360,
+    "h": 198
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_03.webp",
+    "w": 195,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_04.webp",
+    "w": 360,
+    "h": 148
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_05.webp",
+    "w": 173,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_06.webp",
+    "w": 308,
+    "h": 212
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_07.webp",
+    "w": 215,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/swamp/cave_08.webp",
+    "w": 360,
+    "h": 111
+   }
+  ]
+ },
+ "forest": {
+  "surface": [
+   {
+    "file": "res://assets/art/dress/forest/surface_00.webp",
+    "w": 278,
+    "h": 338
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_01.webp",
+    "w": 289,
+    "h": 179
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_02.webp",
+    "w": 360,
+    "h": 168
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_03.webp",
+    "w": 247,
+    "h": 144
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_04.webp",
+    "w": 246,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_05.webp",
+    "w": 111,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_06.webp",
+    "w": 110,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_07.webp",
+    "w": 111,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_08.webp",
+    "w": 122,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_09.webp",
+    "w": 120,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_10.webp",
+    "w": 178,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_11.webp",
+    "w": 342,
+    "h": 275
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_12.webp",
+    "w": 219,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_13.webp",
+    "w": 360,
+    "h": 350
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_14.webp",
+    "w": 360,
+    "h": 280
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_15.webp",
+    "w": 246,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_16.webp",
+    "w": 196,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_17.webp",
+    "w": 274,
+    "h": 235
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_18.webp",
+    "w": 360,
+    "h": 259
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_19.webp",
+    "w": 216,
+    "h": 307
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_20.webp",
+    "w": 285,
+    "h": 224
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_21.webp",
+    "w": 219,
+    "h": 259
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_22.webp",
+    "w": 223,
+    "h": 214
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_23.webp",
+    "w": 188,
+    "h": 196
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_24.webp",
+    "w": 360,
+    "h": 117
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_25.webp",
+    "w": 205,
+    "h": 125
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_26.webp",
+    "w": 306,
+    "h": 161
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_27.webp",
+    "w": 168,
+    "h": 109
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_28.webp",
+    "w": 360,
+    "h": 160
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_29.webp",
+    "w": 255,
+    "h": 164
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_30.webp",
+    "w": 360,
+    "h": 136
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_31.webp",
+    "w": 360,
+    "h": 150
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_32.webp",
+    "w": 360,
+    "h": 153
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_33.webp",
+    "w": 360,
+    "h": 190
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_34.webp",
+    "w": 203,
+    "h": 178
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_35.webp",
+    "w": 240,
+    "h": 220
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_36.webp",
+    "w": 232,
+    "h": 164
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_37.webp",
+    "w": 223,
+    "h": 172
+   },
+   {
+    "file": "res://assets/art/dress/forest/surface_38.webp",
+    "w": 198,
+    "h": 220
+   }
+  ],
+  "cave": [
+   {
+    "file": "res://assets/art/dress/forest/cave_00.webp",
+    "w": 360,
+    "h": 194
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_01.webp",
+    "w": 360,
+    "h": 120
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_02.webp",
+    "w": 360,
+    "h": 111
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_03.webp",
+    "w": 172,
+    "h": 223
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_04.webp",
+    "w": 360,
+    "h": 135
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_05.webp",
+    "w": 211,
+    "h": 307
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_06.webp",
+    "w": 360,
+    "h": 185
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_07.webp",
+    "w": 360,
+    "h": 192
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_08.webp",
+    "w": 233,
+    "h": 282
+   },
+   {
+    "file": "res://assets/art/dress/forest/cave_09.webp",
+    "w": 324,
+    "h": 241
+   }
+  ]
+ },
+ "frost": {
+  "surface": [
+   {
+    "file": "res://assets/art/dress/frost/surface_00.webp",
+    "w": 304,
+    "h": 353
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_01.webp",
+    "w": 360,
+    "h": 230
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_02.webp",
+    "w": 229,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_03.webp",
+    "w": 360,
+    "h": 222
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_04.webp",
+    "w": 360,
+    "h": 246
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_05.webp",
+    "w": 360,
+    "h": 271
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_06.webp",
+    "w": 360,
+    "h": 240
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_07.webp",
+    "w": 360,
+    "h": 301
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_08.webp",
+    "w": 355,
+    "h": 211
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_09.webp",
+    "w": 240,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_10.webp",
+    "w": 186,
+    "h": 324
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_11.webp",
+    "w": 310,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_12.webp",
+    "w": 221,
+    "h": 217
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_13.webp",
+    "w": 313,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_14.webp",
+    "w": 155,
+    "h": 291
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_15.webp",
+    "w": 153,
+    "h": 153
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_16.webp",
+    "w": 239,
+    "h": 102
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_17.webp",
+    "w": 286,
+    "h": 132
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_18.webp",
+    "w": 237,
+    "h": 134
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_19.webp",
+    "w": 246,
+    "h": 208
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_20.webp",
+    "w": 360,
+    "h": 169
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_21.webp",
+    "w": 308,
+    "h": 193
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_22.webp",
+    "w": 360,
+    "h": 128
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_23.webp",
+    "w": 310,
+    "h": 198
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_24.webp",
+    "w": 192,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_25.webp",
+    "w": 270,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_26.webp",
+    "w": 168,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_27.webp",
+    "w": 172,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_28.webp",
+    "w": 218,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_29.webp",
+    "w": 360,
+    "h": 160
+   },
+   {
+    "file": "res://assets/art/dress/frost/surface_30.webp",
+    "w": 239,
+    "h": 341
+   }
+  ],
+  "cave": [
+   {
+    "file": "res://assets/art/dress/frost/cave_00.webp",
+    "w": 360,
+    "h": 166
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_01.webp",
+    "w": 360,
+    "h": 197
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_02.webp",
+    "w": 211,
+    "h": 354
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_03.webp",
+    "w": 249,
+    "h": 273
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_04.webp",
+    "w": 360,
+    "h": 157
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_05.webp",
+    "w": 217,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_06.webp",
+    "w": 309,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_07.webp",
+    "w": 253,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_08.webp",
+    "w": 185,
+    "h": 279
+   },
+   {
+    "file": "res://assets/art/dress/frost/cave_09.webp",
+    "w": 203,
+    "h": 274
+   }
+  ]
+ },
+ "hub": {
+  "surface": [
+   {
+    "file": "res://assets/art/dress/hub/surface_00.webp",
+    "w": 360,
+    "h": 229
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_01.webp",
+    "w": 118,
+    "h": 307
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_02.webp",
+    "w": 203,
+    "h": 307
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_03.webp",
+    "w": 328,
+    "h": 306
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_04.webp",
+    "w": 356,
+    "h": 247
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_05.webp",
+    "w": 360,
+    "h": 178
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_06.webp",
+    "w": 360,
+    "h": 274
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_07.webp",
+    "w": 341,
+    "h": 198
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_08.webp",
+    "w": 360,
+    "h": 268
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_09.webp",
+    "w": 213,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_10.webp",
+    "w": 316,
+    "h": 268
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_11.webp",
+    "w": 315,
+    "h": 268
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_12.webp",
+    "w": 275,
+    "h": 268
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_13.webp",
+    "w": 322,
+    "h": 210
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_14.webp",
+    "w": 271,
+    "h": 231
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_15.webp",
+    "w": 348,
+    "h": 257
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_16.webp",
+    "w": 321,
+    "h": 273
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_17.webp",
+    "w": 360,
+    "h": 270
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_18.webp",
+    "w": 360,
+    "h": 193
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_19.webp",
+    "w": 297,
+    "h": 261
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_20.webp",
+    "w": 290,
+    "h": 247
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_21.webp",
+    "w": 289,
+    "h": 247
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_22.webp",
+    "w": 292,
+    "h": 247
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_23.webp",
+    "w": 283,
+    "h": 292
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_24.webp",
+    "w": 284,
+    "h": 159
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_25.webp",
+    "w": 177,
+    "h": 222
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_26.webp",
+    "w": 360,
+    "h": 221
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_27.webp",
+    "w": 197,
+    "h": 299
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_28.webp",
+    "w": 255,
+    "h": 113
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_29.webp",
+    "w": 360,
+    "h": 280
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_30.webp",
+    "w": 224,
+    "h": 172
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_31.webp",
+    "w": 360,
+    "h": 255
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_32.webp",
+    "w": 200,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_33.webp",
+    "w": 360,
+    "h": 152
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_34.webp",
+    "w": 252,
+    "h": 124
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_35.webp",
+    "w": 236,
+    "h": 176
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_36.webp",
+    "w": 174,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_37.webp",
+    "w": 133,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_38.webp",
+    "w": 103,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_39.webp",
+    "w": 308,
+    "h": 347
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_40.webp",
+    "w": 285,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_41.webp",
+    "w": 190,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_42.webp",
+    "w": 351,
+    "h": 344
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_43.webp",
+    "w": 297,
+    "h": 319
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_44.webp",
+    "w": 290,
+    "h": 360
+   },
+   {
+    "file": "res://assets/art/dress/hub/surface_45.webp",
+    "w": 202,
+    "h": 360
+   }
+  ],
+  "cave": [
+   {
+    "file": "res://assets/art/dress/hub/cave_00.webp",
+    "w": 360,
+    "h": 302
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_01.webp",
+    "w": 245,
+    "h": 300
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_02.webp",
+    "w": 278,
+    "h": 262
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_03.webp",
+    "w": 307,
+    "h": 264
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_04.webp",
+    "w": 351,
+    "h": 330
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_05.webp",
+    "w": 357,
+    "h": 205
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_06.webp",
+    "w": 188,
+    "h": 297
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_07.webp",
+    "w": 99,
+    "h": 288
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_08.webp",
+    "w": 230,
+    "h": 275
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_09.webp",
+    "w": 200,
+    "h": 359
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_10.webp",
+    "w": 360,
+    "h": 326
+   },
+   {
+    "file": "res://assets/art/dress/hub/cave_11.webp",
+    "w": 360,
+    "h": 186
+   }
+  ]
+ },
+ "_note": "Set dressing (tools/asset-pipeline/navart/dress.py): per location, pieces for surface and cave rooms; w/h in px."
+}

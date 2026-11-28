@@ -1,5 +1,5 @@
 {
-  "_note": "Backgrounds of the graph levels per visuals.json style (src/world/level_backdrop.gd, shaders cave_backdrop / earth_fill). Colours are hex. cave_*: underground back wall (band 1 = under the roots, band 2 = the deep); glow: fungi / root embers / ice crystals dotting it; glow_density 0..1 share of 90 px cells that hold one; crack: Navi cracks of the deep band. earth_*: the solid ground body: stone = pebbles, strata = layer lines, roots = root threads near the top. landmarks: silhouette kinds placed along the level, one per landmark_every layer px (layer scale landmark_scale), coloured landmark_col and faded toward the style fog by landmark_fog. progress_tint: colour the far layers drift toward by the level's end (progress_k = how far, 0..1). anchor_tween: seconds the surface backdrop takes to follow a room at another height. Optional art: cave_tex (a seamless PNG used as the far cave wall instead of the procedural one), earth_tex (a seamless PNG for the solid ground). cave_tex_scale / earth_tex_scale scale those images. landmark_halo: alpha of the fog glow behind a landmark. Art drop-in guide: assets/art/backgrounds/README.md. cave_fit_room: the painted cave scene (cave_tex far, cave_mid_tex arches) fits one module height (x cave_fit_rows) from each underground room's top. landmarks_off keeps the procedural silhouettes for a fallback; the painted mid layers carry the scenery now.",
+  "_note": "Backgrounds of the graph levels per visuals.json style (src/world/level_backdrop.gd, shaders cave_backdrop / earth_fill). Colours are hex. cave_*: underground back wall (band 1 = under the roots, band 2 = the deep); glow: fungi / root embers / ice crystals dotting it; glow_density 0..1 share of 90 px cells that hold one; crack: Navi cracks of the deep band. earth_*: the solid ground body: stone = pebbles, strata = layer lines, roots = root threads near the top. landmarks: silhouette kinds placed along the level, one per landmark_every layer px (layer scale landmark_scale), coloured landmark_col and faded toward the style fog by landmark_fog. progress_tint: colour the far layers drift toward by the level's end (progress_k = how far, 0..1). anchor_tween: seconds the surface backdrop takes to follow a room at another height. Optional art: cave_tex (a seamless PNG used as the far cave wall instead of the procedural one), earth_tex (a seamless PNG for the solid ground). cave_tex_scale / earth_tex_scale scale those images. landmark_halo: alpha of the fog glow behind a landmark. Art drop-in guide: assets/art/backgrounds/README.md. cave_fit_room: the painted cave scene (cave_tex far, cave_mid_tex arches) fits one module height (x cave_fit_rows) from each underground room's top. landmarks_off keeps the procedural silhouettes for a fallback; the painted mid layers carry the scenery now. dress = location of assets/art/dress/dress.json stood on room floors by LevelDecor (dress_every cells per piece, dress_h [min,max] px tall, dress_mod tint).",
   "ruins": {
     "cave_back": "#141a15",
     "cave_rock": "#25302a",
@@ -35,7 +35,14 @@
     ],
     "earth_tex": "res://assets/art/backgrounds/swamp/earth.webp",
     "earth_tex_scale": 0.8,
-    "earth_tex_dark": 0.45
+    "earth_tex_dark": 0.45,
+    "dress": "swamp",
+    "dress_every": 7,
+    "dress_h": [
+      70,
+      140
+    ],
+    "dress_mod": "#e6e6e6"
   },
   "forest": {
     "cave_back": "#16140f",
@@ -72,7 +79,14 @@
     ],
     "earth_tex": "res://assets/art/backgrounds/forest/earth.webp",
     "earth_tex_scale": 0.8,
-    "earth_tex_dark": 0.45
+    "earth_tex_dark": 0.45,
+    "dress": "forest",
+    "dress_every": 7,
+    "dress_h": [
+      70,
+      140
+    ],
+    "dress_mod": "#e6e6e6"
   },
   "frost": {
     "cave_back": "#141a24",
@@ -109,6 +123,13 @@
     ],
     "earth_tex": "res://assets/art/backgrounds/frost/earth.webp",
     "earth_tex_scale": 0.8,
-    "earth_tex_dark": 0.45
+    "earth_tex_dark": 0.45,
+    "dress": "frost",
+    "dress_every": 7,
+    "dress_h": [
+      70,
+      140
+    ],
+    "dress_mod": "#e6e6e6"
   }
 }
