@@ -1,27 +1,42 @@
 ## Look of a LevelRoom (GDD level-structure §3.3, §3.8; stage 1 "без красоты"):
 ## reuses TerrainArt's rim, platform and grain shader on the level grid.
-## mode "fill": every solid cell of the level, flat earth darkening with depth;
+## mode "fill": every solid cell of the level, earth darkening with depth
+## (earth_fill shader: mottling, strata, pebbles, roots);
 ## "room": one room's lit rims on exposed tops, dark lips with hanging roots
-## under overhangs, one-way platforms and bog water; "wall": the back wall of a
-## room below the surface (roots under the roots band, black with Navi cracks in
-## the deep band). Visual only; LevelRoom owns collision.
+## under overhangs, one-way platforms and bog water. The back walls of
+## underground rooms are LevelBackdrop's cave shader. Visual only; LevelRoom
+## owns collision.
 class_name LevelArt
 extends TerrainArt
 
 var lr: LevelRoom
-## LevelGen room dictionary ("room" / "wall" modes).
+## LevelGen room dictionary ("room" mode).
 var room: Dictionary = {}
 var mode: String = "room"
+## The level_backdrop.json block ("fill" mode: earth colours, optional earth_tex).
+var earth: Dictionary = {}
 
-## Back wall colour per depth band (surface, under the roots, the deep).
-const WALL: Array = ["#00000000", "#1a1d16", "#0d0b12"]
-const CRACK: Color = Color("#c03cff")
 
 func _ready() -> void:
 	super._ready()
-	if mode == "wall":
-		z_index = -60
-		material = null
+	if mode == "fill" and not earth.is_empty():
+		material = earth_material(earth)
+
+const EARTH_SHADER: String = "res://assets/shaders/earth_fill.gdshader"
+
+## The earth_fill material for a level_backdrop.json block.
+static func earth_material(e: Dictionary) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load(EARTH_SHADER) as Shader
+	m.set_shader_parameter("stone", Color(String(e.get("stone", "#45534a"))))
+	m.set_shader_parameter("strata", Color(String(e.get("strata", "#1c2620"))))
+	m.set_shader_parameter("roots", Color(String(e.get("earth_roots", "#4a3d26"))))
+	var tex := String(e.get("earth_tex", ""))
+	if tex != "" and ResourceLoader.exists(tex):
+		m.set_shader_parameter("use_tex", true)
+		m.set_shader_parameter("earth_tex", load(tex) as Texture2D)
+		m.set_shader_parameter("tex_scale", float(e.get("earth_tex_scale", 1.0)))
+	return m
 
 func _depth_k(y: float) -> float:
 	return clampf(y / maxf(1.0, lr.rows * lr.cell), 0.0, 1.0)
@@ -32,14 +47,12 @@ func _draw() -> void:
 	match mode:
 		"fill":
 			_draw_fill()
-		"wall":
-			_draw_wall()
 		_:
 			_draw_room()
 
 func _draw_fill() -> void:
-	var top := _c("solid", "#2a3530")
-	var deep := _c("body_bottom", "#0e1512")
+	var top := Color(String(earth.get("earth_hi", t.get("solid", "#2a3530"))))
+	var deep := Color(String(earth.get("earth_lo", t.get("body_bottom", "#0e1512"))))
 	for r: Rect2 in lr.layout.get("solids", []):
 		var k := _depth_k(r.position.y) * 0.8
 		draw_rect(r, top.lerp(deep, k))
@@ -133,42 +146,3 @@ func _hummock(top: Vector2, w: float) -> void:
 		pts.append(top + Vector2(cos(a) * w * 0.55, -sin(a) * 26.0 + 4.0))
 	draw_colored_polygon(pts, _c("plat", "#4a4a38").darkened(0.1))
 	draw_polyline(PackedVector2Array([top + Vector2(-w * 0.5, 2), top + Vector2(0, -3), top + Vector2(w * 0.5, 2)]), _c("rim_light", "#7d9a5a"), 3.0)
-
-func _draw_wall() -> void:
-	var band := int(room.band)
-	if band <= 0:
-		return
-	var rc := _room_cells()
-	var c := lr.cell
-	var rect := Rect2(rc.position.x * c, rc.position.y * c, rc.size.x * c, rc.size.y * c)
-	var col := Color(String(WALL[band]))
-	draw_rect(rect, col)
-	var s := int(room.i) * 53
-	if band == 1:
-		# Earth strata and roots of the vault.
-		for i in 7:
-			var y := rect.position.y + rect.size.y * (0.12 + 0.13 * i) + _h(s + i, 1) * 20.0
-			draw_line(Vector2(rect.position.x, y), Vector2(rect.end.x, y + (_h(s + i, 2) - 0.5) * 30.0), Color("#2a2a1c", 0.6), 3.0 + _h(s + i, 3) * 4.0)
-		for i in int(rect.size.x / 70.0):
-			if _h(s + i, 4) < 0.5:
-				var x := rect.position.x + i * 70.0 + _h(s + i, 5) * 40.0
-				var l := 60.0 + _h(s + i, 6) * 200.0
-				draw_line(Vector2(x, rect.position.y), Vector2(x + (_h(s + i, 7) - 0.5) * 40.0, rect.position.y + l), Color("#3a3422", 0.7), 2.0 + _h(s + i, 8) * 3.0)
-		for i in 6:
-			var p := rect.position + Vector2(_h(s + i, 9) * rect.size.x, _h(s + i, 10) * rect.size.y)
-			draw_circle(p, 3.0 + _h(s + i, 11) * 3.0, Color("#b6e36b", 0.35))
-	else:
-		# The deep: black water stains and magenta Navi cracks.
-		for i in 5:
-			var p := rect.position + Vector2(_h(s + i, 12) * rect.size.x, (0.2 + 0.6 * _h(s + i, 13)) * rect.size.y)
-			var pts := PackedVector2Array([p])
-			for j in 5:
-				p += Vector2((_h(s + i * 7 + j, 14) - 0.5) * 60.0, 20.0 + _h(s + i * 7 + j, 15) * 30.0)
-				pts.append(p)
-			draw_polyline(pts, Color(CRACK, 0.45), 2.0)
-			draw_polyline(pts, Color(CRACK, 0.12), 8.0)
-		for i in 4:
-			var bx := rect.position.x + _h(s + i, 16) * rect.size.x
-			var by := rect.end.y - c * 1.0
-			draw_line(Vector2(bx, by), Vector2(bx, by - 90.0), Color("#3a2e26"), 4.0)
-			draw_circle(Vector2(bx, by - 96.0), 9.0, Color("#c8bca0", 0.8))

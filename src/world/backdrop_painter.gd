@@ -202,7 +202,7 @@ func _fog() -> void:
 			PackedColorArray([c, c, c, c]), PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]))
 	# Low ground haze below the bands.
 	var lc := Color(c, c.a * 0.8)
-	_grad_rect(Rect2(-t, ground - 40.0, t * 3.0, 60.0), Color(lc, 0.0), lc)
+	_grad_rect(Rect2(-t, ground - 300.0, t * 3.0, 320.0), Color(lc, 0.0), lc)
 	draw_rect(Rect2(-t, ground + 20.0, t * 3.0, 900.0), lc)
 
 func _rays() -> void:

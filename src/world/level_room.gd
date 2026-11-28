@@ -16,6 +16,8 @@ var rows: int = 0
 var grid: PackedStringArray = PackedStringArray()
 var mw: int = 16
 var mh: int = 9
+## The level's backgrounds (surface backdrop, landmarks, caves).
+var backdrop: LevelBackdrop
 
 ## Builds collision and art for `l` (LevelGen.build output).
 func build_level(l: Dictionary) -> void:
@@ -61,15 +63,16 @@ func build_level(l: Dictionary) -> void:
 		shape.position = Vector2(p.x + p.z / 2.0, p.y + 8)
 		pb.add_child(shape)
 	add_child(pb)
-	# The surface backdrop (sky, far forest) at the entry's floor; deeper rooms get a back wall.
-	var entry: Dictionary = l.rooms[int(l.entry)]
-	var surf := (float(entry.y) * mh + mh - 1) * cell
-	var bd := Backdrop.new()
-	add_child(bd)
-	bd.build(vis, surf, surf - 1200.0)
+	# Backgrounds (LevelBackdrop): the surface sky and landmarks follow the hero
+	# along the level; underground rooms get the cave wall shader.
+	var bspec := LevelBackdrop.spec_for(String(look.get("props", "ruins")))
+	backdrop = LevelBackdrop.new()
+	add_child(backdrop)
+	backdrop.build(self, vis, bspec)
 	var fill := LevelArt.new()
 	fill.lr = self
 	fill.t = vis.get("terrain", {})
+	fill.earth = bspec
 	fill.mode = "fill"
 	add_child(fill)
 	for room: Dictionary in l.rooms:
@@ -79,12 +82,6 @@ func build_level(l: Dictionary) -> void:
 		a.room = room
 		a.mode = "room"
 		add_child(a)
-		var wall := LevelArt.new()
-		wall.lr = self
-		wall.t = vis.get("terrain", {})
-		wall.room = room
-		wall.mode = "wall"
-		add_child(wall)
 
 ## Rectangles (world px) covering every cell of `chars`, rows merged vertically.
 func merged_rects(chars: String) -> Array:

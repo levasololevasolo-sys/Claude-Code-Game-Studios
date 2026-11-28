@@ -242,6 +242,10 @@ func _ready() -> void:
 			var pfc: Node = (load("res://tests/integration/perf/perf_check_driver.gd") as GDScript).new()
 			pfc.set("out_dir", a.trim_prefix("--perf-check="))
 			add_child(pfc)
+		elif a.begins_with("--bg-check="):
+			var bgc: Node = (load("res://tests/integration/visual/bg_check_driver.gd") as GDScript).new()
+			bgc.set("out_dir", a.trim_prefix("--bg-check="))
+			add_child(bgc)
 		elif a.begins_with("--menu-check="):
 			var mc: Node = (load("res://tests/integration/core/menu_check_driver.gd") as GDScript).new()
 			mc.set("out_dir", a.trim_prefix("--menu-check="))
