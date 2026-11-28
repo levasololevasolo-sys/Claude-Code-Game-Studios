@@ -142,6 +142,12 @@ func _build_cave() -> void:
 		_cave_mat.set_shader_parameter("use_tex", true)
 		_cave_mat.set_shader_parameter("cave_tex", load(tex_path) as Texture2D)
 		_cave_mat.set_shader_parameter("tex_scale", float(spec.get("cave_tex_scale", 1.0)))
+		_cave_mat.set_shader_parameter("tex_fit_room", bool(spec.get("cave_fit_room", false)))
+		_cave_mat.set_shader_parameter("fit_rows", float(spec.get("cave_fit_rows", 1.0)))
+		var mid_path := String(spec.get("cave_mid_tex", ""))
+		if mid_path != "" and ResourceLoader.exists(mid_path):
+			_cave_mat.set_shader_parameter("use_mid", true)
+			_cave_mat.set_shader_parameter("cave_mid_tex", load(mid_path) as Texture2D)
 	cave.material = _cave_mat
 	add_child(cave)
 

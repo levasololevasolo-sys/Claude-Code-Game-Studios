@@ -6,6 +6,13 @@
 // parallax, rock pillars, stalactites hanging from the room top, glowing dots
 // (fungi, embers or ice by location) and, in the deep band, Navi cracks.
 // Optional `cave_tex` replaces the procedural far wall (seamless art).
+// With `tex_fit_room` the painted cave scenes (art drop 057/065/073/081) are
+// fitted to the room instead of tiled: x repeats (the art is made seamless in
+// x by tools/asset-pipeline/navart/layout.py), y spans one module height from
+// the room top; the optional `cave_mid_tex` (transparent arches, 058/066/...)
+// lies over it at a faster parallax, and the procedural stones, stalactites
+// and roots are left out (the art has its own). Target: Compatibility and
+// Forward+, two extra texture reads per pixel at most.
 shader_type canvas_item;
 
 uniform sampler2D rooms : filter_nearest;
@@ -22,6 +29,15 @@ uniform vec4 roots : source_color = vec4(0.23, 0.2, 0.13, 1.0);
 uniform bool use_tex = false;
 uniform sampler2D cave_tex : repeat_enable, filter_linear_mipmap;
 uniform float tex_scale = 1.0;
+group_uniforms painted_cave;
+/** Fit the painted far wall to the room height instead of tiling it. */
+uniform bool tex_fit_room = false;
+/** Transparent mid layer (arches, pillars) over the far wall; alpha blended. */
+uniform bool use_mid = false;
+uniform sampler2D cave_mid_tex : repeat_enable, filter_linear_mipmap;
+/** Height of the painted layers in module heights (1 = one module tall). */
+uniform float fit_rows = 1.0;
+group_uniforms;
 
 varying vec2 wpos;
 
@@ -63,7 +79,21 @@ void fragment() {
 	// far wall, parallax 0.35
 	vec2 qf = wpos - cam * 0.65;
 	vec3 col;
-	if (use_tex) {
+	float fit_h = module_px.y * fit_rows;
+	// 0 at the room top, 1 one painted-height below (clamped: the floor rows stretch)
+	float fy = clamp((wpos.y - top_y) / fit_h, 0.0, 1.0);
+	if (use_tex && tex_fit_room) {
+		vec2 ts = vec2(textureSize(cave_tex, 0));
+		float wk = fit_h / ts.y;
+		col = texture(cave_tex, vec2(qf.x / (ts.x * wk), fy)).rgb;
+		if (use_mid) {
+			vec2 ms = vec2(textureSize(cave_mid_tex, 0));
+			float mk = fit_h / ms.y;
+			// mid layer parallax 0.6 (between the far wall and the play plane)
+			vec4 mc = texture(cave_mid_tex, vec2((wpos.x - cam.x * 0.4) / (ms.x * mk), fy));
+			col = mix(col, mc.rgb, mc.a);
+		}
+	} else if (use_tex) {
 		col = texture(cave_tex, qf / (vec2(textureSize(cave_tex, 0)) * tex_scale)).rgb;
 	} else {
 		float n = fbm(qf * 0.0035);
@@ -80,19 +110,21 @@ void fragment() {
 	}
 	// mid rock texture at parallax 0.7: blocky stones
 	vec2 qm = wpos - cam * 0.3;
+	// painted caves bring their own rock: the procedural detail fades out
+	float proc = (use_tex && tex_fit_room) ? 0.0 : 1.0;
 	float rn = fbm(qm * 0.012);
 	// soft boulders: smooth noise with a lit upper edge, no hard blocks
 	float stone = smoothstep(0.35, 0.75, vnoise(qm / vec2(90.0, 60.0)));
 	float lit = clamp(stone - smoothstep(0.35, 0.75, vnoise((qm + vec2(0.0, 8.0)) / vec2(90.0, 60.0))), 0.0, 1.0);
-	col += cave_rock.rgb * lit * 0.8;
-	col = mix(col, mix(cave_back.rgb, cave_rock.rgb, stone), 0.5 * smoothstep(0.3, 0.6, rn));
+	col += cave_rock.rgb * lit * 0.8 * proc;
+	col = mix(col, mix(cave_back.rgb, cave_rock.rgb, stone), 0.5 * smoothstep(0.3, 0.6, rn) * proc);
 	// stalactites hanging from the room top (world space)
 	float sx = floor(wpos.x / 36.0);
 	float sl = (40.0 + 140.0 * h1(sx * 1.7 + rid)) * step(0.45, h1(sx * 3.3 + rid));
 	float sd = wpos.y - top_y;
 	float sw = 14.0 * (1.0 - clamp(sd / max(sl, 1.0), 0.0, 1.0));
 	if (sd > 0.0 && sd < sl && abs(fract(wpos.x / 36.0) - 0.5) * 36.0 < sw) {
-		col = mix(col, cave_rock.rgb * 0.8, 0.85);
+		col = mix(col, cave_rock.rgb * 0.8, 0.85 * proc);
 	}
 	// roots dangling in the roots band
 	if (band < 1.5) {
@@ -101,7 +133,7 @@ void fragment() {
 		float on = step(0.7, h1(rx * 2.9 + rid));
 		float rw = sin(sd * 0.03 + rx) * 4.0;
 		if (on > 0.5 && sd > 0.0 && sd < rl && abs(fract(wpos.x / 22.0) * 22.0 - 11.0 + rw) < 1.6) {
-			col = mix(col, roots.rgb, 0.9);
+			col = mix(col, roots.rgb, 0.9 * proc);
 		}
 	}
 	// glowing dots (fungi / embers / ice), slow pulse
@@ -124,6 +156,6 @@ void fragment() {
 	}
 	// depth: darker toward the room's top (vault in shadow), faint bounce light low
 	float vy = clamp((wpos.y - top_y) / (module_px.y * 1.2), 0.0, 1.0);
-	col *= mix(0.75, 1.15, smoothstep(0.0, 0.8, vy));
+	col *= mix(mix(0.75, 0.9, 1.0 - proc), mix(1.15, 1.0, 1.0 - proc), smoothstep(0.0, 0.8, vy));
 	COLOR = vec4(col, 1.0);
 }

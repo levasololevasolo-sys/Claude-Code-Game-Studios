@@ -53,6 +53,10 @@ func _draw() -> void:
 func _draw_fill() -> void:
 	var top := Color(String(earth.get("earth_hi", t.get("solid", "#2a3530"))))
 	var deep := Color(String(earth.get("earth_lo", t.get("body_bottom", "#0e1512"))))
+	if material is ShaderMaterial and bool((material as ShaderMaterial).get_shader_parameter("use_tex")):
+		# painted earth: a grey ramp that only darkens it with depth
+		top = Color.WHITE
+		deep = Color(1, 1, 1).darkened(float(earth.get("earth_tex_dark", 0.55)))
 	for r: Rect2 in lr.layout.get("solids", []):
 		var k := _depth_k(r.position.y) * 0.8
 		draw_rect(r, top.lerp(deep, k))

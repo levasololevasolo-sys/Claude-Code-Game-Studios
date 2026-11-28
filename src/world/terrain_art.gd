@@ -17,12 +17,42 @@ var layout: Dictionary = {}
 ## The "terrain" block of a visuals.json style.
 var t: Dictionary = {}
 var ground: float = 640.0
+## Painted ground tiles (terrain "tiles" = a location of
+## assets/art/backgrounds/tiles.json): {top, top_surface, top_size, plat,
+## plat_cap, plat_surface, plat_size, top_scale, plat_scale}; empty = the
+## procedural rim and platform.
+var tiles: Dictionary = {}
+
+const TILES_JSON: String = "res://assets/art/backgrounds/tiles.json"
+
+## The painted tile set of a terrain block (its "tiles" location name), with the
+## textures loaded; {} when unset or the files are missing.
+static func tile_set(terrain: Dictionary) -> Dictionary:
+	var loc := String(terrain.get("tiles", ""))
+	if loc == "" or not FileAccess.file_exists(TILES_JSON):
+		return {}
+	var all: Variant = JSON.parse_string(FileAccess.get_file_as_string(TILES_JSON))
+	if not (all is Dictionary) or not (all as Dictionary).has(loc):
+		return {}
+	var m: Dictionary = (all as Dictionary)[loc]
+	var dir := "res://assets/art/backgrounds/%s/" % loc
+	if not ResourceLoader.exists(dir + "top.webp") or not ResourceLoader.exists(dir + "plat.webp"):
+		return {}
+	return {
+		"top": load(dir + "top.webp") as Texture2D, "top_surface": float(m.get("top_surface", 0)),
+		"plat": load(dir + "plat.webp") as Texture2D, "plat_cap": float(m.get("plat_cap", 0)),
+		"plat_surface": float(m.get("plat_surface", 0)),
+		"top_scale": float(terrain.get("tiles_top_scale", 0.6)), "plat_scale": float(terrain.get("tiles_plat_scale", 0.5)),
+	}
 
 func _ready() -> void:
 	z_index = -1
+	if tiles.is_empty():
+		tiles = tile_set(t)
+	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	var m := ShaderMaterial.new()
 	m.shader = load(SHADER_PATH) as Shader
-	m.set_shader_parameter("grain", float(t.get("grain", 0.2)))
+	m.set_shader_parameter("grain", float(t.get("grain", 0.2)) * (0.25 if not tiles.is_empty() else 1.0))
 	m.set_shader_parameter("streak", float(t.get("streak", 0.3)))
 	material = m
 
@@ -59,6 +89,9 @@ func _body(r: Rect2, top_c: Color, bot_c: Color, fade: float) -> void:
 ## Ragged lit rim along [x0, x1] at height y: a shadow band under it, the rim
 ## body, a thin highlight on top, and drips hanging down.
 func _rim(x0: float, x1: float, y: float, s: int) -> void:
+	if not tiles.is_empty():
+		_rim_tex(x0, x1, y)
+		return
 	var rim := _c("rim", "#5f6b3c")
 	var light := _c("rim_light", "#8a9a52")
 	var step := 12.0
@@ -88,6 +121,9 @@ func _rim(x0: float, x1: float, y: float, s: int) -> void:
 
 ## A one-way platform: tapered thick body, rim on top, things hanging under it.
 func _plat(p: Vector3, k: int) -> void:
+	if not tiles.is_empty():
+		_plat_tex(p)
+		return
 	var x0 := p.x
 	var x1 := p.x + p.z
 	var y := p.y
@@ -111,3 +147,36 @@ func _plat(p: Vector3, k: int) -> void:
 			var sway := 0.0 if ice else (_h(i, k) - 0.5) * 8.0
 			draw_colored_polygon(PackedVector2Array([Vector2(hx - 3.0, hy - 4.0), Vector2(hx + sway, hy + hl), Vector2(hx + 3.0, hy - 4.0)]), Color(hang, 0.9))
 	_rim(x0 - 2.0, x1 + 2.0, y, k * 17 + 3)
+
+## Painted rim: the location's top.webp tiled along [x0, x1], its surface line
+## on y (the art's grass / snow hangs over the edge of the earth below).
+func _rim_tex(x0: float, x1: float, y: float) -> void:
+	var tex: Texture2D = tiles.top
+	var sc: float = tiles.top_scale
+	var w := (x1 - x0) / sc
+	draw_set_transform(Vector2(x0, y - float(tiles.top_surface) * sc), 0.0, Vector2(sc, sc))
+	# texture x follows world x so neighbouring rims line up
+	var off := fposmod(x0 / sc, float(tex.get_width()))
+	draw_texture_rect_region(tex, Rect2(0, 0, w, tex.get_height()), Rect2(off, 0, w, tex.get_height()))
+	draw_set_transform(Vector2.ZERO)
+
+## Painted one-way platform: plat.webp's left cap, its middle repeated, its right
+## cap, scaled so the plank top sits on the collider's top (p.y).
+func _plat_tex(p: Vector3) -> void:
+	var tex: Texture2D = tiles.plat
+	var sc: float = tiles.plat_scale
+	var tw := float(tex.get_width())
+	var th := float(tex.get_height())
+	var cap: float = tiles.plat_cap
+	var w := p.z / sc
+	var c := minf(cap, w * 0.5)
+	draw_set_transform(Vector2(p.x, p.y - float(tiles.plat_surface) * sc), 0.0, Vector2(sc, sc))
+	draw_texture_rect_region(tex, Rect2(0, 0, c, th), Rect2(0, 0, c, th))
+	draw_texture_rect_region(tex, Rect2(w - c, 0, c, th), Rect2(tw - c, 0, c, th))
+	var mid := tw - 2.0 * cap
+	var x := c
+	while x < w - c - 0.5:
+		var seg := minf(mid, w - c - x)
+		draw_texture_rect_region(tex, Rect2(x, 0, seg, th), Rect2(cap, 0, seg, th))
+		x += seg
+	draw_set_transform(Vector2.ZERO)

@@ -153,12 +153,15 @@ func _variants(par: Parallax2D, holder: Node2D, spec: Dictionary, paths: Array, 
 	var texs: Array = []
 	for p: String in paths:
 		texs.append(load(p) as Texture2D)
-	var tw := float((texs[0] as Texture2D).get_width()) * k
+	# tex_overlap: image px each variant lies over the previous one (the art's
+	# left edge is feathered, tools/asset-pipeline/navart/layout.py).
+	var ov := float(spec.get("tex_overlap", 0.0)) * k
+	var tw := float((texs[0] as Texture2D).get_width()) * k - ov
 	var span := strip_width(level_width, par.scroll_scale.x)
-	var count := int(ceil(span / tw)) + 1
+	var count := int(ceil((span + ov) / tw)) + 1
 	par.repeat_size = Vector2(0.0, 0.0)
 	var order := variant_order(texs.size(), count, layer_i + 3)
-	var x := 0.0
+	var x := -ov
 	for j in count:
 		var tex: Texture2D = texs[order[j]]
 		var spr := Sprite2D.new()
@@ -170,7 +173,7 @@ func _variants(par: Parallax2D, holder: Node2D, spec: Dictionary, paths: Array, 
 		spr.position = Vector2(x, ground + float(spec.get("tex_y", -900.0)))
 		holder.add_child(spr)
 		_caps(holder, spr, spec)
-		x += float(tex.get_width()) * k
+		x += float(tex.get_width()) * k - ov
 
 ## Width of a level the layers must cover (set before build; 0 = one room).
 var level_width: float = 0.0

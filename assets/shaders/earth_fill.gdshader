@@ -39,7 +39,8 @@ void fragment() {
 	vec3 base = COLOR.rgb;
 	if (use_tex) {
 		vec3 t = texture(earth_tex, wpos / (vec2(textureSize(earth_tex, 0)) * tex_scale)).rgb;
-		COLOR = vec4(t * (base / max(max(base.r, base.g), 0.05)) * 0.9, COLOR.a);
+		// LevelArt draws a grey depth ramp when textured: it only darkens.
+		COLOR = vec4(t * base, COLOR.a);
 	} else {
 		float n = fbm(wpos * 0.008);
 		vec3 col = base * (0.8 + 0.45 * n);

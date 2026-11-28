@@ -1,5 +1,5 @@
 {
-  "_note": "Backgrounds of the graph levels per visuals.json style (src/world/level_backdrop.gd, shaders cave_backdrop / earth_fill). Colours are hex. cave_*: underground back wall (band 1 = under the roots, band 2 = the deep); glow: fungi / root embers / ice crystals dotting it; glow_density 0..1 share of 90 px cells that hold one; crack: Navi cracks of the deep band. earth_*: the solid ground body: stone = pebbles, strata = layer lines, roots = root threads near the top. landmarks: silhouette kinds placed along the level, one per landmark_every layer px (layer scale landmark_scale), coloured landmark_col and faded toward the style fog by landmark_fog. progress_tint: colour the far layers drift toward by the level's end (progress_k = how far, 0..1). anchor_tween: seconds the surface backdrop takes to follow a room at another height. Optional art: cave_tex (a seamless PNG used as the far cave wall instead of the procedural one), earth_tex (a seamless PNG for the solid ground). cave_tex_scale / earth_tex_scale scale those images. landmark_halo: alpha of the fog glow behind a landmark. Art drop-in guide: assets/art/backgrounds/README.md.",
+  "_note": "Backgrounds of the graph levels per visuals.json style (src/world/level_backdrop.gd, shaders cave_backdrop / earth_fill). Colours are hex. cave_*: underground back wall (band 1 = under the roots, band 2 = the deep); glow: fungi / root embers / ice crystals dotting it; glow_density 0..1 share of 90 px cells that hold one; crack: Navi cracks of the deep band. earth_*: the solid ground body: stone = pebbles, strata = layer lines, roots = root threads near the top. landmarks: silhouette kinds placed along the level, one per landmark_every layer px (layer scale landmark_scale), coloured landmark_col and faded toward the style fog by landmark_fog. progress_tint: colour the far layers drift toward by the level's end (progress_k = how far, 0..1). anchor_tween: seconds the surface backdrop takes to follow a room at another height. Optional art: cave_tex (a seamless PNG used as the far cave wall instead of the procedural one), earth_tex (a seamless PNG for the solid ground). cave_tex_scale / earth_tex_scale scale those images. landmark_halo: alpha of the fog glow behind a landmark. Art drop-in guide: assets/art/backgrounds/README.md. cave_fit_room: the painted cave scene (cave_tex far, cave_mid_tex arches) fits one module height (x cave_fit_rows) from each underground room's top. landmarks_off keeps the procedural silhouettes for a fallback; the painted mid layers carry the scenery now.",
   "ruins": {
     "cave_back": "#141a15",
     "cave_rock": "#25302a",
@@ -13,7 +13,19 @@
     "stone": "#45534a",
     "strata": "#1c2620",
     "earth_roots": "#4a3d26",
-    "landmarks": [
+    "landmarks": [],
+    "landmark_every": 1700,
+    "landmark_scale": 0.45,
+    "landmark_col": "#16241d",
+    "landmark_fog": 0.35,
+    "progress_tint": "#3a2a4a",
+    "progress_k": 0.45,
+    "anchor_tween": 0.6,
+    "cave_tex": "res://assets/art/backgrounds/swamp/cave_far.webp",
+    "cave_mid_tex": "res://assets/art/backgrounds/swamp/cave_mid.webp",
+    "cave_fit_room": true,
+    "cave_fit_rows": 1.0,
+    "landmarks_off": [
       "stilt_hut",
       "dead_oak",
       "idol",
@@ -21,13 +33,9 @@
       "grave_posts",
       "sunken_tower"
     ],
-    "landmark_every": 1700,
-    "landmark_scale": 0.45,
-    "landmark_col": "#16241d",
-    "landmark_fog": 0.35,
-    "progress_tint": "#3a2a4a",
-    "progress_k": 0.45,
-    "anchor_tween": 0.6
+    "earth_tex": "res://assets/art/backgrounds/swamp/earth.webp",
+    "earth_tex_scale": 0.8,
+    "earth_tex_dark": 0.45
   },
   "forest": {
     "cave_back": "#16140f",
@@ -42,7 +50,19 @@
     "stone": "#544a38",
     "strata": "#241e15",
     "earth_roots": "#5a4428",
-    "landmarks": [
+    "landmarks": [],
+    "landmark_every": 1600,
+    "landmark_scale": 0.45,
+    "landmark_col": "#0f1a24",
+    "landmark_fog": 0.3,
+    "progress_tint": "#3a1f2a",
+    "progress_k": 0.45,
+    "anchor_tween": 0.6,
+    "cave_tex": "res://assets/art/backgrounds/forest/cave_far.webp",
+    "cave_mid_tex": "res://assets/art/backgrounds/forest/cave_mid.webp",
+    "cave_fit_room": true,
+    "cave_fit_rows": 1.0,
+    "landmarks_off": [
       "giant_pine",
       "idol",
       "watchtower",
@@ -50,13 +70,9 @@
       "dead_oak",
       "stone_circle"
     ],
-    "landmark_every": 1600,
-    "landmark_scale": 0.45,
-    "landmark_col": "#0f1a24",
-    "landmark_fog": 0.3,
-    "progress_tint": "#3a1f2a",
-    "progress_k": 0.45,
-    "anchor_tween": 0.6
+    "earth_tex": "res://assets/art/backgrounds/forest/earth.webp",
+    "earth_tex_scale": 0.8,
+    "earth_tex_dark": 0.45
   },
   "frost": {
     "cave_back": "#141a24",
@@ -71,7 +87,19 @@
     "stone": "#5a6a80",
     "strata": "#1e2836",
     "earth_roots": "#6f8aa8",
-    "landmarks": [
+    "landmarks": [],
+    "landmark_every": 1700,
+    "landmark_scale": 0.45,
+    "landmark_col": "#1c2a3c",
+    "landmark_fog": 0.35,
+    "progress_tint": "#1e2a52",
+    "progress_k": 0.45,
+    "anchor_tween": 0.6,
+    "cave_tex": "res://assets/art/backgrounds/frost/cave_far.webp",
+    "cave_mid_tex": "res://assets/art/backgrounds/frost/cave_mid.webp",
+    "cave_fit_room": true,
+    "cave_fit_rows": 1.0,
+    "landmarks_off": [
       "ice_spire",
       "frozen_idol",
       "giant_pine",
@@ -79,12 +107,8 @@
       "ice_spire",
       "watchtower"
     ],
-    "landmark_every": 1700,
-    "landmark_scale": 0.45,
-    "landmark_col": "#1c2a3c",
-    "landmark_fog": 0.35,
-    "progress_tint": "#1e2a52",
-    "progress_k": 0.45,
-    "anchor_tween": 0.6
+    "earth_tex": "res://assets/art/backgrounds/frost/earth.webp",
+    "earth_tex_scale": 0.8,
+    "earth_tex_dark": 0.45
   }
 }

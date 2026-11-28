@@ -1,0 +1,70 @@
+{
+ "swamp": {
+  "earth": [
+   428,
+   78
+  ],
+  "top": [
+   456,
+   85
+  ],
+  "top_surface": 32,
+  "plat": [
+   281,
+   81
+  ],
+  "plat_cap": 62,
+  "plat_surface": 11
+ },
+ "forest": {
+  "earth": [
+   251,
+   75
+  ],
+  "top": [
+   268,
+   83
+  ],
+  "top_surface": 16,
+  "plat": [
+   374,
+   139
+  ],
+  "plat_cap": 83,
+  "plat_surface": 10
+ },
+ "frost": {
+  "earth": [
+   603,
+   67
+  ],
+  "top": [
+   644,
+   94
+  ],
+  "top_surface": 10,
+  "plat": [
+   348,
+   129
+  ],
+  "plat_cap": 77,
+  "plat_surface": 15
+ },
+ "hub": {
+  "earth": [
+   387,
+   82
+  ],
+  "top": [
+   413,
+   94
+  ],
+  "top_surface": 55,
+  "plat": [
+   365,
+   121
+  ],
+  "plat_cap": 81,
+  "plat_surface": 28
+ }
+}

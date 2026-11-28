@@ -1,5 +1,5 @@
 {
-  "_note": "Presentation of each location style (design/art/visual-upgrade-plan.md §2, art-bible §4.2, §6). Keyed by locations.json look.props ('ruins' = swamp) plus 'base'. Visual only: nothing here touches collision or gameplay. layers = Parallax2D background layers back to front: scale = scroll_scale.x (vertical parallax is softer), kind = procedural placeholder painter, col = base colour, fog = 0..1 mix toward the fog colour (atmospheric perspective), tex = optional res:// image that replaces the placeholder (kind stays as the fallback if the file is missing; tex_scale = its scale, it repeats every width x tex_scale px; tex_y = its top relative to ground_y; tex_mod = tint). The swamp uses the Blender renders of tools/asset-pipeline/blender/build_swamp_bg.py (rendered at 1.5x, so tex_scale 0.6667). enemy_rim = the outline / back light drawn on pre-rendered enemies above the darkness so they read in the dark. terrain = ground and platform colours; dark_tint = colour the darkness multiplies toward (plan §2.9 CanvasModulate); post = vignette / grading / glow / grain, hero_glow = alpha of the warm additive light around the hero; particles = ambient CPUParticles2D around the camera; camera = look-ahead and vertical dead zone. tex_up = px of the image's top rows stretched upward (no visible top edge). ambient = optional CanvasModulate colour (the light level 2D lights add to). Тёмный бор, Царство Морены and the base Застава use build_location_bg.py renders (WebP); the base draws its old procedural yard only when its images are missing (src/base/base.gd).",
+  "_note": "Presentation of each location style (design/art/visual-upgrade-plan.md §2, art-bible §4.2, §6). Keyed by locations.json look.props ('ruins' = swamp) plus 'base'. Visual only: nothing here touches collision or gameplay. layers = Parallax2D background layers back to front: scale = scroll_scale.x (vertical parallax is softer), kind = procedural placeholder painter, col = base colour, fog = 0..1 mix toward the fog colour (atmospheric perspective), tex = optional res:// image that replaces the placeholder (kind stays as the fallback if the file is missing; tex_scale = its scale, it repeats every width x tex_scale px; tex_y = its top relative to ground_y; tex_mod = tint). The swamp uses the Blender renders of tools/asset-pipeline/blender/build_swamp_bg.py (rendered at 1.5x, so tex_scale 0.6667). enemy_rim = the outline / back light drawn on pre-rendered enemies above the darkness so they read in the dark. terrain = ground and platform colours; dark_tint = colour the darkness multiplies toward (plan §2.9 CanvasModulate); post = vignette / grading / glow / grain, hero_glow = alpha of the warm additive light around the hero; particles = ambient CPUParticles2D around the camera; camera = look-ahead and vertical dead zone. tex_up = px of the image's top rows stretched upward (no visible top edge). ambient = optional CanvasModulate colour (the light level 2D lights add to). Тёмный бор, Царство Морены and the base Застава use build_location_bg.py renders (WebP); the base draws its old procedural yard only when its images are missing (src/base/base.gd). The approved art drop (tools/asset-pipeline/navart: prepare.py keys and cuts it, layout.py makes the layers) fills far / mid / near with tex_list variants (1672x941, tex_scale 0.85, left edges feathered over tex_overlap px). terrain.tiles = a location of assets/art/backgrounds/tiles.json (tools/asset-pipeline/navart/tiles.py): painted rims (top.webp at tiles_top_scale) and one-way platforms (plat.webp at tiles_plat_scale) replace the procedural ones.",
   "camera": {
     "look_ahead": 140,
     "look_time": 0.4,
@@ -11,7 +11,8 @@
     "alpha": 0.4,
     "width": 5.0,
     "back": "#e8f4c8",
-    "back_alpha": 0.55, "emit": 1.0
+    "back_alpha": 0.55,
+    "emit": 1.0
   },
   "forest": {
     "fog": "#3e5878",
@@ -23,11 +24,15 @@
         "bottom": "#2e4466",
         "moon": true,
         "stars": 50,
-        "tex": "res://assets/art/sprites/forest/bg_far.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/forest/far_1.webp",
+          "res://assets/art/backgrounds/forest/far_2.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "fog",
@@ -53,11 +58,16 @@
         ],
         "trunk": true,
         "eyes": "#ff8a3d",
-        "tex": "res://assets/art/sprites/forest/bg_mid.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/forest/mid_1.webp",
+          "res://assets/art/backgrounds/forest/mid_2.webp",
+          "res://assets/art/backgrounds/forest/mid_3.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "fog",
@@ -78,11 +88,16 @@
         "fog": 0.15,
         "gap": 520,
         "rim": "#5a6e92",
-        "tex": "res://assets/art/sprites/forest/bg_near.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/forest/near_1.webp",
+          "res://assets/art/backgrounds/forest/near_2.webp",
+          "res://assets/art/backgrounds/forest/near_3.webp"
+        ],
+        "tex_overlap": 160
       }
     ],
     "terrain": {
@@ -96,7 +111,10 @@
       "hang": "#3a4a2c",
       "solid": "#3a2e30",
       "grain": 0.22,
-      "streak": 0.6
+      "streak": 0.6,
+      "tiles": "forest",
+      "tiles_top_scale": 0.6,
+      "tiles_plat_scale": 0.5
     },
     "dark_tint": "#3b5280",
     "post": {
@@ -170,7 +188,7 @@
         "low": true
       }
     ],
-    "ambient": "#dce3f0"
+    "ambient": "#e8edf6"
   },
   "ruins": {
     "fog": "#5e7a62",
@@ -182,11 +200,15 @@
         "bottom": "#3e5a4a",
         "moon": false,
         "stars": 20,
-        "tex": "res://assets/art/sprites/swamp/bg_far.png",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/swamp/far_1.webp",
+          "res://assets/art/backgrounds/swamp/far_2.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "fog",
@@ -211,11 +233,16 @@
           620
         ],
         "reeds": true,
-        "tex": "res://assets/art/sprites/swamp/bg_mid.png",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/swamp/mid_1.webp",
+          "res://assets/art/backgrounds/swamp/mid_2.webp",
+          "res://assets/art/backgrounds/swamp/mid_3.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "rays",
@@ -244,11 +271,16 @@
         "gap": 620,
         "rim": "#6e8a78",
         "crooked": true,
-        "tex": "res://assets/art/sprites/swamp/bg_near.png",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/swamp/near_1.webp",
+          "res://assets/art/backgrounds/swamp/near_2.webp",
+          "res://assets/art/backgrounds/swamp/near_3.webp"
+        ],
+        "tex_overlap": 160
       }
     ],
     "terrain": {
@@ -262,7 +294,10 @@
       "hang": "#3f5a32",
       "solid": "#2a3530",
       "grain": 0.24,
-      "streak": 0.2
+      "streak": 0.2,
+      "tiles": "swamp",
+      "tiles_top_scale": 0.6,
+      "tiles_plat_scale": 0.5
     },
     "dark_tint": "#45684f",
     "post": {
@@ -277,7 +312,25 @@
       "hero_glow": 0.1
     },
     "particles": [
-      { "kind": "firefly", "amount": 14, "life": 6.0, "col": "#b6e36b", "size": [0.05, 0.1], "vel": [6, 20], "gravity": [0, -4], "add": true },
+      {
+        "kind": "firefly",
+        "amount": 14,
+        "life": 6.0,
+        "col": "#b6e36b",
+        "size": [
+          0.05,
+          0.1
+        ],
+        "vel": [
+          6,
+          20
+        ],
+        "gravity": [
+          0,
+          -4
+        ],
+        "add": true
+      },
       {
         "kind": "spore",
         "amount": 50,
@@ -318,7 +371,7 @@
         "low": true
       }
     ],
-    "ambient": "#c4d0c8"
+    "ambient": "#dce6dc"
   },
   "frost": {
     "fog": "#e6eef5",
@@ -330,11 +383,15 @@
         "bottom": "#c9d8e6",
         "sun": true,
         "stars": 0,
-        "tex": "res://assets/art/sprites/frost/bg_far.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/frost/far_1.webp",
+          "res://assets/art/backgrounds/frost/far_2.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "fog",
@@ -360,11 +417,16 @@
         ],
         "trunk": true,
         "snow": "#dde8f0",
-        "tex": "res://assets/art/sprites/frost/bg_mid.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/frost/mid_1.webp",
+          "res://assets/art/backgrounds/frost/mid_2.webp",
+          "res://assets/art/backgrounds/frost/mid_3.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "fog",
@@ -386,11 +448,16 @@
         "gap": 600,
         "rim": "#dde8f0",
         "snow": "#dde8f0",
-        "tex": "res://assets/art/sprites/frost/bg_near.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/frost/near_1.webp",
+          "res://assets/art/backgrounds/frost/near_2.webp",
+          "res://assets/art/backgrounds/frost/near_3.webp"
+        ],
+        "tex_overlap": 160
       }
     ],
     "terrain": {
@@ -405,7 +472,10 @@
       "solid": "#6f88a6",
       "grain": 0.16,
       "streak": 0.0,
-      "icicles": true
+      "icicles": true,
+      "tiles": "frost",
+      "tiles_top_scale": 0.6,
+      "tiles_plat_scale": 0.5
     },
     "dark_tint": "#21517f",
     "post": {
@@ -477,7 +547,7 @@
         "add": true
       }
     ],
-    "ambient": "#b8c0cc"
+    "ambient": "#c8d0dc"
   },
   "base": {
     "fog": "#2a3248",
@@ -489,11 +559,15 @@
         "bottom": "#26304a",
         "moon": true,
         "stars": 80,
-        "tex": "res://assets/art/sprites/base/bg_far.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/hub/far_1.webp",
+          "res://assets/art/backgrounds/hub/far_2.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "fog",
@@ -513,11 +587,16 @@
         "col": "#1a2236",
         "fog": 0.4,
         "bridge": true,
-        "tex": "res://assets/art/sprites/base/bg_mid.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/hub/mid_1.webp",
+          "res://assets/art/backgrounds/hub/mid_2.webp",
+          "res://assets/art/backgrounds/hub/mid_3.webp"
+        ],
+        "tex_overlap": 160
       },
       {
         "kind": "trunks",
@@ -526,11 +605,16 @@
         "fog": 0.1,
         "gap": 900,
         "rim": "#ffb070",
-        "tex": "res://assets/art/sprites/base/bg_near.webp",
-        "tex_scale": 0.6667,
-        "tex_y": -485,
+        "tex_scale": 0.85,
+        "tex_y": -760,
         "tex_mod": "#ffffff",
-        "tex_up": 1600
+        "tex_up": 1600,
+        "tex_list": [
+          "res://assets/art/backgrounds/hub/near_1.webp",
+          "res://assets/art/backgrounds/hub/near_2.webp",
+          "res://assets/art/backgrounds/hub/near_3.webp"
+        ],
+        "tex_overlap": 160
       }
     ],
     "terrain": {},

@@ -308,9 +308,11 @@ static func has_backdrop_art() -> bool:
 	var layers: Array = (Tune.table("visuals").get("base", {}) as Dictionary).get("layers", [])
 	var n := 0
 	for spec: Dictionary in layers:
-		var t := String(spec.get("tex", ""))
-		if t != "":
-			if not ResourceLoader.exists(t):
+		var paths: Array = spec.get("tex_list", [])
+		if paths.is_empty() and String(spec.get("tex", "")) != "":
+			paths = [String(spec.tex)]
+		for t: Variant in paths:
+			if not ResourceLoader.exists(String(t)):
 				return false
 			n += 1
 	return n > 0
