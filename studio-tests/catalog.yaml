@@ -621,6 +621,17 @@ skills:
     priority: low
     category: utility
 
+  - name: honest-review
+    spec: studio-tests/skills/utility/honest-review.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: low
+    category: utility
+
   - name: milestone-review
     spec: studio-tests/skills/sprint/milestone-review.md
     last_static: ""

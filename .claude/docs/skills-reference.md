@@ -106,6 +106,7 @@
 | `/bug-triage` | Read all open bugs, re-evaluate priority vs. severity, assign owner and label |
 | `/reverse-document` | Generate design or architecture docs from existing implementation |
 | `/playtest-report` | Generate a structured playtest report or analyze existing playtest notes |
+| `/honest-review` | Strictly honest scoring of the built game by the whole agent panel against benchmark games, with ranked fixes and cuts |
 | `/cut` | Finish the game: proposes cuts from the brief and what is built (you pick each), keeps a polish list, and for a game to sell records a release date and a feature freeze |
 
 ## Release
