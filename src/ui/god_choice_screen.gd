@@ -92,7 +92,8 @@ func _draw() -> void:
 		draw_rect(r, Color(0.07, 0.09, 0.1, 0.96))
 		draw_rect(r, col if i == selected else Color(col, 0.55), false, 6.0 if i == selected else 3.0)
 		draw_string(font, r.position + Vector2(0, 46), "%d" % (i + 1), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 28, col)
-		GodGlyph.draw(self, g, r.position + Vector2(r.size.x / 2.0, 190), 80.0, col)
+		if not GodGlyph.draw_portrait(self, g, r.position + Vector2(r.size.x / 2.0, 180), 108.0):
+			GodGlyph.draw(self, g, r.position + Vector2(r.size.x / 2.0, 190), 80.0, col)
 		draw_string(font, r.position + Vector2(0, 340), String(row.get("name", g)), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 44, Color("#f4ecd8"))
 		draw_string(font, r.position + Vector2(0, 390), String(row.get("word", "")), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 26, col)
 		var tag := "у тебя уже есть" if g in held else "новый бог"

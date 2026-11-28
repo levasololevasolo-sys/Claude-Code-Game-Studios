@@ -179,7 +179,8 @@ func _card(font: Font, r: Rect2, g: String, hot: bool) -> void:
 		draw_rect(r.grow(-3), Color(col, 0.18 + 0.12 * pulse), false, 2.0)
 	draw_rect(r, C_GOLD if hot else Color(col, 0.6 * a + 0.2), false, 3.0 if hot else 1.5)
 	var c := r.position + Vector2(74, r.size.y * 0.5 - 6)
-	GodGlyph.draw(self, g, c, 48.0, Color(col, a))
+	if not GodGlyph.draw_portrait(self, g, c, 64.0, Color(1, 1, 1, a) if lit else Color(0.45, 0.45, 0.5, a)):
+		GodGlyph.draw(self, g, c, 48.0, Color(col, a))
 	var tx := r.position.x + 140
 	var tw := r.size.x - 150
 	draw_string(font, Vector2(tx, r.position.y + 46), String(row.get("name", g)), HORIZONTAL_ALIGNMENT_LEFT, tw, 32, Color(C_LINEN, a))

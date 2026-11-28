@@ -154,6 +154,8 @@ func _run() -> void:
 	await _forge(summary)
 	await _prophet(summary)
 	await _prophet_station(summary)
+	await _god_choice(summary)
+	await _doors(summary)
 	var f := FileAccess.open(out_dir.path_join("god-check-log.txt"), FileAccess.WRITE)
 	f.store_string("\n".join(summary) + "\n")
 	f.close()
@@ -253,3 +255,40 @@ func _prophet_station(summary: PackedStringArray) -> void:
 	_note(line)
 	summary.append(line)
 	b.queue_free()
+
+## The god choice after a boss with the painted portraits (navart gods.py).
+func _god_choice(summary: PackedStringArray) -> void:
+	var gc := GodChoiceScreen.new()
+	gc.gods = ["perun", "mokosh", "semargl"]
+	gc.held = ["perun"]
+	_main.show_screen(gc)
+	for i in 4:
+		await get_tree().process_frame
+	await _shot("god-choice.png")
+	var line := "god choice: portraits %s" % [gc.gods.map(func(g: String) -> bool: return GodGlyph.art("portrait_" + g) != null)]
+	_note(line)
+	summary.append(line)
+	gc.take(0)
+
+## A row of painted doors in the room: god doors, the forge (closed, open in
+## front of the hero), loot, lair and a plain route door.
+func _doors(summary: PackedStringArray) -> void:
+	_clear()
+	_place_hero(900.0)
+	var row := [{ "type": "god", "god": "perun" }, { "type": "god", "god": "zhiva" }, { "type": "svarog" },
+		{ "type": "loot" }, { "type": "lair", "arg": "Лихо" }, { "type": "heal" }]
+	var made: Array[Door] = []
+	for i in row.size():
+		var d := Door.new()
+		d.info = row[i]
+		d.position = Vector2(560.0 + i * 230.0, Tune.f("ground_y"))
+		d.near = i == 2
+		_main.add_child(d)
+		made.append(d)
+	await _frames(20, {}, [], {})
+	await _shot("doors.png")
+	var line := "doors: art %s" % [row.map(func(r: Dictionary) -> bool: return GodGlyph.door_art(String(r.type), String(r.get("god", ""))) != null)]
+	_note(line)
+	summary.append(line)
+	for d in made:
+		d.queue_free()

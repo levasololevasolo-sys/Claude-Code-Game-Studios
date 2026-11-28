@@ -1,0 +1,19 @@
+kupala: words ГОРИТ, dummy damage over 3 s = 55.55
+perun: words ЗАРЯД 1/3, ЗАРЯД 2/3, РАЗРЯД, dummy damage over 3 s = 63.80, second dummy at +250 px = 15.40
+stribog: words ПОРЕЗ 1, ПОРЕЗ 2, dummy damage over 3 s = 22.00
+veles: words ПРОКЛЯТ, dummy damage over 3 s = 51.04
+zhiva: words ОПЛЕТЁН, dummy damage over 3 s = 41.80
+mokosh: words НИТЬ, dummy damage over 3 s = 41.80
+dazhbog: words СЛЕП, dummy damage over 3 s = 41.80
+khors: words ОБОД, dummy damage over 3 s = 61.60
+yarilo: words ЯРЬ, dummy damage over 3 s = 41.80
+chernobog: words МРАК, dummy damage over 3 s = 62.70
+semargl: words ДОБЫЧА, dummy damage over 3 s = 65.80
+svyatovit: words ОТКРЫТ, dummy damage over 3 s = 41.80
+stribog wall: hits on crawler [STRIKE 11.0, STRIKE 11.0, STATUS 18.0, WALL 14.6, STRIKE 19.8], words ПОРЕЗ 1, ПОРЕЗ 2, ВСКРЫТ
+new powers: orbit 1, suns 1, dog idle, words ОБОД, СЛЕП, НИТЬ
+forge (blade): offer ["sv_blade_riposte", "sv_blade_twin", "sv_sparks"], took -> ["sv_blade_riposte"]
+prophet: gods ["kupala", "perun", "stribog", "veles", "zhiva", "mokosh", "dazhbog", "khors", "yarilo", "chernobog", "semargl", "svyatovit"], off ["perun", "chernobog"], called 10
+base after a win: stations ["dolya", "bayun", "chur", "sova", "potap", "ofenya", "prorok", "gate"], prophet art true, before a win: false
+god choice: portraits [true, true, true]
+doors: art [true, true, true, true, true, true]

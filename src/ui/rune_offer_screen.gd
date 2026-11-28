@@ -192,8 +192,14 @@ func _draw_card(font: Font, r: Rect2, id: String, i: int) -> void:
 	var gr := row.get("gods", [g]) as Array
 	var dy := 0.0
 	if mode == "forge":
-		GodGlyph.svarog_icon(self, r.position + Vector2(r.size.x / 2.0, 150), 70.0, col)
-		dy = 10.0
+		# a painted forge picture per upgrade (boons_svarog sheet), else the sign
+		var pic := GodGlyph.art("boon_svarog_%d" % (absi(id.hash()) % 8))
+		if pic:
+			draw_texture_rect(pic, Rect2(r.position + Vector2(r.size.x / 2.0 - 100.0, 50.0), Vector2(200, 200)), false)
+			dy = 40.0
+		else:
+			GodGlyph.svarog_icon(self, r.position + Vector2(r.size.x / 2.0, 150), 70.0, col)
+			dy = 10.0
 	elif GodGlyph.draw_icon(self, "rune", id, r.position + Vector2(r.size.x / 2.0, 150), 100.0):
 		dy = 40.0  # the large rune icon carries the god sign(s)
 	else:

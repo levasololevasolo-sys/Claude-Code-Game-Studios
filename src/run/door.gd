@@ -15,6 +15,8 @@ var note: String = ""
 
 const W: float = 96.0
 const H: float = 170.0
+## Height of a painted door, px (its top carries the god's sign).
+const ART_H: float = 200.0
 
 ## Text under the sign (doors.json label).
 func label() -> String:
@@ -68,12 +70,27 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var col := colour()
 	var a := 1.0 if active else 0.35
-	if String(info.get("type", "")) == "svarog":
-		_draw_forge(col, a)
-	draw_rect(Rect2(-W / 2.0, -H, W, H), Color(0.05, 0.06, 0.07, 0.95 * a))
-	draw_rect(Rect2(-W / 2.0, -H, W, H), Color(col, a), false, 4.0 if near else 2.5)
-	draw_rect(Rect2(-W / 2.0 + 10, -H + 12, W - 20, H - 12), Color(col, 0.18 * a))
-	GodGlyph.door_icon(self, String(info.get("type", "")), String(info.get("god", "")), Vector2(0, -H - 52), 30.0, Color(col, a))
+	var type := String(info.get("type", ""))
+	var art := GodGlyph.door_art(type, String(info.get("god", "")), (2 if near else 1) if active else 0)
+	var text_y := -H - 100.0
+	if art:
+		text_y = -ART_H - (16.0 if type == "god" or type == "svarog" else 72.0)
+		# painted door (assets/art/gods): bottom on the floor, ART_H px tall,
+		# a glow of the sign colour behind it when the hero stands in front
+		var sz := art.get_size() * (ART_H / art.get_height())
+		if near and active:
+			for i in 4:
+				draw_circle(Vector2(0, -sz.y * 0.5), sz.x * (0.75 - i * 0.12), Color(col, 0.05 * (i + 1)))
+		draw_texture_rect(art, Rect2(Vector2(-sz.x * 0.5, -sz.y), sz), false, Color(1, 1, 1, a) if active else Color(0.55, 0.55, 0.6, 1.0))
+		if type != "god" and type != "svarog":
+			GodGlyph.door_icon(self, type, String(info.get("god", "")), Vector2(0, -sz.y - 34), 26.0, Color(col, a))
+	else:
+		if type == "svarog":
+			_draw_forge(col, a)
+		draw_rect(Rect2(-W / 2.0, -H, W, H), Color(0.05, 0.06, 0.07, 0.95 * a))
+		draw_rect(Rect2(-W / 2.0, -H, W, H), Color(col, a), false, 4.0 if near else 2.5)
+		draw_rect(Rect2(-W / 2.0 + 10, -H + 12, W - 20, H - 12), Color(col, 0.18 * a))
+		GodGlyph.door_icon(self, type, String(info.get("god", "")), Vector2(0, -H - 52), 30.0, Color(col, a))
 	var lines: PackedStringArray = []
 	if is_reward_door():
 		lines.append("за следующей комнатой:")
@@ -84,4 +101,4 @@ func _draw() -> void:
 		lines.append("E — войти")
 	for i in lines.size():
 		var fs := 13 if i == 0 and is_reward_door() else 15
-		draw_string(font, Vector2(-90, -H - 100 - (lines.size() - 1 - i) * 18), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 180, fs, Color(1, 1, 1, a) if i > 0 or not is_reward_door() else Color(0.8, 0.8, 0.75, a))
+		draw_string(font, Vector2(-90, text_y - (lines.size() - 1 - i) * 18), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 180, fs, Color(1, 1, 1, a) if i > 0 or not is_reward_door() else Color(0.8, 0.8, 0.75, a))

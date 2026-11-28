@@ -13,16 +13,55 @@ const SIGN_SCALE: float = 1.12
 
 static var _cache: Dictionary = {}
 
+## Painted god art of the approved drop (tools/asset-pipeline/navart/gods.py).
+const ART_DIR: String = "res://assets/art/gods/"
+
 ## Path of an icon: kind = "god" | "rune" | "door".
 static func icon_path(kind: String, id: String) -> String:
 	return ICON_DIR + "ui_icon_%s_%s.svg" % [kind, id]
 
-## The icon texture (cached), or null when the file does not exist.
-static func icon(kind: String, id: String) -> Texture2D:
-	var p := icon_path(kind, id)
+## A texture by path (cached), or null when the file does not exist.
+static func _tex(p: String) -> Texture2D:
 	if not _cache.has(p):
 		_cache[p] = load(p) as Texture2D if ResourceLoader.exists(p) else null
 	return _cache[p]
+
+## A painted god-art file (assets/art/gods/<name>.webp), or null.
+static func art(name: String) -> Texture2D:
+	return _tex(ART_DIR + name + ".webp")
+
+## The icon texture (cached), or null when the file does not exist. A rune
+## takes its painted card picture (boon_<rune>.webp) when there is one.
+static func icon(kind: String, id: String) -> Texture2D:
+	if kind == "rune":
+		var b := art("boon_" + id)
+		if b:
+			return b
+	return _tex(icon_path(kind, id))
+
+## The god's framed portrait centred at `c`, fitted into a `half`-radius box
+## (aspect kept); false when there is no portrait.
+static func draw_portrait(ci: CanvasItem, g: String, c: Vector2, half: float, col: Color = Color.WHITE) -> bool:
+	var t := art("portrait_" + g)
+	if t == null:
+		return false
+	var sz := t.get_size() * (2.0 * half / maxf(t.get_width(), t.get_height()))
+	ci.draw_texture_rect(t, Rect2(c - sz * 0.5, sz), false, col)
+	return true
+
+## The painted door of a door `type` / `god` (door_<god>, door_svarog_<state>,
+## door_loot / shop / lair / plain), or null.
+static func door_art(type: String, god: String, state: int = 1) -> Texture2D:
+	match type:
+		"god":
+			return art("door_" + god)
+		"svarog":
+			return art("door_svarog_%d" % clampi(state, 0, 2))
+		"loot", "lair":
+			return art("door_" + type)
+		"surica":
+			return art("door_shop")
+	return art("door_plain")
 
 ## Draws the icon centred at `c` with half-size `half`; false if it is missing.
 static func draw_icon(ci: CanvasItem, kind: String, id: String, c: Vector2, half: float, alpha: float = 1.0) -> bool:
@@ -68,6 +107,10 @@ static func draw(ci: CanvasItem, g: String, c: Vector2, s: float, col: Color) ->
 ## The Горн Сварога sign (gods-expansion §3.12): an anvil, a hammer over it,
 ## three flame tongues behind, on a hot-iron medallion. Painted icon first.
 static func svarog_icon(ci: CanvasItem, c: Vector2, s: float, col: Color) -> void:
+	var sign := art("sign_svarog")
+	if sign:
+		ci.draw_texture_rect(sign, Rect2(c - Vector2(s, s) * SIGN_SCALE, Vector2(s, s) * 2.0 * SIGN_SCALE), false, Color(1, 1, 1, col.a))
+		return
 	if draw_icon(ci, "door", "svarog", c, s * SIGN_SCALE, col.a):
 		return
 	ci.draw_circle(c, s * 1.05, Color(0.25, 0.08, 0.02, 0.9 * col.a))
