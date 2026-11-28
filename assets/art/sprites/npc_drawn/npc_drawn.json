@@ -1,5 +1,5 @@
 {
- "_note": "Hand-drawn Застава NPCs (tools/asset-pipeline/npc2d/build.py). cell/origin in sheet px (origin = the ground under the NPC); px_per_world sheet px per world px; height_world = top of the idle frame above the ground; flip = mirror to face the hero; anims idle/talk loops, react one-shot; portraits 512 px busts facing right.",
+ "_note": "Hand-drawn Застава NPCs (tools/asset-pipeline/npc2d/build.py). cell/origin in sheet px (origin = the ground under the NPC); px_per_world sheet px per world px; height_world = top of the idle frame above the ground; flip = mirror to face the hero; anims idle/talk loops, react one-shot; portraits 512 px busts facing right. NPCs with approved art are rebuilt by tools/asset-pipeline/navart/npcs.py.",
  "px_per_world": 2.0,
  "npcs": {
   "dolya": {
@@ -42,7 +42,7 @@
     "calm": "dolya/dolya_portrait_calm.png",
     "warm": "dolya/dolya_portrait_warm.png"
    },
-   "height_world": 96.4
+   "height_world": 96.0
   },
   "potap": {
    "cell": [
@@ -126,7 +126,7 @@
     "calm": "sova/sova_portrait_calm.png",
     "warm": "sova/sova_portrait_warm.png"
    },
-   "height_world": 105.8
+   "height_world": 106.0
   },
   "bayun": {
    "cell": [
@@ -168,7 +168,7 @@
     "calm": "bayun/bayun_portrait_calm.png",
     "warm": "bayun/bayun_portrait_warm.png"
    },
-   "height_world": 98.7
+   "height_world": 91.5
   },
   "chur": {
    "cell": [
@@ -210,7 +210,7 @@
     "calm": "chur/chur_portrait_calm.png",
     "warm": "chur/chur_portrait_warm.png"
    },
-   "height_world": 192.0
+   "height_world": 186.0
   },
   "ofenya": {
    "cell": [
@@ -252,7 +252,7 @@
     "calm": "ofenya/ofenya_portrait_calm.png",
     "warm": "ofenya/ofenya_portrait_warm.png"
    },
-   "height_world": 117.6
+   "height_world": 117.5
   },
   "prorok": {
    "cell": [

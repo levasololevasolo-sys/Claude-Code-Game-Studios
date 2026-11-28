@@ -1,5 +1,5 @@
 {
- "_note": "Hand-drawn enemy sheets (tools/asset-pipeline/enemies2d/build.py). cell/origin in sheet px (origin = ground under the hit box centre); px_per_world sheet px per world px; anims: frames/fps/loop/cols/rows and variants (noarm, nohead) with their own sheets; parts: cut-out arm/head sprites with the pivot (shoulder / neck) in part px; states: enemy state -> {anim, k: stat driving the progress, moving: sheet while moving, after: one-shot on leaving}.",
+ "_note": "Hand-drawn enemy sheets (tools/asset-pipeline/enemies2d/build.py). cell/origin in sheet px (origin = ground under the hit box centre); px_per_world sheet px per world px; anims: frames/fps/loop/cols/rows and variants (noarm, nohead) with their own sheets; parts: cut-out arm/head sprites with the pivot (shoulder / neck) in part px; states: enemy state -> {anim, k: stat driving the progress, moving: sheet while moving, after: one-shot on leaving}. Kinds with approved art are rebuilt by tools/asset-pipeline/navart/enemies.py.",
  "px_per_world": 1.5,
  "kinds": {
   "balvan": {
@@ -213,12 +213,12 @@
     "head": {
      "file": "crawler_part_head.png",
      "pivot": [
-      11.7,
-      12.8
+      15.5,
+      20.7
      ],
      "size": [
-      56,
-      40
+      31,
+      23
      ]
     }
    },
@@ -351,23 +351,23 @@
     "arm": {
      "file": "thrower_part_arm.png",
      "pivot": [
-      14.0,
-      12.5
+      6.5,
+      2.0
      ],
      "size": [
-      42,
-      87
+      13,
+      25
      ]
     },
     "head": {
      "file": "thrower_part_head.png",
      "pivot": [
-      11.5,
-      20.3
+      11.0,
+      20.7
      ],
      "size": [
-      43,
-      38
+      22,
+      23
      ]
     }
    },
@@ -557,12 +557,12 @@
     "head": {
      "file": "shishiga_part_head.png",
      "pivot": [
-      16.5,
-      45.5
+      19.0,
+      23.4
      ],
      "size": [
-      51,
-      57
+      38,
+      26
      ]
     }
    },
@@ -712,23 +712,23 @@
     "arm": {
      "file": "bognitsa_part_arm.png",
      "pivot": [
-      11.8,
-      11.7
+      12.5,
+      2.6
      ],
      "size": [
-      69,
-      72
+      25,
+      32
      ]
     },
     "head": {
      "file": "bognitsa_part_head.png",
      "pivot": [
-      31.2,
-      53.4
+      22.0,
+      38.7
      ],
      "size": [
-      65,
-      68
+      44,
+      43
      ]
     }
    },
@@ -869,23 +869,23 @@
     "arm": {
      "file": "vodyanitsa_part_arm.png",
      "pivot": [
-      21.3,
-      10.6
+      5.0,
+      2.0
      ],
      "size": [
-      48,
-      47
+      10,
+      25
      ]
     },
     "head": {
      "file": "vodyanitsa_part_head.png",
      "pivot": [
-      28.5,
-      29.0
+      16.5,
+      49.5
      ],
      "size": [
-      49,
-      142
+      33,
+      55
      ]
     }
    },

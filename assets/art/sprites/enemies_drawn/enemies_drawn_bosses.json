@@ -1,5 +1,5 @@
 {
- "_note": "Hand-drawn location bosses (tools/asset-pipeline/enemies2d/build_bosses.py); format as enemies_drawn.json. intro: one-shot when the boss speaks its intro line; variant \"rage\": the phase-2 look (LairBoss.phase >= 2).",
+ "_note": "Hand-drawn location bosses (tools/asset-pipeline/enemies2d/build_bosses.py); format as enemies_drawn.json. intro: one-shot when the boss speaks its intro line; variant \"rage\": the phase-2 look (LairBoss.phase >= 2). Kinds with approved art are rebuilt by tools/asset-pipeline/navart/enemies.py.",
  "px_per_world": 1.5,
  "kinds": {
   "kikimora": {

@@ -1,5 +1,5 @@
 {
- "_note": "Hand-drawn Царство Морены enemies (tools/asset-pipeline/enemies2d/build_frost.py), same format as enemies_drawn.json; fx: effect sprites of the kind (file, origin px, cell/frames when a strip).",
+ "_note": "Hand-drawn Царство Морены enemies (tools/asset-pipeline/enemies2d/build_frost.py), same format as enemies_drawn.json; fx: effect sprites of the kind (file, origin px, cell/frames when a strip). Kinds with approved art are rebuilt by tools/asset-pipeline/navart/enemies.py.",
  "px_per_world": 1.5,
  "kinds": {
   "wolf": {
@@ -81,12 +81,12 @@
     "head": {
      "file": "wolf_part_head.png",
      "pivot": [
-      6.7,
-      28.3
+      18.5,
+      26.1
      ],
      "size": [
-      51,
-      43
+      37,
+      29
      ]
     }
    },
@@ -332,23 +332,23 @@
     "arm": {
      "file": "karachun_part_arm.png",
      "pivot": [
-      26.0,
-      118.0
+      32.0,
+      5.3
      ],
      "size": [
-      58,
-      226
+      64,
+      66
      ]
     },
     "head": {
      "file": "karachun_part_head.png",
      "pivot": [
-      27.9,
-      56.5
+      25.5,
+      195.3
      ],
      "size": [
-      72,
-      101
+      51,
+      217
      ]
     }
    },
@@ -478,12 +478,12 @@
     "head": {
      "file": "snezhnitsa_part_head.png",
      "pivot": [
-      26.8,
-      45.4
+      22.0,
+      36.9
      ],
      "size": [
-      60,
-      106
+      44,
+      41
      ]
     }
    },
@@ -746,23 +746,23 @@
     "arm": {
      "file": "mara_part_arm.png",
      "pivot": [
-      11.3,
-      11.6
+      8.0,
+      5.2
      ],
      "size": [
-      32,
-      98
+      16,
+      65
      ]
     },
     "head": {
      "file": "mara_part_head.png",
      "pivot": [
-      21.2,
-      47.4
+      26.5,
+      44.1
      ],
      "size": [
-      51,
-      63
+      53,
+      49
      ]
     }
    },

@@ -1,5 +1,5 @@
 {
- "_note": "Hand-drawn Тёмный бор enemies (tools/asset-pipeline/enemies2d/build_forest.py); format as enemies_drawn.json. block: one-shot when the front shield stops a hit; projectile: the branch-spear sprites (tip = sprite px of the point, the spear lies along +x).",
+ "_note": "Hand-drawn Тёмный бор enemies (tools/asset-pipeline/enemies2d/build_forest.py); format as enemies_drawn.json. block: one-shot when the front shield stops a hit; projectile: the branch-spear sprites (tip = sprite px of the point, the spear lies along +x). Kinds with approved art are rebuilt by tools/asset-pipeline/navart/enemies.py.",
  "px_per_world": 1.5,
  "kinds": {
   "ringer": {
@@ -126,23 +126,23 @@
     "arm": {
      "file": "ringer_part_arm.png",
      "pivot": [
-      12.1,
-      10.5
+      13.5,
+      5.5
      ],
      "size": [
-      65,
-      82
+      27,
+      69
      ]
     },
     "head": {
      "file": "ringer_part_head.png",
      "pivot": [
-      20.8,
-      56.9
+      28.0,
+      31.5
      ],
      "size": [
-      50,
-      69
+      56,
+      35
      ]
     }
    },
@@ -269,12 +269,12 @@
     "head": {
      "file": "rootling_part_head.png",
      "pivot": [
-      37.7,
-      64.2
+      19.0,
+      35.1
      ],
      "size": [
-      80,
-      78
+      38,
+      39
      ]
     }
    },
@@ -487,12 +487,12 @@
     "head": {
      "file": "sentry_part_head.png",
      "pivot": [
-      13.0,
-      28.5
+      19.0,
+      27.0
      ],
      "size": [
-      36,
-      39
+      38,
+      30
      ]
     }
    },
@@ -591,12 +591,12 @@
     "head": {
      "file": "suchkovik_part_head.png",
      "pivot": [
-      41.1,
-      68.4
+      18.5,
+      36.0
      ],
      "size": [
-      82,
-      89
+      37,
+      40
      ]
     }
    },
@@ -727,12 +727,12 @@
     "head": {
      "file": "lesavka_part_head.png",
      "pivot": [
-      37.3,
-      49.6
+      19.5,
+      23.4
      ],
      "size": [
-      78,
-      60
+      39,
+      26
      ]
     }
    },
